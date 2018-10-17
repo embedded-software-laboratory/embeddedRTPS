@@ -1,7 +1,7 @@
 # Preparation on Windows
 
 ## Fresh setup without repo
-##Compiler
+## Compiler
 install mingw-w64 [https://mingw-w64.org/doku.php/download/mingw-builds].
 There are problems with mingw32, as ntddndis.h is placed in "ddk/" and does not, e.g., define "NDIS_MEDIA_STATE".
 
