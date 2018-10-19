@@ -311,6 +311,9 @@ a lot of data that needs to be copied, this should be set high. */
 #endif /* LWIP_OPTTEST_FILE */
 
 /* The following defines must be done even in OPTTEST mode: */
+#ifdef __cplusplus
+extern "C"{
+#endif
 
 #if !defined(NO_SYS) || !NO_SYS /* default is 0 */
 void sys_check_core_locking(void);
@@ -324,6 +327,10 @@ void sys_lock_tcpip_core(void);
 void sys_unlock_tcpip_core(void);
 #define UNLOCK_TCPIP_CORE()        sys_unlock_tcpip_core()
 #endif
+#endif
+
+#ifdef __cplusplus
+}
 #endif
 
 #endif /* LWIP_LWIPOPTS_H */

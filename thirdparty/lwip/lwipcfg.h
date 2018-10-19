@@ -8,7 +8,7 @@
 #define PPP_PASSWORD  "pass"
 
 /** Define this to the index of the windows network adapter to use */
-#define PACKET_LIB_ADAPTER_NR         0
+#define PACKET_LIB_ADAPTER_NR         3
 /** Define this to the GUID of the windows network adapter to use
  * or NOT define this if you want PACKET_LIB_ADAPTER_NR to be used */
 /*#define PACKET_LIB_ADAPTER_GUID       "00000000-0000-0000-0000-000000000000"*/
@@ -26,7 +26,7 @@
 
 /* remember to change this MAC address to suit your needs!
    the last octet will be increased by netif->num for each netif */
-#define LWIP_MAC_ADDR_BASE            {0x00,0x01,0x02,0x03,0x04,0x05}
+#define LWIP_MAC_ADDR_BASE            {0x00,0x80,0xE1,0x00,0x00,0x00}
 
 /* #define USE_SLIPIF 0 */
 /* #define SIO_USE_COMPORT 0 */

@@ -9,7 +9,7 @@ Working setup configuration:
 System: i686 (yes, 32bit version)  
 Threads: posix
 
-# Prepare necessary folders and files
+## Prepare necessary folders and files
 Create a folder e.g. named LWIP_Windows.
 After the following steps, the structure within looks like this:  
 - check (optional for unit tests of lwip)
@@ -27,10 +27,28 @@ Starting point was this repository [https://github.com/yarrick/lwip-contrib/tree
 5. Clone the rtps repository into the LWIP_Windows folder and name it rtps.
 6. Clone or download and extract the googletest repository [https://github.com/google/googletest] into LWIP_Windows/rtps/thirdparty/googletest.
 Add all files in the repository, not just the ones in the goolgletest subfolder.
-7. Because of a "wrong" pointer cast and non-c90-compliant things like long long, some compiler flags need to be removed. This can be simply done by editing contrib/prots/CMakeCommon.cmake. Just remove/comment out the line 82 set(LWIP_COMPILER_FLAGS ${LWIP_COMPILER_FLAGS_GNU_CLANG}) for GNU within the if CMAKE_C_COMPILER_ID STREQUAL GNU.
 
+Code modifications:
+1. Because of a "wrong" pointer cast and non-c90-compliant things like long long, some compiler flags need to be removed. This can be simply done by editing contrib/prots/CMakeCommon.cmake. Just remove/comment out the line 82 set(LWIP_COMPILER_FLAGS ${LWIP_COMPILER_FLAGS_GNU_CLANG}) for GNU within the if CMAKE_C_COMPILER_ID STREQUAL GNU.
+2. If core locking has a missing definition pu the c++ clause below around the function definitions in lwipopts.h.
+```cpp
+// Include guard
+#ifdef __cplusplus
+extern "C"{
+#endif
+
+//code
+
+#ifdef __cplusplus
+}
+#endif
+//include guard
+```
 
 Now you should be able to either start the sample project in MS Visual Studio (contrib/port/win32/mscv) or open the rtps folder as a cmake project.
 
 Attention:
 Make sure you have chosen the correct compiler.
+
+##Configuration of windows
+In order to send UDP packets, I had to configure a static IPv4 address on my ethernet port which is equal to the one defined in lwipcfg.h.
