@@ -1,6 +1,6 @@
 /*
  *
- * Author: Andreas Wuestenberg (andreas.wuestenberg@rwth-aachen.de)
+ * Author: Andreas Wüstenberg (andreas.wuestenberg@rwth-aachen.de)
  */
 
 #ifndef RTPS_UDPDRIVER_H
@@ -10,56 +10,33 @@
 #include "rtps/config.h"
 #include "rtps/UdpConnection.h"
 #include "rtps/LwipInterface.h"
+#include "rtps/types.h"
 
 #include <array>
 
-
-
 class UdpDriver{
 public:
-    bool createUdpConnection(const ip4_addr addr, const uint16_t port);
-    template<std::size_t SIZE>
-    bool sendPacket(const ip4_addr destAddr, const uint16_t destPort, const std::array<uint8_t, SIZE> &data) const{
-        auto begin = conns.cbegin();
-        auto end = conns.cend();
-        while(begin != end){
-            if(begin->addr.addr == destAddr.addr && begin->port == destPort){
-                break;
-            }
-            begin++;
-        }
+    typedef void (*udp_rx_func_t)(void *arg, struct udp_pcb *pcb, struct pbuf *p, const ip_addr_t *addr, ip4_port_t port);
 
-        if(begin == end){
-            printf("Could not find a udp connection for destination %s:%u,...adding\r\n", ipaddr_ntoa(&destAddr), destPort);
-            return false;
-        }
 
-        const UdpConnection& conn = *begin;
-
-        pbuf* pb = pbuf_alloc(PBUF_TRANSPORT, SIZE, PBUF_POOL);
-        if (!pb) {
-            printf("Error while allocating pbuf\n\r");
-            return false;
-        }
-
-        memcpy(pb->payload, data.data(), SIZE);
-        LOCK_TCPIP_CORE();
-        err_t err = udp_sendto(conn.pcb, pb, &(destAddr), destPort);
-        UNLOCK_TCPIP_CORE();
-        if(err != ERR_OK){
-            printf("UDP TRANSMIT NOT SUCCESSFULL %s:%u size: %u err: %i\r\n", ipaddr_ntoa(&destAddr), destPort, SIZE, err);
-            pbuf_free(pb);
-            return false;
-        }
-        pbuf_free(pb);
-        printf("Send packet successful \n");
-        return true;
+    constexpr ip4_addr transforIP4ToU32(uint8_t MSB, uint8_t p2, uint8_t p1, uint8_t LSB){
+        return {((uint32_t)(MSB << 24)) |
+                ((uint32_t)( p2 << 16)) |
+                ((uint32_t)( p1 <<  8)) |
+                            LSB};
     }
+    
+    constexpr ip4_addr defaultMCastGroup(){
+        return transforIP4ToU32(239,255,0,1);
+    }
+
+
+    bool createUdpConnection(const ip4_addr addr, const ip4_port_t port, const udp_rx_func_t callback);
+    bool sendPacket(const ip4_addr destAddr, const ip4_port_t destPort, const uint8_t *data, size_t length);
 private:
     std::array<UdpConnection, Config::MAX_NUM_UDP_CONNECTIONS> conns;
     std::size_t n_conns = 0;
 
 };
-
 
 #endif //RTPS_UDPDRIVER_H

@@ -1,6 +1,6 @@
 /*
  *
- * Author: Andreas Wuestenberg (andreas.wuestenberg@rwth-aachen.de)
+ * Author: Andreas Wüstenberg (andreas.wuestenberg@rwth-aachen.de)
  */
 
 #ifndef RTPS_UDPCONNECTION_H
