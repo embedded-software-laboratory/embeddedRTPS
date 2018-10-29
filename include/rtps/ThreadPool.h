@@ -6,9 +6,12 @@
 #ifndef RTPS_THREADPOOL_H
 #define RTPS_THREADPOOL_H
 
-#include "lwip/sys.h"
-#include "UdpDriver.h"
 #include "config.h"
+#include "lwip/sys.h"
+#include "rtps/communication/PBufWrapper.h"
+#include "rtps/utils/ThreadSafeCircularBuffer.h"
+#include "rtps/communication/UdpDriver.h"
+
 #include <array>
 
 struct Workload_t{
@@ -19,25 +22,25 @@ struct Workload_t{
 };
 
 class ThreadPool{
+private:
+    bool running = false;
+    UdpDriver transport;
+    std::array<sys_thread_t, Config::THREAD_POOL_NUM_WRITERS> writers;
+
+    ThreadSafeCircularBuffer<Workload_t, Config::THREAD_POOL_WORKLOAD_QUEUE_LENGTH> inputQueue;
+    ThreadSafeCircularBuffer<PBufWrapper, Config::THREAD_POOL_WORKLOAD_QUEUE_LENGTH> outputQueue;
+
+    static void readCallback(void *arg, udp_pcb *pcb, pbuf *p, const ip_addr_t *addr, ip4_port_t port);
+    static void sendFunction(void *arg);
+    static void writerFunction(void *arg);
+
 public:
     bool startThreads();
     void stopThreads();
-    bool addConnection(ip4_addr_t& addr, ip4_port_t port);
-    void addWorkload(Workload_t work);
+    bool addConnection(const ip4_addr_t &addr, const ip4_port_t port);
+    void addWorkload(Workload_t&& work);
 
-private:
-    bool running;
-    UdpDriver transportDriver;
-    std::array<sys_thread_t, Config::THREAD_POOL_NUM_WRITERS> writers;
 
-    std::array<Workload_t, Config::THREAD_POOL_WORKLOAD_QUEUE_LENGTH> workloadQueue;
-    sys_mutex_t queueMutex;
-    static_assert(Config::THREAD_POOL_WORKLOAD_QUEUE_LENGTH < UINT32_MAX);
-    uint32_t head = 0;
-    uint32_t tail = 0;
-
-    static void writerFunction(void *arg);
-    static void callback(void *arg, udp_pcb *pcb, pbuf *p, const ip_addr_t *addr, ip4_port_t port);
 };
 
 #endif //RTPS_THREADPOOL_H

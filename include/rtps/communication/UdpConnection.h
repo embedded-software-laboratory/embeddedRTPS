@@ -7,7 +7,7 @@
 #define RTPS_UDPCONNECTION_H
 
 #include "lwip/udp.h"
-#include "rtps/LwipInterface.h"
+#include "LwipInterface.h"
 
 template <class UdpInterface = LwipInterface>
 struct UdpConnectionT{

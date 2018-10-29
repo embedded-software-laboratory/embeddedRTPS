@@ -4,28 +4,17 @@
  */
 
 #include "rtps/ThreadPool.h"
+#include "lwip/tcpip.h"
 
-class Lock{
-public:
-    Lock(sys_mutex_t& passedMutex) : mutex(passedMutex){
-        sys_mutex_lock(&mutex);
-    };
-    ~Lock(){
-        sys_mutex_unlock(&mutex);
-    };
-private:
-    sys_mutex_t& mutex;
-};
 
 bool ThreadPool::startThreads(){
     if(running){
         return true;
     }
-    if (sys_mutex_new(&queueMutex) != ERR_OK) {
+    if(!inputQueue.init() || !outputQueue.init()){
         return false;
     }
-    head = 0;
-    tail = 0;
+
     running = true;
     for(auto &thread : writers){
         // TODO ID, err check
@@ -38,33 +27,69 @@ void ThreadPool::stopThreads() {
     running = false;
 }
 
-bool ThreadPool::addConnection(ip4_addr_t &addr, ip4_port_t port) {
-    return transportDriver.createUdpConnection(addr, port, callback);
+bool ThreadPool::addConnection(const ip4_addr_t &addr, const ip4_port_t port) {
+    return transport.createUdpConnection(addr, port, readCallback);
 }
 
-void ThreadPool::addWorkload(Workload_t work){
-    Lock lock(queueMutex);
-    workloadQueue[head] = work;
-    head = (head+1) % workloadQueue.size();
+void ThreadPool::addWorkload(Workload_t&& work){
+    inputQueue.moveElementIntoBuffer(std::move(work));
 }
 
 void ThreadPool::writerFunction(void *arg){
     ThreadPool* pool = static_cast<ThreadPool*>(arg);
+    if(pool == nullptr){
+        printf("nullptr passed to writer function\n");
+        return;
+    }
     while(pool->running){
         {
-            Lock lock(pool->queueMutex);
-            if(pool->head != pool->tail){
-                Workload_t& current = pool->workloadQueue[pool->tail];
-                pool->tail = (pool->tail+1) % pool->workloadQueue.size();
-                pool->transportDriver.sendPacket(current.addr, current.port, current.data, current.size);
+            Workload_t current;
+            const bool isWorkToDo = pool->inputQueue.moveFirstInto(current);
+            if(!isWorkToDo){
+                sys_msleep(10);
+                continue;
             }
+
+            PBufWrapper pbWrapper(PBUF_TRANSPORT, current.size, PBUF_POOL);
+            if (!pbWrapper.isValid()) {
+                printf("Error while allocating pbuf\n");
+                continue;
+            }
+
+
+            const bool success = pbWrapper.fillBuffer(current.data, current.size);
+            if(!success){
+                printf("Error while filling pbuf\n");
+                continue;
+            }
+
+            pbWrapper.addr = current.addr;
+            pbWrapper.port = current.port;
+            pool->outputQueue.moveElementIntoBuffer(std::move(pbWrapper));
+
+            // Execute with tcpip-thread
+            tcpip_callback(sendFunction, pool); // Blocking i.e. thread safe call
         }
-        sys_msleep(10);
     }
 }
 
+void ThreadPool::sendFunction(void *arg) {
+    ThreadPool *pool = static_cast<ThreadPool*>(arg);
+    if(pool == nullptr){
+        printf("nullptr passed to send function\n");
+        return;
+    }
+    PBufWrapper pBufWrapper;
+    const bool isWorkToDo = pool->outputQueue.moveFirstInto(pBufWrapper);
+    if(!isWorkToDo){
+        printf("Who dares to wake me up if there is nothing to do?!");
+        return;
+    }
+    pool->transport.sendPacket(pBufWrapper.addr, pBufWrapper.port, *pBufWrapper.firstElement);
+}
 
-void ThreadPool::callback(void *arg, udp_pcb *pcb, pbuf *p, const ip_addr_t *addr, ip4_port_t port) {
+
+void ThreadPool::readCallback(void *arg, udp_pcb *pcb, pbuf *p, const ip_addr_t *addr, ip4_port_t port) {
     printf("Received something from %s:%u !!!!\n\r", ipaddr_ntoa(addr), port);
     for(int i=0; i < p->len; i++){
         printf("%c ", ((unsigned char*)p->payload)[i]);

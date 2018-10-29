@@ -4,8 +4,8 @@ include_directories(${gtest_SOURCE_DIR}/include ${gtest_SOURCE_DIR})
 include_directories(${rtps_SOURCE_DIR}/include ${rtps_SOURCE_DIR})
 
 add_executable(runTests test_udpConnection.cpp
-                        test_threadPool.cpp
                         test_lwip.cpp
+                        communication/test_PBufWrapper.cpp
         )
 target_link_libraries(runTests gtest gtest_main gmock gmock_main)
 target_link_libraries(runTests rtps lwip)
