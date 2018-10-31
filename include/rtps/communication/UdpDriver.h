@@ -23,14 +23,14 @@ public:
     typedef void (*udp_rx_func_t)(void *arg, udp_pcb *pcb, pbuf *p, const ip_addr_t *addr, ip4_port_t port);
 
 
-    constexpr ip4_addr transforIP4ToU32(uint8_t MSB, uint8_t p2, uint8_t p1, uint8_t LSB){
+    constexpr static ip4_addr transforIP4ToU32(uint8_t MSB, uint8_t p2, uint8_t p1, uint8_t LSB){
         return {((uint32_t)(MSB << 24)) |
                 ((uint32_t)( p2 << 16)) |
                 ((uint32_t)( p1 <<  8)) |
                             LSB};
     }
     
-    constexpr ip4_addr defaultMCastGroup(){
+    constexpr static ip4_addr defaultMCastGroup(){
         return transforIP4ToU32(239,255,0,1);
     }
 
