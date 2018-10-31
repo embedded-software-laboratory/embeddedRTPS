@@ -4,6 +4,7 @@
  */
 
 #include "rtps/communication/PBufWrapper.h"
+#include <cstring>
 
 
 PBufWrapper::PBufWrapper() : firstElement(nullptr){
@@ -41,13 +42,13 @@ bool PBufWrapper::fillBuffer(const uint8_t* const data, uint16_t length){
     if(firstElement == nullptr){
         return false;
     }
-    memcpy(firstElement->payload, data, firstElement->len);
+    std::memcpy(firstElement->payload, data, firstElement->len);
 
     uint16_t copiedSize = firstElement->len;
     pbuf* currentElement = firstElement;
     while(copiedSize != length){
         currentElement = currentElement->next;
-        memcpy(currentElement->payload, &data[copiedSize], currentElement->len);
+        std::memcpy(currentElement->payload, &data[copiedSize], currentElement->len);
         copiedSize += currentElement->len;
     }
     return true;
