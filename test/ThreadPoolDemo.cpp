@@ -15,7 +15,7 @@ int main(){
 
     const uint16_t port = 7050;
     ip4_addr addr;
-    IP4_ADDR((&addr), 192,168,0, 100);
+    IP4_ADDR((&addr), 192,168,0, 42);
 
     ThreadPool pool;
     pool.addConnection(addr, port);
@@ -35,7 +35,7 @@ int main(){
 
     while(true){
         Workload_t work = worklist[i%4]; // Copy
-        pool.addWorkload(std::move(work));
+        //pool.addWorkload(std::move(work));
         i++;
         sys_msleep(20+(i%200));
     }

@@ -4,7 +4,6 @@
  */
 
 #include <gtest/gtest.h>
-#include <gmock/gmock.h>
 
 #include "rtps/rtps.h"
 #include "rtps/communication/PBufWrapper.h"
@@ -49,7 +48,6 @@ TEST_F(PBufWrapperTest, FillIntoMultipleChains){
     const uint16_t lengthFirst = 5;
     static_assert(lengthFirst < lengthData);
     const uint16_t lengthSecond = lengthData - lengthFirst;
-
     // Construction of synthetic chains
     PBufWrapper wrapper;
     uint8_t first[lengthFirst];
@@ -59,6 +57,7 @@ TEST_F(PBufWrapperTest, FillIntoMultipleChains){
     wrapper.firstElement = &firstElement;
 
     bool success = wrapper.fillBuffer(data, lengthData);
+
     EXPECT_TRUE(success);
     for(int i=0; i<lengthFirst; i++){
         EXPECT_EQ(((uint8_t*)wrapper.firstElement->payload)[i], data[i]);
