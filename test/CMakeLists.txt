@@ -8,6 +8,7 @@ add_executable(runTests ThreadPoolTest.cpp
                         communication/UdpConnectionTest.cpp
                         communication/PBufWrapperTest.cpp
                         entities/StatelessWriterTest.cpp
+                        messages/MessageFactoryTest.cpp
         )
 target_link_libraries(runTests gtest gtest_main gmock gmock_main)
 target_link_libraries(runTests rtps lwip)

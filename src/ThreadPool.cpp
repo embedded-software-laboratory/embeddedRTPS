@@ -28,7 +28,7 @@ void ThreadPool::stopThreads() {
     running = false;
 }
 
-bool ThreadPool::addConnection(const ip4_addr_t &addr, const ip4_port_t port) {
+bool ThreadPool::addConnection(const ip4_addr_t& addr, const ip4_port_t port) {
     return transport.createUdpConnection(addr, port, readCallback);
 }
 
@@ -36,7 +36,7 @@ void ThreadPool::addWorkload(Workload_t&& work){
     inputQueue.moveElementIntoBuffer(std::move(work));
 }
 
-void ThreadPool::writerFunction(void *arg){
+void ThreadPool::writerFunction(void* arg){
     ThreadPool* pool = static_cast<ThreadPool*>(arg);
     if(pool == nullptr){
         printf("nullptr passed to writer function\n");
@@ -51,14 +51,14 @@ void ThreadPool::writerFunction(void *arg){
                 continue;
             }
 
-            PBufWrapper pbWrapper(PBUF_TRANSPORT, current.size, PBUF_POOL);
+            PBufWrapper pbWrapper(current.size);
             if (!pbWrapper.isValid()) {
                 printf("Error while allocating pbuf\n");
                 continue;
             }
 
 
-            const bool success = pbWrapper.fillBuffer(current.data, current.size);
+            const bool success = pbWrapper.append(current.data, current.size);
             if(!success){
                 printf("Error while filling pbuf\n");
                 continue;
@@ -74,7 +74,7 @@ void ThreadPool::writerFunction(void *arg){
     }
 }
 
-void ThreadPool::sendFunction(void *arg) {
+void ThreadPool::sendFunction(void* arg) {
     ThreadPool *pool = static_cast<ThreadPool*>(arg);
     if(pool == nullptr){
         printf("nullptr passed to send function\n");
@@ -90,7 +90,7 @@ void ThreadPool::sendFunction(void *arg) {
 }
 
 
-void ThreadPool::readCallback(void *arg, udp_pcb *pcb, pbuf *p, const ip_addr_t *addr, ip4_port_t port) {
+void ThreadPool::readCallback(void*, udp_pcb*, pbuf* p, const ip_addr_t* addr, ip4_port_t port) {
     printf("Received something from %s:%u !!!!\n\r", ipaddr_ntoa(addr), port);
     for(int i=0; i < p->len; i++){
         printf("%c ", ((unsigned char*)p->payload)[i]);

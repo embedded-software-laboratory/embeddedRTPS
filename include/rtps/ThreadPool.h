@@ -20,7 +20,7 @@ namespace rtps {
         ip4_addr_t addr;
         uint16_t port;
         uint16_t size;
-        uint8_t *data;
+        uint8_t* data;
     };
 
     class ThreadPool {
@@ -32,20 +32,20 @@ namespace rtps {
         ThreadSafeCircularBuffer<Workload_t, Config::THREAD_POOL_WORKLOAD_QUEUE_LENGTH> inputQueue;
         ThreadSafeCircularBuffer<PBufWrapper, Config::THREAD_POOL_WORKLOAD_QUEUE_LENGTH> outputQueue;
 
-        static void readCallback(void *arg, udp_pcb *pcb, pbuf *p, const ip_addr_t *addr, ip4_port_t port);
+        static void readCallback(void* arg, udp_pcb* pcb, pbuf* p, const ip_addr_t* addr, ip4_port_t port);
 
-        static void sendFunction(void *arg);
+        static void sendFunction(void* arg);
 
-        static void writerFunction(void *arg);
+        static void writerFunction(void* arg);
 
     public:
         bool startThreads();
 
         void stopThreads();
 
-        bool addConnection(const ip4_addr_t &addr, const ip4_port_t port);
+        bool addConnection(const ip4_addr_t& addr, const ip4_port_t port);
 
-        void addWorkload(Workload_t &&work);
+        void addWorkload(Workload_t&& work);
 
 
     };

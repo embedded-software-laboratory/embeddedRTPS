@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.7)
 set(CMAKE_CXX_STANDARD 11)
-set (CMAKE_CXX_FLAGS "-Wall -fno-exceptions -fno-non-call-exceptions -fno-rtti -m32")
+set (CMAKE_CXX_FLAGS "-Wall -Wextra -fno-exceptions -fno-non-call-exceptions -fno-rtti -m32")
 
 project(rtps)
 

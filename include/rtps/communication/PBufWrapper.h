@@ -18,23 +18,42 @@
 namespace rtps {
 
     struct PBufWrapper {
+        struct PBufPosition{
+            pbuf* element;
+            data_size_t offset;
+        };
+
         pbuf *firstElement = nullptr;
 
         ip4_addr_t addr{};
         ip4_port_t port = 0;
 
-        PBufWrapper();
+        PBufWrapper() = default;
+        explicit PBufWrapper(data_size_t length);
 
-        PBufWrapper(pbuf_layer layer, u16_t length, pbuf_type type);
-
-        PBufWrapper &operator=(PBufWrapper &&other);
+        PBufWrapper &operator=(PBufWrapper &&other) noexcept;
 
         ~PBufWrapper();
 
-        bool isValid();
+        bool isValid() const;
 
-        bool fillBuffer(const uint8_t *const data, uint16_t length);
+        bool append(const uint8_t *const data, data_size_t length);
 
+        bool reserve(data_size_t length);
+
+
+    private:
+
+
+        constexpr static pbuf_layer m_layer = PBUF_TRANSPORT;
+        constexpr static pbuf_type m_type = PBUF_POOL;
+
+        data_size_t m_usedMemory = 0;
+        PBufPosition m_nextEmptyByte{nullptr, 0};
+
+
+        data_size_t spaceLeft() const;
+        bool increaseSize(uint16_t length);
     };
 
 }
