@@ -8,6 +8,8 @@
 #include "rtps/rtps.h"
 #include "rtps/communication/PBufWrapper.h"
 
+using rtps::PBufWrapper;
+
 class PBufWrapperTest : public ::testing::Test {
 protected:
     static void SetUpTestCase() {
@@ -16,7 +18,7 @@ protected:
 };
 
 TEST_F(PBufWrapperTest, MultipleAllocAndFree){
-    // TODO Use constant for maximum memory
+    // TODO Use constant maximum amount of memory
     for(int i=1; i<10000; ++i){
         PBufWrapper wrapper(PBUF_TRANSPORT, i, PBUF_POOL);
     }

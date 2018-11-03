@@ -14,23 +14,29 @@
  * This Wrapper handles the lifetime of a pbuf element. Allocates it
  * when constructed and frees is again when running out of scope.
  */
-struct PBufWrapper{
-    pbuf* firstElement = nullptr;
 
-    ip4_addr_t addr{};
-    ip4_port_t port = 0;
+namespace rtps {
 
-    PBufWrapper();
+    struct PBufWrapper {
+        pbuf *firstElement = nullptr;
 
-    PBufWrapper(pbuf_layer layer, u16_t length, pbuf_type type);
+        ip4_addr_t addr{};
+        ip4_port_t port = 0;
 
-    PBufWrapper& operator=(PBufWrapper&& other);
+        PBufWrapper();
 
-    ~PBufWrapper();
+        PBufWrapper(pbuf_layer layer, u16_t length, pbuf_type type);
 
-    bool isValid();
+        PBufWrapper &operator=(PBufWrapper &&other);
 
-    bool fillBuffer(const uint8_t* const data, uint16_t length);
-};
+        ~PBufWrapper();
+
+        bool isValid();
+
+        bool fillBuffer(const uint8_t *const data, uint16_t length);
+
+    };
+
+}
 
 #endif //RTPS_PBUFWRAPPER_H

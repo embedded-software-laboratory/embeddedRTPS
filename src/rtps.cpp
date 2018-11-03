@@ -66,5 +66,10 @@ void LwIPInit(){
 }
 
 void rtps::init(){
-    LwIPInit();
+    // TODO This is not threadsafe. Might cause problems in tests. For now, it seems to work.
+    static bool initialized = false;
+    if(!initialized){
+        LwIPInit();
+        initialized = true;
+    }
 }

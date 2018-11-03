@@ -12,8 +12,11 @@
 #include <array>
 #include <initializer_list>
 
-namespace {
+// TODO subnamespaces
+namespace rtps{
+
     typedef uint16_t ip4_port_t;
+    typedef uint16_t data_size_t;
 
     enum class EntityKind_t : uint8_t{
         USER_DEFINED_UNKNOWN            = 0x00,
@@ -44,7 +47,7 @@ namespace {
     };
 
     enum class ChangeKind_t : uint8_t{
-        ALIVE, NOT_ALIVE_DISPASED, NOT_ALIVE_UNREGISTERED
+        INVALID, ALIVE, NOT_ALIVE_DISPOSED, NOT_ALIVE_UNREGISTERED
     };
 
     enum class ReliabilityKind_t : uint8_t{
@@ -86,6 +89,21 @@ namespace {
     struct SequenceNumber_t{
         int32_t high;
         uint32_t low;
+
+        bool operator==(const SequenceNumber_t& other) const{
+            return high == other.high && low == other.low;
+        }
+        bool operator<(const SequenceNumber_t& other) const{
+            return high < other.high && low < other.low;
+        }
+
+        SequenceNumber_t& operator++(){
+            ++low;
+            if(low == 0){
+                ++high;
+            }
+            return *this;
+        }
     };
 
     struct FragmentNumber_t{
@@ -114,6 +132,26 @@ namespace {
         uint8_t major;
         uint8_t minor;
     };
+
+    namespace Behavior{
+        typedef Time_t Duration_t; // TODO
+
+        enum class ChangeForReaderStatusKind{
+            UNSENT, UNACKNOWLEDGED, REQURESTED, ACKNOWLEDGED, UNDERWAY
+        };
+
+        enum class ChangeFromWriterStatusKind{
+            LOST, MISSING, RECEIVED, UNKNOWN
+        };
+
+        struct InstanceHandle_t{ // TODO
+            uint64_t value;
+        };
+
+        struct ParticipantMessageData{ // TODO
+
+        };
+    }
 
     /* Default Values */
     // TODO memory_reduction_possible

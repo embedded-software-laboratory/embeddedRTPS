@@ -8,7 +8,8 @@
 #include "lwip/tcpip.h"
 
 
-/**
+using rtps::UdpDriver;
+    /**
  *
  * @param addr IP4 address on which we are listening
  * @param port Port on which we are listening
@@ -26,8 +27,9 @@ bool UdpDriver::createUdpConnection(const ip4_addr_t &addr, const ip4_port_t por
     if(n_conns == conns.size()){
         return false;
     }
-    LOCK_TCPIP_CORE();
+
     UdpConnection udp_conn(addr, port);
+    LOCK_TCPIP_CORE();
     err_t err = udp_bind(udp_conn.pcb, IP_ADDR_ANY, port); //to receive multicast
     UNLOCK_TCPIP_CORE();
 
@@ -64,7 +66,10 @@ bool UdpDriver::sendPacket(const ip4_addr_t &destAddr, const ip4_port_t destPort
 
     const UdpConnection& conn = *begin;
 
+
+    LOCK_TCPIP_CORE();
     err_t err = udp_sendto(conn.pcb, &buffer, &(destAddr), destPort);
+    UNLOCK_TCPIP_CORE();
 
     if(err != ERR_OK){
         printf("UDP TRANSMIT NOT SUCCESSFUL %s:%u size: %u err: %i\n", ipaddr_ntoa(&destAddr), destPort, buffer.tot_len, err);

@@ -6,6 +6,7 @@
 #include "rtps/communication/PBufWrapper.h"
 #include <cstring>
 
+using rtps::PBufWrapper;
 
 PBufWrapper::PBufWrapper() : firstElement(nullptr){
 }

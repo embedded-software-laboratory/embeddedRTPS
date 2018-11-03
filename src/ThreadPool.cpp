@@ -6,6 +6,7 @@
 #include "rtps/ThreadPool.h"
 #include "lwip/tcpip.h"
 
+using rtps::ThreadPool;
 
 bool ThreadPool::startThreads(){
     if(running){

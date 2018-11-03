@@ -14,13 +14,11 @@ class LwipInterfaceMock {
 public:
     static udp_pcb *udpNew(void) {
         static udp_pcb *id = new udp_pcb;
-        printf("Creating pcb  pcb %p", id);
         id++;
         return id;
     }
 
     static void udpRemove(udp_pcb *pcb) {
-        printf("Removing pcb %p", pcb);
         delete pcb;
     }
 };

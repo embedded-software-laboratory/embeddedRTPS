@@ -14,33 +14,41 @@
 
 #include <array>
 
-struct Workload_t{
-    ip4_addr_t addr;
-    uint16_t port;
-    uint16_t size;
-    uint8_t* data;
-};
+namespace rtps {
 
-class ThreadPool{
-private:
-    bool running = false;
-    UdpDriver transport;
-    std::array<sys_thread_t, Config::THREAD_POOL_NUM_WRITERS> writers;
+    struct Workload_t {
+        ip4_addr_t addr;
+        uint16_t port;
+        uint16_t size;
+        uint8_t *data;
+    };
 
-    ThreadSafeCircularBuffer<Workload_t, Config::THREAD_POOL_WORKLOAD_QUEUE_LENGTH> inputQueue;
-    ThreadSafeCircularBuffer<PBufWrapper, Config::THREAD_POOL_WORKLOAD_QUEUE_LENGTH> outputQueue;
+    class ThreadPool {
+    private:
+        bool running = false;
+        UdpDriver transport;
+        std::array<sys_thread_t, Config::THREAD_POOL_NUM_WRITERS> writers;
 
-    static void readCallback(void *arg, udp_pcb *pcb, pbuf *p, const ip_addr_t *addr, ip4_port_t port);
-    static void sendFunction(void *arg);
-    static void writerFunction(void *arg);
+        ThreadSafeCircularBuffer<Workload_t, Config::THREAD_POOL_WORKLOAD_QUEUE_LENGTH> inputQueue;
+        ThreadSafeCircularBuffer<PBufWrapper, Config::THREAD_POOL_WORKLOAD_QUEUE_LENGTH> outputQueue;
 
-public:
-    bool startThreads();
-    void stopThreads();
-    bool addConnection(const ip4_addr_t &addr, const ip4_port_t port);
-    void addWorkload(Workload_t&& work);
+        static void readCallback(void *arg, udp_pcb *pcb, pbuf *p, const ip_addr_t *addr, ip4_port_t port);
+
+        static void sendFunction(void *arg);
+
+        static void writerFunction(void *arg);
+
+    public:
+        bool startThreads();
+
+        void stopThreads();
+
+        bool addConnection(const ip4_addr_t &addr, const ip4_port_t port);
+
+        void addWorkload(Workload_t &&work);
 
 
-};
+    };
+}
 
 #endif //RTPS_THREADPOOL_H

@@ -9,43 +9,50 @@
 #include "lwip/udp.h"
 #include "LwipInterface.h"
 
-template <class UdpInterface = LwipInterface>
-struct UdpConnectionT{
-    udp_pcb* pcb = nullptr;
-    ip4_addr addr;
-    uint16_t port;
-    bool is_multicast = false;
+namespace rtps {
 
-    UdpConnectionT() = default;
+    template<class UdpInterface = LwipInterface>
+    struct UdpConnectionT {
+        udp_pcb *pcb = nullptr;
+        ip4_addr addr;
+        uint16_t port;
+        bool is_multicast = false;
 
-    UdpConnectionT(ip4_addr addr, uint16_t port)
-    : addr(addr), port(port){
-        pcb = UdpInterface::udpNew();
-    }
+        UdpConnectionT() = default;
 
-    UdpConnectionT& operator=(UdpConnectionT&& other){
-        addr = other.addr;
-        port = other.port;
-        is_multicast = other.is_multicast;
+        UdpConnectionT(ip4_addr addr, uint16_t port)
+                : addr(addr), port(port) {
+            LOCK_TCPIP_CORE();
+            pcb = UdpInterface::udpNew();
+            UNLOCK_TCPIP_CORE();
+        }
 
-        if(other.pcb != nullptr){
-            if(pcb != nullptr){
-                UdpInterface::udpRemove(pcb);
+        UdpConnectionT &operator=(UdpConnectionT &&other) {
+            addr = other.addr;
+            port = other.port;
+            is_multicast = other.is_multicast;
+
+            if (other.pcb != nullptr) {
+                if (pcb != nullptr) {
+                    UdpInterface::udpRemove(pcb);
+                }
+                pcb = other.pcb;
+                other.pcb = nullptr;
             }
-            pcb = other.pcb;
-            other.pcb = nullptr;
+            return *this;
         }
-        return *this;
-    }
 
-    ~UdpConnectionT(){
-        if(pcb != nullptr){
-            UdpInterface::udpRemove(pcb);
-            pcb = nullptr;
+        ~UdpConnectionT() {
+            if (pcb != nullptr) {
+                LOCK_TCPIP_CORE();
+                UdpInterface::udpRemove(pcb);
+                UNLOCK_TCPIP_CORE();
+                pcb = nullptr;
+            }
         }
-    }
 
-};
+    };
 
-using UdpConnection = UdpConnectionT<>; // <> required before C17
+    using UdpConnection = UdpConnectionT<>; // <> required before C17
+}
 #endif //RTPS_UDPCONNECTION_H

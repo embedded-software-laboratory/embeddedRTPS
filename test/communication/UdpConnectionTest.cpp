@@ -16,7 +16,7 @@
 
 
 TEST(UpdConnection, MoveSemantics){
-    using UdpConnection = UdpConnectionT<LwipInterfaceMock>;
+    using UdpConnection = rtps::UdpConnectionT<LwipInterfaceMock>;
 
     std::array<UdpConnection, 5> conns;
     EXPECT_EQ(conns[0].pcb, nullptr);
