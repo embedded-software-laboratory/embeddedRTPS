@@ -41,7 +41,7 @@ struct BufferMock{
         return true;
     }
 
-    bool append(BufferMock&& other){
+    void append(BufferMock&& other){
         buffer.insert(std::end(buffer), std::begin(other.buffer), std::end(other.buffer));
         reserved = other.reserved;
         other.buffer.clear();

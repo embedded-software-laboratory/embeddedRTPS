@@ -81,4 +81,5 @@ rtps::Time_t rtps::getCurrentTimeStamp(){
     uint32_t nowMs = sys_now();
     now.seconds = (int32_t) nowMs / 1000;
     now.fraction = ((nowMs % 1000)/1000);
+    return now;
 }
