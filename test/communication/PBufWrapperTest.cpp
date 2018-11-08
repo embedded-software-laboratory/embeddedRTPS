@@ -65,13 +65,21 @@ TEST_F(EmptyPBufWrapper, Reserve_DoesNotOverrideExisiting){
     wrapper.reserve(5);
 
     ASSERT_EQ(wrapper.firstElement, old);
-
 }
 
-class WrapperWith10ByteReserved : public ::testing::Test{
+TEST_F(EmptyPBufWrapper, Reserve_DoesNothingWhenAlreadyReservedEnough){
+    wrapper.reserve(10);
+
+    bool success = wrapper.reserve(5);
+
+    EXPECT_TRUE(success);
+    EXPECT_EQ(wrapper.spaceLeft(), 10);
+}
+
+class PBufWrapperWith10ByteReserved : public ::testing::Test{
 protected:
     PBufWrapper wrapper;
-    std::array<uint8_t, 10> data = {0,1,2,3,4,5,6,7,8,9};
+    std::array<uint8_t, 10> data{0,1,2,3,4,5,6,7,8,9};
 
     void SetUp() override{
         rtps::init();
@@ -81,7 +89,7 @@ protected:
     }
 };
 
-TEST_F(WrapperWith10ByteReserved, AppendData_CanAdd10Byte){
+TEST_F(PBufWrapperWith10ByteReserved, AppendData_CanAdd10Byte){
 
     bool success = wrapper.append(data.data(), data.size());
 
@@ -91,7 +99,7 @@ TEST_F(WrapperWith10ByteReserved, AppendData_CanAdd10Byte){
     }
 }
 
-TEST_F(WrapperWith10ByteReserved, AppendData_CanAdd5ByteTwoTimes){
+TEST_F(PBufWrapperWith10ByteReserved, AppendData_CanAdd5ByteTwoTimes){
 
     bool success1 = wrapper.append(data.data(), 5);
     bool success2 = wrapper.append(data.data(), 5);
@@ -103,7 +111,7 @@ TEST_F(WrapperWith10ByteReserved, AppendData_CanAdd5ByteTwoTimes){
     }
 }
 
-TEST_F(WrapperWith10ByteReserved, AppendData_CannotAdd10BytesAfterAdding5){
+TEST_F(PBufWrapperWith10ByteReserved, AppendData_CannotAdd10BytesAfterAdding5){
     wrapper.append(data.data(), 5);
 
     bool success = wrapper.append(data.data(), data.size());
@@ -111,13 +119,25 @@ TEST_F(WrapperWith10ByteReserved, AppendData_CannotAdd10BytesAfterAdding5){
     ASSERT_FALSE(success);
 }
 
-TEST_F(WrapperWith10ByteReserved, ReserveAppend_WorksWhenNotEnoughSpaceLeft){
+TEST_F(PBufWrapperWith10ByteReserved, ReserveAppend_WorksWhenNotEnoughSpaceLeft){
     wrapper.append(data.data(), 5);
 
     bool successRes = wrapper.reserve(data.size());
     ASSERT_TRUE(successRes);
-    bool successAppend= wrapper.append(data.data(), data.size());
+    bool successAppend = wrapper.append(data.data(), data.size());
     ASSERT_TRUE(successAppend);
+}
+
+TEST_F(PBufWrapperWith10ByteReserved, MoveAssignment_ToEmpty_KeepsSpace){
+    wrapper.append(data.data(), 1);
+
+    PBufWrapper emptyWrapper;
+    emptyWrapper = std::move(wrapper);
+
+    bool successWithToMuch = emptyWrapper.append(data.data(), data.size());
+    ASSERT_FALSE(successWithToMuch);
+    bool successWithExactCount = emptyWrapper.append(data.data(), data.size()-1);
+    ASSERT_TRUE(successWithExactCount);
 }
 
 TEST(PBufWrapperTest, AllocByCtorFillAndFree){
@@ -141,16 +161,21 @@ protected:
     static_assert(lengthFirst < lengthData);
     const static uint16_t lengthSecond = lengthData - lengthFirst;
     PBufWrapper wrapper;
-    const std::array<uint8_t, lengthFirst> first{};
-    std::array<uint8_t, lengthSecond> second{};
+    const std::array<uint8_t, lengthData> zeros{};
+    uint8_t* first;
+    uint8_t* second;
 
     void SetUp() override{
         rtps::init();
-        wrapper.reserve(lengthFirst); // reserve to get position of first empty byte correct
-        wrapper.firstElement->tot_len += lengthFirst;
-        wrapper.firstElement->next = new pbuf{nullptr, second.data(), lengthSecond, lengthSecond, 0, 1, 120, 0};
-        std::memcpy(wrapper.firstElement->payload, first.data(), lengthFirst);
-        std::memcpy(wrapper.firstElement->next->payload, second.data(), lengthSecond);
+        wrapper.reserve(lengthFirst);
+        wrapper.reserve(lengthFirst + lengthSecond);
+        ASSERT_NE(wrapper.firstElement->next, nullptr) << "PBufWrapperWithTwoElementChain: Need two chains, go one.";
+        // Fill with zeros, so we can tell a difference
+        std::memcpy(wrapper.firstElement->payload, zeros.data(), lengthFirst);
+        std::memcpy(wrapper.firstElement->next->payload, zeros.data(), lengthSecond);
+
+        first = static_cast<uint8_t*>(wrapper.firstElement->payload);
+        second = static_cast<uint8_t*>(wrapper.firstElement->next->payload);
     }
 
     void TearDown() override{
@@ -164,7 +189,7 @@ TEST_F(PBufWrapperWithTwoElementChain, Append_FillsBothCorrectly){
 
     bool success = wrapper.append(data, lengthData);
 
-    EXPECT_TRUE(success);
+    ASSERT_TRUE(success);
     for(int i=0; i<lengthFirst; i++){
         EXPECT_EQ(((uint8_t*)wrapper.firstElement->payload)[i], data[i]);
     }
@@ -192,4 +217,75 @@ TEST_F(PBufWrapperWithTwoElementChain, Append_DoesNotCopyTooMuchInSecondElement)
 
     ASSERT_EQ(second[positionToCheck - lengthFirst], 0);
 }
+
+
+class TwoPBufWrapperThisAndOther : public ::testing::Test{
+protected:
+    PBufWrapper thisWrapper{10};
+    PBufWrapper otherWrapper{12};
+
+    std::array<uint8_t, 10> data{0,1,2,3,4,5,6,7,8,9};
+    const std::array<uint8_t, 10> zeros{};
+    pbuf* thisElement;
+    pbuf* otherElement;
+    uint16_t combinedSize;
+
+    void SetUp() override{
+        ASSERT_TRUE(thisWrapper.isValid());
+        ASSERT_TRUE(otherWrapper.isValid());
+
+        thisElement = thisWrapper.firstElement;
+        otherElement = otherWrapper.firstElement;
+        combinedSize = otherElement->tot_len + thisElement->tot_len;
+
+        std::memcpy(thisElement->payload, zeros.data(), thisElement->len);
+        std::memcpy(otherElement->payload, zeros.data(), otherElement->len);
+
+        ASSERT_EQ(otherElement->next, nullptr); // Need single element, no chain
+    }
+};
+
+
+TEST_F(TwoPBufWrapperThisAndOther, Append_AnotherWrapper_ToEmptyWrapperBehavesAsMoveAssignemnt){
+    PBufWrapper emptyWrapper;
+
+    emptyWrapper.append(std::move(otherWrapper));
+
+    EXPECT_EQ(emptyWrapper.firstElement, otherElement);
+}
+
+TEST_F(TwoPBufWrapperThisAndOther, Append_AnotherWrapper_MovesChainElement){
+
+    thisWrapper.append(std::move(otherWrapper));
+
+    EXPECT_EQ(thisElement->next, otherElement);
+    ASSERT_EQ(otherWrapper.firstElement, nullptr);
+}
+
+TEST_F(TwoPBufWrapperThisAndOther, Append_AnotherWrapper_AdjustsSize){
+    thisWrapper.append(std::move(otherWrapper));
+
+    EXPECT_EQ(thisElement->tot_len, combinedSize);
+}
+
+TEST_F(TwoPBufWrapperThisAndOther, Append_Itself_DoesNothing){
+
+    thisWrapper.append(std::move(thisWrapper));
+
+    EXPECT_EQ(thisWrapper.firstElement, thisElement);
+}
+
+TEST_F(TwoPBufWrapperThisAndOther, Appends_Data_ContinuesAtEndAfterAppendWrapper){
+    thisWrapper.append(data.data(), 2);
+    otherWrapper.append(data.data(), 2);
+    thisWrapper.append(std::move(otherWrapper));
+
+    thisWrapper.append(data.data(), 2);
+
+    EXPECT_EQ(((uint8_t*)thisElement->payload)[2], 0);
+    EXPECT_EQ(((uint8_t*)otherElement->payload)[2], data[0]);
+    EXPECT_EQ(((uint8_t*)otherElement->payload)[3], data[1]);
+}
+
+
 

@@ -11,12 +11,17 @@ using rtps::PBufWrapper;
 PBufWrapper::PBufWrapper(data_size_t length)
     : firstElement(pbuf_alloc(m_layer, length, m_type)){
     // TODO Can I move this to initializer list?
-    m_nextEmptyByte = {firstElement,0};
+    if(isValid()){
+        m_nextEmptyByte = {firstElement,0};
+        m_freeSpace = length;
+    }
 }
 
 PBufWrapper& PBufWrapper::operator=(PBufWrapper&& other){
     addr = other.addr;
     port = other.port;
+    m_freeSpace = other.m_freeSpace;
+    m_nextEmptyByte = other.m_nextEmptyByte;
     if(other.firstElement != nullptr){
         if(firstElement != nullptr){
             pbuf_free(firstElement);
@@ -39,14 +44,11 @@ bool PBufWrapper::isValid() const{
 }
 
 rtps::data_size_t PBufWrapper::spaceLeft() const{
-    if(firstElement == nullptr){
-        return 0;
-    }
-    return firstElement->tot_len - m_usedMemory;
+    return m_freeSpace;
 }
 
 bool PBufWrapper::append(const uint8_t *const data, data_size_t length){
-    if(firstElement == nullptr || spaceLeft() < length){
+    if(firstElement == nullptr || m_freeSpace < length){
         return false;
     }
 
@@ -67,12 +69,58 @@ bool PBufWrapper::append(const uint8_t *const data, data_size_t length){
             m_nextEmptyByte = {currentElement->next, 0};
         }
     }
-    m_usedMemory += length;
+    m_freeSpace -= length;
     return true;
 }
 
+void PBufWrapper::append(PBufWrapper&& other){
+    if(this == &other){
+        printf("PBufWrapper::append applied to itself");
+        return;
+    }
+    if(this->firstElement == nullptr){
+        *this = std::move(other);
+        return;
+    }
+
+    pbuf* const currentElement = getLastElement();
+
+    pbuf* const newElement = other.firstElement;
+    currentElement->next = newElement;
+    other.firstElement = nullptr;
+
+    adjustSizeUntil(newElement);
+
+    m_freeSpace = other.m_freeSpace;
+    m_nextEmptyByte = other.m_nextEmptyByte;
+}
+
+pbuf* PBufWrapper::getLastElement(){
+    if(this->firstElement == nullptr){
+        return nullptr;
+    }
+
+    pbuf* currentElement = this->firstElement;
+    while(currentElement->next != nullptr){
+        currentElement = currentElement->next;
+    }
+    return currentElement;
+}
+
+void PBufWrapper::adjustSizeUntil(const pbuf* const newElement){
+    pbuf* elementToResize = this->firstElement;
+    while(elementToResize != newElement){
+        elementToResize->tot_len += newElement->tot_len;
+        elementToResize = elementToResize->next;
+    }
+}
+
 bool PBufWrapper::reserve(data_size_t length) {
-    auto additionalAllocation = length - spaceLeft();
+    auto additionalAllocation = length - m_freeSpace;
+    if(additionalAllocation <= 0){
+        return true;
+    }
+
     return increaseSize(additionalAllocation);
 }
 
@@ -82,15 +130,17 @@ bool PBufWrapper::increaseSize(uint16_t length){
         return false;
     }
 
+    m_freeSpace += length;
+
     if(firstElement == nullptr){
         firstElement = allocation;
     }else{
         pbuf* current = firstElement;
-        current->tot_len += length;
+        current->tot_len += allocation->len;
 
         while(current->next != nullptr){
             current = current->next;
-            current->tot_len += length;
+            current->tot_len += allocation->len;
         }
         current->next = allocation;
     }

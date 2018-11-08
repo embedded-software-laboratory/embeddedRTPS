@@ -31,15 +31,23 @@ namespace rtps {
         PBufWrapper() = default;
         explicit PBufWrapper(data_size_t length);
 
-        PBufWrapper &operator=(PBufWrapper &&other) noexcept;
+        PBufWrapper& operator=(PBufWrapper&& other) noexcept;
 
         ~PBufWrapper();
 
         bool isValid() const;
 
-        bool append(const uint8_t *const data, data_size_t length);
+        bool append(const uint8_t* const data, data_size_t length);
+
+        /**
+         * Note that unused reserved memory is now part of the wrapper. New calls to append(uint8_t*[...]) will
+         * continue behind the appended wrapper
+         */
+        void append(PBufWrapper&& other);
 
         bool reserve(data_size_t length);
+
+        data_size_t spaceLeft() const;
 
 
     private:
@@ -48,12 +56,14 @@ namespace rtps {
         constexpr static pbuf_layer m_layer = PBUF_TRANSPORT;
         constexpr static pbuf_type m_type = PBUF_POOL;
 
-        data_size_t m_usedMemory = 0;
+        data_size_t m_freeSpace = 0; // TODO change to memory_free for more efficient reserve
         PBufPosition m_nextEmptyByte{nullptr, 0};
 
-
-        data_size_t spaceLeft() const;
         bool increaseSize(uint16_t length);
+
+        pbuf* getLastElement();
+
+        void adjustSizeUntil(const pbuf* const newElement);
     };
 
 }
