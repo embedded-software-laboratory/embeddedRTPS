@@ -78,8 +78,14 @@ namespace rtps{
 
     // Described as long but there wasn't any definition. Other than 32 bit does not conform the default values
     struct Time_t{
-        int32_t seconds;           // time in seconds
-        uint32_t fraction; // time in sec/2^32
+        int32_t seconds;   // time in seconds
+        uint32_t fraction; // time in sec/2^32 (?)
+
+        static Time_t create(int32_t s, uint32_t ns){
+            static constexpr double factor = (static_cast<uint64_t>(1) << 32)/1000000000.;
+            auto fraction = static_cast<uint32_t>(ns*factor);
+            return Time_t{s, fraction};
+        }
     };
 
     struct VendorId_t{
