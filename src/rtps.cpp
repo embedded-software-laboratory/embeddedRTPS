@@ -11,6 +11,7 @@
 #include "lwip/sys.h"
 #include <time.h>
 #include <lwip/tcpip.h>
+#include <cmath>
 
 #ifdef HIGHTEC_TOOLCHAIN
     #include "ethernetif.h"
@@ -72,4 +73,12 @@ void rtps::init(){
         LwIPInit();
         initialized = true;
     }
+}
+
+rtps::Time_t rtps::getCurrentTimeStamp(){
+    Time_t now;
+    // TODO FIX
+    uint32_t nowMs = sys_now();
+    now.seconds = (int32_t) nowMs / 1000;
+    now.fraction = ((nowMs % 1000)/1000);
 }
