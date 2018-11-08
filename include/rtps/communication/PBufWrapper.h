@@ -49,6 +49,8 @@ namespace rtps {
 
         data_size_t spaceLeft() const;
 
+        data_size_t getSize() const;
+
 
     private:
 
@@ -61,7 +63,7 @@ namespace rtps {
 
         bool increaseSize(uint16_t length);
 
-        pbuf* getLastElement();
+        pbuf* getLastElement() const;
 
         void adjustSizeUntil(const pbuf* const newElement);
     };

@@ -47,6 +47,14 @@ rtps::data_size_t PBufWrapper::spaceLeft() const{
     return m_freeSpace;
 }
 
+rtps::data_size_t PBufWrapper::getSize() const{
+    if(firstElement == nullptr){
+        return 0;
+    }
+
+    return firstElement->tot_len - m_freeSpace;
+}
+
 bool PBufWrapper::append(const uint8_t *const data, data_size_t length){
     if(firstElement == nullptr || m_freeSpace < length){
         return false;
@@ -95,7 +103,7 @@ void PBufWrapper::append(PBufWrapper&& other){
     m_nextEmptyByte = other.m_nextEmptyByte;
 }
 
-pbuf* PBufWrapper::getLastElement(){
+pbuf* PBufWrapper::getLastElement() const{
     if(this->firstElement == nullptr){
         return nullptr;
     }

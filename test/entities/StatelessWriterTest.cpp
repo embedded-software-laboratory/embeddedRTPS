@@ -40,7 +40,7 @@ TEST_F(EmptyRTPSWriterWithoutKey, AddChangeReturnsCorrectChange){
     EXPECT_EQ(change.size, size);
 }
 
-TEST_F(EmptyRTPSWriterWithoutKey, IgnoresOnlyAddsKindAlive){
+TEST_F(EmptyRTPSWriterWithoutKey, IgnoresAllKindThatAreNotAlive){
     SequenceNumber_t current = writer.getLastSequenceNumber();
 
     ChangeKind_t irrelevantKinds[] = {ChangeKind_t::INVALID,
@@ -59,7 +59,7 @@ protected:
 
 };
 
-TEST_F(EmptyRTPSWriterWithKey, IgnoresIgnoresInvalid){
+TEST_F(EmptyRTPSWriterWithKey, IgnoresKindInvalid){
     SequenceNumber_t current = writer.getLastSequenceNumber();
 
     CacheChange change = writer.newChange(ChangeKind_t::INVALID, nullptr, 0);
@@ -68,7 +68,7 @@ TEST_F(EmptyRTPSWriterWithKey, IgnoresIgnoresInvalid){
     EXPECT_EQ(current, writer.getLastSequenceNumber());
 
 }
-TEST_F(EmptyRTPSWriterWithKey, AddsAllBesideInvalid){
+TEST_F(EmptyRTPSWriterWithKey, AddsAllKindsBesideInvalid){
     ChangeKind_t relevantKinds[] = {ChangeKind_t::ALIVE,
                                     ChangeKind_t::NOT_ALIVE_DISPOSED,
                                     ChangeKind_t::NOT_ALIVE_UNREGISTERED};
@@ -79,8 +79,10 @@ TEST_F(EmptyRTPSWriterWithKey, AddsAllBesideInvalid){
         EXPECT_EQ(change.kind, kind);
         EXPECT_EQ(writer.getLastSequenceNumber(), expected);
     }
-
 }
+
+
+
 
 
 

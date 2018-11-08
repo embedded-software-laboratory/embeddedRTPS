@@ -128,6 +128,13 @@ TEST_F(PBufWrapperWith10ByteReserved, ReserveAppend_WorksWhenNotEnoughSpaceLeft)
     ASSERT_TRUE(successAppend);
 }
 
+TEST_F(PBufWrapperWith10ByteReserved, GetSize_IsZeroIfOnlyReserved){
+
+    auto size = wrapper.getSize();
+
+    EXPECT_EQ(size, 0);
+}
+
 TEST_F(PBufWrapperWith10ByteReserved, MoveAssignment_ToEmpty_KeepsSpace){
     wrapper.append(data.data(), 1);
 

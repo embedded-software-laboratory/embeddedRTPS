@@ -41,6 +41,12 @@ struct BufferMock{
         return true;
     }
 
+    bool append(BufferMock&& other){
+        buffer.insert(std::end(buffer), std::begin(other.buffer), std::end(other.buffer));
+        reserved = other.reserved;
+        other.buffer.clear();
+    }
+
     bool reserve(rtps::data_size_t length){
         reserved = length;
         return true;
@@ -56,7 +62,7 @@ struct BufferMock{
 
     template <size_t N>
     void hasElementsAt(std::array<uint8_t, N> elements, int beginIdx){
-        ASSERT_GE(buffer.size(), N);
+        ASSERT_GE(buffer.size() - beginIdx, N);
         for(size_t i =0; i < N; ++i){
             EXPECT_EQ(buffer[beginIdx + i], elements[i]) << "Failed at index " << i << '\n';
         }
