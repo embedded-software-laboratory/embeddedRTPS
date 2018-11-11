@@ -135,6 +135,19 @@ TEST_F(PBufWrapperWith10ByteReserved, GetSize_IsZeroIfOnlyReserved){
     EXPECT_EQ(size, 0);
 }
 
+TEST_F(PBufWrapperWith10ByteReserved, Clone_MakesADeepCopy){
+
+    PBufWrapper clone = wrapper.deepCopy();
+
+    EXPECT_EQ(clone.spaceLeft(), wrapper.spaceLeft());
+    EXPECT_NE(clone.firstElement, wrapper.firstElement);
+
+    auto size = wrapper.firstElement->tot_len;
+    uint8_t data[size];
+    pbuf_copy_partial(wrapper.firstElement, data, size, 0);
+    EXPECT_EQ(pbuf_memcmp(clone.firstElement, 0, data, size), 0);
+}
+
 TEST_F(PBufWrapperWith10ByteReserved, MoveAssignment_ToEmpty_KeepsSpace){
     wrapper.append(data.data(), 1);
 

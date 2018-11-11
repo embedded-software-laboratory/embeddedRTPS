@@ -33,6 +33,7 @@ PBufWrapper& PBufWrapper::operator=(const PBufWrapper &other) {
         pbuf_ref(other.firstElement);
     }
     firstElement = other.firstElement;
+    return *this;
 }
 
 PBufWrapper& PBufWrapper::operator=(PBufWrapper&& other){
@@ -61,6 +62,22 @@ PBufWrapper::~PBufWrapper(){
         pbuf_free(firstElement);
         // Life ends here. No need to set to nullptr.
     }
+}
+
+PBufWrapper PBufWrapper::deepCopy() const{
+    PBufWrapper clone;
+    clone.copySimpleMembersAndResetBuffer(*this);
+    // Decided not to use clone because it prevents const
+
+    clone.firstElement = pbuf_alloc(m_layer, this->firstElement->tot_len, m_type);
+    if(clone.firstElement != nullptr){
+        if(pbuf_copy(clone.firstElement, this->firstElement) != ERR_OK){
+            printf("PBufWrapper::deepCopy: Copy of pbuf failed");
+        }
+    }else{
+        clone.m_freeSpace = 0;
+    }
+    return clone;
 }
 
 bool PBufWrapper::isValid() const{

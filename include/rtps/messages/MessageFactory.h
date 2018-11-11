@@ -18,7 +18,6 @@
 namespace rtps{
     namespace MessageFactory{
         constexpr std::array<uint8_t, 4> PROTOCOL_TYPE{'R', 'T', 'P', 'S'};
-        constexpr std::array<uint8_t, 2> PROTOCOL_VERSION{PROTOCOLVERSION.major, PROTOCOLVERSION.minor};
 
         template <class Buffer>
         void addHeader(Buffer& buffer, const GuidPrefix_t& guidPrefix){
@@ -33,7 +32,7 @@ namespace rtps{
         };
 
         template <class Buffer>
-        void addSubMessageTimeStamp(Buffer& buffer, bool addValidTimestamp){
+        void addSubMessageTimeStamp(Buffer& buffer, bool setInvalid=false){
             SubmessageHeader header;
             header.submessageId = SubmessageKind::INFO_TS;
 
@@ -43,27 +42,26 @@ namespace rtps{
             header.flags = FLAG_BIG_ENDIAN;
 #endif
 
-            if(addValidTimestamp){
-                header.submessageLength = sizeof(Time_t);
-            }else{
+            if(setInvalid){
                 header.flags |= FLAG_INVALIDATE;
                 header.submessageLength = 0;
+            }else{
+                header.submessageLength = sizeof(Time_t);
             }
 
             header.serializeInto(buffer);
 
-            if(addValidTimestamp){
-                // TODO Add some timestamp.
+            if(!setInvalid){
                 buffer.reserve(header.submessageLength);
                 Time_t now = getCurrentTimeStamp();
-                buffer.append(&now.seconds, sizeof(Time_t::seconds));
-                buffer.append(&now.fraction, sizeof(Time_t::fraction));
+                buffer.append(reinterpret_cast<uint8_t*>(&now.seconds), sizeof(Time_t::seconds));
+                buffer.append(reinterpret_cast<uint8_t*>(&now.fraction), sizeof(Time_t::fraction));
             }
 
         }
 
         template <class Buffer>
-        void addSubMessageData(Buffer& buffer, const Buffer& filledPayload, const Buffer& filledInlineQos){
+        void addSubMessageData(Buffer& buffer, const Buffer& filledPayload, bool containsInlineQos){
             SubmessageData msg;
             msg.header.submessageId = SubmessageKind::DATA;
 #if IS_LITTLE_ENDIAN
@@ -71,10 +69,10 @@ namespace rtps{
 #else
             msg.header.flags = FLAG_BIG_ENDIAN;
 #endif
-            const auto sizeMessage = sizeof(SubmessageData) + filledPayload.getSize() + filledInlineQos.getSize();
+            const auto sizeMessage = sizeof(SubmessageData) + filledPayload.getSize();
             msg.header.submessageLength = sizeMessage - sizeof(SubmessageData::header);
 
-            if(filledInlineQos.isValid()){
+            if(containsInlineQos){
                 msg.header.flags |= FLAG_INLINE_QOS;
             }
             if(filledPayload.isValid()){
@@ -84,21 +82,11 @@ namespace rtps{
             buffer.reserve(sizeMessage);
             msg.serializeInto(buffer);
 
-            if(filledInlineQos.isValid()){
-                buffer.append(filledInlineQos);
-            }
-            if(filledPayload.isValid()){
-                buffer.append(filledInlineQos);
+            PBufWrapper clonedPayload = filledPayload.deepCopy();
+            if(clonedPayload.isValid()){
+                buffer.append(std::move(clonedPayload));
             }
         }
-
-        template <class Buffer>
-        void addSPDPBCastMessage(Buffer& buffer, Buffer& filledPayload, Buffer&& filledInlineQos){
-            addSubMessageTimeStamp(buffer, true);
-
-            addSubMessageData(buffer, filledPayload, std::forward(filledInlineQos));
-        }
-
     }
 }
 

@@ -58,34 +58,18 @@ void ThreadPool::writerFunction(void* arg){
             PBufWrapper buffer;
             pWriter->createMessageCallback(buffer);
 
-            /*
 
-            PBufWrapper pbWrapper(current.size);
-            if (!pbWrapper.isValid()) {
-                printf("Error while allocating pbuf\n");
-                continue;
-            }
-
-
-            const bool success = pbWrapper.append(current.data, current.size);
-            if(!success){
-                printf("Error while filling pbuf\n");
-                continue;
-            }
-
-            pbWrapper.addr = current.addr;
-            pbWrapper.port = current.port;
-            pool->outputQueue.moveElementIntoBuffer(std::move(pbWrapper));
+            pool->outputQueue.moveElementIntoBuffer(std::move(buffer));
 
             // Execute with tcpip-thread
             tcpip_callback(sendFunction, pool); // Blocking i.e. thread safe call
-             */
+
         }
     }
 }
 
 void ThreadPool::sendFunction(void* arg) {
-    ThreadPool *pool = static_cast<ThreadPool*>(arg);
+    auto pool = static_cast<ThreadPool*>(arg);
     if(pool == nullptr){
         printf("nullptr passed to send function\n");
         return;

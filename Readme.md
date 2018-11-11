@@ -69,3 +69,8 @@ This can be resolved by adding another Symbol to C/C++ General -> Path and Symbo
 Symbol: __cplusplus  
 Value: 201103L
 5. Another Symbol we need is HIGHTEC_TOOLCHAIN. This is required to trigger the correct #ifdefs. 
+
+# Problem FAQ
+## LwIp
+-  Assertion **Function called without core lock** failed, even though locks are used:  
+There is a problem when using nested "LOCK_TCPIP_CORE()" calls. Lock is granted (each time), the first unlock frees it and other threads can proceed.

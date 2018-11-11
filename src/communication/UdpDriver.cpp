@@ -67,9 +67,7 @@ bool UdpDriver::sendPacket(const ip4_addr_t &destAddr, const ip4_port_t destPort
     const UdpConnection& conn = *begin;
 
 
-    LOCK_TCPIP_CORE();
     err_t err = udp_sendto(conn.pcb, &buffer, &(destAddr), destPort);
-    UNLOCK_TCPIP_CORE();
 
     if(err != ERR_OK){
         printf("UDP TRANSMIT NOT SUCCESSFUL %s:%u size: %u err: %i\n", ipaddr_ntoa(&destAddr), destPort, buffer.tot_len, err);

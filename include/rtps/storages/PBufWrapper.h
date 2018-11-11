@@ -30,13 +30,17 @@ namespace rtps {
 
         PBufWrapper() = default;
         explicit PBufWrapper(data_size_t length);
-        PBufWrapper(const PBufWrapper& other);
-        PBufWrapper(PBufWrapper&& other);
 
+        // Shallow Copy. No copying of the underlying pbuf. Just another reference like a shared pointer.
+        PBufWrapper(const PBufWrapper& other);
         PBufWrapper& operator=(const PBufWrapper& other) noexcept;
+
+        PBufWrapper(PBufWrapper&& other);
         PBufWrapper& operator=(PBufWrapper&& other) noexcept;
 
         ~PBufWrapper();
+
+        PBufWrapper deepCopy() const;
 
         bool isValid() const;
 
@@ -57,12 +61,12 @@ namespace rtps {
         pbuf* getLastElement() const;
 
 
-
     private:
 
 
         constexpr static pbuf_layer m_layer = PBUF_TRANSPORT;
         constexpr static pbuf_type m_type = PBUF_POOL;
+
 
         data_size_t m_freeSpace = 0; // TODO change to memory_free for more efficient reserve
 

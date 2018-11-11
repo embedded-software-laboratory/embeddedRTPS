@@ -1,11 +1,10 @@
-#include "gtest/gtest.h"
-
 /*
  * This test file is used to get a better understanding of how LwIp works and defines behavior assumptions.
  * No claim to completeness.
  *
  * Author: Andreas Wüstenberg (andreas.wuestenberg@rwth-aachen.de)
  */
+#include <gtest/gtest.h>
 
 #include "rtps/storages/PBufWrapper.h"
 #include "rtps/communication/UdpDriver.h"
@@ -16,7 +15,14 @@
 #include <lwip/tcpip.h>
 #include <cstring>
 
-TEST(LwIp, pcbAllocation){
+class LwIp : public ::testing::Test{
+protected:
+    void SetUp() override{
+        rtps::init();
+    }
+};
+
+TEST_F(LwIp, pcbAllocation){
     // TODO rtps::init needs to be called. Currently omitted because it's done in another test. Needs a better method
     for(int i=1; i < 10000; i++){
         pbuf* buff = pbuf_alloc(PBUF_TRANSPORT, i, PBUF_POOL);
@@ -36,7 +42,7 @@ void writer(void* args){
     ready[id] = true;
 }
 
-TEST(LwIp, pcbAllocationMultiThreaded){
+TEST_F(LwIp, pcbAllocationMultiThreaded){
     uint8_t first = 0;
     uint8_t second = 1;
     sys_thread_new("First", writer, &first, 10000, 3);
@@ -49,7 +55,7 @@ bool callbackFinished = false;
 uint8_t data0[] = {'d', 'e', 'a', 'd', 'b', 'e', 'e', 'f'};
 uint8_t data1[] = {'d', 'e', 'c', 'a', 'f', 'b', 'a', 'd'};
 
-void receiveCallback(void *arg, udp_pcb *pcb, pbuf *p, const ip_addr_t *addr, uint16_t port){
+void receiveCallback(void*, udp_pcb*, pbuf* p, const ip_addr_t*, uint16_t){
     auto* receivedData = static_cast<uint8_t*>(p->payload);
     EXPECT_EQ(p->tot_len, p->len);
     for(int i=0; i< p->len; ++i){
@@ -62,9 +68,7 @@ void receiveCallback(void *arg, udp_pcb *pcb, pbuf *p, const ip_addr_t *addr, ui
     callbackFinished = true;
 }
 
-TEST(LwIP, SendSelfChainedPBufs){
-
-    rtps::init();
+TEST_F(LwIp, SendSelfChainedPBufs){
     const uint16_t port = 7050;
     ip4_addr addr;
     LWIP_PORT_INIT_IPADDR(&addr); // self
@@ -89,9 +93,24 @@ TEST(LwIP, SendSelfChainedPBufs){
     while(!callbackFinished);
 }
 
-TEST(LwIP, CanCombineAndSplitChains){
-    pbuf* first = pbuf_alloc(PBUF_TRANSPORT, 8, PBUF_POOL);
-    pbuf* second = pbuf_alloc(PBUF_TRANSPORT, 9, PBUF_POOL);
-    pbuf* third = pbuf_alloc(PBUF_TRANSPORT, 8, PBUF_POOL);
-    pbuf* fourth = pbuf_alloc(PBUF_TRANSPORT, 9, PBUF_POOL);
+TEST_F(LwIp, CombineAndSplitBehavior){
+    pbuf* first  = pbuf_alloc(PBUF_TRANSPORT, 10, PBUF_POOL);
+    pbuf* second = pbuf_alloc(PBUF_TRANSPORT, 10, PBUF_POOL);
+    pbuf* third  = pbuf_alloc(PBUF_TRANSPORT, 10, PBUF_POOL);
+    pbuf* fourth = pbuf_alloc(PBUF_TRANSPORT, 10, PBUF_POOL);
+
+    pbuf_chain(first, second);
+    pbuf_chain(first, third);
+    pbuf_chain(first, fourth);
+
+    EXPECT_EQ(first->tot_len, 40);
+
+    pbuf* tail = pbuf_dechain(second);
+
+    EXPECT_EQ(tail, third);
+    EXPECT_EQ(first->tot_len, 40); // NOTE: THIS IS NOT ADJUSTED!!
+    EXPECT_EQ(second->tot_len, 10);
+    EXPECT_EQ(tail->tot_len, 20);
+
+
 }

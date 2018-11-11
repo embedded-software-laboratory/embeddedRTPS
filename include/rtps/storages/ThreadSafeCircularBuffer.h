@@ -7,25 +7,11 @@
 #define RTPS_THREADSAFEQUEUE_H
 
 #include "lwip/sys.h"
+#include "rtps/utils/Lock.h"
 #include <array>
 
 
 namespace rtps {
-
-    namespace {
-        class Lock {
-        public:
-            Lock(sys_mutex_t &passedMutex) : mutex(passedMutex) {
-                sys_mutex_lock(&mutex);
-            };
-
-            ~Lock() {
-                sys_mutex_unlock(&mutex);
-            };
-        private:
-            sys_mutex_t &mutex;
-        };
-    }
 
     template<typename T, uint16_t SIZE>
     class ThreadSafeCircularBuffer {

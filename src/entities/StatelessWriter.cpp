@@ -9,7 +9,9 @@
 namespace rtps{
 
     StatelessWriter::StatelessWriter(TopicKind_t topicKind): topicKind(topicKind){
-
+        if (sys_mutex_new(&mutex) != ERR_OK) {
+            printf("Failed to create mutex \n");
+        }
     }
 
     SequenceNumber_t StatelessWriter::getLastSequenceNumber() const{
@@ -28,6 +30,7 @@ namespace rtps{
         change.data.append(data, size);
         change.sequenceNumber = lastChangeSequenceNumber;
 
+        Lock lock(mutex);
         return history.addChange(std::move(change));
     }
 
@@ -36,12 +39,16 @@ namespace rtps{
     }
 
     void StatelessWriter::createMessageCallback(PBufWrapper& buffer){
-        //const CacheChange* next = history.getNextCacheChange();
+        Lock lock(mutex);
 
-        //pbuf* originalFirst = next->data.firstElement;
-        //pbuf* originalLast = next->data.
-        //MessageFactory::addHeader(buffer, GUIDPREFIX_UNKNOWN);
-        //MessageFactory::addSubMessageData(buffer, next->data, PBufWrapper{});
+        const CacheChange* next = history.getNextCacheChange();
+
+        MessageFactory::addHeader(buffer, GUIDPREFIX_UNKNOWN);
+        MessageFactory::addSubMessageTimeStamp(buffer);
+        MessageFactory::addSubMessageData(buffer, next->data, false);
+
+        IP4_ADDR((&buffer.addr), 192,168,0, 42);
+        buffer.port = 7050;
     }
 
 

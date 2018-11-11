@@ -14,7 +14,7 @@
 
 namespace rtps {
 
-    class StatelessWriter : Writer{
+class StatelessWriter : public Writer{
     public:
         HistoryCache history;
 
@@ -34,7 +34,7 @@ namespace rtps {
         const TopicKind_t topicKind;
         const ReliabilityKind_t reliability = ReliabilityKind_t::BEST_EFFORT;
         SequenceNumber_t lastChangeSequenceNumber = {0, 0};
-
+        sys_mutex_t mutex;
 
         bool isIrrelevant(ChangeKind_t kind) const;
 

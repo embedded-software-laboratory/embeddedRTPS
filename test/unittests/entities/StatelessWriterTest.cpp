@@ -13,9 +13,10 @@
 
 using namespace rtps;
 
-class EmptyRTPSWriterWithoutKey : public ::testing::Test{
+class EmptyRTPSWriter : public ::testing::Test{
 protected:
-    StatelessWriter writer{TopicKind_t::NO_KEY};
+    const TopicKind_t arbitraryType = TopicKind_t::NO_KEY;
+    StatelessWriter writer{arbitraryType};
     static const data_size_t size = 5;
     const uint8_t data[size] = {0, 1, 2, 3, 4};
 
@@ -24,12 +25,12 @@ protected:
     }
 };
 
-TEST_F(EmptyRTPSWriterWithoutKey, StartsWithSequenceNumberZero){
+TEST_F(EmptyRTPSWriter, StartsWithSequenceNumberZero){
     SequenceNumber_t expectedResult{0,0};
     EXPECT_EQ(writer.getLastSequenceNumber(), expectedResult);
 }
 
-TEST_F(EmptyRTPSWriterWithoutKey, newChange_IncreasesSequenceNumber){
+TEST_F(EmptyRTPSWriter, newChange_IncreasesSequenceNumber){
     SequenceNumber_t expectedResult {0,1};
 
     writer.newChange(ChangeKind_t::ALIVE, nullptr, 0);
@@ -37,7 +38,7 @@ TEST_F(EmptyRTPSWriterWithoutKey, newChange_IncreasesSequenceNumber){
     EXPECT_EQ(writer.getLastSequenceNumber(), expectedResult);
 }
 
-TEST_F(EmptyRTPSWriterWithoutKey, newChange_ReturnsChange){
+TEST_F(EmptyRTPSWriter, newChange_ReturnsChange){
     ChangeKind_t expectedKind = ChangeKind_t::ALIVE;
 
     const CacheChange* change = writer.newChange(expectedKind, data, size);
@@ -45,7 +46,7 @@ TEST_F(EmptyRTPSWriterWithoutKey, newChange_ReturnsChange){
     EXPECT_NE(change, nullptr);
 }
 
-TEST_F(EmptyRTPSWriterWithoutKey, newChange_SetCorrectValues){
+TEST_F(EmptyRTPSWriter, newChange_SetCorrectValues){
     ChangeKind_t expectedKind = ChangeKind_t::ALIVE;
     const data_size_t size = 5;
     uint8_t data[size] = {};
@@ -56,6 +57,27 @@ TEST_F(EmptyRTPSWriterWithoutKey, newChange_SetCorrectValues){
     EXPECT_EQ(change->sequenceNumber, writer.getLastSequenceNumber());
     EXPECT_THAT(change->data, PBufContains(data, size));
 }
+
+TEST_F(EmptyRTPSWriter, newChange_DoesAllocateExactSize){
+    const data_size_t size = 5;
+    uint8_t data[size] = {};
+
+    const CacheChange* change = writer.newChange(ChangeKind_t::ALIVE, data, size);
+
+    EXPECT_EQ(change->data.firstElement->tot_len, size);
+}
+
+
+class EmptyRTPSWriterWithoutKey : public ::testing::Test{
+protected:
+    StatelessWriter writer{TopicKind_t::NO_KEY};
+    static const data_size_t size = 5;
+    const uint8_t data[size] = {0, 1, 2, 3, 4};
+
+    void SetUp() override{
+        rtps::init();
+    }
+};
 
 TEST_F(EmptyRTPSWriterWithoutKey, newChange_IgnoresAllKindThatAreNotAlive){
     SequenceNumber_t current = writer.getLastSequenceNumber();
