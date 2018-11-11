@@ -54,6 +54,7 @@ namespace rtps {
 
         data_size_t getSize() const;
 
+        pbuf* getLastElement() const;
 
 
 
@@ -64,11 +65,10 @@ namespace rtps {
         constexpr static pbuf_type m_type = PBUF_POOL;
 
         data_size_t m_freeSpace = 0; // TODO change to memory_free for more efficient reserve
-        PBufPosition m_nextEmptyByte{nullptr, 0};
+
+        data_size_t getCurrentOffset() const;
 
         bool increaseSize(uint16_t length);
-
-        pbuf* getLastElement() const;
 
         void adjustSizeUntil(const pbuf* const newElement);
 
