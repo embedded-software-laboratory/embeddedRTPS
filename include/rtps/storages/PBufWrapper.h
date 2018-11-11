@@ -30,7 +30,10 @@ namespace rtps {
 
         PBufWrapper() = default;
         explicit PBufWrapper(data_size_t length);
+        PBufWrapper(const PBufWrapper& other);
+        PBufWrapper(PBufWrapper&& other);
 
+        PBufWrapper& operator=(const PBufWrapper& other) noexcept;
         PBufWrapper& operator=(PBufWrapper&& other) noexcept;
 
         ~PBufWrapper();
@@ -52,6 +55,8 @@ namespace rtps {
         data_size_t getSize() const;
 
 
+
+
     private:
 
 
@@ -66,6 +71,8 @@ namespace rtps {
         pbuf* getLastElement() const;
 
         void adjustSizeUntil(const pbuf* const newElement);
+
+        void copySimpleMembersAndResetBuffer(const PBufWrapper& other);
     };
 
 }

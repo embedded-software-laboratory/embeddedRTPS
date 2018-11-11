@@ -14,7 +14,8 @@ namespace rtps {
     namespace Config {
         static const rtps::VendorId_t VENDOR_ID = {0x11, 0x11};
 
-
+        static const int NUM_UNICAST_LOCATORS = 10;
+        static const int NUM_MULTICAST_LOCATORS = 5;
 
         static const int MAX_NUM_UDP_CONNECTIONS = 20;
 

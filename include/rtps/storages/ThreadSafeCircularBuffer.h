@@ -84,6 +84,11 @@ namespace rtps {
                 return false;
             }
         }
+
+        void clear(){
+            Lock lock(mutex);
+            head = tail;
+        }
     };
 
 }

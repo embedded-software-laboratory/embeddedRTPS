@@ -7,7 +7,7 @@
  * Author: Andreas Wüstenberg (andreas.wuestenberg@rwth-aachen.de)
  */
 
-#include "rtps/communication/PBufWrapper.h"
+#include "rtps/storages/PBufWrapper.h"
 #include "rtps/communication/UdpDriver.h"
 #include "rtps/rtps.h"
 #include <lwip/udp.h>
@@ -49,7 +49,7 @@ bool callbackFinished = false;
 uint8_t data0[] = {'d', 'e', 'a', 'd', 'b', 'e', 'e', 'f'};
 uint8_t data1[] = {'d', 'e', 'c', 'a', 'f', 'b', 'a', 'd'};
 
-void result(void *arg, udp_pcb *pcb, pbuf *p, const ip_addr_t *addr, uint16_t port){
+void receiveCallback(void *arg, udp_pcb *pcb, pbuf *p, const ip_addr_t *addr, uint16_t port){
     auto* receivedData = static_cast<uint8_t*>(p->payload);
     EXPECT_EQ(p->tot_len, p->len);
     for(int i=0; i< p->len; ++i){
@@ -70,7 +70,7 @@ TEST(LwIP, SendSelfChainedPBufs){
     LWIP_PORT_INIT_IPADDR(&addr); // self
 
     rtps::UdpDriver driver;
-    driver.createUdpConnection(addr, port, result);
+    driver.createUdpConnection(addr, port, receiveCallback);
 
 
     pbuf* first = pbuf_alloc(PBUF_TRANSPORT, 8, PBUF_POOL);
@@ -87,4 +87,11 @@ TEST(LwIP, SendSelfChainedPBufs){
 
     driver.sendPacket(addr, port, *first);
     while(!callbackFinished);
+}
+
+TEST(LwIP, CanCombineAndSplitChains){
+    pbuf* first = pbuf_alloc(PBUF_TRANSPORT, 8, PBUF_POOL);
+    pbuf* second = pbuf_alloc(PBUF_TRANSPORT, 9, PBUF_POOL);
+    pbuf* third = pbuf_alloc(PBUF_TRANSPORT, 8, PBUF_POOL);
+    pbuf* fourth = pbuf_alloc(PBUF_TRANSPORT, 9, PBUF_POOL);
 }

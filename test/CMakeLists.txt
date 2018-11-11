@@ -3,12 +3,15 @@ cmake_minimum_required(VERSION 3.12)
 include_directories(${gtest_SOURCE_DIR}/include ${gtest_SOURCE_DIR})
 include_directories(${rtps_SOURCE_DIR}/include ${rtps_SOURCE_DIR})
 
-add_executable(runTests ThreadPoolTest.cpp
-                        typesTest.cpp
-                        communication/UdpConnectionTest.cpp
-                        communication/PBufWrapperTest.cpp
-                        entities/StatelessWriterTest.cpp
-                        messages/MessageFactoryTest.cpp
+add_executable(runTests
+                        unittests/typesTest.cpp
+                        unittests/ThreadPoolTest.cpp
+                        unittests/communication/UdpConnectionTest.cpp
+        unittests/storages/PBufWrapperTest.cpp
+                        unittests/entities/StatelessWriterTest.cpp
+                        unittests/messages/MessageFactoryTest.cpp
+        unittests/storages/HistoryCacheTest.cpp
+                        integration/Writer_ThreadPool_Reader.cpp
         )
 target_link_libraries(runTests gtest gtest_main gmock gmock_main)
 target_link_libraries(runTests rtps lwip)

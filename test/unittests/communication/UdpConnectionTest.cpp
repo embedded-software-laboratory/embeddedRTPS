@@ -7,7 +7,7 @@
 #include <gmock/gmock.h>
 
 #include "rtps/rtps.h"
-#include "rtps/communication/PBufWrapper.h"
+#include "rtps/storages/PBufWrapper.h"
 #include "rtps/communication/UdpConnection.h"
 #include "rtps/communication/UdpDriver.h"
 #include "LwipInterfaceMock.h"

@@ -100,7 +100,7 @@ namespace rtps{
             return high == other.high && low == other.low;
         }
         bool operator<(const SequenceNumber_t& other) const{
-            return high < other.high && low < other.low;
+            return high < other.high || (high == other.high && low < other.low);
         }
 
         SequenceNumber_t& operator++(){

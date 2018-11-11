@@ -3,7 +3,7 @@
  * Author: Andreas Wüstenberg (andreas.wuestenberg@rwth-aachen.de)
  */
 
-#include "rtps/communication/PBufWrapper.h"
+#include "rtps/storages/PBufWrapper.h"
 #include <cstring>
 
 using rtps::PBufWrapper;
@@ -17,19 +17,45 @@ PBufWrapper::PBufWrapper(data_size_t length)
     }
 }
 
+// TODO: Speed improvement possible
+PBufWrapper::PBufWrapper(const PBufWrapper& other) {
+    *this = other;
+}
+
+// TODO: Speed improvement possible
+PBufWrapper::PBufWrapper(PBufWrapper&& other) noexcept{
+    *this = std::move(other);
+}
+
+PBufWrapper& PBufWrapper::operator=(const PBufWrapper &other) {
+    copySimpleMembersAndResetBuffer(other);
+
+    if(other.firstElement!= nullptr){
+        pbuf_ref(other.firstElement);
+    }
+    firstElement = other.firstElement;
+}
+
 PBufWrapper& PBufWrapper::operator=(PBufWrapper&& other){
-    addr = other.addr;
-    port = other.port;
-    m_freeSpace = other.m_freeSpace;
-    m_nextEmptyByte = other.m_nextEmptyByte;
+    copySimpleMembersAndResetBuffer(other);
+
     if(other.firstElement != nullptr){
-        if(firstElement != nullptr){
-            pbuf_free(firstElement);
-        }
         firstElement = other.firstElement;
         other.firstElement = nullptr;
     }
     return *this;
+}
+
+void PBufWrapper::copySimpleMembersAndResetBuffer(const PBufWrapper& other){
+    addr = other.addr;
+    port = other.port;
+    m_freeSpace = other.m_freeSpace;
+    m_nextEmptyByte = other.m_nextEmptyByte;
+
+    if(firstElement != nullptr){
+        pbuf_free(firstElement);
+        firstElement = nullptr;
+    }
 }
 
 PBufWrapper::~PBufWrapper(){

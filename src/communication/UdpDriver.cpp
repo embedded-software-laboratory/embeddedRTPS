@@ -4,7 +4,7 @@
  */
 
 #include "rtps/communication/UdpDriver.h"
-#include "rtps/communication/PBufWrapper.h"
+#include "rtps/storages/PBufWrapper.h"
 #include "lwip/tcpip.h"
 
 

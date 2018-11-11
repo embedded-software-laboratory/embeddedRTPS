@@ -6,7 +6,7 @@
 #include <gtest/gtest.h>
 
 #include "BufferMock.h"
-#include "rtps/communication/PBufWrapper.h"
+#include "rtps/storages/PBufWrapper.h"
 #include "rtps/messages/MessageFactory.h"
 #include "rtps/types.h"
 

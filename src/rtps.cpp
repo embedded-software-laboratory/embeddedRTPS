@@ -75,6 +75,15 @@ void rtps::init(){
     }
 }
 
+void rtps::start(){
+    threadPool.startThreads();
+}
+
+void rtps::stop(){
+    threadPool.stopThreads();
+    threadPool.clearQueues();
+}
+
 rtps::Time_t rtps::getCurrentTimeStamp(){
     Time_t now;
     // TODO FIX

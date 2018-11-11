@@ -7,9 +7,13 @@
 #define RTPS_RTPS_H
 
 #include "types.h"
+#include "rtps/ThreadPool.h"
 
 namespace rtps{
+    static ThreadPool threadPool;
     void init();
+    void start();
+    void stop();
     Time_t getCurrentTimeStamp();
 }
 

@@ -8,20 +8,14 @@
 
 #include "config.h"
 #include "lwip/sys.h"
-#include "rtps/communication/PBufWrapper.h"
-#include "rtps/utils/ThreadSafeCircularBuffer.h"
+#include "rtps/storages/PBufWrapper.h"
 #include "rtps/communication/UdpDriver.h"
+#include "rtps/entities/Writer.h"
+#include "rtps/storages/ThreadSafeCircularBuffer.h"
 
 #include <array>
 
 namespace rtps {
-
-    struct Workload_t {
-        ip4_addr_t addr;
-        uint16_t port;
-        uint16_t size;
-        uint8_t* data;
-    };
 
     class ThreadPool {
     private:
@@ -29,8 +23,9 @@ namespace rtps {
         UdpDriver transport;
         std::array<sys_thread_t, Config::THREAD_POOL_NUM_WRITERS> writers;
 
-        ThreadSafeCircularBuffer<Workload_t, Config::THREAD_POOL_WORKLOAD_QUEUE_LENGTH> inputQueue;
+        ThreadSafeCircularBuffer<Writer*, Config::THREAD_POOL_WORKLOAD_QUEUE_LENGTH> inputQueue;
         ThreadSafeCircularBuffer<PBufWrapper, Config::THREAD_POOL_WORKLOAD_QUEUE_LENGTH> outputQueue;
+
 
         static void readCallback(void* arg, udp_pcb* pcb, pbuf* p, const ip_addr_t* addr, ip4_port_t port);
 
@@ -43,9 +38,11 @@ namespace rtps {
 
         void stopThreads();
 
+        void clearQueues();
+
         bool addConnection(const ip4_addr_t& addr, const ip4_port_t port);
 
-        void addWorkload(Workload_t&& work);
+        void addWorkload(Writer& writer);
 
 
     };

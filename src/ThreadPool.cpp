@@ -28,28 +28,37 @@ void ThreadPool::stopThreads() {
     running = false;
 }
 
+void ThreadPool::clearQueues(){
+    inputQueue.clear();
+    outputQueue.clear();
+}
+
 bool ThreadPool::addConnection(const ip4_addr_t& addr, const ip4_port_t port) {
     return transport.createUdpConnection(addr, port, readCallback);
 }
 
-void ThreadPool::addWorkload(Workload_t&& work){
-    inputQueue.moveElementIntoBuffer(std::move(work));
+void ThreadPool::addWorkload(Writer& writer){
+    inputQueue.moveElementIntoBuffer(&writer);
 }
 
 void ThreadPool::writerFunction(void* arg){
-    ThreadPool* pool = static_cast<ThreadPool*>(arg);
+    auto pool = static_cast<ThreadPool*>(arg);
     if(pool == nullptr){
         printf("nullptr passed to writer function\n");
         return;
     }
     while(pool->running){
         {
-            Workload_t current;
-            const bool isWorkToDo = pool->inputQueue.moveFirstInto(current);
+            Writer* pWriter;
+            auto isWorkToDo = pool->inputQueue.moveFirstInto(pWriter);
             if(!isWorkToDo){
-                sys_msleep(10);
+                sys_msleep(1);
                 continue;
             }
+            PBufWrapper buffer;
+            pWriter->createMessageCallback(buffer);
+
+            /*
 
             PBufWrapper pbWrapper(current.size);
             if (!pbWrapper.isValid()) {
@@ -70,6 +79,7 @@ void ThreadPool::writerFunction(void* arg){
 
             // Execute with tcpip-thread
             tcpip_callback(sendFunction, pool); // Blocking i.e. thread safe call
+             */
         }
     }
 }

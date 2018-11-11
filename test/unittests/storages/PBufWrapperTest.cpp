@@ -7,7 +7,7 @@
 #include <cstring>
 
 #include "rtps/rtps.h"
-#include "rtps/communication/PBufWrapper.h"
+#include "rtps/storages/PBufWrapper.h"
 
 using rtps::PBufWrapper;
 
@@ -147,6 +147,15 @@ TEST_F(PBufWrapperWith10ByteReserved, MoveAssignment_ToEmpty_KeepsSpace){
     ASSERT_TRUE(successWithExactCount);
 }
 
+TEST(TwoPBufWrappers, CopyAssignment_IncreasesRefCountAndFreeWorks){
+    {
+        PBufWrapper wrapper{10};
+        PBufWrapper otherWrapper;
+        otherWrapper = wrapper;
+        EXPECT_EQ(wrapper.firstElement->ref, 2);
+    }
+}
+
 TEST(PBufWrapperTest, AllocByCtorFillAndFree){
     const uint8_t data[]{0,1,2,3,4,5,6,7};
     uint16_t size = sizeof(data)/sizeof(data[0]);
@@ -257,6 +266,7 @@ TEST_F(TwoPBufWrapperThisAndOther, Append_AnotherWrapper_ToEmptyWrapperBehavesAs
     PBufWrapper emptyWrapper;
 
     emptyWrapper.append(std::move(otherWrapper));
+
 
     EXPECT_EQ(emptyWrapper.firstElement, otherElement);
 }

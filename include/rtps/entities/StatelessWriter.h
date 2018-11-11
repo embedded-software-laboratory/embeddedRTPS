@@ -7,26 +7,34 @@
 #define RTPS_RTPSWRITER_H
 
 #include "rtps/types.h"
+#include "rtps/config.h"
+#include "rtps/entities/Writer.h"
+#include "rtps/storages/PBufWrapper.h"
+#include "rtps/storages/HistoryCache.h"
 
 namespace rtps {
 
-    struct CacheChange{
-        ChangeKind_t kind = ChangeKind_t::INVALID;
-        uint8_t* data = nullptr;
-        uint16_t size = 0;
-    };
-
-    class StatelessWriter {
+    class StatelessWriter : Writer{
     public:
+        HistoryCache history;
+
         StatelessWriter(TopicKind_t topicKind);
 
+        const CacheChange* newChange(ChangeKind_t kind, const uint8_t* data, data_size_t size);
+
         SequenceNumber_t getLastSequenceNumber() const;
-        CacheChange newChange(ChangeKind_t kind, uint8_t* data, data_size_t size);
+
+        bool addReaderLocator(Locator_t& loc);
+
+        bool removeReaderLocator(Locator_t& loc);
+
+        void createMessageCallback(PBufWrapper& buffer) override;
 
     private:
-        TopicKind_t topicKind;
+        const TopicKind_t topicKind;
+        const ReliabilityKind_t reliability = ReliabilityKind_t::BEST_EFFORT;
         SequenceNumber_t lastChangeSequenceNumber = {0, 0};
-        CacheChange change;
+
 
         bool isIrrelevant(ChangeKind_t kind) const;
 

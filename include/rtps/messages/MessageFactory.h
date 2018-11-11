@@ -63,7 +63,7 @@ namespace rtps{
         }
 
         template <class Buffer>
-        void addSubMessageData(Buffer& buffer, Buffer&& filledPayload, Buffer&& filledInlineQos){
+        void addSubMessageData(Buffer& buffer, const Buffer& filledPayload, const Buffer& filledInlineQos){
             SubmessageData msg;
             msg.header.submessageId = SubmessageKind::DATA;
 #if IS_LITTLE_ENDIAN
@@ -85,18 +85,18 @@ namespace rtps{
             msg.serializeInto(buffer);
 
             if(filledInlineQos.isValid()){
-                buffer.append(std::forward(filledInlineQos));
+                buffer.append(filledInlineQos);
             }
             if(filledPayload.isValid()){
-                buffer.append(std::forward(filledInlineQos));
+                buffer.append(filledInlineQos);
             }
         }
 
         template <class Buffer>
-        void addSPDPBCastMessage(Buffer& buffer, Buffer&& filledPayload, Buffer&& filledInlineQos){
+        void addSPDPBCastMessage(Buffer& buffer, Buffer& filledPayload, Buffer&& filledInlineQos){
             addSubMessageTimeStamp(buffer, true);
 
-            addSubMessageData(buffer, std::forward(filledPayload), std::forward(filledInlineQos));
+            addSubMessageData(buffer, filledPayload, std::forward(filledInlineQos));
         }
 
     }
