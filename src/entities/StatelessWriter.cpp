@@ -8,8 +8,8 @@
 
 namespace rtps{
 
-    StatelessWriter::StatelessWriter(TopicKind_t topicKind, const Locator_t& locator)
-        : topicKind(topicKind), locator(locator){
+    StatelessWriter::StatelessWriter(TopicKind_t topicKind, Locator_t locator, ThreadPool* threadPool)
+        : threadPool(threadPool), topicKind(topicKind), locator(locator){
         if (sys_mutex_new(&mutex) != ERR_OK) {
             printf("Failed to create mutex \n");
         }
@@ -31,8 +31,13 @@ namespace rtps{
         change.data.append(data, size);
         change.sequenceNumber = lastChangeSequenceNumber;
 
+
         Lock lock(mutex);
-        return history.addChange(std::move(change));
+        auto result = history.addChange(std::move(change));
+        if(threadPool != nullptr){
+            threadPool->addWorkload(*this);
+        }
+        return result;
     }
 
     void StatelessWriter::removeChange(const CacheChange* change){
@@ -42,7 +47,9 @@ namespace rtps{
 
     void StatelessWriter::unsentChangesReset() {
         history.resetSend();
-        // TODO notify Threadpool
+        if(threadPool != nullptr){
+            threadPool->addWorkload(*this);
+        }
     }
 
     bool StatelessWriter::isIrrelevant(ChangeKind_t kind) const{

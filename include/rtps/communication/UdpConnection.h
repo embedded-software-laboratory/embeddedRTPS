@@ -22,9 +22,9 @@ namespace rtps {
 
         UdpConnectionT(ip4_addr addr, uint16_t port)
                 : addr(addr), port(port) {
-            LOCK_TCPIP_CORE();
+            //LOCK_TCPIP_CORE();
             pcb = UdpInterface::udpNew();
-            UNLOCK_TCPIP_CORE();
+            //UNLOCK_TCPIP_CORE();
         }
 
         UdpConnectionT &operator=(UdpConnectionT &&other) {
@@ -44,9 +44,9 @@ namespace rtps {
 
         ~UdpConnectionT() {
             if (pcb != nullptr) {
-                LOCK_TCPIP_CORE();
+                //LOCK_TCPIP_CORE();
                 UdpInterface::udpRemove(pcb);
-                UNLOCK_TCPIP_CORE();
+                //UNLOCK_TCPIP_CORE();
                 pcb = nullptr;
             }
         }

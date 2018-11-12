@@ -10,7 +10,6 @@
 #include "rtps/ThreadPool.h"
 
 namespace rtps{
-    static ThreadPool threadPool;
     void init();
     void start();
     void stop();

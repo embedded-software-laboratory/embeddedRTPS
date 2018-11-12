@@ -12,18 +12,23 @@ namespace rtps {
 #define IS_LITTLE_ENDIAN 1
 
     namespace Config {
-        static const rtps::VendorId_t VENDOR_ID = {13, 37};
+        const VendorId_t VENDOR_ID = {13, 37};
 
-        static const int STATELESS_WRITER_NUM_LOCATORS = 5;
-        static const int NUM_UNICAST_LOCATORS = 10;
-        static const int NUM_MULTICAST_LOCATORS = 5;
+        const int SPDP_RESEND_PERIOD_MS = 500;
+        const int SPDP_WRITER_STACKSIZE = 500;
+        const int SPDP_WRITER_PRIO = 3;
 
-        static const int MAX_NUM_UDP_CONNECTIONS = 20;
 
-        static const int THREAD_POOL_NUM_WRITERS = 2;
-        static const int THREAD_POOL_WRITER_STACKSIZE = 1024;
-        static const int THREAD_POOL_WRITER_PRIO = 3;
-        static const int THREAD_POOL_WORKLOAD_QUEUE_LENGTH = 100;
+        const int STATELESS_WRITER_NUM_LOCATORS = 5;
+        const int NUM_UNICAST_LOCATORS = 10;
+        const int NUM_MULTICAST_LOCATORS = 5;
+
+        const int MAX_NUM_UDP_CONNECTIONS = 20;
+
+        const int THREAD_POOL_NUM_WRITERS = 2;
+        const int THREAD_POOL_WRITER_STACKSIZE = 1024;
+        const int THREAD_POOL_WRITER_PRIO = 3;
+        const int THREAD_POOL_WORKLOAD_QUEUE_LENGTH = 100;
     }
 }
 

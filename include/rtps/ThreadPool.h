@@ -18,6 +18,19 @@
 namespace rtps {
 
     class ThreadPool {
+    public:
+
+        bool startThreads();
+
+        void stopThreads();
+
+        void clearQueues();
+
+        bool addConnection(const ip4_addr_t& addr, const ip4_port_t port);
+
+        void addWorkload(Writer& writer);
+
+
     private:
         bool running = false;
         UdpDriver transport;
@@ -32,18 +45,6 @@ namespace rtps {
         static void sendFunction(void* arg);
 
         static void writerFunction(void* arg);
-
-    public:
-        bool startThreads();
-
-        void stopThreads();
-
-        void clearQueues();
-
-        bool addConnection(const ip4_addr_t& addr, const ip4_port_t port);
-
-        void addWorkload(Writer& writer);
-
 
     };
 }

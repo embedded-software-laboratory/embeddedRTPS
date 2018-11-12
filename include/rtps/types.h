@@ -15,6 +15,8 @@
 // TODO subnamespaces
 namespace rtps{
 
+    // TODO move types to where they are needed!
+
     typedef uint16_t ip4_port_t;
     typedef uint16_t data_size_t;
 
@@ -124,10 +126,12 @@ namespace rtps{
         uint32_t port = LOCATOR_PORT_INVALID;
         std::array<uint8_t,16> address = LOCATOR_ADDRESS_INVALID; // TODO make private such that kind and address always match?
 
-        void setUDPv4(uint8_t a, uint8_t b, uint8_t c, uint8_t d, uint32_t port){
-            kind = LocatorKind_t::LOCATOR_KIND_UDPv4;
-            address = {0,0,0,0,0,0,0,0,0,0,0,0,a,b,c,d};
-            this->port = port;
+        static Locator_t createUDPv4Locator(uint8_t a, uint8_t b, uint8_t c, uint8_t d, uint32_t port){
+            Locator_t locator;
+            locator.kind = LocatorKind_t::LOCATOR_KIND_UDPv4;
+            locator.address = {0,0,0,0,0,0,0,0,0,0,0,0,a,b,c,d};
+            locator.port = port;
+            return locator;
         }
     };
 
@@ -162,35 +166,48 @@ namespace rtps{
 
     /* Default Values */
     // TODO memory_reduction_possible
-    constexpr EntityId_t ENTITYID_UNKNOWN = {};
-    constexpr EntityId_t ENTITYID_PARTICIPANT                            = {{00,00,01}, EntityKind_t::BUILD_IN_PARTICIPANT };
-    constexpr EntityId_t ENTITYID_SEDP_BUILTIN_TOPIC_WRITER              = {{00,00,02}, EntityKind_t::BUILD_IN_WRITER_WITH_KEY};
-    constexpr EntityId_t ENTITYID_SEDP_BUILTIN_TOPIC_READER              = {{00,00,02}, EntityKind_t::BUILD_IN_READER_WITH_KEY};
-    constexpr EntityId_t ENTITYID_SEDP_BUILTIN_PUBLICATIONS_WRITER       = {{00,00,03}, EntityKind_t::BUILD_IN_WRITER_WITH_KEY};
-    constexpr EntityId_t ENTITYID_SEDP_BUILTIN_PUBLICATIONS_READER       = {{00,00,03}, EntityKind_t::BUILD_IN_READER_WITH_KEY};
-    constexpr EntityId_t ENTITYID_SEDP_BUILTIN_SUBSCRIPTIONS_WRITER      = {{00,00,04}, EntityKind_t::BUILD_IN_WRITER_WITH_KEY};
-    constexpr EntityId_t ENTITYID_SEDP_BUILTIN_SUBSCRIPTIONS_READER      = {{00,00,04}, EntityKind_t::BUILD_IN_READER_WITH_KEY};
-    constexpr EntityId_t ENTITYID_SPDP_BUILTIN_PARTICIPANT_WRITER        = {{00,01,00}, EntityKind_t::BUILD_IN_WRITER_WITH_KEY};
-    constexpr EntityId_t ENTITYID_SPDP_BUILTIN_PARTICIPANT_READER        = {{00,01,00}, EntityKind_t::BUILD_IN_READER_WITH_KEY};
-    constexpr EntityId_t ENTITYID_P2P_BUILTIN_PARTICIPANT_MESSAGE_WRITER = {{00,02,00}, EntityKind_t::BUILD_IN_WRITER_WITH_KEY};
-    constexpr EntityId_t ENTITYID_P2P_BUILTIN_PARTICIPANT_MESSAGE_READER = {{00,02,00}, EntityKind_t::BUILD_IN_READER_WITH_KEY};
+    const EntityId_t ENTITYID_UNKNOWN = {};
+    const EntityId_t ENTITYID_PARTICIPANT                            = {{00,00,01}, EntityKind_t::BUILD_IN_PARTICIPANT };
+    const EntityId_t ENTITYID_SEDP_BUILTIN_TOPIC_WRITER              = {{00,00,02}, EntityKind_t::BUILD_IN_WRITER_WITH_KEY};
+    const EntityId_t ENTITYID_SEDP_BUILTIN_TOPIC_READER              = {{00,00,02}, EntityKind_t::BUILD_IN_READER_WITH_KEY};
+    const EntityId_t ENTITYID_SEDP_BUILTIN_PUBLICATIONS_WRITER       = {{00,00,03}, EntityKind_t::BUILD_IN_WRITER_WITH_KEY};
+    const EntityId_t ENTITYID_SEDP_BUILTIN_PUBLICATIONS_READER       = {{00,00,03}, EntityKind_t::BUILD_IN_READER_WITH_KEY};
+    const EntityId_t ENTITYID_SEDP_BUILTIN_SUBSCRIPTIONS_WRITER      = {{00,00,04}, EntityKind_t::BUILD_IN_WRITER_WITH_KEY};
+    const EntityId_t ENTITYID_SEDP_BUILTIN_SUBSCRIPTIONS_READER      = {{00,00,04}, EntityKind_t::BUILD_IN_READER_WITH_KEY};
+    const EntityId_t ENTITYID_SPDP_BUILTIN_PARTICIPANT_WRITER        = {{00,01,00}, EntityKind_t::BUILD_IN_WRITER_WITH_KEY};
+    const EntityId_t ENTITYID_SPDP_BUILTIN_PARTICIPANT_READER        = {{00,01,00}, EntityKind_t::BUILD_IN_READER_WITH_KEY};
+    const EntityId_t ENTITYID_P2P_BUILTIN_PARTICIPANT_MESSAGE_WRITER = {{00,02,00}, EntityKind_t::BUILD_IN_WRITER_WITH_KEY};
+    const EntityId_t ENTITYID_P2P_BUILTIN_PARTICIPANT_MESSAGE_READER = {{00,02,00}, EntityKind_t::BUILD_IN_READER_WITH_KEY};
 
-    constexpr GuidPrefix_t GUIDPREFIX_UNKNOWN = {};
+    const GuidPrefix_t GUIDPREFIX_UNKNOWN = {};
 
-    constexpr Time_t TIME_ZERO = {};
-    constexpr Time_t TIME_INVALID = {-1, 0xFFFFFFFF};
-    constexpr Time_t TIME_INFINITE = {0x7FFFFFFF, 0xFFFFFFFF};
+    const uint16_t PB = 7400; // Port Base Number
+    const uint16_t DG = 250; // DomainId Gain
+    const uint16_t PG = 2; // ParticipantId Gain
+    // Additional Offsets
+    const uint16_t D0 =  0;
+    const uint16_t D1 = 10;
+    const uint16_t D2 =  1;
+    const uint16_t D3 = 11;
 
-    constexpr VendorId_t VENDOR_UNKNOWN = {};
+    const ip4_port_t MULTI_CAST_BUILTIN_PORT = PB + DG * 1 + D0;
 
-    constexpr SequenceNumber_t SEQUENCENUMBER_UNKNOWN = {-1, 0};
+    const Locator_t DEFAULT_MULTICAST_LOCATOR = Locator_t::createUDPv4Locator(239,255,0,1, MULTI_CAST_BUILTIN_PORT);
 
-    constexpr ProtocolVersion_t PROTOCOLVERSION_1_0 = {1,0};
-    constexpr ProtocolVersion_t PROTOCOLVERSION_1_1 = {1,1};
-    constexpr ProtocolVersion_t PROTOCOLVERSION_2_0 = {2,0};
-    constexpr ProtocolVersion_t PROTOCOLVERSION_2_1 = {2,1};
-    constexpr ProtocolVersion_t PROTOCOLVERSION_2_2 = {2,2};
-    constexpr ProtocolVersion_t PROTOCOLVERSION = PROTOCOLVERSION_2_2;
+    const ProtocolVersion_t PROTOCOLVERSION_1_0 = {1,0};
+    const ProtocolVersion_t PROTOCOLVERSION_1_1 = {1,1};
+    const ProtocolVersion_t PROTOCOLVERSION_2_0 = {2,0};
+    const ProtocolVersion_t PROTOCOLVERSION_2_1 = {2,1};
+    const ProtocolVersion_t PROTOCOLVERSION_2_2 = {2,2};
+    const ProtocolVersion_t PROTOCOLVERSION = PROTOCOLVERSION_2_2;
+
+    const SequenceNumber_t SEQUENCENUMBER_UNKNOWN = {-1, 0};
+
+    const Time_t TIME_ZERO = {};
+    const Time_t TIME_INVALID = {-1, 0xFFFFFFFF};
+    const Time_t TIME_INFINITE = {0x7FFFFFFF, 0xFFFFFFFF};
+
+    const VendorId_t VENDOR_UNKNOWN = {};
 }
 
 #endif //RTPS_TYPES_H

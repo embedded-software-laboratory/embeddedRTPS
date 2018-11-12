@@ -75,9 +75,10 @@ namespace rtps{
             uint8_t data[];
         };
     }
+
     // TODO
-    constexpr uint8_t CDR_LE[] = {0,1};
-    constexpr uint8_t CDR_BE[] = {0,0};
+    const uint8_t CDR_LE[] = {0,1};
+    const uint8_t CDR_BE[] = {0,0};
 
     enum class SubmessageKind : uint8_t{
         PAD             = 0x01, /* Pad */
@@ -113,7 +114,7 @@ namespace rtps{
 
         template <class Buffer>
         void serializeInto(Buffer &buffer){
-            constexpr auto size = sizeof(Header);
+            const auto size = sizeof(Header);
             buffer.reserve(size);
             buffer.append(reinterpret_cast<uint8_t*>(this), size);
         }
@@ -126,7 +127,7 @@ namespace rtps{
 
         template <class Buffer>
         void serializeInto(Buffer &buffer){
-            constexpr auto size = sizeof(SubmessageHeader);
+            const auto size = sizeof(SubmessageHeader);
             buffer.reserve(size);
             buffer.append(reinterpret_cast<uint8_t*>(this), size);
         }
@@ -142,7 +143,7 @@ namespace rtps{
 
         template <class Buffer>
         void serializeInto(Buffer &buffer){
-            constexpr auto size = sizeof(SubmessageData);
+            const auto size = sizeof(SubmessageData);
             buffer.reserve(size);
             buffer.append(reinterpret_cast<uint8_t*>(this), size);
 

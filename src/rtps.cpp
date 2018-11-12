@@ -26,9 +26,9 @@ static void init(void* arg){
     if(arg == nullptr){
         printf("Failed to init. nullptr passed");
     }
-    sys_sem_t *init_sem = static_cast<sys_sem_t*>(arg);
+    auto init_sem = static_cast<sys_sem_t*>(arg);
 
-    srand((unsigned int)time(0));
+    srand((unsigned int)time(nullptr));
 
     ip4_addr_t ipaddr;
     ip4_addr_t netmask;
@@ -41,7 +41,7 @@ static void init(void* arg){
 #ifdef HIGHTEC_TOOLCHAIN
     netif_add(&netif, &ipaddr, &netmask, &gw, NULL, &ethernetif_init, &tcpip_input);
 #else
-    netif_add(&netif, &ipaddr, &netmask, &gw, NULL, pcapif_init, tcpip_input);
+    netif_add(&netif, &ipaddr, &netmask, &gw, nullptr, pcapif_init, tcpip_input);
 #endif
     netif_set_default(&netif);
     netif_set_up(netif_default);
@@ -51,7 +51,7 @@ static void init(void* arg){
 
 void LwIPInit(){
     /* no stdio-buffering, please! */
-    setvbuf(stdout, NULL,_IONBF, 0);
+    setvbuf(stdout, nullptr ,_IONBF, 0);
 
     err_t err;
     sys_sem_t init_sem;
@@ -76,12 +76,9 @@ void rtps::init(){
 }
 
 void rtps::start(){
-    threadPool.startThreads();
 }
 
 void rtps::stop(){
-    threadPool.stopThreads();
-    threadPool.clearQueues();
 }
 
 rtps::Time_t rtps::getCurrentTimeStamp(){

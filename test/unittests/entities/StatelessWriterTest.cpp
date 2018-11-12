@@ -16,15 +16,14 @@ using namespace rtps;
 class EmptyRTPSWriter : public ::testing::Test{
 protected:
     const TopicKind_t arbitraryType = TopicKind_t::NO_KEY;
-    Locator_t arbitraryLocator;
+    Locator_t arbitraryLocator = Locator_t::createUDPv4Locator(192, 168, 0, 248, 7000);
 
-    StatelessWriter writer{arbitraryType, arbitraryLocator};
+    StatelessWriter writer{arbitraryType, arbitraryLocator, nullptr};
     static const data_size_t size = 5;
     const uint8_t data[size] = {0, 1, 2, 3, 4};
 
     void SetUp() override{
         rtps::init();
-        arbitraryLocator.setUDPv4(192, 168, 0, 248, 7000);
     }
 };
 
@@ -73,14 +72,13 @@ TEST_F(EmptyRTPSWriter, newChange_DoesAllocateExactSize){
 
 class EmptyRTPSWriterWithoutKey : public ::testing::Test{
 protected:
-    Locator_t arbitraryLocator;
-    StatelessWriter writer{TopicKind_t::NO_KEY, arbitraryLocator};
+    Locator_t arbitraryLocator = Locator_t::createUDPv4Locator(192, 168, 0, 248, 7000);
+    StatelessWriter writer{TopicKind_t::NO_KEY, arbitraryLocator, nullptr};
     static const data_size_t size = 5;
     const uint8_t data[size] = {0, 1, 2, 3, 4};
 
     void SetUp() override{
         rtps::init();
-        arbitraryLocator.setUDPv4(192, 168, 0, 248, 7000);
     }
 };
 
@@ -99,12 +97,8 @@ TEST_F(EmptyRTPSWriterWithoutKey, newChange_IgnoresAllKindThatAreNotAlive){
 
 class EmptyRTPSWriterWithKey : public ::testing::Test{
 protected:
-    Locator_t arbitraryLocator;
-    StatelessWriter writer{TopicKind_t::WITH_KEY, arbitraryLocator};
-
-    void SetUp() override{
-        arbitraryLocator.setUDPv4(192, 168, 0, 248, 7000);
-    }
+    Locator_t arbitraryLocator = Locator_t::createUDPv4Locator(192, 168, 0, 248, 7000);
+    StatelessWriter writer{TopicKind_t::WITH_KEY, arbitraryLocator, nullptr};
 };
 
 TEST_F(EmptyRTPSWriterWithKey, newChange_IgnoresKindInvalid){

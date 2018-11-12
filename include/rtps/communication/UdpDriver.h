@@ -32,15 +32,10 @@ namespace rtps {
                     LSB};
         }
 
-        constexpr static ip4_addr defaultMCastGroup() {
-            return transforIP4ToU32(239, 255, 0, 1);
-        }
-
-
-        bool createUdpConnection(const ip4_addr_t &addr, const ip4_port_t port, const udp_rx_func_t callback);
+        bool createUdpConnection(const ip4_addr_t &addr, ip4_port_t port, udp_rx_func_t callback);
 
         // Length is limited by the buffer (pbuf)
-        bool sendPacket(const ip4_addr_t &destAddr, const ip4_port_t destPort, pbuf &buffer);
+        bool sendPacket(const ip4_addr_t &destAddr, ip4_port_t destPort, pbuf &buffer);
 
     };
 }
