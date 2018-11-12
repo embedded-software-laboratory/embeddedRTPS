@@ -75,7 +75,9 @@ namespace rtps{
             uint8_t data[];
         };
     }
-
+    // TODO
+    constexpr uint8_t CDR_LE[] = {0,1};
+    constexpr uint8_t CDR_BE[] = {0,0};
 
     enum class SubmessageKind : uint8_t{
         PAD             = 0x01, /* Pad */
@@ -98,8 +100,8 @@ namespace rtps{
         FLAG_LITTLE_ENDIAN  = (1 << 0),
         FLAG_INVALIDATE     = (1 << 1),
         FLAG_INLINE_QOS     = (1 << 1),
-        FLAG_NO_PAYLOAD     = (0 << 2 | 0 << 1),
-        FLAG_DATA_PAYLOAD   = (0 << 1 | 1 << 1),
+        FLAG_NO_PAYLOAD     = (0 << 3 | 0 << 2),
+        FLAG_DATA_PAYLOAD   = (0 << 3 | 1 << 2),
 
     };
 

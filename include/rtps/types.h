@@ -124,9 +124,10 @@ namespace rtps{
         uint32_t port = LOCATOR_PORT_INVALID;
         std::array<uint8_t,16> address = LOCATOR_ADDRESS_INVALID; // TODO make private such that kind and address always match?
 
-        void setUDPv4(uint8_t a, uint8_t b, uint8_t c, uint8_t d){
+        void setUDPv4(uint8_t a, uint8_t b, uint8_t c, uint8_t d, uint32_t port){
             kind = LocatorKind_t::LOCATOR_KIND_UDPv4;
             address = {0,0,0,0,0,0,0,0,0,0,0,0,a,b,c,d};
+            this->port = port;
         }
     };
 

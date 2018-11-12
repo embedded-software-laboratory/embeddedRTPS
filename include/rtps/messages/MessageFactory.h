@@ -61,7 +61,7 @@ namespace rtps{
         }
 
         template <class Buffer>
-        void addSubMessageData(Buffer& buffer, const Buffer& filledPayload, bool containsInlineQos){
+        void addSubMessageData(Buffer& buffer, const Buffer& filledPayload, bool containsInlineQos, const SequenceNumber_t& SN, const EntityId_t& writerID){
             SubmessageData msg;
             msg.header.submessageId = SubmessageKind::DATA;
 #if IS_LITTLE_ENDIAN
@@ -69,8 +69,7 @@ namespace rtps{
 #else
             msg.header.flags = FLAG_BIG_ENDIAN;
 #endif
-            const auto sizeMessage = sizeof(SubmessageData) + filledPayload.getSize();
-            msg.header.submessageLength = sizeMessage - sizeof(SubmessageData::header);
+            msg.header.submessageLength = sizeof(SubmessageData)  + filledPayload.getSize();
 
             if(containsInlineQos){
                 msg.header.flags |= FLAG_INLINE_QOS;
@@ -79,8 +78,24 @@ namespace rtps{
                 msg.header.flags |= FLAG_DATA_PAYLOAD;
             }
 
-            buffer.reserve(sizeMessage);
+            msg.writerSN = SN;
+            msg.extraFlags = 0;
+            msg.readerId = ENTITYID_UNKNOWN;
+            msg.writerId = writerID;
+
+            constexpr uint16_t octetsToInlineQoS = 4 + 4 + 8; // EntityIds + SequenceNumber
+            msg.octetsToInlineQos = octetsToInlineQoS;
+
+            buffer.reserve(sizeof(SubmessageData) + 4);
             msg.serializeInto(buffer);
+
+#if IS_LITTLE_ENDIAN
+            buffer.append(CDR_LE,2);
+#else
+            buffer.append(CDR_BE,2);
+#endif
+            uint8_t options[] = {0,0};
+            buffer.append(options, 2);
 
             PBufWrapper clonedPayload = filledPayload.deepCopy();
             if(clonedPayload.isValid()){

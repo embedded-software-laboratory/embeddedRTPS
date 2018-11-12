@@ -58,6 +58,9 @@ void ThreadPool::writerFunction(void* arg){
             PBufWrapper buffer;
             pWriter->createMessageCallback(buffer);
 
+            if(!buffer.isValid()){
+                continue;
+            }
 
             pool->outputQueue.moveElementIntoBuffer(std::move(buffer));
 

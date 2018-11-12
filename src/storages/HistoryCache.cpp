@@ -23,9 +23,14 @@ void HistoryCache::removeChange(const CacheChange* change){
     for(auto& entry : buffer){
         if(change == &entry.change){
             entry.used = false;
-            // TODO remove PBufWrapper to free pbuf?
             return;
         }
+    }
+}
+
+void HistoryCache::resetSend() {
+    for(auto& entry : buffer){
+        entry.send = false;
     }
 }
 
@@ -61,6 +66,7 @@ const rtps::CacheChange* HistoryCache::getNextCacheChange(){
             lastReturned++;
         }
         if(buffer[lastReturned].used){
+            buffer[lastReturned].send = true;
             return &(buffer[lastReturned].change);
         }
     }

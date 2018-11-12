@@ -12,8 +12,9 @@ namespace rtps {
 #define IS_LITTLE_ENDIAN 1
 
     namespace Config {
-        static const rtps::VendorId_t VENDOR_ID = {0x11, 0x11};
+        static const rtps::VendorId_t VENDOR_ID = {13, 37};
 
+        static const int STATELESS_WRITER_NUM_LOCATORS = 5;
         static const int NUM_UNICAST_LOCATORS = 10;
         static const int NUM_MULTICAST_LOCATORS = 5;
 

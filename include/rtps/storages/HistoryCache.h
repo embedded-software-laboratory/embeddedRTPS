@@ -33,6 +33,8 @@ namespace rtps{
         const SequenceNumber_t& getSeqNumMin() const;
         const SequenceNumber_t& getSeqNumMax() const;
 
+        void resetSend();
+
 
 
     private:

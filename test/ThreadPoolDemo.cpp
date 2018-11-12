@@ -16,7 +16,7 @@ int main(){
 
     const uint16_t port = 7050;
     ip4_addr addr;
-    IP4_ADDR((&addr), 192,168,0, 42);
+    IP4_ADDR((&addr),192,168,0, 248);
 
     rtps::threadPool.addConnection(addr, port);
     bool started = rtps::threadPool.startThreads();
@@ -25,7 +25,10 @@ int main(){
         return 1;
     }
 
-    rtps::StatelessWriter writer(rtps::TopicKind_t::NO_KEY);
+    rtps::Locator_t locator;
+    locator.setUDPv4(192, 168, 0, 248, port);
+
+    rtps::StatelessWriter writer(rtps::TopicKind_t::NO_KEY, locator);
 
     uint8_t data0[] = {'d', 'e', 'a', 'd', 'b', 'e', 'e', 'f'};
     uint8_t data1[] = {'d', 'e', 'c', 'a', 'f', 'b', 'a', 'd'};
@@ -36,10 +39,11 @@ int main(){
     uint32_t i = 0;
 
     while(true){
-        writer.newChange(rtps::ChangeKind_t::ALIVE, dataArray[i%4], 8);
+        auto change = writer.newChange(rtps::ChangeKind_t::ALIVE, dataArray[i%4], 8);
         rtps::threadPool.addWorkload(static_cast<rtps::Writer&>(writer));
         i++;
         sys_msleep(20+(i%200));
+        writer.removeChange(change);
     }
 
 }

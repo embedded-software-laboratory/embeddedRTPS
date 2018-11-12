@@ -8,7 +8,8 @@
 
 namespace rtps{
 
-    StatelessWriter::StatelessWriter(TopicKind_t topicKind): topicKind(topicKind){
+    StatelessWriter::StatelessWriter(TopicKind_t topicKind, const Locator_t& locator)
+        : topicKind(topicKind), locator(locator){
         if (sys_mutex_new(&mutex) != ERR_OK) {
             printf("Failed to create mutex \n");
         }
@@ -34,6 +35,16 @@ namespace rtps{
         return history.addChange(std::move(change));
     }
 
+    void StatelessWriter::removeChange(const CacheChange* change){
+        Lock lock(mutex);
+        history.removeChange(change);
+    }
+
+    void StatelessWriter::unsentChangesReset() {
+        history.resetSend();
+        // TODO notify Threadpool
+    }
+
     bool StatelessWriter::isIrrelevant(ChangeKind_t kind) const{
         return kind == ChangeKind_t::INVALID || (topicKind == TopicKind_t::NO_KEY && kind != ChangeKind_t::ALIVE);
     }
@@ -45,10 +56,11 @@ namespace rtps{
 
         MessageFactory::addHeader(buffer, GUIDPREFIX_UNKNOWN);
         MessageFactory::addSubMessageTimeStamp(buffer);
-        MessageFactory::addSubMessageData(buffer, next->data, false);
+        MessageFactory::addSubMessageData(buffer, next->data, false, next->sequenceNumber, writerId);
 
-        IP4_ADDR((&buffer.addr), 192,168,0, 42);
-        buffer.port = 7050;
+        // Just usable for IPv4
+        IP4_ADDR((&buffer.addr), locator.address[12],locator.address[13],locator.address[14], locator.address[15]);
+        buffer.port = (ip4_port_t) locator.port;
     }
 
 
