@@ -18,7 +18,8 @@ namespace rtps {
 class StatelessWriter : public Writer{
 public:
 
-    StatelessWriter(TopicKind_t topicKind, Locator_t locator, ThreadPool* threadPool);
+    StatelessWriter(TopicKind_t topicKind, Locator_t locator, ThreadPool* threadPool,
+                    GuidPrefix_t guidPrefix, EntityId_t entityId);
 
     const CacheChange* newChange(ChangeKind_t kind, const uint8_t* data, data_size_t size);
 
@@ -34,12 +35,14 @@ private:
     sys_mutex_t mutex;
     ThreadPool* threadPool;
 
+    const GuidPrefix_t guidPrefix;
+    const EntityId_t entityId;
+
     const TopicKind_t topicKind;
     const ReliabilityKind_t reliability = ReliabilityKind_t::BEST_EFFORT;
     SequenceNumber_t lastChangeSequenceNumber = {0, 0};
     HistoryCache history;
     const Locator_t locator;
-    const EntityId_t writerId = ENTITYID_SPDP_BUILTIN_PARTICIPANT_WRITER;
 
     bool isIrrelevant(ChangeKind_t kind) const;
 

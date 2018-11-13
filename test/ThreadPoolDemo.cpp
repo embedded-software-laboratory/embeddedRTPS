@@ -22,9 +22,12 @@ int main(){
         return 1;
     }
 
-    rtps::SPDPAgent parDiscovery{pool};
+    rtps::GuidPrefix_t guidPrefix{0,1,2,3,4,5,6,7,8,9,10,11};
+    rtps::Participant part(guidPrefix, 1);
+    rtps::SPDPAgent parDiscovery{pool, part};
     parDiscovery.start();
 
+    /*
     rtps::Locator_t locator = rtps::Locator_t::createUDPv4Locator(192, 168, 0, 248, 7050);
     rtps::StatelessWriter writer(rtps::TopicKind_t::NO_KEY, locator, &pool);
 
@@ -35,14 +38,14 @@ int main(){
 
     std::array<uint8_t*, 4> dataArray = {data0, data1, data2, data3};
     uint32_t i = 0;
-
+    */
     while(true){
-
+    /*
         auto change = writer.newChange(rtps::ChangeKind_t::ALIVE, dataArray[i%4], 8);
         i++;
         sys_msleep(20+(i%200));
         writer.removeChange(change);
-
+    */
     }
 
 }

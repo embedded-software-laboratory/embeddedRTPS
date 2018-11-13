@@ -42,6 +42,8 @@ TEST_F(ThreadPoolTest, addWorkload_executesCallbackWithinHalfSecond){
     EXPECT_TRUE(cond_var.wait_for(lock, std::chrono::milliseconds(500), [&done] { return done; }));
 }
 
+//TEST_F(ThradPoolTest)
+
 
 TEST(ThreadPool, sendReceive){
 // TODO

@@ -8,7 +8,7 @@
 
 #include "rtps/storages/PBufWrapper.h"
 #include "rtps/communication/UdpDriver.h"
-#include "rtps/rtps.h"
+#include "rtps/Domain.h"
 #include <lwip/udp.h>
 #include <lwip/sys.h>
 #include <lwipcfg.h>

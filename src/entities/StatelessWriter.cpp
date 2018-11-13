@@ -8,8 +8,9 @@
 
 namespace rtps{
 
-    StatelessWriter::StatelessWriter(TopicKind_t topicKind, Locator_t locator, ThreadPool* threadPool)
-        : threadPool(threadPool), topicKind(topicKind), locator(locator){
+    StatelessWriter::StatelessWriter(TopicKind_t topicKind, Locator_t locator, ThreadPool* threadPool,
+                                     GuidPrefix_t guidPrefix, EntityId_t entityId)
+        : threadPool(threadPool), guidPrefix(guidPrefix), entityId(entityId), topicKind(topicKind), locator(locator){
         if (sys_mutex_new(&mutex) != ERR_OK) {
             printf("Failed to create mutex \n");
         }
@@ -61,9 +62,9 @@ namespace rtps{
 
         const CacheChange* next = history.getNextCacheChange();
 
-        MessageFactory::addHeader(buffer, GUIDPREFIX_UNKNOWN);
+        MessageFactory::addHeader(buffer, guidPrefix);
         MessageFactory::addSubMessageTimeStamp(buffer);
-        MessageFactory::addSubMessageData(buffer, next->data, false, next->sequenceNumber, writerId);
+        MessageFactory::addSubMessageData(buffer, next->data, false, next->sequenceNumber, entityId);
 
         // Just usable for IPv4
         IP4_ADDR((&buffer.addr), locator.address[12],locator.address[13],locator.address[14], locator.address[15]);

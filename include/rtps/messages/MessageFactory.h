@@ -69,7 +69,8 @@ namespace rtps{
 #else
             msg.header.flags = FLAG_BIG_ENDIAN;
 #endif
-            msg.header.submessageLength = sizeof(SubmessageData)  + filledPayload.getSize();
+            const auto offset = 4; // I guess the encapsulation info (CDR scheme and options) doesn't count
+            msg.header.submessageLength = sizeof(SubmessageData) + filledPayload.getSize() - offset;
 
             if(containsInlineQos){
                 msg.header.flags |= FLAG_INLINE_QOS;
@@ -86,16 +87,9 @@ namespace rtps{
             constexpr uint16_t octetsToInlineQoS = 4 + 4 + 8; // EntityIds + SequenceNumber
             msg.octetsToInlineQos = octetsToInlineQoS;
 
-            buffer.reserve(sizeof(SubmessageData) + 4);
+            buffer.reserve(sizeof(SubmessageData));
             msg.serializeInto(buffer);
 
-#if IS_LITTLE_ENDIAN
-            buffer.append(CDR_LE,2);
-#else
-            buffer.append(CDR_BE,2);
-#endif
-            uint8_t options[] = {0,0};
-            buffer.append(options, 2);
 
             PBufWrapper clonedPayload = filledPayload.deepCopy();
             if(clonedPayload.isValid()){

@@ -24,14 +24,6 @@ namespace rtps {
     public:
         typedef void (*udp_rx_func_t)(void *arg, udp_pcb *pcb, pbuf *p, const ip_addr_t *addr, ip4_port_t port);
 
-
-        constexpr static ip4_addr transforIP4ToU32(uint8_t MSB, uint8_t p2, uint8_t p1, uint8_t LSB) {
-            return {((uint32_t) (MSB << 24)) |
-                    ((uint32_t) (p2 << 16)) |
-                    ((uint32_t) (p1 << 8)) |
-                    LSB};
-        }
-
         bool createUdpConnection(const ip4_addr_t &addr, ip4_port_t port, udp_rx_func_t callback);
 
         // Length is limited by the buffer (pbuf)

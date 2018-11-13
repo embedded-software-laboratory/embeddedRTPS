@@ -2,6 +2,8 @@ cmake_minimum_required(VERSION 3.8)
 project(lwip)
 
 #set (CMAKE_EXPORT_COMPILE_COMMANDS ON)
+add_subdirectory(Micro-CDR)
+add_subdirectory(googletest)
 
 SET(LWIP_CONTRIB_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../../contrib")
 SET(LWIP_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../../lwip")
@@ -29,6 +31,3 @@ target_compile_options(lwip PRIVATE ${LWIP_COMPILER_FLAGS})
 target_compile_definitions(lwip PRIVATE ${LWIP_DEFINITIONS})
 target_link_libraries(lwip ${LWIP_SANITIZER_LIBS}  lwipcontribaddons lwipallapps lwipcore lwipcontribportwindows)
 
-
-
-add_subdirectory(googletest)

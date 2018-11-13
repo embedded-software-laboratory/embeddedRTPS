@@ -13,7 +13,8 @@
 namespace rtps{
 
     namespace SMElement{
-        enum class ParameterId_t : uint8_t{
+        // TODO endianess
+        enum ParameterId : uint16_t{
             PID_PAD                                 = 0x0000,
             PID_SENTINEL                            = 0x0001,
             PID_USER_DATA                           = 0x002c,
@@ -69,16 +70,29 @@ namespace rtps{
             PID_STATUS_INFO                         = 0x0071
         };
 
-        struct ParameterList{
-            ParameterId_t parameterId;
-            uint16_t length;
-            uint8_t data[];
-        };
-    }
+        enum BuildInEndpointSet : uint32_t{
+            DISC_BIE_PARTICIPANT_ANNOUNCER       = 1 << 0,
+            DISC_BIE_PARTICIPANT_DETECTOR        = 1 << 1,
+            DISC_BIE_PUBLICATION_ANNOUNCER       = 1 << 2,
+            DISC_BIE_PUBLICATION_DETECTOR        = 1 << 3,
+            DISC_BIE_SUBSCRIPTION_ANNOUNCER      = 1 << 4,
+            DISC_BIE_SUBSCRIPTION_DETECTOR       = 1 << 5,
 
-    // TODO
-    const uint8_t CDR_LE[] = {0,1};
-    const uint8_t CDR_BE[] = {0,0};
+            DISC_BIE_PARTICIPANT_PROXY_ANNOUNCER = 1 << 6,
+            DISC_BIE_PARTICIPANT_PROXY_DETECTOR  = 1 << 7,
+            DISC_BIE_PARTICIPANT_STATE_ANNOUNCER = 1 << 8,
+            DISC_BIE_PARTICIPANT_STATE_DETECTOR  = 1 << 9,
+
+            BIE_PARTICIPANT_MESSAGE_DATA_WRITER  = 1 << 10,
+            BIE_PARTICIPANT_MESSAGE_DATA_READER  = 1 << 11,
+        };
+
+        // TODO endianess
+
+        const std::array<uint8_t,2> SCHEME_CDR_LE{0x00, 0x01};
+        const std::array<uint8_t,2> SCHEME_PL_CDR_LE{0x00, 0x03};
+
+    }
 
     enum class SubmessageKind : uint8_t{
         PAD             = 0x01, /* Pad */
@@ -96,7 +110,7 @@ namespace rtps{
         DATA_FRAG       = 0x16 /* DataFrag */
     };
 
-    enum SubMessageFlag{
+    enum SubMessageFlag : uint8_t{
         FLAG_BIG_ENDIAN     = (0 << 0),
         FLAG_LITTLE_ENDIAN  = (1 << 0),
         FLAG_INVALIDATE     = (1 << 1),
@@ -131,7 +145,7 @@ namespace rtps{
             buffer.reserve(size);
             buffer.append(reinterpret_cast<uint8_t*>(this), size);
         }
-    };
+    } __attribute__((packed));
 
     struct SubmessageData{
         SubmessageHeader header;
@@ -148,7 +162,7 @@ namespace rtps{
             buffer.append(reinterpret_cast<uint8_t*>(this), size);
 
         }
-    };
+    } __attribute__((packed));
 }
 
 #endif //RTPS_MESSAGES_H

@@ -19,6 +19,7 @@ namespace rtps{
 
     typedef uint16_t ip4_port_t;
     typedef uint16_t data_size_t;
+    typedef uint8_t participantId_t; // With UDP only 120 possible
 
     enum class EntityKind_t : uint8_t{
         USER_DEFINED_UNKNOWN            = 0x00,
@@ -73,11 +74,6 @@ namespace rtps{
         EntityKind_t entityKind;
     };
 
-    struct GUID_t{
-        GuidPrefix_t guidPrefix;
-        EntityId_t entityId;
-    };
-
     // Described as long but there wasn't any definition. Other than 32 bit does not conform the default values
     struct Time_t{
         int32_t seconds;   // time in seconds
@@ -118,10 +114,11 @@ namespace rtps{
         uint32_t value;
     };
 
-    struct Locator_t{
-        static const uint32_t LOCATOR_PORT_INVALID = 0;
-        static constexpr std::array<uint8_t, 16> LOCATOR_ADDRESS_INVALID = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
 
+    const uint32_t LOCATOR_PORT_INVALID = 0;
+    const std::array<uint8_t, 16> LOCATOR_ADDRESS_INVALID = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
+
+    struct Locator_t{
         LocatorKind_t kind = LocatorKind_t::LOCATOR_KIND_INVALID;
         uint32_t port = LOCATOR_PORT_INVALID;
         std::array<uint8_t,16> address = LOCATOR_ADDRESS_INVALID; // TODO make private such that kind and address always match?
@@ -133,7 +130,7 @@ namespace rtps{
             locator.port = port;
             return locator;
         }
-    };
+    } __attribute__((packed));
 
     struct Count_t{
         int32_t value;
@@ -167,7 +164,7 @@ namespace rtps{
     /* Default Values */
     // TODO memory_reduction_possible
     const EntityId_t ENTITYID_UNKNOWN = {};
-    const EntityId_t ENTITYID_PARTICIPANT                            = {{00,00,01}, EntityKind_t::BUILD_IN_PARTICIPANT };
+    const EntityId_t ENTITYID_BUILD_IN_PARTICIPANT                   = {{00,00,01}, EntityKind_t::BUILD_IN_PARTICIPANT };
     const EntityId_t ENTITYID_SEDP_BUILTIN_TOPIC_WRITER              = {{00,00,02}, EntityKind_t::BUILD_IN_WRITER_WITH_KEY};
     const EntityId_t ENTITYID_SEDP_BUILTIN_TOPIC_READER              = {{00,00,02}, EntityKind_t::BUILD_IN_READER_WITH_KEY};
     const EntityId_t ENTITYID_SEDP_BUILTIN_PUBLICATIONS_WRITER       = {{00,00,03}, EntityKind_t::BUILD_IN_WRITER_WITH_KEY};
@@ -180,19 +177,6 @@ namespace rtps{
     const EntityId_t ENTITYID_P2P_BUILTIN_PARTICIPANT_MESSAGE_READER = {{00,02,00}, EntityKind_t::BUILD_IN_READER_WITH_KEY};
 
     const GuidPrefix_t GUIDPREFIX_UNKNOWN = {};
-
-    const uint16_t PB = 7400; // Port Base Number
-    const uint16_t DG = 250; // DomainId Gain
-    const uint16_t PG = 2; // ParticipantId Gain
-    // Additional Offsets
-    const uint16_t D0 =  0;
-    const uint16_t D1 = 10;
-    const uint16_t D2 =  1;
-    const uint16_t D3 = 11;
-
-    const ip4_port_t MULTI_CAST_BUILTIN_PORT = PB + DG * 1 + D0;
-
-    const Locator_t DEFAULT_MULTICAST_LOCATOR = Locator_t::createUDPv4Locator(239,255,0,1, MULTI_CAST_BUILTIN_PORT);
 
     const ProtocolVersion_t PROTOCOLVERSION_1_0 = {1,0};
     const ProtocolVersion_t PROTOCOLVERSION_1_1 = {1,1};

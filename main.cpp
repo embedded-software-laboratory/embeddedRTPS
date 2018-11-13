@@ -3,7 +3,7 @@
  * Author: Andreas Wüstenberg (andreas.wuestenberg@rwth-aachen.de)
  */
 
-#include "rtps/rtps.h"
+#include "rtps/Domain.h"
 #include "rtps/communication/UdpDriver.h"
 #include "default_netif.h"
 #include "lwip/sys.h"
