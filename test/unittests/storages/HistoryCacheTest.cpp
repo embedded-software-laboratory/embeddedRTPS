@@ -13,6 +13,8 @@ using rtps::SequenceNumber_t;
 
 class HistoryTest : public ::testing::Test{
 protected:
+    HistoryCache history;
+
     SequenceNumber_t SNOne = {0,1};
     SequenceNumber_t SNTwo = {0,2};
     SequenceNumber_t SNThree = {1,1};
@@ -24,7 +26,6 @@ protected:
 
 TEST_F(HistoryTest, ReturnsCorrectMinAndMaxSequenceNumber){
 
-    HistoryCache history;
     history.addChange(std::move(changeOne));
     history.addChange(std::move(changeTwo));
     history.addChange(std::move(changeThree));
@@ -33,9 +34,8 @@ TEST_F(HistoryTest, ReturnsCorrectMinAndMaxSequenceNumber){
     EXPECT_EQ(history.getSeqNumMax(), SNThree);
 }
 
-TEST_F(HistoryTest, getNextCacheChange){
+TEST_F(HistoryTest, getNextCacheChange_outputsInCorrectOder){
 
-    HistoryCache history;
     history.addChange(std::move(changeOne));
     const CacheChange* toRemove = history.addChange(std::move(changeTwo));
     history.addChange(std::move(changeThree));
@@ -47,4 +47,17 @@ TEST_F(HistoryTest, getNextCacheChange){
 
     EXPECT_EQ(history.getNextCacheChange()->sequenceNumber, SNOne);
     EXPECT_EQ(history.getNextCacheChange()->sequenceNumber, SNThree);
+}
+
+
+TEST_F(HistoryTest, resetSend_returnNumberOfResetChanges){
+    history.addChange(std::move(changeOne));
+    history.addChange(std::move(changeTwo));
+    history.addChange(std::move(changeThree));
+    // Send two
+    history.getNextCacheChange();
+    history.getNextCacheChange();
+
+    auto numReset = history.resetSend();
+    EXPECT_EQ(numReset, 2);
 }

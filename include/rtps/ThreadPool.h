@@ -19,6 +19,10 @@ namespace rtps {
 
     class ThreadPool {
     public:
+        struct Workload_t{
+            Writer* pWriter;
+            uint8_t numCacheChangesToSend;
+        };
 
         bool startThreads();
 
@@ -28,7 +32,7 @@ namespace rtps {
 
         bool addConnection(const ip4_addr_t& addr, const ip4_port_t port);
 
-        void addWorkload(Writer& writer);
+        void addWorkload(Workload_t workload);
 
 
     private:
@@ -36,7 +40,7 @@ namespace rtps {
         UdpDriver transport;
         std::array<sys_thread_t, Config::THREAD_POOL_NUM_WRITERS> writers;
 
-        ThreadSafeCircularBuffer<Writer*, Config::THREAD_POOL_WORKLOAD_QUEUE_LENGTH> inputQueue;
+        ThreadSafeCircularBuffer<Workload_t, Config::THREAD_POOL_WORKLOAD_QUEUE_LENGTH> inputQueue;
         ThreadSafeCircularBuffer<PBufWrapper, Config::THREAD_POOL_WORKLOAD_QUEUE_LENGTH> outputQueue;
 
 

@@ -72,7 +72,6 @@ void SPDPAgent::addParticipantParameters(){
     const uint16_t guidSize = sizeof(GuidPrefix_t::id) + sizeof(EntityId_t::entityKey) + sizeof(EntityId_t::entityKind);
 
     const Locator_t userUniCastLocator = getUserUnicastLocator(participant.participantId);
-    const Locator_t userMultiCastLocator = getUserMulticastLocator();
     const Locator_t builtInUniCastLocator = getBuiltInUnicastLocator(participant.participantId);
     const Locator_t builtInMultiCastLocator = getBuiltInMulticastLocator();
 

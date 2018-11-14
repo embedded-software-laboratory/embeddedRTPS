@@ -37,8 +37,8 @@ bool ThreadPool::addConnection(const ip4_addr_t& addr, const ip4_port_t port) {
     return transport.createUdpConnection(addr, port, readCallback);
 }
 
-void ThreadPool::addWorkload(Writer& writer){
-    inputQueue.moveElementIntoBuffer(&writer);
+void ThreadPool::addWorkload(Workload_t workload){
+    inputQueue.moveElementIntoBuffer(std::move(workload));
 }
 
 void ThreadPool::writerFunction(void* arg){
@@ -49,24 +49,25 @@ void ThreadPool::writerFunction(void* arg){
     }
     while(pool->running){
         {
-            Writer* pWriter;
-            auto isWorkToDo = pool->inputQueue.moveFirstInto(pWriter);
+            Workload_t workload;
+            auto isWorkToDo = pool->inputQueue.moveFirstInto(workload);
             if(!isWorkToDo){
                 sys_msleep(1);
                 continue;
             }
-            PBufWrapper buffer;
-            pWriter->createMessageCallback(buffer);
+            for(uint8_t i=0; i < workload.numCacheChangesToSend; ++i){
+                PBufWrapper buffer;
+                workload.pWriter->createMessageCallback(buffer);
 
-            if(!buffer.isValid()){
-                continue;
+                if(!buffer.isValid()){
+                    continue;
+                }
+
+                pool->outputQueue.moveElementIntoBuffer(std::move(buffer));
+
+                // Execute with tcpip-thread
+                tcpip_callback(sendFunction, pool); // Blocking i.e. thread safe call
             }
-
-            pool->outputQueue.moveElementIntoBuffer(std::move(buffer));
-
-            // Execute with tcpip-thread
-            tcpip_callback(sendFunction, pool); // Blocking i.e. thread safe call
-
         }
     }
 }

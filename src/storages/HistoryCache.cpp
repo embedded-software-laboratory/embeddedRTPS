@@ -28,10 +28,15 @@ void HistoryCache::removeChange(const CacheChange* change){
     }
 }
 
-void HistoryCache::resetSend() {
+uint8_t HistoryCache::resetSend() {
+    uint8_t numReset = 0;
     for(auto& entry : buffer){
-        entry.send = false;
+        if(entry.used && entry.send){
+            ++numReset;
+            entry.send = false;
+        }
     }
+    return numReset;
 }
 
 const rtps::SequenceNumber_t& HistoryCache::getSeqNumMin() const{

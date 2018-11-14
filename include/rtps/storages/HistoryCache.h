@@ -33,7 +33,10 @@ namespace rtps{
         const SequenceNumber_t& getSeqNumMin() const;
         const SequenceNumber_t& getSeqNumMax() const;
 
-        void resetSend();
+        /**
+         * @return Number of changes that were already sent
+         */
+        uint8_t resetSend();
 
 
 

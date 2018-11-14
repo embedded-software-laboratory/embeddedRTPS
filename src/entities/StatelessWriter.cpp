@@ -36,7 +36,7 @@ namespace rtps{
         Lock lock(mutex);
         auto result = history.addChange(std::move(change));
         if(threadPool != nullptr){
-            threadPool->addWorkload(*this);
+            threadPool->addWorkload(ThreadPool::Workload_t{this, 1});
         }
         return result;
     }
@@ -47,9 +47,10 @@ namespace rtps{
     }
 
     void StatelessWriter::unsentChangesReset() {
-        history.resetSend();
+        Lock lock(mutex);
+        auto numReset = history.resetSend();
         if(threadPool != nullptr){
-            threadPool->addWorkload(*this);
+            threadPool->addWorkload(ThreadPool::Workload_t{this, numReset});
         }
     }
 
