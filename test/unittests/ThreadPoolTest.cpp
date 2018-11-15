@@ -8,11 +8,17 @@
 #include <condition_variable>
 
 #include "rtps/ThreadPool.h"
+#include "rtps/types.h"
 #include "test/mocking/WriterMock.h"
 
 class ThreadPoolTest : public ::testing::Test{
 protected:
-    rtps::ThreadPool pool;
+    rtps::Domain domain;
+    rtps::ThreadPool pool{domain};
+    ip4_addr_t someIp4Addr = {1234567};
+    rtps::ip4_port_t somepPort = 123;
+    udp_pcb someUdpPcb;
+
 
     void SetUp() override{
         bool success = pool.startThreads();
@@ -42,14 +48,4 @@ TEST_F(ThreadPoolTest, addWorkload_executesCallbackWithinHalfSecond){
 
     std::unique_lock<std::mutex> lock(m);
     EXPECT_TRUE(cond_var.wait_for(lock, std::chrono::milliseconds(500), [&done] { return done; }));
-}
-
-TEST(ThreadPool, sendReceive){
-// TODO
-/* Idea:
- * Use an UdpInterface mock which just calls receive on send.
- * The packet and the send should come from a mock-pair of Writer and Reader.
- * Problem: Injection of the interface in the driver.
- * Template and injection via constructor or function change threadpool class a lot.
- */
 }

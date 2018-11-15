@@ -8,6 +8,10 @@
 
 using rtps::ThreadPool;
 
+ThreadPool::ThreadPool(Domain& domain) : domain(domain){
+
+}
+
 bool ThreadPool::startThreads(){
     if(running){
         return true;
@@ -34,7 +38,7 @@ void ThreadPool::clearQueues(){
 }
 
 bool ThreadPool::addConnection(const ip4_addr_t& addr, const ip4_port_t port) {
-    return transport.createUdpConnection(addr, port, readCallback);
+    return transport.createUdpConnection(addr, port, readCallback, this);
 }
 
 void ThreadPool::addWorkload(Workload_t workload){
@@ -84,15 +88,25 @@ void ThreadPool::sendFunction(void* arg) {
         printf("Who dares to wake me up if there is nothing to do?!");
         return;
     }
-    pool->transport.sendPacket(pBufWrapper.addr, pBufWrapper.port, *pBufWrapper.firstElement);
+    auto conn = pool->transport.createUdpConnection(pBufWrapper.addr, pBufWrapper.port, readCallback, pool);
+    if(conn == nullptr){
+        printf("Failed to create connection: %s:%u ", ipaddr_ntoa(&pBufWrapper.addr), pBufWrapper.port);
+        return;
+    }
+
+    pool->transport.sendPacket(*conn, *pBufWrapper.firstElement);
 }
 
 
-void ThreadPool::readCallback(void*, udp_pcb*, pbuf* p, const ip_addr_t* addr, ip4_port_t port) {
+void ThreadPool::readCallback(void* args, udp_pcb*, pbuf* pbuf, const ip_addr_t* addr, ip4_port_t port) {
+    auto& pool = *static_cast<ThreadPool*>(args);
+
     printf("Received something from %s:%u !!!!\n\r", ipaddr_ntoa(addr), port);
-    for(int i=0; i < p->len; i++){
-        printf("%c ", ((unsigned char*)p->payload)[i]);
-    }
-    printf("\n");
-    pbuf_free(p);
+
+    PBufWrapper wrapper{pbuf};
+    wrapper.addr = *addr;
+    wrapper.port = port;
+
+    // TODO Other threads shall execute this
+    pool.domain.receiveCallback(static_cast<const PBufWrapper>(wrapper)); // Avoid non-const use if API changes
 }

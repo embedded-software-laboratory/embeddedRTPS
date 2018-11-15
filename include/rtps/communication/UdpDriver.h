@@ -18,16 +18,15 @@ namespace rtps {
 
     class UdpDriver {
     private:
-        std::array<UdpConnection, Config::MAX_NUM_UDP_CONNECTIONS> conns;
-        std::size_t n_conns = 0;
+        std::array<UdpConnection, Config::MAX_NUM_UDP_CONNECTIONS> m_conns;
+        std::size_t m_numConns = 0;
 
     public:
         typedef void (*udp_rx_func_t)(void *arg, udp_pcb *pcb, pbuf *p, const ip_addr_t *addr, ip4_port_t port);
 
-        bool createUdpConnection(const ip4_addr_t &addr, ip4_port_t port, udp_rx_func_t callback);
+        const rtps::UdpConnection* createUdpConnection(const ip4_addr_t &addr, ip4_port_t port, udp_rx_func_t callback, void* args);
 
-        // Length is limited by the buffer (pbuf)
-        bool sendPacket(const ip4_addr_t &destAddr, ip4_port_t destPort, pbuf &buffer);
+        bool sendPacket(const UdpConnection& conn, pbuf& buffer);
 
     };
 }

@@ -16,16 +16,16 @@ using rtps::UdpDriver;
  * @param callback Function that gets called when a packet is received on addr:port.
  * @return True if creation was finished without errors. False otherwise.
  */
-bool UdpDriver::createUdpConnection(const ip4_addr_t &addr, ip4_port_t port, udp_rx_func_t callback) {
+const rtps::UdpConnection* UdpDriver::createUdpConnection(const ip4_addr_t &addr, ip4_port_t port, udp_rx_func_t callback, void* args) {
 
-    for(auto const &conn : conns){
+    for(auto const &conn : m_conns){
         if(conn.addr.addr == addr.addr && conn.port == port){
-            return true;
+            return &conn;
         }
     }
 
-    if(n_conns == conns.size()){
-        return false;
+    if(m_numConns == m_conns.size()){
+        return nullptr;
     }
 
     UdpConnection udp_conn(addr, port);
@@ -35,42 +35,25 @@ bool UdpDriver::createUdpConnection(const ip4_addr_t &addr, ip4_port_t port, udp
 
     if(err != ERR_OK && err != ERR_USE){
         printf("Failed to bind to %s:%u: error %u\n", ipaddr_ntoa(&addr), port, err);
-        return false;
+        return nullptr;
     }
     //LOCK_TCPIP_CORE();
-    udp_recv(udp_conn.pcb, callback, nullptr);
+    udp_recv(udp_conn.pcb, callback, args);
     //UNLOCK_TCPIP_CORE();
 
-    conns[n_conns] = std::move(udp_conn);
-    n_conns++;
+    m_conns[m_numConns] = std::move(udp_conn);
+    m_numConns++;
 
     printf("Success creating UDP connection\n");
-    return true;
+    return &m_conns[m_numConns-1];
 }
 
-bool UdpDriver::sendPacket(const ip4_addr_t &destAddr, ip4_port_t destPort, pbuf& buffer){
-    auto begin = conns.cbegin();
-    auto end = conns.cend();
-    while(begin != end){
-        if(begin->addr.addr == destAddr.addr && begin->port == destPort){
-            break;
-        }
-        begin++;
-    }
+bool UdpDriver::sendPacket(const UdpConnection& conn, pbuf& buffer){
 
-    if(begin == end){
-        printf("Could not find a udp connection for destination %s:%u,...adding\n", ipaddr_ntoa(&destAddr), destPort);
-        createUdpConnection(destAddr, destPort, nullptr);
-        begin = conns.cbegin() + std::distance(conns.data(), &conns[n_conns-1]);
-    }
-
-    const UdpConnection& conn = *begin;
-
-
-    err_t err = udp_sendto(conn.pcb, &buffer, &(destAddr), destPort);
+    err_t err = udp_sendto(conn.pcb, &buffer, &conn.addr, conn.port);
 
     if(err != ERR_OK){
-        printf("UDP TRANSMIT NOT SUCCESSFUL %s:%u size: %u err: %i\n", ipaddr_ntoa(&destAddr), destPort, buffer.tot_len, err);
+        printf("UDP TRANSMIT NOT SUCCESSFUL %s:%u size: %u err: %i\n", ipaddr_ntoa(&conn.addr), conn.port, buffer.tot_len, err);
         return false;
     }
     printf("Send packet successful \n");

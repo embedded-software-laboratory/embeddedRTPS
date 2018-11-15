@@ -18,10 +18,6 @@
 namespace rtps {
 
     struct PBufWrapper {
-        struct PBufPosition{
-            pbuf* element;
-            data_size_t offset;
-        };
 
         pbuf *firstElement = nullptr;
 
@@ -29,6 +25,7 @@ namespace rtps {
         ip4_port_t port = 0;
 
         PBufWrapper() = default;
+        explicit PBufWrapper(pbuf* bufferToWrap);
         explicit PBufWrapper(data_size_t length);
 
         // Shallow Copy. No copying of the underlying pbuf. Just another reference like a shared pointer.

@@ -8,6 +8,10 @@
 
 using rtps::PBufWrapper;
 
+PBufWrapper::PBufWrapper(pbuf* bufferToWrap) : firstElement(bufferToWrap){
+    m_freeSpace = 0; // Assume it to be full
+}
+
 PBufWrapper::PBufWrapper(data_size_t length)
     : firstElement(pbuf_alloc(m_layer, length, m_type)){
     // TODO Can I move this to initializer list?

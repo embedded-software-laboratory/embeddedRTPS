@@ -5,6 +5,7 @@ target_sources(rtps
         "${CMAKE_CURRENT_LIST_DIR}/communication/UdpDriver.cpp"
         "${CMAKE_CURRENT_LIST_DIR}/entities/StatelessWriter.cpp"
         "${CMAKE_CURRENT_LIST_DIR}/discovery/SPDP.cpp"
+        "${CMAKE_CURRENT_LIST_DIR}/entities/Domain.cpp"
         "${CMAKE_CURRENT_LIST_DIR}/entities/Participant.cpp"
         "${CMAKE_CURRENT_LIST_DIR}/storages/HistoryCache.cpp"
         "${CMAKE_CURRENT_LIST_DIR}/storages/PBufWrapper.cpp"
