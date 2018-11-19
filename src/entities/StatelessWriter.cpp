@@ -54,13 +54,14 @@ namespace rtps{
     }
 
     void StatelessWriter::createMessageCallback(PBufWrapper& buffer){
-        Lock lock(mutex);
-
-        const CacheChange* next = history.getNextCacheChange();
-
         MessageFactory::addHeader(buffer, guidPrefix);
         MessageFactory::addSubMessageTimeStamp(buffer);
-        MessageFactory::addSubMessageData(buffer, next->data, false, next->sequenceNumber, entityId);
+
+        {
+            Lock lock(mutex);
+            const CacheChange* next = history.getNextCacheChange();
+            MessageFactory::addSubMessageData(buffer, next->data, false, next->sequenceNumber, entityId);
+        }
 
         // Just usable for IPv4
         IP4_ADDR((&buffer.addr), locator.address[12],locator.address[13],locator.address[14], locator.address[15]);

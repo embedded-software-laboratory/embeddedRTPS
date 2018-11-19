@@ -40,7 +40,7 @@ PBufWrapper& PBufWrapper::operator=(const PBufWrapper &other) {
     return *this;
 }
 
-PBufWrapper& PBufWrapper::operator=(PBufWrapper&& other){
+PBufWrapper& PBufWrapper::operator=(PBufWrapper&& other) noexcept{
     copySimpleMembersAndResetBuffer(other);
 
     if(other.firstElement != nullptr){

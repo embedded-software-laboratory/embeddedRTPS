@@ -7,14 +7,7 @@
 
 using rtps::HistoryCache;
 
-HistoryCache::HistoryCache() {
-    err_t err = sys_mutex_new(&mutex);
-    if(err != ERR_OK){
-        printf("HistoryCache: Unable to create mutex.");
-    }
-}
 const rtps::CacheChange* HistoryCache::addChange(CacheChange&& change){
-    Lock lock(mutex);
     auto& entry = buffer[head];
     entry.change = change;
     entry.send = false;
@@ -26,7 +19,6 @@ const rtps::CacheChange* HistoryCache::addChange(CacheChange&& change){
 }
 
 uint8_t HistoryCache::resetSend() {
-    Lock lock(mutex);
     uint8_t numReset = 0;
     auto iterator = tail;
     while(iterator != head){
@@ -42,7 +34,6 @@ uint8_t HistoryCache::resetSend() {
 }
 
 const rtps::SequenceNumber_t& HistoryCache::getSeqNumMin() const{
-    Lock lock(mutex);
     const SequenceNumber_t* pSN = &SEQUENCENUMBER_UNKNOWN;
     auto iterator = tail;
     while(iterator != head){
@@ -57,7 +48,6 @@ const rtps::SequenceNumber_t& HistoryCache::getSeqNumMin() const{
 }
 
 const rtps::SequenceNumber_t& HistoryCache::getSeqNumMax() const{
-    Lock lock(mutex);
     const SequenceNumber_t* pSN = &SEQUENCENUMBER_UNKNOWN;
 
     auto iterator = tail;
@@ -72,7 +62,6 @@ const rtps::SequenceNumber_t& HistoryCache::getSeqNumMax() const{
 }
 
 const rtps::CacheChange* HistoryCache::getNextCacheChange(){
-    Lock lock(mutex);
     if(lastReturned != head){
         auto& entry = buffer[lastReturned];
         entry.send = true;

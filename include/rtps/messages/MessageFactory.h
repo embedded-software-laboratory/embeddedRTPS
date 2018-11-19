@@ -90,10 +90,9 @@ namespace rtps{
             buffer.reserve(sizeof(SubmessageData));
             msg.serializeInto(buffer);
 
-
-            PBufWrapper clonedPayload = filledPayload.deepCopy();
-            if(clonedPayload.isValid()){
-                buffer.append(std::move(clonedPayload));
+            if(filledPayload.isValid()){
+                PBufWrapper shallowCopy = filledPayload;
+                buffer.append(std::move(shallowCopy));
             }
         }
     }

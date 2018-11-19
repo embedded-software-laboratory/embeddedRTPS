@@ -8,7 +8,7 @@
 
 #include "rtps/storages/PBufWrapper.h"
 #include "rtps/communication/UdpDriver.h"
-#include "rtps/Domain.h"
+#include "rtps/rtps.h"
 #include <lwip/udp.h>
 #include <lwip/sys.h>
 #include <lwipcfg.h>
@@ -74,7 +74,7 @@ TEST_F(LwIp, SendSelfChainedPBufs){
     LWIP_PORT_INIT_IPADDR(&addr); // self
 
     rtps::UdpDriver driver;
-    driver.createUdpConnection(addr, port, receiveCallback);
+    rtps::UdpConnection conn = driver.createUdpConnection(addr, port, receiveCallback nullptr);
 
 
     pbuf* first = pbuf_alloc(PBUF_TRANSPORT, 8, PBUF_POOL);
@@ -89,7 +89,7 @@ TEST_F(LwIp, SendSelfChainedPBufs){
     std::memcpy(first->payload, data0, 8);
     std::memcpy(second->payload, data1, 8);
 
-    driver.sendPacket(addr, port, *first);
+    driver.sendPacket(conn, *first);
     while(!callbackFinished);
 }
 

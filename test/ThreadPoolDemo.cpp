@@ -14,8 +14,8 @@
 #pragma clang diagnostic ignored "-Wmissing-noreturn"
 int main(){
     rtps::init();
-
-    rtps::ThreadPool pool;
+    rtps::Domain domain;
+    rtps::ThreadPool pool(domain);
     bool started = pool.startThreads();
     if(!started){
         std::cout << "Failed starting threads";
@@ -24,12 +24,12 @@ int main(){
 
     rtps::GuidPrefix_t guidPrefix{0,1,2,3,4,5,6,7,8,9,10,11};
     rtps::Participant part(guidPrefix, 1);
-    rtps::SPDPAgent parDiscovery{pool, part};
+    rtps::SPDPAgent parDiscovery(pool, part);
     parDiscovery.start();
 
     /*
     rtps::Locator_t locator = rtps::Locator_t::createUDPv4Locator(192, 168, 0, 248, 7050);
-    rtps::StatelessWriter writer(rtps::TopicKind_t::NO_KEY, locator, &pool);
+    rtps::StatelessWriter writer(rtps::TopicKind_t::NO_KEY, locator, &pool, rtps::GUIDPREFIX_UNKNOWN, rtps::ENTITYID_UNKNOWN);
 
     uint8_t data0[] = {'d', 'e', 'a', 'd', 'b', 'e', 'e', 'f'};
     uint8_t data1[] = {'d', 'e', 'c', 'a', 'f', 'b', 'a', 'd'};
@@ -40,12 +40,11 @@ int main(){
     uint32_t i = 0;
     */
     while(true){
-    /*
-        auto change = writer.newChange(rtps::ChangeKind_t::ALIVE, dataArray[i%4], 8);
+        /*
+        writer.newChange(rtps::ChangeKind_t::ALIVE, dataArray[i%4], 8);
         i++;
         sys_msleep(20+(i%200));
-        writer.removeChange(change);
-    */
+        */
     }
 
 }

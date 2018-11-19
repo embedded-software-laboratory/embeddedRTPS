@@ -24,8 +24,6 @@ namespace rtps{
 
     class HistoryCache{
     public:
-
-        HistoryCache();
         const CacheChange INVALID_CACHE_CHANGE{};
 
         const CacheChange* addChange(CacheChange&& change);
@@ -46,7 +44,6 @@ namespace rtps{
         };
 
         std::array<HistoryEntry, 10> buffer{};
-        mutable sys_mutex_t mutex;
         uint16_t head = 0;
         uint16_t tail = 0;
         uint16_t lastReturned = 0;
