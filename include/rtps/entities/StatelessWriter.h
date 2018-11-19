@@ -23,8 +23,6 @@ public:
 
     const CacheChange* newChange(ChangeKind_t kind, const uint8_t* data, data_size_t size);
 
-    void removeChange(const CacheChange* change);
-
     void unsentChangesReset();
 
     SequenceNumber_t getLastSequenceNumber() const;

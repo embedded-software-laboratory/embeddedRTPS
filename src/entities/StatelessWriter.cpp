@@ -41,11 +41,6 @@ namespace rtps{
         return result;
     }
 
-    void StatelessWriter::removeChange(const CacheChange* change){
-        Lock lock(mutex);
-        history.removeChange(change);
-    }
-
     void StatelessWriter::unsentChangesReset() {
         Lock lock(mutex);
         auto numReset = history.resetSend();

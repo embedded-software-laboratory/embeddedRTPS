@@ -8,75 +8,46 @@
 
 #include "lwip/sys.h"
 #include "rtps/utils/Lock.h"
-#include <array>
 
+#include <array>
 
 namespace rtps {
 
     template<typename T, uint16_t SIZE>
     class ThreadSafeCircularBuffer {
 
-    private:
-        std::array<T, SIZE> queue{};
-        sys_mutex_t mutex;
-        uint32_t head = 0;
-        uint32_t tail = 0;
-        bool initialized = false;
 
     public:
 
-        bool init() {
-            if (initialized) {
-                return true;
-            }
-            if (sys_mutex_new(&mutex) != ERR_OK) {
-                printf("Failed to create mutex \n");
-                return false;
-            } else {
-                printf("Successfully created mutex at %p\n", &mutex);
-                initialized = true;
-                return true;
-            }
-        }
+        bool init();
 
-        ~ThreadSafeCircularBuffer() {
-            if (mutex.mut != nullptr) {
-                sys_mutex_free(&mutex);
-            }
-        }
+        ~ThreadSafeCircularBuffer();
 
-        void moveElementIntoBuffer(T &&elem) {
-            Lock lock(mutex);
-
-            queue[head] = std::move(elem);
-            head = (head + 1) % SIZE;
-            if (head == tail) { // drop one element
-                tail = (tail + 1) % SIZE;
-            }
-        }
+        void moveElementIntoBuffer(T &&elem);
 
         /**
          * Removes the first into the given hull. Also moves responsibility for resources.
          *
          * @return true if element was injected. False if no element was present.
          */
-        bool moveFirstInto(T &hull) {
-            Lock lock(mutex);
-            if (head != tail) {
-                hull = std::move(queue[tail]);
-                tail = (tail + 1) % SIZE;
-                return true;
-            } else {
-                return false;
-            }
-        }
+        bool moveFirstInto(T &hull);
 
-        void clear(){
-            Lock lock(mutex);
-            head = tail;
-        }
+        void clear();
+
+    private:
+        std::array<T, SIZE> buffer{};
+        uint16_t head = 0;
+        uint16_t tail = 0;
+        sys_mutex_t mutex;
+        bool initialized = false;
+
+        inline void incrementIterator(uint16_t& iterator);
+        inline void incrementTail();
+        inline void incrementHead();
     };
 
 }
+
+#include "ThreadSafeCircularBuffer.tpp"
 
 #endif //RTPS_THREADSAFEQUEUE_H

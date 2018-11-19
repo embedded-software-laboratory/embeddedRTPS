@@ -37,16 +37,13 @@ TEST_F(HistoryTest, ReturnsCorrectMinAndMaxSequenceNumber){
 TEST_F(HistoryTest, getNextCacheChange_outputsInCorrectOder){
 
     history.addChange(std::move(changeOne));
-    const CacheChange* toRemove = history.addChange(std::move(changeTwo));
+    history.addChange(std::move(changeTwo));
     history.addChange(std::move(changeThree));
 
     EXPECT_EQ(history.getNextCacheChange()->sequenceNumber, SNOne);
     EXPECT_EQ(history.getNextCacheChange()->sequenceNumber, SNTwo);
     EXPECT_EQ(history.getNextCacheChange()->sequenceNumber, SNThree);
-    history.removeChange(toRemove);
-
-    EXPECT_EQ(history.getNextCacheChange()->sequenceNumber, SNOne);
-    EXPECT_EQ(history.getNextCacheChange()->sequenceNumber, SNThree);
+    EXPECT_EQ(history.getNextCacheChange(), &history.INVALID_CACHE_CHANGE);
 }
 
 

@@ -7,73 +7,99 @@
 
 using rtps::HistoryCache;
 
-const rtps::CacheChange* HistoryCache::addChange(CacheChange&& change){
-    for(auto& entry : buffer){
-        if(!entry.used){
-            entry.used = true;
-            entry.send = false;
-            entry.change = std::move(change);
-            return &entry.change;
-        }
+HistoryCache::HistoryCache() {
+    err_t err = sys_mutex_new(&mutex);
+    if(err != ERR_OK){
+        printf("HistoryCache: Unable to create mutex.");
     }
-    return &INVALID_CACHE_CHANGE;
 }
+const rtps::CacheChange* HistoryCache::addChange(CacheChange&& change){
+    Lock lock(mutex);
+    auto& entry = buffer[head];
+    entry.change = change;
+    entry.send = false;
+    entry.change = std::move(change);
 
-void HistoryCache::removeChange(const CacheChange* change){
-    for(auto& entry : buffer){
-        if(change == &entry.change){
-            entry.used = false;
-            return;
-        }
-    }
+    incrementHead();
+
+    return &entry.change;
 }
 
 uint8_t HistoryCache::resetSend() {
+    Lock lock(mutex);
     uint8_t numReset = 0;
-    for(auto& entry : buffer){
-        if(entry.used && entry.send){
+    auto iterator = tail;
+    while(iterator != head){
+        auto& entry = buffer[iterator];
+        if(entry.send){
             ++numReset;
             entry.send = false;
         }
+        incrementIterator(iterator);
+        lastReturned = tail;
     }
     return numReset;
 }
 
 const rtps::SequenceNumber_t& HistoryCache::getSeqNumMin() const{
+    Lock lock(mutex);
     const SequenceNumber_t* pSN = &SEQUENCENUMBER_UNKNOWN;
-    for(auto const& entry : buffer){
-        if(entry.used){
-            if(pSN == &SEQUENCENUMBER_UNKNOWN || entry.change.sequenceNumber < *pSN) {
-                pSN = &entry.change.sequenceNumber;
-            }
+    auto iterator = tail;
+    while(iterator != head){
+        auto& entry = buffer[iterator];
+        if(pSN == &SEQUENCENUMBER_UNKNOWN || entry.change.sequenceNumber < *pSN) {
+            pSN = &entry.change.sequenceNumber;
         }
+    incrementIterator(iterator);
     }
+
     return *pSN;
 }
 
 const rtps::SequenceNumber_t& HistoryCache::getSeqNumMax() const{
+    Lock lock(mutex);
     const SequenceNumber_t* pSN = &SEQUENCENUMBER_UNKNOWN;
-    for(auto const& entry : buffer){
-        if(entry.used){
-            if(pSN == &SEQUENCENUMBER_UNKNOWN || *pSN < entry.change.sequenceNumber){
-                pSN = &entry.change.sequenceNumber;
-            }
+
+    auto iterator = tail;
+    while(iterator != head){
+        auto& entry = buffer[iterator];
+        if(pSN == &SEQUENCENUMBER_UNKNOWN || *pSN < entry.change.sequenceNumber){
+            pSN = &entry.change.sequenceNumber;
         }
+        incrementIterator(iterator);
     }
     return *pSN;
 }
 
 const rtps::CacheChange* HistoryCache::getNextCacheChange(){
-    for(size_t i=0; i < buffer.size(); ++i){
-        if(lastReturned >= buffer.size() -1){
-            lastReturned = 0;
-        }else{
-            lastReturned++;
-        }
-        if(buffer[lastReturned].used){
-            buffer[lastReturned].send = true;
-            return &(buffer[lastReturned].change);
-        }
+    Lock lock(mutex);
+    if(lastReturned != head){
+        auto& entry = buffer[lastReturned];
+        entry.send = true;
+        incrementIterator(lastReturned);
+        return &entry.change;
+    }else{
+        return &INVALID_CACHE_CHANGE;
     }
-    return &INVALID_CACHE_CHANGE;
+}
+
+void HistoryCache::incrementHead() {
+    incrementIterator(head);
+    if(head == tail){
+        incrementTail();
+    }
+}
+
+void HistoryCache::incrementTail() {
+    if(lastReturned == tail){
+        incrementIterator(lastReturned);
+    }
+    incrementIterator(tail);
+}
+
+void HistoryCache::incrementIterator(uint16_t& iterator) const{
+    ++iterator;
+    if(iterator >= buffer.size()){
+        iterator = 0;
+    }
 }

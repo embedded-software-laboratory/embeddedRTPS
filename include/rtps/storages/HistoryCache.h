@@ -24,10 +24,11 @@ namespace rtps{
 
     class HistoryCache{
     public:
+
+        HistoryCache();
         const CacheChange INVALID_CACHE_CHANGE{};
 
         const CacheChange* addChange(CacheChange&& change);
-        void removeChange(const CacheChange* change);
         const CacheChange* getNextCacheChange();
 
         const SequenceNumber_t& getSeqNumMin() const;
@@ -40,14 +41,19 @@ namespace rtps{
 
     private:
         struct HistoryEntry{
-            bool used = false;
             bool send = false;
             CacheChange change;
         };
 
         std::array<HistoryEntry, 10> buffer{};
-        size_t lastReturned = buffer.size() -1;
+        mutable sys_mutex_t mutex;
+        uint16_t head = 0;
+        uint16_t tail = 0;
+        uint16_t lastReturned = 0;
 
+        inline void incrementHead();
+        inline void incrementIterator(uint16_t& iterator) const;
+        inline void incrementTail();
     };
 };
 
