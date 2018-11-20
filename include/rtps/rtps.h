@@ -11,8 +11,6 @@
 
 namespace rtps{
     void init();
-    void start();
-    void stop();
     Time_t getCurrentTimeStamp();
 }
 

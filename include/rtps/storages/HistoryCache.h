@@ -43,10 +43,10 @@ namespace rtps{
             CacheChange change;
         };
 
-        std::array<HistoryEntry, 10> buffer{};
-        uint16_t head = 0;
-        uint16_t tail = 0;
-        uint16_t lastReturned = 0;
+        std::array<HistoryEntry, 10> m_buffer{};
+        uint16_t m_head = 0;
+        uint16_t m_tail = 0;
+        uint16_t m_lastReturned = 0;
 
         inline void incrementHead();
         inline void incrementIterator(uint16_t& iterator) const;

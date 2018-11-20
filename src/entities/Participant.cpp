@@ -12,7 +12,7 @@ Participant::Participant(const GuidPrefix_t& guidPrefix, participantId_t partici
         : guidPrefix(guidPrefix), participantId(participantId){};
 
 Participant::~Participant() {
-    spdpAgent.stop();
+    m_spdpAgent.stop();
 }
 
 bool Participant::isValid(){
@@ -32,20 +32,20 @@ std::array<uint8_t, 3> Participant::getNextUserEntityKey(){
 }
 
 rtps::Writer* Participant::addUserWriter(Writer& writer){
-    if(numWriters >= m_writers.size()){
+    if(m_numWriters >= m_writers.size()){
         return nullptr;
     }
-    m_writers[numWriters] = &writer;
-    ++numWriters;
+    m_writers[m_numWriters] = &writer;
+    ++m_numWriters;
     return &writer;
 }
 
 void Participant::addSPDPWriter(rtps::Writer &writer) {
-    m_SPDPWriter = &writer;
-    spdpAgent.init(*this);
-    spdpAgent.start();
+    mp_SPDPWriter = &writer;
+    m_spdpAgent.init(*this);
+    m_spdpAgent.start();
 }
 
 rtps::Writer* Participant::getSPDPWriter() {
-    return m_SPDPWriter;
+    return mp_SPDPWriter;
 }

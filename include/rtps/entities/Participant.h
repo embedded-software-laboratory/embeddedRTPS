@@ -30,10 +30,10 @@ namespace rtps{
 
     private:
         std::array<Writer*, Config::NUM_WRITERS_PER_PARTICIPANT> m_writers{nullptr};
-        uint8_t numWriters = 0;
+        uint8_t m_numWriters = 0;
         std::array<uint8_t, 3> m_nextUserEntityId{0,0,0};
-        Writer* m_SPDPWriter = nullptr;
-        SPDPAgent spdpAgent;
+        Writer* mp_SPDPWriter = nullptr;
+        SPDPAgent m_spdpAgent;
     };
 }
 

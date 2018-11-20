@@ -10,12 +10,12 @@ namespace rtps{
 
     void StatelessWriter::init(TopicKind_t topicKind, Locator_t locator, ThreadPool* threadPool,
                           GuidPrefix_t guidPrefix, EntityId_t entityId){
-        m_threadPool = threadPool;
+        mp_threadPool = threadPool;
         m_guidPrefix = guidPrefix;
         m_entityId = entityId;
         m_topicKind = topicKind;
         m_locator = locator;
-        if (sys_mutex_new(&mutex) != ERR_OK) {
+        if (sys_mutex_new(&m_mutex) != ERR_OK) {
             printf("Failed to create mutex \n");
         }
     }
@@ -37,19 +37,19 @@ namespace rtps{
         change.sequenceNumber = m_lastChangeSequenceNumber;
 
 
-        Lock lock(mutex);
+        Lock lock(m_mutex);
         auto result = m_history.addChange(std::move(change));
-        if(m_threadPool != nullptr){
-            m_threadPool->addWorkload(ThreadPool::Workload_t{this, 1});
+        if(mp_threadPool != nullptr){
+            mp_threadPool->addWorkload(ThreadPool::Workload_t{this, 1});
         }
         return result;
     }
 
     void StatelessWriter::unsentChangesReset() {
-        Lock lock(mutex);
+        Lock lock(m_mutex);
         auto numReset = m_history.resetSend();
-        if(m_threadPool != nullptr){
-            m_threadPool->addWorkload(ThreadPool::Workload_t{this, numReset});
+        if(mp_threadPool != nullptr){
+            mp_threadPool->addWorkload(ThreadPool::Workload_t{this, numReset});
         }
     }
 
@@ -62,7 +62,7 @@ namespace rtps{
         MessageFactory::addSubMessageTimeStamp(buffer);
 
         {
-            Lock lock(mutex);
+            Lock lock(m_mutex);
             const CacheChange* next = m_history.getNextCacheChange();
             MessageFactory::addSubMessageData(buffer, next->data, false, next->sequenceNumber, m_entityId);
         }

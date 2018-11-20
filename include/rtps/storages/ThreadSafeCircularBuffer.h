@@ -35,11 +35,11 @@ namespace rtps {
         void clear();
 
     private:
-        std::array<T, SIZE> buffer{};
-        uint16_t head = 0;
-        uint16_t tail = 0;
-        sys_mutex_t mutex;
-        bool initialized = false;
+        std::array<T, SIZE> m_buffer{};
+        uint16_t m_head = 0;
+        uint16_t m_tail = 0;
+        sys_mutex_t m_mutex;
+        bool m_initialized = false;
 
         inline void incrementIterator(uint16_t& iterator);
         inline void incrementTail();

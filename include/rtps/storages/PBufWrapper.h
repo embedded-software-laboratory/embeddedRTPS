@@ -65,7 +65,7 @@ namespace rtps {
         constexpr static pbuf_type m_type = PBUF_POOL;
 
 
-        data_size_t m_freeSpace = 0; // TODO change to memory_free for more efficient reserve
+        data_size_t m_freeSpace = 0;
 
         data_size_t getCurrentOffset() const;
 

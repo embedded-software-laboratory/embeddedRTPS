@@ -13,8 +13,8 @@ using rtps::SMElement::ParameterId;
 using rtps::SMElement::BuildInEndpointSet;
 
 void SPDPAgent::init(Participant& participant) {
-    m_participant = &participant;
-    m_writer = participant.getSPDPWriter();
+    mp_participant = &participant;
+    mp_writer = participant.getSPDPWriter();
     ucdr_init_buffer(&m_microbuffer, m_buffer.data(), m_buffer.size());
 
     //addInlineQos();
@@ -41,11 +41,11 @@ void SPDPAgent::stop(){
 void SPDPAgent::run(void* args){
     SPDPAgent& agent = *static_cast<SPDPAgent*>(args);
     const auto size = ucdr_buffer_length(&agent.m_microbuffer);
-    agent.m_writer->newChange(ChangeKind_t::ALIVE, agent.m_microbuffer.init, size);
+    agent.mp_writer->newChange(ChangeKind_t::ALIVE, agent.m_microbuffer.init, size);
 
     while(agent.m_running){
         sys_msleep(Config::SPDP_RESEND_PERIOD_MS);
-        agent.m_writer->unsentChangesReset();
+        agent.mp_writer->unsentChangesReset();
     }
 }
 
@@ -53,7 +53,7 @@ void SPDPAgent::run(void* args){
 void SPDPAgent::addInlineQos(){
     ucdr_serialize_uint16_t(&m_microbuffer, ParameterId::PID_KEY_HASH);
     ucdr_serialize_uint16_t(&m_microbuffer, 16);
-    ucdr_serialize_array_uint8_t(&m_microbuffer, m_participant->guidPrefix.id.data(), sizeof(GuidPrefix_t::id));
+    ucdr_serialize_array_uint8_t(&m_microbuffer, mp_participant->guidPrefix.id.data(), sizeof(GuidPrefix_t::id));
     ucdr_serialize_array_uint8_t(&m_microbuffer, ENTITYID_BUILD_IN_PARTICIPANT.entityKey.data(), sizeof(EntityId_t::entityKey));
     ucdr_serialize_uint8_t(&m_microbuffer,       static_cast<uint8_t>(ENTITYID_BUILD_IN_PARTICIPANT.entityKind));
 
@@ -68,8 +68,8 @@ void SPDPAgent::addParticipantParameters(){
     const uint16_t durationSize = sizeof(Behavior::Duration_t::seconds) + sizeof(Behavior::Duration_t::fraction);
     const uint16_t guidSize = sizeof(GuidPrefix_t::id) + sizeof(EntityId_t::entityKey) + sizeof(EntityId_t::entityKind);
 
-    const Locator_t userUniCastLocator = getUserUnicastLocator(m_participant->participantId);
-    const Locator_t builtInUniCastLocator = getBuiltInUnicastLocator(m_participant->participantId);
+    const Locator_t userUniCastLocator = getUserUnicastLocator(mp_participant->participantId);
+    const Locator_t builtInUniCastLocator = getBuiltInUnicastLocator(mp_participant->participantId);
     const Locator_t builtInMultiCastLocator = getBuiltInMulticastLocator();
 
     ucdr_serialize_array_uint8_t(&m_microbuffer, rtps::SMElement::SCHEME_PL_CDR_LE.data(), rtps::SMElement::SCHEME_PL_CDR_LE.size());
@@ -103,7 +103,7 @@ void SPDPAgent::addParticipantParameters(){
 
     ucdr_serialize_uint16_t(&m_microbuffer,      ParameterId::PID_PARTICIPANT_GUID);
     ucdr_serialize_uint16_t(&m_microbuffer,      guidSize);
-    ucdr_serialize_array_uint8_t(&m_microbuffer, m_participant->guidPrefix.id.data(), sizeof(GuidPrefix_t::id));
+    ucdr_serialize_array_uint8_t(&m_microbuffer, mp_participant->guidPrefix.id.data(), sizeof(GuidPrefix_t::id));
     ucdr_serialize_array_uint8_t(&m_microbuffer, ENTITYID_BUILD_IN_PARTICIPANT.entityKey.data(), sizeof(EntityId_t::entityKey));
     ucdr_serialize_uint8_t(&m_microbuffer,       static_cast<uint8_t>(ENTITYID_BUILD_IN_PARTICIPANT.entityKind));
 

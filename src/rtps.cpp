@@ -75,12 +75,6 @@ void rtps::init(){
     }
 }
 
-void rtps::start(){
-}
-
-void rtps::stop(){
-}
-
 rtps::Time_t rtps::getCurrentTimeStamp(){
     Time_t now;
     // TODO FIX

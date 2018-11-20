@@ -30,8 +30,8 @@ namespace rtps {
         void createMessageCallback(PBufWrapper& buffer) override;
 
     private:
-        sys_mutex_t mutex;
-        ThreadPool* m_threadPool = nullptr;
+        sys_mutex_t m_mutex;
+        ThreadPool* mp_threadPool = nullptr;
 
         GuidPrefix_t m_guidPrefix = GUIDPREFIX_UNKNOWN;
         EntityId_t m_entityId = ENTITYID_UNKNOWN;

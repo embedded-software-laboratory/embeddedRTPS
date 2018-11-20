@@ -21,8 +21,8 @@ namespace rtps{
         void stop();
 
     private:
-        Participant* m_participant = nullptr;
-        Writer* m_writer = nullptr;
+        Participant* mp_participant = nullptr;
+        Writer* mp_writer = nullptr;
         bool m_running = false;
         std::array<uint8_t, 400> m_buffer{};
         ucdrBuffer m_microbuffer;

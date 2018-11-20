@@ -12,7 +12,6 @@ add_executable(runTests
                         unittests/entities/StatelessWriterTest.cpp
                         unittests/messages/MessageFactoryTest.cpp
                         unittests/storages/HistoryCacheTest.cpp
-                        integration/Writer_ThreadPool_Reader.cpp
         )
 target_link_libraries(runTests gtest gtest_main gmock gmock_main)
 target_link_libraries(runTests rtps lwip)

@@ -8,12 +8,12 @@
 
 using rtps::Domain;
 
-Domain::Domain() : pool(*this){
+Domain::Domain() : m_threadPool(*this){
 
 }
 
 bool Domain::start(){
-    bool started = pool.startThreads();
+    bool started = m_threadPool.startThreads();
     if(!started){
         printf("Failed starting threads");
     }
@@ -21,7 +21,7 @@ bool Domain::start(){
 }
 
 void Domain::stop(){
-    pool.stopThreads();
+    m_threadPool.stopThreads();
 }
 
 void Domain::receiveCallback(PBufWrapper buffer){
@@ -41,7 +41,7 @@ rtps::Participant* Domain::createParticipant(){
 
 void Domain::addDefaultWriterAndReader(rtps::Participant &part) {
     m_statelessWriters[m_numStatelessWriters].init(TopicKind_t::WITH_KEY, getDefaultSendMulticastLocator(),
-                                                   &pool, part.guidPrefix, ENTITYID_SPDP_BUILTIN_PARTICIPANT_WRITER);
+                                                   &m_threadPool, part.guidPrefix, ENTITYID_SPDP_BUILTIN_PARTICIPANT_WRITER);
     part.addSPDPWriter(m_statelessWriters[m_numStatelessWriters++]);
 }
 
@@ -51,7 +51,7 @@ rtps::Writer* Domain::createWriter(Participant& part, Locator_t locator, bool re
         return nullptr;
     }else{
         // TODO Differentiate WithKey and NoKey (Also changes EntityKind)
-        m_statelessWriters[m_numStatelessWriters].init(TopicKind_t::NO_KEY, locator, &pool, part.guidPrefix,
+        m_statelessWriters[m_numStatelessWriters].init(TopicKind_t::NO_KEY, locator, &m_threadPool, part.guidPrefix,
                                                        {part.getNextUserEntityKey(), EntityKind_t::USER_DEFINED_WRITER_WITHOUT_KEY});
 
         return &m_statelessWriters[m_numStatelessWriters++];

@@ -27,7 +27,7 @@ namespace rtps{
         Writer* createWriter(Participant& part, Locator_t locator, bool reliable);
 
     private:
-        ThreadPool pool;
+        ThreadPool m_threadPool;
         std::array<Participant, Config::MAX_NUM_PARTICIPANTS> m_participants;
         participantId_t m_nextParticipantId = 1;
 
