@@ -8,26 +8,25 @@
 
 #include "rtps/types.h"
 #include "rtps/ThreadPool.h"
-#include "rtps/entities/Participant.h"
 #include "rtps/entities/StatelessWriter.h"
 
 #include "ucdr/microcdr.h"
 
 namespace rtps{
+    class Participant;
     class SPDPAgent{
     public:
-        SPDPAgent(ThreadPool& pool, Participant& participant);
+        void init(Participant& participant);
         void start();
         void stop();
 
     private:
-        Participant& participant;
-        StatelessWriter writer;
-        bool running = false;
-        std::array<uint8_t, 400> buffer{};
-        ucdrBuffer microbuffer;
+        Participant* m_participant = nullptr;
+        Writer* m_writer = nullptr;
+        bool m_running = false;
+        std::array<uint8_t, 400> m_buffer{};
+        ucdrBuffer m_microbuffer;
 
-        void init();
         void addInlineQos();
         void addParticipantParameters();
         void endCurrentList();

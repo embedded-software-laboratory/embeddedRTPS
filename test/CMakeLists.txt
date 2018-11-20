@@ -7,10 +7,11 @@ add_executable(runTests
                         unittests/typesTest.cpp
                         unittests/ThreadPoolTest.cpp
                         unittests/communication/UdpConnectionTest.cpp
-        unittests/storages/PBufWrapperTest.cpp
+                        unittests/storages/PBufWrapperTest.cpp
+                        unittests/entities/ParticipantTest.cpp
                         unittests/entities/StatelessWriterTest.cpp
                         unittests/messages/MessageFactoryTest.cpp
-        unittests/storages/HistoryCacheTest.cpp
+                        unittests/storages/HistoryCacheTest.cpp
                         integration/Writer_ThreadPool_Reader.cpp
         )
 target_link_libraries(runTests gtest gtest_main gmock gmock_main)

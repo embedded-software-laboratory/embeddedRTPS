@@ -5,6 +5,7 @@
 
 #include "rtps/ThreadPool.h"
 #include "lwip/tcpip.h"
+#include "rtps/entities/Domain.h"
 
 using rtps::ThreadPool;
 
@@ -108,5 +109,5 @@ void ThreadPool::readCallback(void* args, udp_pcb*, pbuf* pbuf, const ip_addr_t*
     wrapper.port = port;
 
     // TODO Other threads shall execute this
-    pool.domain.receiveCallback(static_cast<const PBufWrapper>(wrapper)); // Avoid non-const use if API changes
+    pool.domain.receiveCallback(static_cast<const PBufWrapper>(wrapper)); // Avoid non-const use (API change might need this)
 }

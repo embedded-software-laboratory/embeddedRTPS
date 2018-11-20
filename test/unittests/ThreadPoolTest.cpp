@@ -9,6 +9,7 @@
 
 #include "rtps/ThreadPool.h"
 #include "rtps/types.h"
+#include "rtps/entities/Domain.h"
 #include "test/mocking/WriterMock.h"
 
 class ThreadPoolTest : public ::testing::Test{

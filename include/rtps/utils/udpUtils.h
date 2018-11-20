@@ -6,6 +6,7 @@
 #ifndef RTPS_UDP_UTILS_H
 #define RTPS_UDP_UTILS_H
 
+
 #include "rtps/config.h"
 
 namespace rtps {
@@ -28,7 +29,7 @@ namespace rtps {
                 LSB};
     }
 
-    uint16_t getBuiltInUnicastPort(uint8_t participantId) {
+    inline uint16_t getBuiltInUnicastPort(uint8_t participantId) {
         return PB +
                DG * Config::DOMAIN_ID +
                D1 +
@@ -41,7 +42,7 @@ namespace rtps {
                D0;
     }
 
-    uint16_t getUserUnicastPort(uint8_t participantId) {
+    inline uint16_t getUserUnicastPort(uint8_t participantId) {
         return PB +
                DG * Config::DOMAIN_ID +
                D3 +
@@ -54,31 +55,31 @@ namespace rtps {
                D2;
     }
 
-    Locator_t getBuiltInUnicastLocator(participantId_t participantId) {
+    inline Locator_t getBuiltInUnicastLocator(participantId_t participantId) {
         return Locator_t::createUDPv4Locator(Config::IP_ADDRESS[0], Config::IP_ADDRESS[1],
                                              Config::IP_ADDRESS[2], Config::IP_ADDRESS[3],
                                              getBuiltInUnicastPort(participantId));
     }
 
-    Locator_t getBuiltInMulticastLocator() {
+    inline Locator_t getBuiltInMulticastLocator() {
         return Locator_t::createUDPv4Locator(Config::IP_ADDRESS[0], Config::IP_ADDRESS[1],
                                              Config::IP_ADDRESS[2], Config::IP_ADDRESS[3],
                                              getBuiltInMulticastPort());
     }
 
-    Locator_t getUserUnicastLocator(participantId_t participantId) {
+    inline Locator_t getUserUnicastLocator(participantId_t participantId) {
         return Locator_t::createUDPv4Locator(Config::IP_ADDRESS[0], Config::IP_ADDRESS[1],
                                              Config::IP_ADDRESS[2], Config::IP_ADDRESS[3],
                                              getUserUnicastPort(participantId));
     }
 
-    Locator_t getUserMulticastLocator() {
+    inline Locator_t getUserMulticastLocator() {
         return Locator_t::createUDPv4Locator(Config::IP_ADDRESS[0], Config::IP_ADDRESS[1],
                                              Config::IP_ADDRESS[2], Config::IP_ADDRESS[3],
                                              getUserMulticastPort());
     }
 
-    Locator_t getDefaultSendMulticastLocator() {
+    inline Locator_t getDefaultSendMulticastLocator() {
         return Locator_t::createUDPv4Locator(239, 255, 0, 1,
                                              getBuiltInMulticastPort());
     }

@@ -15,36 +15,35 @@
 
 namespace rtps {
 
-class StatelessWriter : public Writer{
-public:
+    class StatelessWriter : public Writer{
+    public:
 
-    StatelessWriter(TopicKind_t topicKind, Locator_t locator, ThreadPool* threadPool,
-                    GuidPrefix_t guidPrefix, EntityId_t entityId);
+        void init(TopicKind_t topicKind, Locator_t locator, ThreadPool* threadPool,
+                  GuidPrefix_t guidPrefix, EntityId_t entityId);
 
-    const CacheChange* newChange(ChangeKind_t kind, const uint8_t* data, data_size_t size);
+        const CacheChange* newChange(ChangeKind_t kind, const uint8_t* data, data_size_t size) override;
 
-    void unsentChangesReset();
+        void unsentChangesReset() override;
 
-    SequenceNumber_t getLastSequenceNumber() const;
+        SequenceNumber_t getLastSequenceNumber() const;
 
-    void createMessageCallback(PBufWrapper& buffer) override;
+        void createMessageCallback(PBufWrapper& buffer) override;
 
-private:
-    sys_mutex_t mutex;
-    ThreadPool* threadPool;
+    private:
+        sys_mutex_t mutex;
+        ThreadPool* m_threadPool = nullptr;
 
-    const GuidPrefix_t guidPrefix;
-    const EntityId_t entityId;
+        GuidPrefix_t m_guidPrefix = GUIDPREFIX_UNKNOWN;
+        EntityId_t m_entityId = ENTITYID_UNKNOWN;
 
-    const TopicKind_t topicKind;
-    const ReliabilityKind_t reliability = ReliabilityKind_t::BEST_EFFORT;
-    SequenceNumber_t lastChangeSequenceNumber = {0, 0};
-    HistoryCache history;
-    const Locator_t locator;
+        TopicKind_t m_topicKind = TopicKind_t::NO_KEY;
+        SequenceNumber_t m_lastChangeSequenceNumber = {0, 0};
+        HistoryCache m_history;
+        Locator_t m_locator{};
 
-    bool isIrrelevant(ChangeKind_t kind) const;
+        bool isIrrelevant(ChangeKind_t kind) const;
 
-};
+    };
 
 }
 

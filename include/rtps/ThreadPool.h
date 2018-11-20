@@ -9,7 +9,6 @@
 #include "config.h"
 #include "lwip/sys.h"
 #include "rtps/communication/UdpDriver.h"
-#include "rtps/entities/Domain.h"
 #include "rtps/entities/Writer.h"
 #include "rtps/storages/PBufWrapper.h"
 #include "rtps/storages/ThreadSafeCircularBuffer.h"
@@ -18,10 +17,12 @@
 
 namespace rtps {
 
+    class Domain;
+
     class ThreadPool {
     public:
 
-        ThreadPool(Domain& domain);
+        explicit ThreadPool(Domain& domain);
         struct Workload_t{
             Writer* pWriter;
             uint8_t numCacheChangesToSend;

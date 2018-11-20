@@ -19,7 +19,7 @@ namespace rtps{
 
     typedef uint16_t ip4_port_t;
     typedef uint16_t data_size_t;
-    typedef uint8_t participantId_t; // With UDP only 120 possible
+    typedef int8_t participantId_t; // With UDP only 120 possible
 
     enum class EntityKind_t : uint8_t{
         USER_DEFINED_UNKNOWN            = 0x00,
@@ -68,6 +68,7 @@ namespace rtps{
     struct GuidPrefix_t{
         std::array<uint8_t, 12> id;
     };
+
 
     struct EntityId_t{
         std::array<uint8_t, 3> entityKey;
@@ -162,8 +163,7 @@ namespace rtps{
     }
 
     /* Default Values */
-    // TODO memory_reduction_possible
-    const EntityId_t ENTITYID_UNKNOWN = {};
+    const EntityId_t ENTITYID_UNKNOWN{};
     const EntityId_t ENTITYID_BUILD_IN_PARTICIPANT                   = {{00,00,01}, EntityKind_t::BUILD_IN_PARTICIPANT };
     const EntityId_t ENTITYID_SEDP_BUILTIN_TOPIC_WRITER              = {{00,00,02}, EntityKind_t::BUILD_IN_WRITER_WITH_KEY};
     const EntityId_t ENTITYID_SEDP_BUILTIN_TOPIC_READER              = {{00,00,02}, EntityKind_t::BUILD_IN_READER_WITH_KEY};
@@ -176,7 +176,9 @@ namespace rtps{
     const EntityId_t ENTITYID_P2P_BUILTIN_PARTICIPANT_MESSAGE_WRITER = {{00,02,00}, EntityKind_t::BUILD_IN_WRITER_WITH_KEY};
     const EntityId_t ENTITYID_P2P_BUILTIN_PARTICIPANT_MESSAGE_READER = {{00,02,00}, EntityKind_t::BUILD_IN_READER_WITH_KEY};
 
-    const GuidPrefix_t GUIDPREFIX_UNKNOWN = {};
+    const GuidPrefix_t GUIDPREFIX_UNKNOWN{};
+
+    const participantId_t PARTICIPANT_ID_INVALID = -1;
 
     const ProtocolVersion_t PROTOCOLVERSION_1_0 = {1,0};
     const ProtocolVersion_t PROTOCOLVERSION_1_1 = {1,1};
