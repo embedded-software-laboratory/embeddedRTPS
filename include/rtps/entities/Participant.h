@@ -8,10 +8,11 @@
 
 #include "rtps/types.h"
 #include "rtps/config.h"
-#include "rtps/entities/Writer.h"
 #include "rtps/discovery/SPDP.h"
 
 namespace rtps{
+
+    class Writer;
 
     class Participant{
     public:

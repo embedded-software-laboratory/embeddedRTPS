@@ -7,6 +7,8 @@
 #include "rtps/messages/Messages.h"
 #include "rtps/utils/udpUtils.h"
 #include "rtps/entities/Participant.h"
+#include "rtps/entities/Writer.h"
+#include "lwip/sys.h"
 
 using rtps::SPDPAgent;
 using rtps::SMElement::ParameterId;

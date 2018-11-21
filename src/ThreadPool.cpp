@@ -4,8 +4,10 @@
  */
 
 #include "rtps/ThreadPool.h"
+
 #include "lwip/tcpip.h"
 #include "rtps/entities/Domain.h"
+#include "rtps/entities/Writer.h"
 
 using rtps::ThreadPool;
 

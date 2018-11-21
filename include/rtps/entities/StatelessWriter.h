@@ -8,12 +8,14 @@
 
 #include "rtps/types.h"
 #include "rtps/config.h"
-#include "rtps/ThreadPool.h"
 #include "rtps/entities/Writer.h"
-#include "rtps/storages/PBufWrapper.h"
 #include "rtps/storages/HistoryCache.h"
+#include "lwip/sys.h"
 
 namespace rtps {
+
+    class ThreadPool;
+    class PBufWrapper;
 
     class StatelessWriter : public Writer{
     public:

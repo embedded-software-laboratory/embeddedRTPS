@@ -5,6 +5,8 @@
 
 #include "rtps/entities/Participant.h"
 
+#include "rtps/entities/Writer.h"
+
 using rtps::Participant;
 
 Participant::Participant() : guidPrefix(GUIDPREFIX_UNKNOWN), participantId(PARTICIPANT_ID_INVALID){};

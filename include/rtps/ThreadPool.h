@@ -9,7 +9,6 @@
 #include "config.h"
 #include "lwip/sys.h"
 #include "rtps/communication/UdpDriver.h"
-#include "rtps/entities/Writer.h"
 #include "rtps/storages/PBufWrapper.h"
 #include "rtps/storages/ThreadSafeCircularBuffer.h"
 
@@ -18,6 +17,7 @@
 namespace rtps {
 
     class Domain;
+    class Writer;
 
     class ThreadPool {
     public:

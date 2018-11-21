@@ -8,7 +8,6 @@
 
 #include "rtps/types.h"
 #include "rtps/storages/PBufWrapper.h"
-#include "rtps/storages/ThreadSafeCircularBuffer.h"
 
 namespace rtps{
 

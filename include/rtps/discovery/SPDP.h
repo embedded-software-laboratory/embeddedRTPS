@@ -7,13 +7,12 @@
 #define RTPS_SPDP_H
 
 #include "rtps/types.h"
-#include "rtps/ThreadPool.h"
-#include "rtps/entities/StatelessWriter.h"
-
 #include "ucdr/microcdr.h"
 
 namespace rtps{
     class Participant;
+    class Writer;
+
     class SPDPAgent{
     public:
         void init(Participant& participant);

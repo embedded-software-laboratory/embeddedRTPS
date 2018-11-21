@@ -3,8 +3,11 @@
  * Author: Andreas Wüstenberg (andreas.wuestenberg@rwth-aachen.de)
  */
 
-#include "rtps/messages/MessageFactory.h"
 #include "rtps/entities/StatelessWriter.h"
+
+#include "rtps/ThreadPool.h"
+#include "rtps/messages/MessageFactory.h"
+#include "rtps/storages/PBufWrapper.h"
 
 namespace rtps{
 
