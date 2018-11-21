@@ -15,10 +15,10 @@ namespace rtps {
         const uint16_t DG = 250; // DomainId Gain
         const uint16_t PG = 2; // ParticipantId Gain
         // Additional Offsets
-        const uint16_t D0 = 0;
-        const uint16_t D1 = 10;
-        const uint16_t D2 = 1;
-        const uint16_t D3 = 11;
+        const uint16_t D0 = 0; // Builtin multicast
+        const uint16_t D1 = 10; // Builtin unicast
+        const uint16_t D2 = 1; // User multicast
+        const uint16_t D3 = 11; // User unicast
     }
 
 
@@ -29,30 +29,56 @@ namespace rtps {
                 LSB};
     }
 
-    inline uint16_t getBuiltInUnicastPort(uint8_t participantId) {
+    inline ip4_port_t getBuiltInUnicastPort(participantId_t participantId) {
         return PB +
                DG * Config::DOMAIN_ID +
                D1 +
                PG * participantId;
     }
 
-    constexpr uint16_t getBuiltInMulticastPort() {
+    constexpr ip4_port_t getBuiltInMulticastPort() {
         return PB +
                DG * Config::DOMAIN_ID +
                D0;
     }
 
-    inline uint16_t getUserUnicastPort(uint8_t participantId) {
+    inline ip4_port_t getUserUnicastPort(participantId_t participantId) {
         return PB +
                DG * Config::DOMAIN_ID +
                D3 +
                PG * participantId;
     }
 
-    constexpr uint16_t getUserMulticastPort() {
+    constexpr ip4_port_t getUserMulticastPort() {
         return PB +
                DG * Config::DOMAIN_ID +
                D2;
+    }
+
+    inline bool isUserPort(ip4_port_t port){
+        return (port & 1) == 1;
+    }
+
+    inline bool isMultiCastPort(ip4_port_t port){
+        const auto idWithoutBase = port - PB - DG*Config::DOMAIN_ID;
+        return idWithoutBase == D0 || idWithoutBase == D2;
+    }
+
+    inline participantId_t getParticipantIdFromUnicastPort(ip4_port_t port, bool isUserPort){
+        const auto basePart = PB + DG*Config::DOMAIN_ID;
+        participantId_t participantPart = port - basePart;
+        if(isUserPort){
+            participantPart -= D3;
+        }else{
+            participantPart -= D1;
+        }
+
+        auto id = static_cast<participantId_t>(participantPart / PG);
+        if(id*PG + basePart == port){
+            return id;
+        }else{
+            return PARTICIPANT_ID_INVALID;
+        }
     }
 
     inline Locator_t getBuiltInUnicastLocator(participantId_t participantId) {

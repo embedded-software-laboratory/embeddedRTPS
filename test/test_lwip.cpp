@@ -74,7 +74,9 @@ TEST_F(LwIp, SendSelfChainedPBufs){
     LWIP_PORT_INIT_IPADDR(&addr); // self
 
     rtps::UdpDriver driver;
-    rtps::UdpConnection conn = driver.createUdpConnection(addr, port, receiveCallback nullptr);
+    LOCK_TCPIP_CORE();
+    const rtps::UdpConnection* conn = driver.createUdpConnection(port, receiveCallback, nullptr);
+    UNLOCK_TCPIP_CORE();
 
 
     pbuf* first = pbuf_alloc(PBUF_TRANSPORT, 8, PBUF_POOL);
@@ -89,8 +91,11 @@ TEST_F(LwIp, SendSelfChainedPBufs){
     std::memcpy(first->payload, data0, 8);
     std::memcpy(second->payload, data1, 8);
 
-    driver.sendPacket(conn, *first);
-    while(!callbackFinished);
+    LOCK_TCPIP_CORE();
+    driver.sendPacket(*conn, addr, port, *first);
+    UNLOCK_TCPIP_CORE();
+    sys_msleep(50);
+    EXPECT_TRUE(callbackFinished);
 }
 
 TEST_F(LwIp, CombineAndSplitBehavior){
@@ -112,5 +117,37 @@ TEST_F(LwIp, CombineAndSplitBehavior){
     EXPECT_EQ(second->tot_len, 10);
     EXPECT_EQ(tail->tot_len, 20);
 
+
+}
+
+void receiveCallback2(void* arg, udp_pcb*, pbuf*, const ip_addr_t*, uint16_t){
+    *static_cast<bool*>(arg) = true;
+}
+
+/**
+ * Creating a connection and therefore binding some port needs the port on which
+ * we want to receive. In this case "destPort", NOT "srcPort"
+ */
+TEST_F(LwIp, ConnectionContainsInputPort){
+    bool called = false;
+    //const uint16_t srcPort = 7050;
+    const uint16_t destPort = 7060;
+    ip4_addr addr;
+    LWIP_PORT_INIT_IPADDR(&addr); // self
+
+    rtps::UdpDriver transport;
+    LOCK_TCPIP_CORE();
+    //const rtps::UdpConnection* conn = transport.createUdpConnection(srcPort, receiveCallback2, &called);
+    const rtps::UdpConnection* conn = transport.createUdpConnection(destPort, receiveCallback2, &called);
+    UNLOCK_TCPIP_CORE();
+    rtps::PBufWrapper wrapper(10);
+
+    LOCK_TCPIP_CORE();
+    err_t err = udp_sendto(conn->pcb, wrapper.firstElement, &addr, destPort);
+    UNLOCK_TCPIP_CORE();
+
+    EXPECT_EQ(err, ERR_OK);
+    sys_msleep(20);
+    EXPECT_TRUE(called);
 
 }

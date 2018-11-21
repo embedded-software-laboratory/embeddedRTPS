@@ -29,7 +29,8 @@ namespace rtps{
     private:
         ThreadPool m_threadPool;
         std::array<Participant, Config::MAX_NUM_PARTICIPANTS> m_participants;
-        participantId_t m_nextParticipantId = 1;
+        const uint8_t PARTICIPANT_START_ID = 1;
+        participantId_t m_nextParticipantId = PARTICIPANT_START_ID;
 
         std::array<StatelessWriter, Config::NUM_STATELESS_WRITERS> m_statelessWriters;
         uint8_t m_numStatelessWriters = 0;

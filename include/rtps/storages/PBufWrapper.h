@@ -30,9 +30,9 @@ namespace rtps {
 
         // Shallow Copy. No copying of the underlying pbuf. Just another reference like a shared pointer.
         PBufWrapper(const PBufWrapper& other);
-        PBufWrapper& operator=(const PBufWrapper& other) noexcept;
+        PBufWrapper& operator=(const PBufWrapper& other);
 
-        PBufWrapper(PBufWrapper&& other);
+        PBufWrapper(PBufWrapper&& other) noexcept;
         PBufWrapper& operator=(PBufWrapper&& other) noexcept;
 
         ~PBufWrapper();

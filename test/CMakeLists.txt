@@ -9,9 +9,11 @@ add_executable(runTests
                         unittests/communication/UdpConnectionTest.cpp
                         unittests/storages/PBufWrapperTest.cpp
                         unittests/entities/ParticipantTest.cpp
+                        unittests/entities/StatelessReaderTest.cpp
                         unittests/entities/StatelessWriterTest.cpp
                         unittests/messages/MessageFactoryTest.cpp
                         unittests/storages/HistoryCacheTest.cpp
+                        unittests/utils/udpUtilsTest.cpp
         )
 target_link_libraries(runTests gtest gtest_main gmock gmock_main)
 target_link_libraries(runTests rtps lwip)

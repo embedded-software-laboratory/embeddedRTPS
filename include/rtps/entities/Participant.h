@@ -28,6 +28,7 @@ namespace rtps{
         Writer* addUserWriter(Writer& writer);
         void addSPDPWriter(Writer& writer);
         Writer* getSPDPWriter();
+        void newMessage(const uint8_t* data, uint16_t len);
 
     private:
         std::array<Writer*, Config::NUM_WRITERS_PER_PARTICIPANT> m_writers{nullptr};

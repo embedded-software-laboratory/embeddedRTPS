@@ -14,21 +14,18 @@ namespace rtps {
     template<class UdpInterface = LwipInterface>
     struct UdpConnectionT {
         udp_pcb *pcb = nullptr;
-        ip4_addr addr;
         uint16_t port;
         bool is_multicast = false;
 
         UdpConnectionT() = default;
 
-        UdpConnectionT(ip4_addr addr, uint16_t port)
-                : addr(addr), port(port) {
+        explicit UdpConnectionT(uint16_t port): port(port) {
             //LOCK_TCPIP_CORE();
             pcb = UdpInterface::udpNew();
             //UNLOCK_TCPIP_CORE();
         }
 
-        UdpConnectionT &operator=(UdpConnectionT &&other) {
-            addr = other.addr;
+        UdpConnectionT &operator=(UdpConnectionT &&other) noexcept{
             port = other.port;
             is_multicast = other.is_multicast;
 
@@ -44,9 +41,9 @@ namespace rtps {
 
         ~UdpConnectionT() {
             if (pcb != nullptr) {
-                //LOCK_TCPIP_CORE();
+                LOCK_TCPIP_CORE();
                 UdpInterface::udpRemove(pcb);
-                //UNLOCK_TCPIP_CORE();
+                UNLOCK_TCPIP_CORE();
                 pcb = nullptr;
             }
         }

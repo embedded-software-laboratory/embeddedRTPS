@@ -1,0 +1,48 @@
+/*
+ *
+ * Author: Andreas Wüstenberg (andreas.wuestenberg@rwth-aachen.de)
+ */
+
+#include <gtest/gtest.h>
+
+#include "rtps/utils/udpUtils.h"
+
+using rtps::isUserPort;
+using rtps::getBuiltInMulticastPort;
+using rtps::getBuiltInUnicastPort;
+using rtps::getUserMulticastPort;
+using rtps::getUserUnicastPort;
+using rtps::isMultiCastPort;
+
+TEST(IsBuildinPort, WorksCorrecltyWithGetMethods){
+    EXPECT_FALSE(isUserPort(getBuiltInMulticastPort()));
+    EXPECT_FALSE(isUserPort(getBuiltInUnicastPort(1)));
+    EXPECT_TRUE(isUserPort(getUserMulticastPort()));
+    EXPECT_TRUE(isUserPort(getUserUnicastPort(1)));
+}
+
+TEST(IsMultiCast, WorksCorrecltyWithGetMethods){
+    EXPECT_TRUE(isMultiCastPort(getBuiltInMulticastPort()));
+    EXPECT_FALSE(isMultiCastPort(getBuiltInUnicastPort(1)));
+    EXPECT_TRUE(isMultiCastPort(getUserMulticastPort()));
+    EXPECT_FALSE(isMultiCastPort(getUserUnicastPort(1)));
+}
+
+TEST(GetParticipantIdFromPort, returnsInvalidIdIfPortIsNoValidParticipantPort){
+    rtps::ip4_port_t invalidPort = rtps::getUserUnicastPort(1) + static_cast<rtps::ip4_port_t>(1);
+
+    rtps::participantId_t id = rtps::getParticipantIdFromUnicastPort(invalidPort, true);
+
+    EXPECT_EQ(id, rtps::PARTICIPANT_ID_INVALID);
+}
+
+TEST(GetParticipantIdFromPort, returnsInvalidIdIfPortIsMultiCast){
+    rtps::ip4_port_t userMultiCastPort = rtps::getUserMulticastPort();
+    rtps::ip4_port_t builtinMultiCastPort = rtps::getBuiltInMulticastPort();
+
+    rtps::participantId_t id = rtps::getParticipantIdFromUnicastPort(userMultiCastPort, true);
+    EXPECT_EQ(id, rtps::PARTICIPANT_ID_INVALID);
+
+    rtps::participantId_t id2 = rtps::getParticipantIdFromUnicastPort(builtinMultiCastPort, true);
+    EXPECT_EQ(id2, rtps::PARTICIPANT_ID_INVALID);
+}

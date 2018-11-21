@@ -16,10 +16,10 @@ using rtps::UdpDriver;
  * @param callback Function that gets called when a packet is received on addr:port.
  * @return True if creation was finished without errors. False otherwise.
  */
-const rtps::UdpConnection* UdpDriver::createUdpConnection(const ip4_addr_t &addr, ip4_port_t port, udp_rx_func_t callback, void* args) {
+const rtps::UdpConnection* UdpDriver::createUdpConnection(ip4_port_t receivePort, udp_rx_func_t callback, void* args) {
 
     for(auto const &conn : m_conns){
-        if(conn.addr.addr == addr.addr && conn.port == port){
+        if(conn.port == receivePort){
             return &conn;
         }
     }
@@ -28,13 +28,13 @@ const rtps::UdpConnection* UdpDriver::createUdpConnection(const ip4_addr_t &addr
         return nullptr;
     }
 
-    UdpConnection udp_conn(addr, port);
+    UdpConnection udp_conn(receivePort);
     //LOCK_TCPIP_CORE();
-    err_t err = udp_bind(udp_conn.pcb, IP_ADDR_ANY, port); //to receive multicast
+    err_t err = udp_bind(udp_conn.pcb, IP_ADDR_ANY, receivePort); //to receive multicast
     //UNLOCK_TCPIP_CORE();
 
     if(err != ERR_OK && err != ERR_USE){
-        printf("Failed to bind to %s:%u: error %u\n", ipaddr_ntoa(&addr), port, err);
+        printf("Failed to bind to port%u: error %u\n", receivePort, err);
         return nullptr;
     }
     //LOCK_TCPIP_CORE();
@@ -48,12 +48,12 @@ const rtps::UdpConnection* UdpDriver::createUdpConnection(const ip4_addr_t &addr
     return &m_conns[m_numConns-1];
 }
 
-bool UdpDriver::sendPacket(const UdpConnection& conn, pbuf& buffer){
+bool UdpDriver::sendPacket(const UdpConnection& conn, ip4_addr_t& destAddr, ip4_port_t destPort, pbuf& buffer){
 
-    err_t err = udp_sendto(conn.pcb, &buffer, &conn.addr, conn.port);
+    err_t err = udp_sendto(conn.pcb, &buffer, &destAddr, destPort);
 
     if(err != ERR_OK){
-        printf("UDP TRANSMIT NOT SUCCESSFUL %s:%u size: %u err: %i\n", ipaddr_ntoa(&conn.addr), conn.port, buffer.tot_len, err);
+        printf("UDP TRANSMIT NOT SUCCESSFUL %s:%u size: %u err: %i\n", ipaddr_ntoa(&destAddr), destPort, buffer.tot_len, err);
         return false;
     }
     printf("Send packet successful \n");

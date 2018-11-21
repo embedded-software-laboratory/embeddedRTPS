@@ -28,13 +28,18 @@ namespace rtps {
             uint8_t numCacheChangesToSend;
         };
 
+        struct PacketInfo{
+            ip4_port_t srcPort;
+            ip4_addr_t destAddr;
+            ip4_port_t destPort;
+            PBufWrapper buffer;
+        };
+
         bool startThreads();
 
         void stopThreads();
 
         void clearQueues();
-
-        bool addConnection(const ip4_addr_t& addr, const ip4_port_t port);
 
         void addWorkload(Workload_t workload);
 
@@ -45,7 +50,7 @@ namespace rtps {
         std::array<sys_thread_t, Config::THREAD_POOL_NUM_WRITERS> writers;
 
         ThreadSafeCircularBuffer<Workload_t, Config::THREAD_POOL_WORKLOAD_QUEUE_LENGTH> inputQueue;
-        ThreadSafeCircularBuffer<PBufWrapper, Config::THREAD_POOL_WORKLOAD_QUEUE_LENGTH> outputQueue;
+        ThreadSafeCircularBuffer<PacketInfo, Config::THREAD_POOL_WORKLOAD_QUEUE_LENGTH> outputQueue;
 
         static void readCallback(void* arg, udp_pcb* pcb, pbuf* p, const ip_addr_t* addr, ip4_port_t port);
 

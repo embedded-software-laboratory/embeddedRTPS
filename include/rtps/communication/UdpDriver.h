@@ -24,9 +24,9 @@ namespace rtps {
     public:
         typedef void (*udp_rx_func_t)(void *arg, udp_pcb *pcb, pbuf *p, const ip_addr_t *addr, ip4_port_t port);
 
-        const rtps::UdpConnection* createUdpConnection(const ip4_addr_t &addr, ip4_port_t port, udp_rx_func_t callback, void* args);
+        const rtps::UdpConnection* createUdpConnection(ip4_port_t receivePort, udp_rx_func_t callback, void* args);
 
-        bool sendPacket(const UdpConnection& conn, pbuf& buffer);
+        bool sendPacket(const UdpConnection& conn, ip4_addr_t& destAddr, ip4_port_t destPort, pbuf& buffer);
 
     };
 }

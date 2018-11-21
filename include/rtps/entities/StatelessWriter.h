@@ -9,19 +9,17 @@
 #include "rtps/types.h"
 #include "rtps/config.h"
 #include "rtps/entities/Writer.h"
-#include "rtps/storages/HistoryCache.h"
 #include "lwip/sys.h"
 
 namespace rtps {
 
-    class ThreadPool;
-    class PBufWrapper;
+    struct PBufWrapper;
 
     class StatelessWriter : public Writer{
     public:
 
         void init(TopicKind_t topicKind, Locator_t locator, ThreadPool* threadPool,
-                  GuidPrefix_t guidPrefix, EntityId_t entityId);
+                  GuidPrefix_t guidPrefix, EntityId_t entityId, participantId_t participantId);
 
         const CacheChange* newChange(ChangeKind_t kind, const uint8_t* data, data_size_t size) override;
 
@@ -29,7 +27,7 @@ namespace rtps {
 
         SequenceNumber_t getLastSequenceNumber() const;
 
-        void createMessageCallback(PBufWrapper& buffer) override;
+        void createMessageCallback(ThreadPool::PacketInfo& packetInfo) override;
 
     private:
         sys_mutex_t m_mutex;
@@ -37,6 +35,7 @@ namespace rtps {
 
         GuidPrefix_t m_guidPrefix = GUIDPREFIX_UNKNOWN;
         EntityId_t m_entityId = ENTITYID_UNKNOWN;
+        ip4_port_t m_sendPort = 0;
 
         TopicKind_t m_topicKind = TopicKind_t::NO_KEY;
         SequenceNumber_t m_lastChangeSequenceNumber = {0, 0};

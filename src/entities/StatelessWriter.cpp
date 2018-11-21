@@ -8,16 +8,18 @@
 #include "rtps/ThreadPool.h"
 #include "rtps/messages/MessageFactory.h"
 #include "rtps/storages/PBufWrapper.h"
+#include "rtps/utils/udpUtils.h"
 
 namespace rtps{
 
     void StatelessWriter::init(TopicKind_t topicKind, Locator_t locator, ThreadPool* threadPool,
-                          GuidPrefix_t guidPrefix, EntityId_t entityId){
+                          GuidPrefix_t guidPrefix, EntityId_t entityId, participantId_t participantId){
         mp_threadPool = threadPool;
         m_guidPrefix = guidPrefix;
         m_entityId = entityId;
         m_topicKind = topicKind;
         m_locator = locator;
+        m_sendPort = getUserUnicastPort(participantId);
         if (sys_mutex_new(&m_mutex) != ERR_OK) {
             printf("Failed to create mutex \n");
         }
@@ -60,19 +62,20 @@ namespace rtps{
         return kind == ChangeKind_t::INVALID || (m_topicKind == TopicKind_t::NO_KEY && kind != ChangeKind_t::ALIVE);
     }
 
-    void StatelessWriter::createMessageCallback(PBufWrapper& buffer){
-        MessageFactory::addHeader(buffer, m_guidPrefix);
-        MessageFactory::addSubMessageTimeStamp(buffer);
+    void StatelessWriter::createMessageCallback(ThreadPool::PacketInfo& packetInfo){
+        MessageFactory::addHeader(packetInfo.buffer, m_guidPrefix);
+        MessageFactory::addSubMessageTimeStamp(packetInfo.buffer);
 
         {
             Lock lock(m_mutex);
             const CacheChange* next = m_history.getNextCacheChange();
-            MessageFactory::addSubMessageData(buffer, next->data, false, next->sequenceNumber, m_entityId);
+            MessageFactory::addSubMessageData(packetInfo.buffer, next->data, false, next->sequenceNumber, m_entityId);
         }
 
         // Just usable for IPv4
-        IP4_ADDR((&buffer.addr), m_locator.address[12],m_locator.address[13],m_locator.address[14], m_locator.address[15]);
-        buffer.port = (ip4_port_t) m_locator.port;
+        packetInfo.srcPort = m_sendPort;
+        IP4_ADDR((&packetInfo.destAddr), m_locator.address[12],m_locator.address[13],m_locator.address[14], m_locator.address[15]);
+        packetInfo.destPort = (ip4_port_t) m_locator.port;
     }
 
 

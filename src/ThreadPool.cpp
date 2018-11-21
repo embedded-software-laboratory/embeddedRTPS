@@ -40,10 +40,6 @@ void ThreadPool::clearQueues(){
     outputQueue.clear();
 }
 
-bool ThreadPool::addConnection(const ip4_addr_t& addr, const ip4_port_t port) {
-    return transport.createUdpConnection(addr, port, readCallback, this);
-}
-
 void ThreadPool::addWorkload(Workload_t workload){
     inputQueue.moveElementIntoBuffer(std::move(workload));
 }
@@ -63,14 +59,14 @@ void ThreadPool::writerFunction(void* arg){
                 continue;
             }
             for(uint8_t i=0; i < workload.numCacheChangesToSend; ++i){
-                PBufWrapper buffer;
-                workload.pWriter->createMessageCallback(buffer);
+                PacketInfo info;
+                workload.pWriter->createMessageCallback(info);
 
-                if(!buffer.isValid()){
+                if(!info.buffer.isValid()){
                     continue;
                 }
 
-                pool->outputQueue.moveElementIntoBuffer(std::move(buffer));
+                pool->outputQueue.moveElementIntoBuffer(std::move(info));
 
                 // Execute with tcpip-thread
                 tcpip_callback(sendFunction, pool); // Blocking i.e. thread safe call
@@ -85,19 +81,19 @@ void ThreadPool::sendFunction(void* arg) {
         printf("nullptr passed to send function\n");
         return;
     }
-    PBufWrapper pBufWrapper;
-    const bool isWorkToDo = pool->outputQueue.moveFirstInto(pBufWrapper);
+    PacketInfo info;
+    const bool isWorkToDo = pool->outputQueue.moveFirstInto(info);
     if(!isWorkToDo){
         printf("Who dares to wake me up if there is nothing to do?!");
         return;
     }
-    auto conn = pool->transport.createUdpConnection(pBufWrapper.addr, pBufWrapper.port, readCallback, pool);
+    auto conn = pool->transport.createUdpConnection(info.srcPort, readCallback, pool);
     if(conn == nullptr){
-        printf("Failed to create connection: %s:%u ", ipaddr_ntoa(&pBufWrapper.addr), pBufWrapper.port);
+        printf("Failed to create connection on port %u \n", info.srcPort);
         return;
     }
 
-    pool->transport.sendPacket(*conn, *pBufWrapper.firstElement);
+    pool->transport.sendPacket(*conn, info.destAddr, info.destPort, *info.buffer.firstElement);
 }
 
 

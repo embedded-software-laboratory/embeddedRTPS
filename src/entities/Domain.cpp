@@ -25,7 +25,18 @@ void Domain::stop(){
 }
 
 void Domain::receiveCallback(PBufWrapper buffer){
-    printf("received callback");
+    if(isMultiCastPort(buffer.port)){
+        // Pass to all
+        for(auto i=0; i < m_nextParticipantId - PARTICIPANT_START_ID; ++i) {
+            m_participants[i].newMessage(static_cast<uint8_t*>(buffer.firstElement->payload), buffer.firstElement->len);
+        }
+    }else{
+        // Pass to addressed one only
+        participantId_t id = getParticipantIdFromUnicastPort(buffer.port, isUserPort(buffer.port));
+        if(id != PARTICIPANT_ID_INVALID){
+            m_participants[id-PARTICIPANT_START_ID].newMessage(static_cast<uint8_t*>(buffer.firstElement->payload), buffer.firstElement->len);
+        }
+    }
 }
 
 rtps::Participant* Domain::createParticipant(){
@@ -41,7 +52,7 @@ rtps::Participant* Domain::createParticipant(){
 
 void Domain::addDefaultWriterAndReader(rtps::Participant &part) {
     m_statelessWriters[m_numStatelessWriters].init(TopicKind_t::WITH_KEY, getDefaultSendMulticastLocator(),
-                                                   &m_threadPool, part.guidPrefix, ENTITYID_SPDP_BUILTIN_PARTICIPANT_WRITER);
+                                                   &m_threadPool, part.guidPrefix, ENTITYID_SPDP_BUILTIN_PARTICIPANT_WRITER, part.participantId);
     part.addSPDPWriter(m_statelessWriters[m_numStatelessWriters++]);
 }
 
@@ -52,7 +63,7 @@ rtps::Writer* Domain::createWriter(Participant& part, Locator_t locator, bool re
     }else{
         // TODO Differentiate WithKey and NoKey (Also changes EntityKind)
         m_statelessWriters[m_numStatelessWriters].init(TopicKind_t::NO_KEY, locator, &m_threadPool, part.guidPrefix,
-                                                       {part.getNextUserEntityKey(), EntityKind_t::USER_DEFINED_WRITER_WITHOUT_KEY});
+                                                       {part.getNextUserEntityKey(), EntityKind_t::USER_DEFINED_WRITER_WITHOUT_KEY}, part.participantId);
 
         return &m_statelessWriters[m_numStatelessWriters++];
     }

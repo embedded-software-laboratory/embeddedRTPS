@@ -51,3 +51,7 @@ void Participant::addSPDPWriter(rtps::Writer &writer) {
 rtps::Writer* Participant::getSPDPWriter() {
     return mp_SPDPWriter;
 }
+
+void Participant::newMessage(const uint8_t* data, uint16_t len){
+    // TODO
+}

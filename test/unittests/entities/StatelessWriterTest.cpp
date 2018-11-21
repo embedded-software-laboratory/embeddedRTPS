@@ -16,7 +16,8 @@ using namespace rtps;
 class EmptyRTPSWriter : public ::testing::Test{
 protected:
     const TopicKind_t arbitraryType = TopicKind_t::NO_KEY;
-    Locator_t arbitraryLocator = Locator_t::createUDPv4Locator(192, 168, 0, 248, 7000);
+    const Locator_t arbitraryLocator = Locator_t::createUDPv4Locator(192, 168, 0, 248, 7000);
+    const participantId_t arbitraryParticipantId = 1;
 
     StatelessWriter writer;
     static const data_size_t size = 5;
@@ -24,7 +25,7 @@ protected:
 
     void SetUp() override{
         rtps::init();
-        writer.init(arbitraryType, arbitraryLocator, nullptr, GUIDPREFIX_UNKNOWN, ENTITYID_UNKNOWN);
+        writer.init(arbitraryType, arbitraryLocator, nullptr, GUIDPREFIX_UNKNOWN, ENTITYID_UNKNOWN, arbitraryParticipantId);
     }
 };
 
@@ -74,13 +75,14 @@ TEST_F(EmptyRTPSWriter, newChange_DoesAllocateExactSize){
 class EmptyRTPSWriterWithoutKey : public ::testing::Test{
 protected:
     Locator_t arbitraryLocator = Locator_t::createUDPv4Locator(192, 168, 0, 248, 7000);
+    const participantId_t arbitraryParticipantId = 1;
     StatelessWriter writer;
     static const data_size_t size = 5;
     const uint8_t data[size] = {0, 1, 2, 3, 4};
 
     void SetUp() override{
         rtps::init();
-        writer.init(TopicKind_t::NO_KEY, arbitraryLocator, nullptr, GUIDPREFIX_UNKNOWN, ENTITYID_UNKNOWN);
+        writer.init(TopicKind_t::NO_KEY, arbitraryLocator, nullptr, GUIDPREFIX_UNKNOWN, ENTITYID_UNKNOWN, arbitraryParticipantId);
     }
 };
 
@@ -100,9 +102,10 @@ TEST_F(EmptyRTPSWriterWithoutKey, newChange_IgnoresAllKindThatAreNotAlive){
 class EmptyRTPSWriterWithKey : public ::testing::Test{
 protected:
     Locator_t arbitraryLocator = Locator_t::createUDPv4Locator(192, 168, 0, 248, 7000);
+    const participantId_t arbitraryParticipantId = 1;
     StatelessWriter writer;
     void SetUp() override{
-        writer.init(TopicKind_t::WITH_KEY, arbitraryLocator, nullptr, GUIDPREFIX_UNKNOWN, ENTITYID_UNKNOWN);
+        writer.init(TopicKind_t::WITH_KEY, arbitraryLocator, nullptr, GUIDPREFIX_UNKNOWN, ENTITYID_UNKNOWN, arbitraryParticipantId);
     };
 };
 
