@@ -17,6 +17,9 @@ namespace rtps{
         virtual void createMessageCallback(ThreadPool::PacketInfo& buffer) = 0;
         virtual const CacheChange* newChange(ChangeKind_t kind, const uint8_t* data, data_size_t size) = 0;
         virtual void unsentChangesReset() = 0;
+
+    protected:
+        virtual ~Writer() = default;
     };
 }
 

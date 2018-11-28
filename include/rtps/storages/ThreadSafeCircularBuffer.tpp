@@ -14,7 +14,7 @@ namespace rtps {
             printf("Failed to create mutex \n");
             return false;
         } else {
-            printf("Successfully created mutex at %p\n", &m_mutex);
+            printf("Successfully created mutex at %p\n", static_cast<void*>(&m_mutex));
             m_initialized = true;
             return true;
         }

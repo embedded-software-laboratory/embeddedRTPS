@@ -29,7 +29,7 @@ namespace rtps{
             header.guidPrefix = guidPrefix;
 
             header.serializeInto(buffer);
-        };
+        }
 
         template <class Buffer>
         void addSubMessageTimeStamp(Buffer& buffer, bool setInvalid=false){

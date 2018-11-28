@@ -51,6 +51,6 @@ namespace rtps{
         inline void incrementIterator(uint16_t& iterator) const;
         inline void incrementTail();
     };
-};
+}
 
 #endif //RTPS_HISTORYCACHE_H

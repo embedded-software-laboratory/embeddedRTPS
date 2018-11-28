@@ -9,9 +9,13 @@
 
 using rtps::Participant;
 
-Participant::Participant() : guidPrefix(GUIDPREFIX_UNKNOWN), participantId(PARTICIPANT_ID_INVALID){};
+Participant::Participant() : guidPrefix(GUIDPREFIX_UNKNOWN), participantId(PARTICIPANT_ID_INVALID){
+
+}
 Participant::Participant(const GuidPrefix_t& guidPrefix, participantId_t participantId)
-        : guidPrefix(guidPrefix), participantId(participantId){};
+        : guidPrefix(guidPrefix), participantId(participantId){
+
+}
 
 Participant::~Participant() {
     m_spdpAgent.stop();
@@ -52,6 +56,6 @@ rtps::Writer* Participant::getSPDPWriter() {
     return mp_SPDPWriter;
 }
 
-void Participant::newMessage(const uint8_t* data, uint16_t len){
+void Participant::newMessage(const uint8_t* /*data*/, uint16_t /*len*/){
     // TODO
 }

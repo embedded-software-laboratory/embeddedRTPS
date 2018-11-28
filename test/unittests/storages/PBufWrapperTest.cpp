@@ -142,7 +142,7 @@ TEST_F(PBufWrapperWith10ByteReserved, Clone_MakesADeepCopy){
     EXPECT_EQ(clone.spaceLeft(), wrapper.spaceLeft());
     EXPECT_NE(clone.firstElement, wrapper.firstElement);
 
-    auto size = wrapper.firstElement->tot_len;
+    const auto size = 10;
     uint8_t data[size];
     pbuf_copy_partial(wrapper.firstElement, data, size, 0);
     EXPECT_EQ(pbuf_memcmp(clone.firstElement, 0, data, size), 0);
@@ -187,7 +187,7 @@ protected:
     const uint8_t data[8]{0,1,2,3,4,5,6,7};
     const static uint16_t lengthData = sizeof(data)/sizeof(data[0]);
     const static uint16_t lengthFirst = 5;
-    static_assert(lengthFirst < lengthData);
+    static_assert(lengthFirst < lengthData, "Should be split into two elements of strict positive size.");
     const static uint16_t lengthSecond = lengthData - lengthFirst;
     PBufWrapper wrapper;
     const std::array<uint8_t, lengthData> zeros{};
