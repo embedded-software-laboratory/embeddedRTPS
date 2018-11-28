@@ -73,6 +73,11 @@ namespace rtps{
     struct EntityId_t{
         std::array<uint8_t, 3> entityKey;
         EntityKind_t entityKind;
+
+        bool operator==(const EntityId_t& other) const{
+            return this->entityKey == other.entityKey &&
+                   this->entityKind == other.entityKind;
+        }
     };
 
     // Described as long but there wasn't any definition. Other than 32 bit does not conform the default values

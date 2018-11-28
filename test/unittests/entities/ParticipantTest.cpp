@@ -27,3 +27,13 @@ TEST_F(SomeParticipant, getNextUserEntityKey_increasesCorrectly){
 
     ASSERT_THAT(nextKey, testing::ElementsAre(0,0,1));
 }
+
+/*
+class ParticipantWithSPDP : public ::testing::Test{
+protected:
+    SPDPReaderMock
+    rtps::GuidPrefix_t somePrefix{1};
+    rtps::participantId_t someId = 1;
+    Participant part{somePrefix, someId};
+
+};*/

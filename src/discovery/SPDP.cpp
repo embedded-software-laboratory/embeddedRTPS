@@ -4,7 +4,7 @@
  */
 
 #include "rtps/discovery/SPDP.h"
-#include "rtps/messages/Messages.h"
+#include "rtps/messages/MessageTypes.h"
 #include "rtps/utils/udpUtils.h"
 #include "rtps/entities/Participant.h"
 #include "rtps/entities/Writer.h"

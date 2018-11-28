@@ -22,6 +22,7 @@ namespace rtps {
         const uint8_t NUM_STATELESS_WRITERS = 30;
         const uint8_t MAX_NUM_PARTICIPANTS = 3;
         const uint8_t NUM_WRITERS_PER_PARTICIPANT = 10;
+        const uint8_t NUM_READERS_PER_PARTICIPANT = 10;
 
         const int SPDP_RESEND_PERIOD_MS = 500;
         const int SPDP_WRITER_STACKSIZE = 500;

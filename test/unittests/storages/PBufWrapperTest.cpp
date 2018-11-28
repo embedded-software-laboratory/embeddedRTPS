@@ -130,7 +130,7 @@ TEST_F(PBufWrapperWith10ByteReserved, ReserveAppend_WorksWhenNotEnoughSpaceLeft)
 
 TEST_F(PBufWrapperWith10ByteReserved, GetSize_IsZeroIfOnlyReserved){
 
-    auto size = wrapper.getSize();
+    auto size = wrapper.getUsedSize();
 
     EXPECT_EQ(size, 0);
 }

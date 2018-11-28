@@ -111,6 +111,7 @@ namespace rtps{
     };
 
     enum SubMessageFlag : uint8_t{
+        FLAG_ENDIANESS      = (1 << 0),
         FLAG_BIG_ENDIAN     = (0 << 0),
         FLAG_LITTLE_ENDIAN  = (1 << 0),
         FLAG_INVALIDATE     = (1 << 1),
@@ -120,6 +121,7 @@ namespace rtps{
 
     };
 
+    const std::array<uint8_t, 4> RTPS_PROTOCOL_NAME = {'R', 'T', 'P', 'S'};
     struct Header{
         std::array<uint8_t, 4> protocolName;
         ProtocolVersion_t protocolVersion;

@@ -26,6 +26,10 @@ struct BufferMock{
         return true;
     }
 
+    rtps::data_size_t getUsedSize() const{
+        return (rtps::data_size_t) buffer.size();
+    }
+
     void assertEnoughSpace(rtps::data_size_t length){
         ASSERT_LE(length, reserved);
     }

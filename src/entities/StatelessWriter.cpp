@@ -69,7 +69,8 @@ namespace rtps{
         {
             Lock lock(m_mutex);
             const CacheChange* next = m_history.getNextCacheChange();
-            MessageFactory::addSubMessageData(packetInfo.buffer, next->data, false, next->sequenceNumber, m_entityId);
+            MessageFactory::addSubMessageData(packetInfo.buffer, next->data, false, next->sequenceNumber, m_entityId,
+                                              ENTITYID_SPDP_BUILTIN_PARTICIPANT_READER); // TODO
         }
 
         // Just usable for IPv4
@@ -77,7 +78,4 @@ namespace rtps{
         IP4_ADDR((&packetInfo.destAddr), m_locator.address[12],m_locator.address[13],m_locator.address[14], m_locator.address[15]);
         packetInfo.destPort = (ip4_port_t) m_locator.port;
     }
-
-
-
 }

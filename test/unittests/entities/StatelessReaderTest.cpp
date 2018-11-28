@@ -5,3 +5,8 @@
 
 #include <gtest/gtest.h>
 
+#include "rtps/entities/StatelessReader.h"
+
+using rtps::StatelessReader;
+
+

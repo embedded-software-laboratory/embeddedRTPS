@@ -53,7 +53,7 @@ namespace rtps {
 
         data_size_t spaceLeft() const;
 
-        data_size_t getSize() const;
+        data_size_t getUsedSize() const;
 
         pbuf* getLastElement() const;
 

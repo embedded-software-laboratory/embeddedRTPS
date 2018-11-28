@@ -12,6 +12,7 @@ add_executable(runTests
                         unittests/entities/StatelessReaderTest.cpp
                         unittests/entities/StatelessWriterTest.cpp
                         unittests/messages/MessageFactoryTest.cpp
+                        unittests/messages/MessageReceiverTest.cpp
                         unittests/storages/HistoryCacheTest.cpp
                         unittests/utils/udpUtilsTest.cpp
         )

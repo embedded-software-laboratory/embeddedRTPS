@@ -92,7 +92,7 @@ rtps::data_size_t PBufWrapper::spaceLeft() const{
     return m_freeSpace;
 }
 
-rtps::data_size_t PBufWrapper::getSize() const{
+rtps::data_size_t PBufWrapper::getUsedSize() const{
     if(firstElement == nullptr){
         return 0;
     }

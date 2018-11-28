@@ -8,7 +8,7 @@
 
 #include "rtps/types.h"
 #include "rtps/config.h"
-#include "rtps/messages/Messages.h"
+#include "rtps/messages/MessageTypes.h"
 #include "rtps/rtps.h"
 
 #include <cstdint>
@@ -61,7 +61,7 @@ namespace rtps{
         }
 
         template <class Buffer>
-        void addSubMessageData(Buffer& buffer, const Buffer& filledPayload, bool containsInlineQos, const SequenceNumber_t& SN, const EntityId_t& writerID){
+        void addSubMessageData(Buffer& buffer, const Buffer& filledPayload, bool containsInlineQos, const SequenceNumber_t& SN, const EntityId_t& writerID, const EntityId_t& readerID){
             SubmessageData msg;
             msg.header.submessageId = SubmessageKind::DATA;
 #if IS_LITTLE_ENDIAN
@@ -70,7 +70,7 @@ namespace rtps{
             msg.header.flags = FLAG_BIG_ENDIAN;
 #endif
             const auto offset = 4; // I guess the encapsulation info (CDR scheme and options) doesn't count
-            msg.header.submessageLength = sizeof(SubmessageData) + filledPayload.getSize() - offset;
+            msg.header.submessageLength = sizeof(SubmessageData) + filledPayload.getUsedSize() - offset;
 
             if(containsInlineQos){
                 msg.header.flags |= FLAG_INLINE_QOS;
@@ -81,7 +81,7 @@ namespace rtps{
 
             msg.writerSN = SN;
             msg.extraFlags = 0;
-            msg.readerId = ENTITYID_UNKNOWN;
+            msg.readerId = readerID;
             msg.writerId = writerID;
 
             constexpr uint16_t octetsToInlineQoS = 4 + 4 + 8; // EntityIds + SequenceNumber
@@ -91,7 +91,7 @@ namespace rtps{
             msg.serializeInto(buffer);
 
             if(filledPayload.isValid()){
-                PBufWrapper shallowCopy = filledPayload;
+                Buffer shallowCopy = filledPayload;
                 buffer.append(std::move(shallowCopy));
             }
         }
