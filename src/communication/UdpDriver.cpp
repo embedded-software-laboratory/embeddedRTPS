@@ -5,11 +5,14 @@
 
 #include "rtps/communication/UdpDriver.h"
 #include "rtps/storages/PBufWrapper.h"
-#include "lwip/tcpip.h"
+#include <lwip/igmp.h>
+#include <lwip/tcpip.h>
 
 
 using rtps::UdpDriver;
-    /**
+
+
+/**
  *
  * @param addr IP4 address on which we are listening
  * @param port Port on which we are listening
@@ -44,8 +47,18 @@ const rtps::UdpConnection* UdpDriver::createUdpConnection(ip4_port_t receivePort
     m_conns[m_numConns] = std::move(udp_conn);
     m_numConns++;
 
-    printf("Success creating UDP connection\n");
+    printf("Success creating UDP connection on port %u \n", receivePort);
     return &m_conns[m_numConns-1];
+}
+
+bool UdpDriver::joinMultiCastGroup(ip4_addr_t addr) const {
+    err_t iret = igmp_joingroup(IP_ADDR_ANY, (&addr));
+
+    if(iret != ERR_OK){
+        printf("Failed to join IGMP multicast group %s\n", ipaddr_ntoa(&addr));
+        return false;
+    }
+    return true;
 }
 
 bool UdpDriver::sendPacket(const UdpConnection& conn, ip4_addr_t& destAddr, ip4_port_t destPort, pbuf& buffer){
@@ -56,6 +69,6 @@ bool UdpDriver::sendPacket(const UdpConnection& conn, ip4_addr_t& destAddr, ip4_
         printf("UDP TRANSMIT NOT SUCCESSFUL %s:%u size: %u err: %i\n", ipaddr_ntoa(&destAddr), destPort, buffer.tot_len, err);
         return false;
     }
-    printf("Send packet successful \n");
+    //printf("Send packet successful \n");
     return true;
 }

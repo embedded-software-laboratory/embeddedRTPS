@@ -25,7 +25,7 @@ namespace rtps {
         typedef void (*udp_rx_func_t)(void *arg, udp_pcb *pcb, pbuf *p, const ip_addr_t *addr, ip4_port_t port);
 
         const rtps::UdpConnection* createUdpConnection(ip4_port_t receivePort, udp_rx_func_t callback, void* args);
-
+        bool joinMultiCastGroup(ip4_addr_t addr) const;
         bool sendPacket(const UdpConnection& conn, ip4_addr_t& destAddr, ip4_port_t destPort, pbuf& buffer);
 
     };

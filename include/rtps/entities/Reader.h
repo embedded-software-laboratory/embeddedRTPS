@@ -10,16 +10,15 @@
 #include "rtps/storages/PBufWrapper.h"
 
 namespace rtps{
+
+    typedef void (*ddsReaderCallback_fp)(const uint8_t* data, data_size_t size);
+
     class Reader{
     public:
-        const EntityId_t entityId;
+        EntityId_t entityId = ENTITYID_UNKNOWN;
         virtual void newChange(ChangeKind_t kind, const uint8_t*, rtps::data_size_t) = 0;
-        virtual void registerCallback() = 0;
+        virtual void registerCallback(ddsReaderCallback_fp cb) = 0;
     protected:
-        explicit Reader(EntityId_t id) : entityId(id){
-
-        };
-
         virtual ~Reader() = default;
     };
 }

@@ -10,6 +10,19 @@
 
 using rtps::MessageReceiver;
 
+MessageReceiver::MessageReceiver(GuidPrefix_t partGuid)
+: ourGuid(partGuid){
+
+}
+
+void MessageReceiver::reset(){
+    sourceGuidPrefix = GUIDPREFIX_UNKNOWN;
+    sourceVersion = PROTOCOLVERSION;
+    sourceVendor = VENDOR_UNKNOWN;
+    haveTimeStamp = false;
+}
+
+
 bool MessageReceiver::addReader(Reader& reader){
     if(m_numReaders != m_readers.size()){
         m_readers[m_numReaders++] = &reader;
@@ -27,7 +40,9 @@ bool MessageReceiver::processMessage(const uint8_t* data, data_size_t size){
         return false;
     }
 
-    processSubMessage(msgInfo);
+    while(msgInfo.nextPos < msgInfo.size){
+        processSubMessage(msgInfo);
+    }
 
     return true;
 
@@ -39,6 +54,10 @@ bool MessageReceiver::processHeader(MessageProcessingInfo& msgInfo){
     }
 
     auto header = reinterpret_cast<const Header*>(msgInfo.getPointerToPos());
+
+    if(header->guidPrefix.id == ourGuid.id){
+        return false; // Don't process our own packet
+    }
 
     if(header->protocolName != RTPS_PROTOCOL_NAME ||
        header->protocolVersion.major != PROTOCOLVERSION.major){
@@ -57,14 +76,18 @@ bool MessageReceiver::processSubMessage(MessageProcessingInfo& msgInfo){
 
     auto submsgHeader = reinterpret_cast<const SubmessageHeader*>(msgInfo.getPointerToPos());
 
+    bool success;
     switch(submsgHeader->submessageId){
         case SubmessageKind::DATA:
-            return processDataSubMessage(msgInfo);
+            printf("Processing DataSubMessage\n");
+            success = processDataSubMessage(msgInfo);
+            break;
         default:
-            printf("Submessage of type %ui currently not supported.", static_cast<uint8_t>(submsgHeader->submessageId));
-            return false;
+            printf("Submessage of type %u currently not supported. Skipping..\n", static_cast<uint8_t>(submsgHeader->submessageId));
+            success = false;
     }
-
+    msgInfo.nextPos+= submsgHeader->submessageLength + sizeof(SubmessageHeader);
+    return success;
 }
 
 bool MessageReceiver::processDataSubMessage(MessageProcessingInfo& msgInfo){
@@ -88,8 +111,6 @@ bool MessageReceiver::processDataSubMessage(MessageProcessingInfo& msgInfo){
             break;
         }
     }
-
-    msgInfo.nextPos += submsgData->header.submessageLength;
     return true;
 }
 

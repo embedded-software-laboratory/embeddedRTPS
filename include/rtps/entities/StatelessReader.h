@@ -10,17 +10,14 @@
 #include "rtps/storages/HistoryCache.h"
 
 namespace rtps{
-
     class StatelessReader final: public Reader{
     public:
-        explicit StatelessReader(EntityId_t id);
-        ~StatelessReader() override = default;
-
         void newChange(ChangeKind_t kind, const uint8_t* data, data_size_t size) override;
-        void registerCallback() override;
+        void registerCallback(ddsReaderCallback_fp cb) override;
 
     private:
         HistoryCache historyCache;
+        ddsReaderCallback_fp m_callback = nullptr;
     };
 
 }

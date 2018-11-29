@@ -6,14 +6,18 @@
 #include "rtps/entities/Participant.h"
 
 #include "rtps/entities/Writer.h"
+#include "rtps/entities/Reader.h"
+#include "rtps/messages/MessageReceiver.h"
 
 using rtps::Participant;
 
-Participant::Participant() : guidPrefix(GUIDPREFIX_UNKNOWN), participantId(PARTICIPANT_ID_INVALID){
+Participant::Participant() : guidPrefix(GUIDPREFIX_UNKNOWN), participantId(PARTICIPANT_ID_INVALID),
+                             receiver(GUIDPREFIX_UNKNOWN){
 
 }
 Participant::Participant(const GuidPrefix_t& guidPrefix, participantId_t participantId)
-        : guidPrefix(guidPrefix), participantId(participantId){
+        : guidPrefix(guidPrefix), participantId(participantId),
+          receiver(guidPrefix){
 
 }
 
@@ -46,16 +50,31 @@ rtps::Writer* Participant::addUserWriter(Writer& writer){
     return &writer;
 }
 
-void Participant::addSPDPWriter(rtps::Writer &writer) {
+void Participant::addSPDPWriter(Writer &writer) {
     mp_SPDPWriter = &writer;
-    m_spdpAgent.init(*this);
-    m_spdpAgent.start();
+    if(mp_SPDPReader != nullptr){
+        m_spdpAgent.init(*this);
+        m_spdpAgent.start();
+    }
 }
 
 rtps::Writer* Participant::getSPDPWriter() {
     return mp_SPDPWriter;
 }
 
-void Participant::newMessage(const uint8_t* /*data*/, uint16_t /*len*/){
-    // TODO
+void Participant::addSPDPReader(Reader &reader) {
+    mp_SPDPReader = &reader;
+    if(mp_SPDPWriter != nullptr){
+        m_spdpAgent.init(*this);
+        m_spdpAgent.start();
+    }
+    receiver.addReader(reader);
+}
+
+rtps::Reader* Participant::getSPDPReader() {
+    return mp_SPDPReader;
+}
+
+void Participant::newMessage(const uint8_t* data, uint16_t size){
+    receiver.processMessage(data, size);
 }

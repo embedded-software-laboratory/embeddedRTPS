@@ -11,6 +11,10 @@
 #include "rtps/entities/Domain.h"
 
 
+void ddsReaderCallback(const uint8_t* data, rtps::data_size_t size){
+    printf("DDS-SPDP-Reader received serialized data. \n");
+}
+
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wmissing-noreturn"
 int main(){
@@ -19,17 +23,24 @@ int main(){
     domain.start();
 
     rtps::Participant* part = domain.createParticipant();
+    part->getSPDPReader()->registerCallback(ddsReaderCallback);
+    //rtps::Participant* part2 = domain.createParticipant();
+
     if(part == nullptr){
         printf("Failed to create participant");
         return 1;
     }
-
-    rtps::Locator_t locator = rtps::Locator_t::createUDPv4Locator(192, 168, 0, 248, 7050);
-    rtps::Writer* writer = domain.createWriter(*part, locator, false);
+    rtps::EntityId_t eid = {{1, 2, 3}, rtps::EntityKind_t::USER_DEFINED_READER_WITHOUT_KEY};
+    rtps::Locator_t locator = rtps::Locator_t::createUDPv4Locator(192, 168, 0, 248, 7400);
+    rtps::ReaderLocator remoteReader{eid, locator};
+    rtps::Writer* writer = domain.createWriter(*part, false);
     if(writer == nullptr){
         printf("Failed to create writer");
         return 2;
     }
+
+    writer->addNewMatchedReader(remoteReader);
+
     uint8_t data0[] = {'d', 'e', 'a', 'd', 'b', 'e', 'e', 'f'};
     uint8_t data1[] = {'d', 'e', 'c', 'a', 'f', 'b', 'a', 'd'};
     uint8_t data2[] = {'b', 'a', 'd', 'c', 'o', 'd', 'e', 'd'};

@@ -8,6 +8,7 @@
 
 #include "rtps/config.h"
 #include "rtps/entities/Participant.h"
+#include "rtps/entities/StatelessReader.h"
 #include "rtps/entities/StatelessWriter.h"
 #include "rtps/storages/PBufWrapper.h"
 #include "rtps/ThreadPool.h"
@@ -21,10 +22,10 @@ namespace rtps{
         bool start();
         void stop();
 
-        void receiveCallback(PBufWrapper buffer);
+        void receiveCallback(PBufWrapper buffer, ip4_port_t destPort);
 
         Participant* createParticipant();
-        Writer* createWriter(Participant& part, Locator_t locator, bool reliable);
+        Writer* createWriter(Participant& part, bool reliable);
 
     private:
         ThreadPool m_threadPool;
@@ -34,9 +35,12 @@ namespace rtps{
 
         std::array<StatelessWriter, Config::NUM_STATELESS_WRITERS> m_statelessWriters;
         uint8_t m_numStatelessWriters = 0;
+        std::array<StatelessReader, Config::NUM_STATELESS_READERS> m_statelessReaders;
+        uint8_t m_numStatelessReaders = 0;
 
         GuidPrefix_t generateGuidPrefix(participantId_t id) const;
         void addDefaultWriterAndReader(Participant& part);
+        void registerPort(Participant& part);
     };
 }
 

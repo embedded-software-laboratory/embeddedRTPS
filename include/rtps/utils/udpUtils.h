@@ -22,11 +22,11 @@ namespace rtps {
     }
 
 
-    constexpr ip4_addr transforIP4ToU32(uint8_t MSB, uint8_t p2, uint8_t p1, uint8_t LSB) {
-        return {((uint32_t) (MSB << 24)) |
-                ((uint32_t) (p2 << 16)) |
-                ((uint32_t) (p1 << 8)) |
-                LSB};
+    constexpr ip4_addr transformIP4ToU32(uint8_t MSB, uint8_t p2, uint8_t p1, uint8_t LSB) {
+        return {((uint32_t) (LSB << 24)) |
+                ((uint32_t) (p1 << 16)) |
+                ((uint32_t) (p2 << 8)) |
+                MSB};
     }
 
     inline ip4_port_t getBuiltInUnicastPort(participantId_t participantId) {

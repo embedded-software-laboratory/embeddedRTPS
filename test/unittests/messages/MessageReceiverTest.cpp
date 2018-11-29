@@ -17,12 +17,13 @@ using ::testing::_;
 
 class AMessageReceiver : public ::testing::Test{
 protected:
-    rtps::MessageReceiver receiver;
+    rtps::GuidPrefix_t receiverGuidPrefix{1};
+    rtps::MessageReceiver receiver{receiverGuidPrefix};
     rtps::Header validHeader;
 
     void SetUp() override{
         validHeader.protocolName = {'R', 'T', 'P', 'S'};
-        validHeader.guidPrefix = {1};
+        validHeader.guidPrefix = {2};
         validHeader.vendorId = rtps::VENDOR_UNKNOWN;
         validHeader.protocolVersion = rtps::PROTOCOLVERSION_2_2;
     };
@@ -37,7 +38,7 @@ TEST_F(AMessageReceiver, processMessage_returnsTrueIfValidHeader){
     EXPECT_TRUE(valid);
 }
 
-TEST_F(AMessageReceiver, processMessage_returnsSetsInfoCorrectIfValidHeader){
+TEST_F(AMessageReceiver, processMessage_setsInfoCorrectIfValidHeader){
     auto data = reinterpret_cast<uint8_t*>(&validHeader);
     rtps::data_size_t size = sizeof(validHeader);
 
@@ -92,6 +93,17 @@ TEST_F(AMessageReceiver, processMessage_returnsFalseIfMajorVersionIsHigher){
     EXPECT_FALSE(valid);
 }
 
+TEST_F(AMessageReceiver, processMessage_returnsFalseIfItsOwnPackage){
+    validHeader.guidPrefix = receiverGuidPrefix;
+
+    auto data = reinterpret_cast<uint8_t*>(&validHeader);
+    rtps::data_size_t size = sizeof(validHeader);
+
+    bool valid = receiver.processMessage(data, size);
+
+    EXPECT_FALSE(valid);
+}
+
 class AMessageReceiverReceivedDataSubmessage : public ::testing::Test{
 protected:
     ReaderMock correctReaderMock{rtps::ENTITYID_SPDP_BUILTIN_PARTICIPANT_READER};
@@ -99,8 +111,9 @@ protected:
     BufferMock validDataMsgBufferMock;
     rtps::GuidPrefix_t somePrefix = {1,2,3,4};
     BufferMock somePayload;
-    BufferMock someInlineQoS;
-    rtps::MessageReceiver receiver;
+
+    rtps::GuidPrefix_t receiverGuidPrefix{1};
+    rtps::MessageReceiver receiver{receiverGuidPrefix};
 
 
     void SetUp() override{

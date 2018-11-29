@@ -8,8 +8,10 @@
 #include "lwip/tcpip.h"
 #include "rtps/entities/Domain.h"
 #include "rtps/entities/Writer.h"
+#include "rtps/utils/udpUtils.h"
 
 using rtps::ThreadPool;
+
 
 ThreadPool::ThreadPool(Domain& domain) : domain(domain){
 
@@ -28,6 +30,12 @@ bool ThreadPool::startThreads(){
         // TODO ID, err check
         thread = sys_thread_new("WriterThread", writerFunction, this, Config::THREAD_POOL_WRITER_STACKSIZE, Config::THREAD_POOL_WRITER_PRIO);
     }
+
+    //TODO move avoid from here
+    LOCK_TCPIP_CORE();
+    transport.joinMultiCastGroup(transformIP4ToU32(239, 255, 0, 1));
+    UNLOCK_TCPIP_CORE();
+
     return true;
 }
 
@@ -60,9 +68,8 @@ void ThreadPool::writerFunction(void* arg){
             }
             for(uint8_t i=0; i < workload.numCacheChangesToSend; ++i){
                 PacketInfo info;
-                workload.pWriter->createMessageCallback(info);
 
-                if(!info.buffer.isValid()){
+                if(!workload.pWriter->createMessageCallback(info)){
                     continue;
                 }
 
@@ -97,15 +104,13 @@ void ThreadPool::sendFunction(void* arg) {
 }
 
 
-void ThreadPool::readCallback(void* args, udp_pcb*, pbuf* pbuf, const ip_addr_t* addr, ip4_port_t port) {
-    auto& pool = *static_cast<ThreadPool*>(args);
-
+void ThreadPool::readCallback(void* args, udp_pcb* target, pbuf* pbuf, const ip_addr_t* addr, ip4_port_t port) {
     printf("Received something from %s:%u !!!!\n\r", ipaddr_ntoa(addr), port);
 
+    auto& pool = *static_cast<ThreadPool*>(args);
+
     PBufWrapper wrapper{pbuf};
-    wrapper.addr = *addr;
-    wrapper.port = port;
 
     // TODO Other threads shall execute this
-    pool.domain.receiveCallback(static_cast<const PBufWrapper>(wrapper)); // Avoid non-const use (API change might need this)
+    pool.domain.receiveCallback(static_cast<const PBufWrapper>(wrapper), target->local_port); // Avoid non-const use (API change might need this)
 }

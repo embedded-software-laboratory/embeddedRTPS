@@ -78,6 +78,10 @@ namespace rtps{
             return this->entityKey == other.entityKey &&
                    this->entityKind == other.entityKind;
         }
+
+        bool operator!=(const EntityId_t& other) const{
+            return !(*this == other);
+        }
     };
 
     // Described as long but there wasn't any definition. Other than 32 bit does not conform the default values

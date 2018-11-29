@@ -18,16 +18,17 @@ namespace rtps {
     class StatelessWriter : public Writer{
     public:
 
-        void init(TopicKind_t topicKind, Locator_t locator, ThreadPool* threadPool,
-                  GuidPrefix_t guidPrefix, EntityId_t entityId, participantId_t participantId);
+        void init(TopicKind_t topicKind, ThreadPool* threadPool,
+                  GuidPrefix_t guidPrefix, EntityId_t entityId, ip4_port_t sendPort);
 
+        bool addNewMatchedReader(ReaderLocator loc) override;
+        bool createMessageCallback(ThreadPool::PacketInfo& packetInfo) override;
         const CacheChange* newChange(ChangeKind_t kind, const uint8_t* data, data_size_t size) override;
-
         void unsentChangesReset() override;
 
         SequenceNumber_t getLastSequenceNumber() const;
 
-        void createMessageCallback(ThreadPool::PacketInfo& packetInfo) override;
+
 
     private:
         sys_mutex_t m_mutex;
@@ -40,7 +41,7 @@ namespace rtps {
         TopicKind_t m_topicKind = TopicKind_t::NO_KEY;
         SequenceNumber_t m_lastChangeSequenceNumber = {0, 0};
         HistoryCache m_history;
-        Locator_t m_locator{};
+        ReaderLocator m_readerLocator{};
 
         bool isIrrelevant(ChangeKind_t kind) const;
 

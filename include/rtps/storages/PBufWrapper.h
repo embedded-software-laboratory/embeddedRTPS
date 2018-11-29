@@ -21,9 +21,6 @@ namespace rtps {
 
         pbuf *firstElement = nullptr;
 
-        ip4_addr_t addr{};
-        ip4_port_t port = 0;
-
         PBufWrapper() = default;
         explicit PBufWrapper(pbuf* bufferToWrap);
         explicit PBufWrapper(data_size_t length);

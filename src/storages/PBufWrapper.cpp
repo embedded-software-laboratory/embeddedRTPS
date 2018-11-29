@@ -51,8 +51,6 @@ PBufWrapper& PBufWrapper::operator=(PBufWrapper&& other) noexcept{
 }
 
 void PBufWrapper::copySimpleMembersAndResetBuffer(const PBufWrapper& other){
-    addr = other.addr;
-    port = other.port;
     m_freeSpace = other.m_freeSpace;
 
     if(firstElement != nullptr){

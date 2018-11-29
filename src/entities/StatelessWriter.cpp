@@ -12,17 +12,24 @@
 
 namespace rtps{
 
-    void StatelessWriter::init(TopicKind_t topicKind, Locator_t locator, ThreadPool* threadPool,
-                          GuidPrefix_t guidPrefix, EntityId_t entityId, participantId_t participantId){
+    void StatelessWriter::init(TopicKind_t topicKind, ThreadPool* threadPool,
+                          GuidPrefix_t guidPrefix, EntityId_t entityId, ip4_port_t sendPort){
         mp_threadPool = threadPool;
         m_guidPrefix = guidPrefix;
         m_entityId = entityId;
         m_topicKind = topicKind;
-        m_locator = locator;
-        m_sendPort = getUserUnicastPort(participantId);
+        m_sendPort = sendPort;
         if (sys_mutex_new(&m_mutex) != ERR_OK) {
             printf("Failed to create mutex \n");
         }
+    }
+
+    bool StatelessWriter::addNewMatchedReader(ReaderLocator loc){
+        if(m_readerLocator.entityId != ENTITYID_UNKNOWN){
+            return false;
+        }
+        m_readerLocator = loc;
+        return true;
     }
 
     SequenceNumber_t StatelessWriter::getLastSequenceNumber() const{
@@ -62,7 +69,11 @@ namespace rtps{
         return kind == ChangeKind_t::INVALID || (m_topicKind == TopicKind_t::NO_KEY && kind != ChangeKind_t::ALIVE);
     }
 
-    void StatelessWriter::createMessageCallback(ThreadPool::PacketInfo& packetInfo){
+    bool StatelessWriter::createMessageCallback(ThreadPool::PacketInfo& packetInfo){
+        if(m_readerLocator.entityId == ENTITYID_UNKNOWN){ // TODO UNKNOWN might be okay. Detect not-set locator in another way
+            return false;
+        }
+
         MessageFactory::addHeader(packetInfo.buffer, m_guidPrefix);
         MessageFactory::addSubMessageTimeStamp(packetInfo.buffer);
 
@@ -70,12 +81,15 @@ namespace rtps{
             Lock lock(m_mutex);
             const CacheChange* next = m_history.getNextCacheChange();
             MessageFactory::addSubMessageData(packetInfo.buffer, next->data, false, next->sequenceNumber, m_entityId,
-                                              ENTITYID_SPDP_BUILTIN_PARTICIPANT_READER); // TODO
+                                              m_readerLocator.entityId); // TODO
         }
 
         // Just usable for IPv4
+        const Locator_t& locator = m_readerLocator.locator;
+
         packetInfo.srcPort = m_sendPort;
-        IP4_ADDR((&packetInfo.destAddr), m_locator.address[12],m_locator.address[13],m_locator.address[14], m_locator.address[15]);
-        packetInfo.destPort = (ip4_port_t) m_locator.port;
+        IP4_ADDR((&packetInfo.destAddr), locator.address[12], locator.address[13], locator.address[14], locator.address[15]);
+        packetInfo.destPort = (ip4_port_t) locator.port;
+        return true;
     }
 }

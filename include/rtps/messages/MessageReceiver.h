@@ -15,10 +15,14 @@ namespace rtps {
 
     class MessageReceiver {
     public:
-        GuidPrefix_t sourceGuidPrefix;
-        ProtocolVersion_t sourceVersion;
-        VendorId_t sourceVendor;
+        GuidPrefix_t sourceGuidPrefix = GUIDPREFIX_UNKNOWN;
+        ProtocolVersion_t sourceVersion = PROTOCOLVERSION;
+        VendorId_t sourceVendor = VENDOR_UNKNOWN;
         bool haveTimeStamp = false;
+
+        explicit MessageReceiver(GuidPrefix_t partGuid);
+
+        void reset();
 
         bool addWriter(); // for acknack etc.
         bool addReader(Reader& reader); // for new CacheChanges
@@ -31,12 +35,15 @@ namespace rtps {
                 : data(data), size(size){}
             const uint8_t* data;
             const data_size_t size;
+
+            //! Offset to the next unprocessed byte
             data_size_t nextPos = 0;
 
             inline const uint8_t* getPointerToPos(){
                 return &data[nextPos];
             }
 
+            //! Returns the size of data which isn't processed yet
             inline data_size_t getRemainingSize(){
                 return size - nextPos;
             }
@@ -44,6 +51,7 @@ namespace rtps {
 
         std::array<Reader*, Config::NUM_READERS_PER_PARTICIPANT> m_readers{nullptr};
         uint8_t m_numReaders = 0;
+        GuidPrefix_t ourGuid;
 
         // TODO make msgInfo a member
         // This probably make processing faster, as no parameter needs to be passed around

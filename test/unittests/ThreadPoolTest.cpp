@@ -38,11 +38,14 @@ TEST_F(ThreadPoolTest, addWorkload_executesCallbackWithinHalfSecond){
     bool done = false;
 
     EXPECT_CALL(mock, createMessageCallback(::testing::_)).Times(2)
-                                      .WillOnce(testing::Invoke([&](rtps::ThreadPool::PacketInfo&)->void {}))
-                                      .WillOnce(testing::Invoke([&](rtps::ThreadPool::PacketInfo&)->void {
+                                      .WillOnce(testing::Invoke([&](rtps::ThreadPool::PacketInfo&)->bool {
+                                          return false; // No message to send.
+                                      }))
+                                      .WillOnce(testing::Invoke([&](rtps::ThreadPool::PacketInfo&)->bool {
                                           std::lock_guard<std::mutex> lock(m);
                                           done = true;
                                           cond_var.notify_one();
+                                          return false; // No message to send.
                                       }));
 
     pool.addWorkload(rtps::ThreadPool::Workload_t{&mock, 2});
