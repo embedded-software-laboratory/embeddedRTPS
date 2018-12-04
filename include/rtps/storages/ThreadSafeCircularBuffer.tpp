@@ -22,7 +22,7 @@ namespace rtps {
 
     template<typename T, uint16_t SIZE>
     ThreadSafeCircularBuffer<T, SIZE>::~ThreadSafeCircularBuffer(){
-        if (m_mutex.mut != nullptr) {
+        if (m_initialized && m_mutex.mut != nullptr) {
             sys_mutex_free(&m_mutex);
         }
     }
