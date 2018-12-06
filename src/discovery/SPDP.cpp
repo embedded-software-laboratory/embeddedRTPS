@@ -99,14 +99,15 @@ void SPDPAgent::handleSPDPPackage(ChangeKind_t kind, const uint8_t* data, DataSi
         if(m_proxyDataBuffer.readFromUcdrBuffer(buffer)){
             // TODO In case we store the history we can free the history mutex here
             if(m_proxyDataBuffer.m_guid.prefix.id == mp_participant->guidPrefix.id){
-                printf("Received our own broadcast.");
+                printf("Received our own broadcast.\n");
                 return;
             }
 
             for(auto& partProxy : m_foundParticipants){
                 if(partProxy.m_guid.prefix.id == m_proxyDataBuffer.m_guid.prefix.id){
                     // TODO update
-                    printf("Found same participant again.");
+                    printf("Found same participant again.\n");
+                    return;
                 }
             }
 
@@ -118,6 +119,7 @@ void SPDPAgent::handleSPDPPackage(ChangeKind_t kind, const uint8_t* data, DataSi
                         printf("%u", i);
                     }
                     printf("\n");
+                    return;
                 }
             }
         }

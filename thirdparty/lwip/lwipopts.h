@@ -129,7 +129,7 @@ a lot of data that needs to be copied, this should be set high. */
 #define MEMP_NUM_RAW_PCB        3
 /* MEMP_NUM_UDP_PCB: the number of UDP protocol control blocks. One
    per active UDP "connection". */
-#define MEMP_NUM_UDP_PCB        4
+#define MEMP_NUM_UDP_PCB        40
 /* MEMP_NUM_TCP_PCB: the number of simulatenously active TCP
    connections. */
 #define MEMP_NUM_TCP_PCB        5
@@ -161,7 +161,7 @@ a lot of data that needs to be copied, this should be set high. */
 #define PBUF_POOL_SIZE          120
 
 /* PBUF_POOL_BUFSIZE: the size of each pbuf in the pbuf pool. */
-#define PBUF_POOL_BUFSIZE       256
+#define PBUF_POOL_BUFSIZE       512
 
 /** SYS_LIGHTWEIGHT_PROT
  * define SYS_LIGHTWEIGHT_PROT in lwipopts.h if you want inter-task protection

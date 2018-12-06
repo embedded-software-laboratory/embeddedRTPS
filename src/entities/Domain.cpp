@@ -26,7 +26,7 @@ void Domain::stop(){
 
 void Domain::receiveCallback(PBufWrapper buffer, Ip4Port_t destPort){
     if(buffer.firstElement->next != nullptr){
-        printf("Domain: Cannot handle multiple elements chained.\n");
+        printf("Domain: Cannot handle multiple elements chained. You might want to increase PBUF_POOL_BUFSIZE\n");
     }
     if(isMultiCastPort(destPort)){
         // Pass to all
