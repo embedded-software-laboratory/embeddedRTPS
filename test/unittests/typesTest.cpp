@@ -4,7 +4,7 @@
  */
 
 #include <gtest/gtest.h>
-#include <rtps/types.h>
+#include <rtps/common/types.h>
 #include <limits>
 
 using rtps::SequenceNumber_t;

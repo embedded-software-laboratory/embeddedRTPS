@@ -21,8 +21,8 @@ public:
     }
     ~ReaderMock() override = default;
 
-    MOCK_METHOD3(newChange, void(rtps::ChangeKind_t, const uint8_t*, rtps::data_size_t));
-    MOCK_METHOD1(registerCallback, void(rtps::ddsReaderCallback_fp));
+    MOCK_METHOD3(newChange, void(rtps::ChangeKind_t, const uint8_t*, rtps::DataSize_t));
+    MOCK_METHOD2(registerCallback, void(rtps::ddsReaderCallback_fp, void*));
 
 };
 

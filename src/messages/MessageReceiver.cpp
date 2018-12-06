@@ -32,7 +32,25 @@ bool MessageReceiver::addReader(Reader& reader){
     }
 }
 
-bool MessageReceiver::processMessage(const uint8_t* data, data_size_t size){
+bool MessageReceiver::addWriter(Writer& writer){
+    if(m_numWriters != m_writers.size()){
+        m_writers[m_numWriters++] = &writer;
+        return true;
+    }else{
+        return false;
+    }
+}
+
+void MessageReceiver::addBuiltInEndpoints(BuiltInEndpoints& endpoints){
+    addWriter(*endpoints.spdpWriter);
+    addReader(*endpoints.spdpReader);
+    addWriter(*endpoints.sedpPubWriter);
+    addReader(*endpoints.sedpPubReader);
+    addWriter(*endpoints.sedpSubWriter);
+    addReader(*endpoints.sedpSubReader);
+}
+
+bool MessageReceiver::processMessage(const uint8_t* data, DataSize_t size){
 
     MessageProcessingInfo msgInfo{data, size};
 
@@ -92,8 +110,8 @@ bool MessageReceiver::processSubMessage(MessageProcessingInfo& msgInfo){
 
 bool MessageReceiver::processDataSubMessage(MessageProcessingInfo& msgInfo){
     auto submsgData = reinterpret_cast<const SubmessageData*>(msgInfo.getPointerToPos());
-    const auto serializedData = msgInfo.getPointerToPos() + sizeof(SubmessageData);
-    const data_size_t size = msgInfo.size - (msgInfo.nextPos - sizeof(SubmessageData));
+    const uint8_t* serializedData = msgInfo.getPointerToPos() + sizeof(SubmessageData);
+    const DataSize_t size = msgInfo.size - (msgInfo.nextPos + sizeof(SubmessageData));
 
     //if(submsgHeader->submessageLength > msgInfo.size - msgInfo.nextPos){
     //    return false;

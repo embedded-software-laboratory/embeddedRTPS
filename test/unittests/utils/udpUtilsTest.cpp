@@ -29,20 +29,20 @@ TEST(IsMultiCast, WorksCorrecltyWithGetMethods){
 }
 
 TEST(GetParticipantIdFromPort, returnsInvalidIdIfPortIsNoValidParticipantPort){
-    rtps::ip4_port_t invalidPort = rtps::getUserUnicastPort(1) + static_cast<rtps::ip4_port_t>(1);
+    rtps::Ip4Port_t invalidPort = rtps::getUserUnicastPort(1) + static_cast<rtps::Ip4Port_t>(1);
 
-    rtps::participantId_t id = rtps::getParticipantIdFromUnicastPort(invalidPort, true);
+    rtps::ParticipantId_t id = rtps::getParticipantIdFromUnicastPort(invalidPort, true);
 
     EXPECT_EQ(id, rtps::PARTICIPANT_ID_INVALID);
 }
 
 TEST(GetParticipantIdFromPort, returnsInvalidIdIfPortIsMultiCast){
-    rtps::ip4_port_t userMultiCastPort = rtps::getUserMulticastPort();
-    rtps::ip4_port_t builtinMultiCastPort = rtps::getBuiltInMulticastPort();
+    rtps::Ip4Port_t userMultiCastPort = rtps::getUserMulticastPort();
+    rtps::Ip4Port_t builtinMultiCastPort = rtps::getBuiltInMulticastPort();
 
-    rtps::participantId_t id = rtps::getParticipantIdFromUnicastPort(userMultiCastPort, true);
+    rtps::ParticipantId_t id = rtps::getParticipantIdFromUnicastPort(userMultiCastPort, true);
     EXPECT_EQ(id, rtps::PARTICIPANT_ID_INVALID);
 
-    rtps::participantId_t id2 = rtps::getParticipantIdFromUnicastPort(builtinMultiCastPort, true);
+    rtps::ParticipantId_t id2 = rtps::getParticipantIdFromUnicastPort(builtinMultiCastPort, true);
     EXPECT_EQ(id2, rtps::PARTICIPANT_ID_INVALID);
 }

@@ -22,7 +22,7 @@ namespace rtps{
         bool start();
         void stop();
 
-        void receiveCallback(PBufWrapper buffer, ip4_port_t destPort);
+        void receiveCallback(PBufWrapper buffer, Ip4Port_t destPort);
 
         Participant* createParticipant();
         Writer* createWriter(Participant& part, bool reliable);
@@ -31,14 +31,14 @@ namespace rtps{
         ThreadPool m_threadPool;
         std::array<Participant, Config::MAX_NUM_PARTICIPANTS> m_participants;
         const uint8_t PARTICIPANT_START_ID = 1;
-        participantId_t m_nextParticipantId = PARTICIPANT_START_ID;
+        ParticipantId_t m_nextParticipantId = PARTICIPANT_START_ID;
 
         std::array<StatelessWriter, Config::NUM_STATELESS_WRITERS> m_statelessWriters;
         uint8_t m_numStatelessWriters = 0;
         std::array<StatelessReader, Config::NUM_STATELESS_READERS> m_statelessReaders;
         uint8_t m_numStatelessReaders = 0;
 
-        GuidPrefix_t generateGuidPrefix(participantId_t id) const;
+        GuidPrefix_t generateGuidPrefix(ParticipantId_t id) const;
         void addDefaultWriterAndReader(Participant& part);
         void registerPort(Participant& part);
     };

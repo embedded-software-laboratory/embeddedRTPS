@@ -6,7 +6,7 @@
 #ifndef RTPS_MESSAGEFACTORY_H
 #define RTPS_MESSAGEFACTORY_H
 
-#include "rtps/types.h"
+#include "rtps/common/types.h"
 #include "rtps/config.h"
 #include "rtps/messages/MessageTypes.h"
 #include "rtps/rtps.h"

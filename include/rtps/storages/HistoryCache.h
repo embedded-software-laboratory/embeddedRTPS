@@ -6,7 +6,7 @@
 #ifndef RTPS_HISTORYCACHE_H
 #define RTPS_HISTORYCACHE_H
 
-#include "rtps/types.h"
+#include "rtps/common/types.h"
 #include "rtps/storages/PBufWrapper.h"
 
 namespace rtps{

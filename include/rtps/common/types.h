@@ -17,9 +17,10 @@ namespace rtps{
 
     // TODO move types to where they are needed!
 
-    typedef uint16_t ip4_port_t;
-    typedef uint16_t data_size_t;
-    typedef int8_t participantId_t; // With UDP only 120 possible
+    typedef uint16_t Ip4Port_t;
+    typedef uint16_t DataSize_t;
+    typedef int8_t ParticipantId_t; // With UDP only 120 possible
+    typedef uint32_t BuiltinEndpointSet_t;
 
     enum class EntityKind_t : uint8_t{
         USER_DEFINED_UNKNOWN            = 0x00,
@@ -58,13 +59,6 @@ namespace rtps{
         RELIABLE    = 3
     };
 
-    enum class LocatorKind_t : int32_t{
-        LOCATOR_KIND_INVALID  = -1,
-        LOCATOR_KIND_RESERVED =  0,
-        LOCATOR_KIND_UDPv4    =  1,
-        LOCATOR_KIND_UDPv6    =  2
-    };
-
     struct GuidPrefix_t{
         std::array<uint8_t, 12> id;
     };
@@ -82,6 +76,11 @@ namespace rtps{
         bool operator!=(const EntityId_t& other) const{
             return !(*this == other);
         }
+    };
+
+    struct Guid{
+        GuidPrefix_t prefix;
+        EntityId_t entityId;
     };
 
     // Described as long but there wasn't any definition. Other than 32 bit does not conform the default values
@@ -124,24 +123,6 @@ namespace rtps{
         uint32_t value;
     };
 
-
-    const uint32_t LOCATOR_PORT_INVALID = 0;
-    const std::array<uint8_t, 16> LOCATOR_ADDRESS_INVALID = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
-
-    struct Locator_t{
-        LocatorKind_t kind = LocatorKind_t::LOCATOR_KIND_INVALID;
-        uint32_t port = LOCATOR_PORT_INVALID;
-        std::array<uint8_t,16> address = LOCATOR_ADDRESS_INVALID; // TODO make private such that kind and address always match?
-
-        static Locator_t createUDPv4Locator(uint8_t a, uint8_t b, uint8_t c, uint8_t d, uint32_t port){
-            Locator_t locator;
-            locator.kind = LocatorKind_t::LOCATOR_KIND_UDPv4;
-            locator.address = {0,0,0,0,0,0,0,0,0,0,0,0,a,b,c,d};
-            locator.port = port;
-            return locator;
-        }
-    } __attribute__((packed));
-
     struct Count_t{
         int32_t value;
     };
@@ -151,25 +132,23 @@ namespace rtps{
         uint8_t minor;
     };
 
-    namespace Behavior{
-        typedef Time_t Duration_t; // TODO
+    typedef Time_t Duration_t; // TODO
 
-        enum class ChangeForReaderStatusKind{
-            UNSENT, UNACKNOWLEDGED, REQURESTED, ACKNOWLEDGED, UNDERWAY
-        };
+    enum class ChangeForReaderStatusKind{
+        UNSENT, UNACKNOWLEDGED, REQURESTED, ACKNOWLEDGED, UNDERWAY
+    };
 
-        enum class ChangeFromWriterStatusKind{
-            LOST, MISSING, RECEIVED, UNKNOWN
-        };
+    enum class ChangeFromWriterStatusKind{
+        LOST, MISSING, RECEIVED, UNKNOWN
+    };
 
-        struct InstanceHandle_t{ // TODO
-            uint64_t value;
-        };
+    struct InstanceHandle_t{ // TODO
+        uint64_t value;
+    };
 
-        struct ParticipantMessageData{ // TODO
+    struct ParticipantMessageData{ // TODO
 
-        };
-    }
+    };
 
     /* Default Values */
     const EntityId_t ENTITYID_UNKNOWN{};
@@ -187,7 +166,7 @@ namespace rtps{
 
     const GuidPrefix_t GUIDPREFIX_UNKNOWN{};
 
-    const participantId_t PARTICIPANT_ID_INVALID = -1;
+    const ParticipantId_t PARTICIPANT_ID_INVALID = -1;
 
     const ProtocolVersion_t PROTOCOLVERSION_1_0 = {1,0};
     const ProtocolVersion_t PROTOCOLVERSION_1_1 = {1,1};

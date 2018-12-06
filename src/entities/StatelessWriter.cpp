@@ -13,7 +13,7 @@
 namespace rtps{
 
     void StatelessWriter::init(TopicKind_t topicKind, ThreadPool* threadPool,
-                          GuidPrefix_t guidPrefix, EntityId_t entityId, ip4_port_t sendPort){
+                          GuidPrefix_t guidPrefix, EntityId_t entityId, Ip4Port_t sendPort){
         mp_threadPool = threadPool;
         m_guidPrefix = guidPrefix;
         m_entityId = entityId;
@@ -36,7 +36,7 @@ namespace rtps{
         return m_lastChangeSequenceNumber;
     }
 
-    const CacheChange* StatelessWriter::newChange(rtps::ChangeKind_t kind, const uint8_t* data, data_size_t size) {
+    const CacheChange* StatelessWriter::newChange(rtps::ChangeKind_t kind, const uint8_t* data, DataSize_t size) {
         if(isIrrelevant(kind)){
             return &m_history.INVALID_CACHE_CHANGE;
         }
@@ -85,11 +85,11 @@ namespace rtps{
         }
 
         // Just usable for IPv4
-        const Locator_t& locator = m_readerLocator.locator;
+        const Locator& locator = m_readerLocator.locator;
 
         packetInfo.srcPort = m_sendPort;
         IP4_ADDR((&packetInfo.destAddr), locator.address[12], locator.address[13], locator.address[14], locator.address[15]);
-        packetInfo.destPort = (ip4_port_t) locator.port;
+        packetInfo.destPort = (Ip4Port_t) locator.port;
         return true;
     }
 }

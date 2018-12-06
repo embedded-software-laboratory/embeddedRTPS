@@ -9,6 +9,7 @@
 #include "lwip/sys.h"
 
 namespace rtps{
+
     class Lock {
     public:
         explicit Lock(sys_mutex_t &passedMutex) : m_mutex(passedMutex) {

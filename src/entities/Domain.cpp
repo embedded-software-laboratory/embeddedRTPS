@@ -24,7 +24,10 @@ void Domain::stop(){
     m_threadPool.stopThreads();
 }
 
-void Domain::receiveCallback(PBufWrapper buffer, ip4_port_t destPort){
+void Domain::receiveCallback(PBufWrapper buffer, Ip4Port_t destPort){
+    if(buffer.firstElement->next != nullptr){
+        printf("Domain: Cannot handle multiple elements chained.\n");
+    }
     if(isMultiCastPort(destPort)){
         // Pass to all
         for(auto i=0; i < m_nextParticipantId - PARTICIPANT_START_ID; ++i) {
@@ -32,7 +35,7 @@ void Domain::receiveCallback(PBufWrapper buffer, ip4_port_t destPort){
         }
     }else{
         // Pass to addressed one only
-        participantId_t id = getParticipantIdFromUnicastPort(destPort, isUserPort(destPort));
+        ParticipantId_t id = getParticipantIdFromUnicastPort(destPort, isUserPort(destPort));
         if(id != PARTICIPANT_ID_INVALID){
             m_participants[id-PARTICIPANT_START_ID].newMessage(static_cast<uint8_t*>(buffer.firstElement->payload),
                                                                buffer.firstElement->len);
@@ -55,13 +58,19 @@ rtps::Participant* Domain::createParticipant(){
 
 void Domain::addDefaultWriterAndReader(Participant& part) {
     //SPDP
-    StatelessWriter& nextWriter = m_statelessWriters[m_numStatelessWriters++];
-    nextWriter.init(TopicKind_t::WITH_KEY, &m_threadPool, part.guidPrefix, ENTITYID_SPDP_BUILTIN_PARTICIPANT_WRITER, getBuiltInMulticastPort());
-    nextWriter.addNewMatchedReader(ReaderLocator(ENTITYID_SPDP_BUILTIN_PARTICIPANT_READER, getDefaultSendMulticastLocator()));
-    part.addSPDPWriter(nextWriter);
-    StatelessReader& nextReader = m_statelessReaders[m_numStatelessReaders++];
-    nextReader.entityId = ENTITYID_SPDP_BUILTIN_PARTICIPANT_READER;
-    part.addSPDPReader(nextReader);
+    StatelessWriter& spdpWriter = m_statelessWriters[m_numStatelessWriters++];
+    spdpWriter.init(TopicKind_t::WITH_KEY, &m_threadPool, part.guidPrefix, ENTITYID_SPDP_BUILTIN_PARTICIPANT_WRITER, getBuiltInMulticastPort());
+    spdpWriter.addNewMatchedReader(ReaderLocator(ENTITYID_SPDP_BUILTIN_PARTICIPANT_READER, getDefaultSendMulticastLocator()));
+
+    StatelessReader& spdpReader = m_statelessReaders[m_numStatelessReaders++];
+    spdpReader.entityId = ENTITYID_SPDP_BUILTIN_PARTICIPANT_READER;
+
+
+    BuiltInEndpoints endpoints{};
+    endpoints.spdpWriter = &spdpWriter;
+    endpoints.spdpReader = &spdpReader;
+
+    part.addBuiltInEndpoints(endpoints);
 }
 
 void Domain::registerPort(Participant& /*part*/){
@@ -82,7 +91,7 @@ rtps::Writer* Domain::createWriter(Participant& part, bool reliable){
     }
 }
 
-rtps::GuidPrefix_t Domain::generateGuidPrefix(participantId_t id) const{
+rtps::GuidPrefix_t Domain::generateGuidPrefix(ParticipantId_t id) const{
     // TODO
     GuidPrefix_t prefix{1,2,3,4,5,6,7,8,9,10,11, *reinterpret_cast<uint8_t*>(&id)};
     return prefix;

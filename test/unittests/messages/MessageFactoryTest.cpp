@@ -8,7 +8,7 @@
 #include "BufferMock.h"
 #include "rtps/storages/PBufWrapper.h"
 #include "rtps/messages/MessageFactory.h"
-#include "rtps/types.h"
+#include "rtps/common/types.h"
 
 #include <array>
 #include <rtps/config.h>

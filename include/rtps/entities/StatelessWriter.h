@@ -6,7 +6,7 @@
 #ifndef RTPS_RTPSWRITER_H
 #define RTPS_RTPSWRITER_H
 
-#include "rtps/types.h"
+#include "rtps/common/types.h"
 #include "rtps/config.h"
 #include "rtps/entities/Writer.h"
 #include "lwip/sys.h"
@@ -19,11 +19,11 @@ namespace rtps {
     public:
 
         void init(TopicKind_t topicKind, ThreadPool* threadPool,
-                  GuidPrefix_t guidPrefix, EntityId_t entityId, ip4_port_t sendPort);
+                  GuidPrefix_t guidPrefix, EntityId_t entityId, Ip4Port_t sendPort);
 
         bool addNewMatchedReader(ReaderLocator loc) override;
         bool createMessageCallback(ThreadPool::PacketInfo& packetInfo) override;
-        const CacheChange* newChange(ChangeKind_t kind, const uint8_t* data, data_size_t size) override;
+        const CacheChange* newChange(ChangeKind_t kind, const uint8_t* data, DataSize_t size) override;
         void unsentChangesReset() override;
 
         SequenceNumber_t getLastSequenceNumber() const;
@@ -36,7 +36,7 @@ namespace rtps {
 
         GuidPrefix_t m_guidPrefix = GUIDPREFIX_UNKNOWN;
         EntityId_t m_entityId = ENTITYID_UNKNOWN;
-        ip4_port_t m_sendPort = 0;
+        Ip4Port_t m_sendPort = 0;
 
         TopicKind_t m_topicKind = TopicKind_t::NO_KEY;
         SequenceNumber_t m_lastChangeSequenceNumber = {0, 0};

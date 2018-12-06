@@ -6,7 +6,7 @@
 #ifndef RTPS_MESSAGES_H
 #define RTPS_MESSAGES_H
 
-#include "rtps/types.h"
+#include "rtps/common/types.h"
 
 #include <array>
 
@@ -92,6 +92,11 @@ namespace rtps{
         const std::array<uint8_t,2> SCHEME_CDR_LE{0x00, 0x01};
         const std::array<uint8_t,2> SCHEME_PL_CDR_LE{0x00, 0x03};
 
+        struct ParameterList_t{
+            ParameterId pid;
+            uint16_t length;
+            // Values follow
+        } __attribute__((packed));
     }
 
     enum class SubmessageKind : uint8_t{

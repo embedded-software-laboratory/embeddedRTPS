@@ -8,7 +8,7 @@
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
-#include "rtps/types.h"
+#include "rtps/common/types.h"
 
 #include <vector>
 #include <cstdint>
@@ -16,7 +16,7 @@
 
 struct BufferMock{
     std::vector<uint8_t> buffer;
-    rtps::data_size_t reserved = 0;
+    rtps::DataSize_t reserved = 0;
 
     BufferMock() = default;
     explicit BufferMock(uint16_t){
@@ -26,14 +26,14 @@ struct BufferMock{
         return true;
     }
 
-    rtps::data_size_t getUsedSize() const{
-        return (rtps::data_size_t) buffer.size();
+    rtps::DataSize_t getUsedSize() const{
+        return (rtps::DataSize_t) buffer.size();
     }
 
-    void assertEnoughSpace(rtps::data_size_t length){
+    void assertEnoughSpace(rtps::DataSize_t length){
         ASSERT_LE(length, reserved);
     }
-    bool append(const uint8_t *const data, rtps::data_size_t length){
+    bool append(const uint8_t *const data, rtps::DataSize_t length){
         assertEnoughSpace(length);
         if(reserved < length){
             return false;
@@ -51,7 +51,7 @@ struct BufferMock{
         other.buffer.clear();
     }
 
-    bool reserve(rtps::data_size_t length){
+    bool reserve(rtps::DataSize_t length){
         reserved = length;
         return true;
     }

@@ -6,32 +6,47 @@
 #ifndef RTPS_SPDP_H
 #define RTPS_SPDP_H
 
-#include "rtps/types.h"
+#include "rtps/common/types.h"
+#include "rtps/config.h"
+#include "rtps/discovery/ParticipantProxyData.h"
+#include "lwip/sys.h"
 #include "ucdr/microcdr.h"
 
 namespace rtps{
     class Participant;
+    class BuiltInEndpoints;
     class Writer;
+    class Reader;
 
     class SPDPAgent{
     public:
-        void init(Participant& participant);
+        ~SPDPAgent();
+        void init(Participant& participant, BuiltInEndpoints& endpoints);
         void start();
         void stop();
 
     private:
         Participant* mp_participant = nullptr;
+        std::array<ParticipantProxyData, Config::SPDP_MAX_NUMBER_FOUND_PARTICIPANTS> m_foundParticipants;
         Writer* mp_writer = nullptr;
+        Reader* mp_reader = nullptr;
         bool m_running = false;
-        std::array<uint8_t, 400> m_buffer{};
-        ucdrBuffer m_microbuffer;
+        std::array<uint8_t, 400> m_outputBuffer{}; // TODO check required size
+        std::array<uint8_t, 400> m_inputBuffer{};
+        ParticipantProxyData m_proxyDataBuffer{};
+        ucdrBuffer m_microbuffer{};
+
+        sys_mutex_t m_mutex;
+        bool initialized = false;
+        static void receiveCallback(void* callee, ChangeKind_t kind, const uint8_t* data, DataSize_t length);
+        void handleSPDPPackage(ChangeKind_t kind, const uint8_t* data, DataSize_t size);
 
         void addInlineQos();
         void addParticipantParameters();
         void endCurrentList();
 
+        static void runBroadcast(void *args);
 
-        static void run(void* args);
 
     };
 }

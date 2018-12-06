@@ -11,9 +11,6 @@
 #include "rtps/entities/Domain.h"
 
 
-void ddsReaderCallback(const uint8_t* data, rtps::data_size_t size){
-    printf("DDS-SPDP-Reader received serialized data. \n");
-}
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wmissing-noreturn"
@@ -23,7 +20,6 @@ int main(){
     domain.start();
 
     rtps::Participant* part = domain.createParticipant();
-    part->getSPDPReader()->registerCallback(ddsReaderCallback);
     //rtps::Participant* part2 = domain.createParticipant();
 
     if(part == nullptr){
@@ -31,7 +27,7 @@ int main(){
         return 1;
     }
     rtps::EntityId_t eid = {{1, 2, 3}, rtps::EntityKind_t::USER_DEFINED_READER_WITHOUT_KEY};
-    rtps::Locator_t locator = rtps::Locator_t::createUDPv4Locator(192, 168, 0, 248, 7400);
+    rtps::Locator locator = rtps::Locator::createUDPv4Locator(192, 168, 0, 248, 7400);
     rtps::ReaderLocator remoteReader{eid, locator};
     rtps::Writer* writer = domain.createWriter(*part, false);
     if(writer == nullptr){
@@ -50,13 +46,12 @@ int main(){
     uint32_t i = 0;
     while(true){
 
-        writer->newChange(rtps::ChangeKind_t::ALIVE, dataArray[i%4], 8);
+        //writer->newChange(rtps::ChangeKind_t::ALIVE, dataArray[i%4], 8);
         i++;
         sys_msleep(20+(i%200));
 
     }
 
 }
-
 
 #pragma clang diagnostic pop

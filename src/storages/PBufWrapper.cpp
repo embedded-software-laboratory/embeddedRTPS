@@ -12,7 +12,7 @@ PBufWrapper::PBufWrapper(pbuf* bufferToWrap) : firstElement(bufferToWrap){
     m_freeSpace = 0; // Assume it to be full
 }
 
-PBufWrapper::PBufWrapper(data_size_t length)
+PBufWrapper::PBufWrapper(DataSize_t length)
     : firstElement(pbuf_alloc(m_layer, length, m_type)){
     // TODO Can I move this to initializer list?
     if(isValid()){
@@ -86,11 +86,11 @@ bool PBufWrapper::isValid() const{
     return firstElement != nullptr;
 }
 
-rtps::data_size_t PBufWrapper::spaceLeft() const{
+rtps::DataSize_t PBufWrapper::spaceLeft() const{
     return m_freeSpace;
 }
 
-rtps::data_size_t PBufWrapper::getUsedSize() const{
+rtps::DataSize_t PBufWrapper::getUsedSize() const{
     if(firstElement == nullptr){
         return 0;
     }
@@ -98,7 +98,7 @@ rtps::data_size_t PBufWrapper::getUsedSize() const{
     return firstElement->tot_len - m_freeSpace;
 }
 
-rtps::data_size_t PBufWrapper::getCurrentOffset() const{
+rtps::DataSize_t PBufWrapper::getCurrentOffset() const{
     if(firstElement == nullptr){
         return 0;
     }else{
@@ -106,7 +106,7 @@ rtps::data_size_t PBufWrapper::getCurrentOffset() const{
     }
 }
 
-bool PBufWrapper::append(const uint8_t *const data, data_size_t length){
+bool PBufWrapper::append(const uint8_t *const data, DataSize_t length){
     err_t err = pbuf_take_at(firstElement, data, length, getCurrentOffset());
 
     if(err == ERR_OK){
@@ -155,7 +155,7 @@ void PBufWrapper::adjustSizeUntil(const pbuf* const newElement){
     }
 }
 
-bool PBufWrapper::reserve(data_size_t length) {
+bool PBufWrapper::reserve(DataSize_t length) {
     auto additionalAllocation = length - m_freeSpace;
     if(additionalAllocation <= 0){
         return true;

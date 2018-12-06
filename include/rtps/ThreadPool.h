@@ -23,15 +23,18 @@ namespace rtps {
     public:
 
         explicit ThreadPool(Domain& domain);
+
+        ~ThreadPool();
+
         struct Workload_t{
             Writer* pWriter;
             uint8_t numCacheChangesToSend;
         };
 
         struct PacketInfo{
-            ip4_port_t srcPort;
+            Ip4Port_t srcPort;
             ip4_addr_t destAddr;
-            ip4_port_t destPort;
+            Ip4Port_t destPort;
             PBufWrapper buffer;
         };
 
@@ -52,7 +55,7 @@ namespace rtps {
         ThreadSafeCircularBuffer<Workload_t, Config::THREAD_POOL_WORKLOAD_QUEUE_LENGTH> inputQueue;
         ThreadSafeCircularBuffer<PacketInfo, Config::THREAD_POOL_WORKLOAD_QUEUE_LENGTH> outputQueue;
 
-        static void readCallback(void* arg, udp_pcb* pcb, pbuf* p, const ip_addr_t* addr, ip4_port_t port);
+        static void readCallback(void* arg, udp_pcb* pcb, pbuf* p, const ip_addr_t* addr, Ip4Port_t port);
 
         static void sendFunction(void* arg);
 

@@ -10,7 +10,7 @@
 #include "rtps/config.h"
 #include "UdpConnection.h"
 #include "LwipInterface.h"
-#include "rtps/types.h"
+#include "rtps/common/types.h"
 
 #include <array>
 
@@ -22,11 +22,11 @@ namespace rtps {
         std::size_t m_numConns = 0;
 
     public:
-        typedef void (*udp_rx_func_t)(void *arg, udp_pcb *pcb, pbuf *p, const ip_addr_t *addr, ip4_port_t port);
+        typedef void (*udp_rx_func_t)(void *arg, udp_pcb *pcb, pbuf *p, const ip_addr_t *addr, Ip4Port_t port);
 
-        const rtps::UdpConnection* createUdpConnection(ip4_port_t receivePort, udp_rx_func_t callback, void* args);
+        const rtps::UdpConnection* createUdpConnection(Ip4Port_t receivePort, udp_rx_func_t callback, void* args);
         bool joinMultiCastGroup(ip4_addr_t addr) const;
-        bool sendPacket(const UdpConnection& conn, ip4_addr_t& destAddr, ip4_port_t destPort, pbuf& buffer);
+        bool sendPacket(const UdpConnection& conn, ip4_addr_t& destAddr, Ip4Port_t destPort, pbuf& buffer);
 
     };
 }

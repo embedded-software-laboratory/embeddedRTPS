@@ -8,7 +8,7 @@
 
 #include "lwip/ip4_addr.h"
 #include "lwip/pbuf.h"
-#include "rtps/types.h"
+#include "rtps/common/types.h"
 
 /**
  * This Wrapper handles the lifetime of a pbuf element. Allocates it
@@ -23,7 +23,7 @@ namespace rtps {
 
         PBufWrapper() = default;
         explicit PBufWrapper(pbuf* bufferToWrap);
-        explicit PBufWrapper(data_size_t length);
+        explicit PBufWrapper(DataSize_t length);
 
         // Shallow Copy. No copying of the underlying pbuf. Just another reference like a shared pointer.
         PBufWrapper(const PBufWrapper& other);
@@ -38,7 +38,7 @@ namespace rtps {
 
         bool isValid() const;
 
-        bool append(const uint8_t* const data, data_size_t length);
+        bool append(const uint8_t* const data, DataSize_t length);
 
         /**
          * Note that unused reserved memory is now part of the wrapper. New calls to append(uint8_t*[...]) will
@@ -46,11 +46,11 @@ namespace rtps {
          */
         void append(PBufWrapper&& other);
 
-        bool reserve(data_size_t length);
+        bool reserve(DataSize_t length);
 
-        data_size_t spaceLeft() const;
+        DataSize_t spaceLeft() const;
 
-        data_size_t getUsedSize() const;
+        DataSize_t getUsedSize() const;
 
         pbuf* getLastElement() const;
 
@@ -62,9 +62,9 @@ namespace rtps {
         constexpr static pbuf_type m_type = PBUF_POOL;
 
 
-        data_size_t m_freeSpace = 0;
+        DataSize_t m_freeSpace = 0;
 
-        data_size_t getCurrentOffset() const;
+        DataSize_t getCurrentOffset() const;
 
         bool increaseSize(uint16_t length);
 

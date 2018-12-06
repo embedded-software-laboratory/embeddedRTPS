@@ -5,17 +5,19 @@
 
 #include "rtps/entities/StatelessReader.h"
 
-
-
 using rtps::StatelessReader;
 
-
-void StatelessReader::newChange(ChangeKind_t /*kind*/, const uint8_t* data, data_size_t size){
+void StatelessReader::newChange(ChangeKind_t kind, const uint8_t* data, DataSize_t size){
     if(m_callback != nullptr){
-        m_callback(data, size);
+        m_callback(m_callee, kind, data, size);
     }
 }
 
-void StatelessReader::registerCallback(ddsReaderCallback_fp cb){
-    m_callback = cb;
+void StatelessReader::registerCallback(ddsReaderCallback_fp cb, void* callee){
+    if(cb != nullptr && callee != nullptr){
+        m_callback = cb;
+        m_callee = callee;
+    }else{
+        printf("StatelessReader: Callback or callee nullptr");
+    }
 }

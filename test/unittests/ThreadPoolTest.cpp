@@ -8,7 +8,8 @@
 #include <condition_variable>
 
 #include "rtps/ThreadPool.h"
-#include "rtps/types.h"
+#include "rtps/common/types.h"
+#include "rtps/rtps.h"
 #include "rtps/entities/Domain.h"
 #include "test/mocking/WriterMock.h"
 
@@ -17,11 +18,12 @@ protected:
     rtps::Domain domain;
     rtps::ThreadPool pool{domain};
     ip4_addr_t someIp4Addr = {1234567};
-    rtps::ip4_port_t somepPort = 123;
+    rtps::Ip4Port_t somepPort = 123;
     udp_pcb someUdpPcb;
 
 
     void SetUp() override{
+        rtps::init();
         bool success = pool.startThreads();
         ASSERT_TRUE(success);
     }

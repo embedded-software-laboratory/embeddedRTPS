@@ -16,10 +16,10 @@ using namespace rtps;
 class EmptyRTPSWriter : public ::testing::Test{
 protected:
     const TopicKind_t arbitraryType = TopicKind_t::NO_KEY;
-    const participantId_t arbitraryParticipantId = 1;
+    const ParticipantId_t arbitraryParticipantId = 1;
 
     StatelessWriter writer;
-    static const data_size_t size = 5;
+    static const DataSize_t size = 5;
     const uint8_t data[size] = {0, 1, 2, 3, 4};
 
     void SetUp() override{
@@ -51,7 +51,7 @@ TEST_F(EmptyRTPSWriter, newChange_ReturnsChange){
 
 TEST_F(EmptyRTPSWriter, newChange_SetCorrectValues){
     ChangeKind_t expectedKind = ChangeKind_t::ALIVE;
-    const data_size_t size = 5;
+    const DataSize_t size = 5;
     uint8_t data[size] = {};
 
     const CacheChange* change = writer.newChange(expectedKind, data, size);
@@ -62,7 +62,7 @@ TEST_F(EmptyRTPSWriter, newChange_SetCorrectValues){
 }
 
 TEST_F(EmptyRTPSWriter, newChange_DoesAllocateExactSize){
-    const data_size_t size = 5;
+    const DataSize_t size = 5;
     uint8_t data[size] = {};
 
     const CacheChange* change = writer.newChange(ChangeKind_t::ALIVE, data, size);
@@ -73,9 +73,9 @@ TEST_F(EmptyRTPSWriter, newChange_DoesAllocateExactSize){
 
 class EmptyRTPSWriterWithoutKey : public ::testing::Test{
 protected:
-    const participantId_t arbitraryParticipantId = 1;
+    const ParticipantId_t arbitraryParticipantId = 1;
     StatelessWriter writer;
-    static const data_size_t size = 5;
+    static const DataSize_t size = 5;
     const uint8_t data[size] = {0, 1, 2, 3, 4};
 
     void SetUp() override{
@@ -99,7 +99,7 @@ TEST_F(EmptyRTPSWriterWithoutKey, newChange_IgnoresAllKindThatAreNotAlive){
 
 class EmptyRTPSWriterWithKey : public ::testing::Test{
 protected:
-    const participantId_t arbitraryParticipantId = 1;
+    const ParticipantId_t arbitraryParticipantId = 1;
     StatelessWriter writer;
     void SetUp() override{
         writer.init(TopicKind_t::WITH_KEY, nullptr, GUIDPREFIX_UNKNOWN, ENTITYID_UNKNOWN, arbitraryParticipantId);
@@ -128,25 +128,6 @@ TEST_F(EmptyRTPSWriterWithKey, newChange_AddsAllKindsBesideInvalid){
     }
 }
 
-/*
-class WriterWithoutThreadNotification : StatelessWriter{
-public:
-    using StatelessWriter::StatelessWriter;
-    const CacheChange* newChange(ChangeKind_t kind, const uint8_t* data, data_size_t size){
-        return nullptr;
-    }
-};
-
-TEST(BasicWriter, newChange_NotifiesThreadPool){
-    static const data_size_t size = 5;
-    const uint8_t data[size] = {0, 1, 2, 3, 4};
-    WriterWithoutThreadNotification writer{TopicKind_t::NO_KEY};
-
-    EXPECT_CALL()
-    writer.newChange(ChangeKind_t::ALIVE, data, size), nullptr;
-}
-
-*/
 
 
 

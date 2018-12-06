@@ -15,7 +15,7 @@ Participant::Participant() : guidPrefix(GUIDPREFIX_UNKNOWN), participantId(PARTI
                              receiver(GUIDPREFIX_UNKNOWN){
 
 }
-Participant::Participant(const GuidPrefix_t& guidPrefix, participantId_t participantId)
+Participant::Participant(const GuidPrefix_t& guidPrefix, ParticipantId_t participantId)
         : guidPrefix(guidPrefix), participantId(participantId),
           receiver(guidPrefix){
 
@@ -28,6 +28,7 @@ Participant::~Participant() {
 bool Participant::isValid(){
     return participantId != PARTICIPANT_ID_INVALID;
 }
+
 std::array<uint8_t, 3> Participant::getNextUserEntityKey(){
     const auto result = m_nextUserEntityId;
 
@@ -42,39 +43,20 @@ std::array<uint8_t, 3> Participant::getNextUserEntityKey(){
 }
 
 rtps::Writer* Participant::addUserWriter(Writer& writer){
-    if(m_numWriters >= m_writers.size()){
+    if(receiver.addWriter(writer)){
+        return &writer;
+    }else{
         return nullptr;
     }
-    m_writers[m_numWriters] = &writer;
-    ++m_numWriters;
-    return &writer;
 }
 
-void Participant::addSPDPWriter(Writer &writer) {
-    mp_SPDPWriter = &writer;
-    if(mp_SPDPReader != nullptr){
-        m_spdpAgent.init(*this);
-        m_spdpAgent.start();
-    }
+void Participant::addBuiltInEndpoints(BuiltInEndpoints& endpoints){
+    receiver.addBuiltInEndpoints(endpoints);
+
+    m_spdpAgent.init(*this, endpoints);
+    m_spdpAgent.start();
 }
 
-rtps::Writer* Participant::getSPDPWriter() {
-    return mp_SPDPWriter;
-}
-
-void Participant::addSPDPReader(Reader &reader) {
-    mp_SPDPReader = &reader;
-    if(mp_SPDPWriter != nullptr){
-        m_spdpAgent.init(*this);
-        m_spdpAgent.start();
-    }
-    receiver.addReader(reader);
-}
-
-rtps::Reader* Participant::getSPDPReader() {
-    return mp_SPDPReader;
-}
-
-void Participant::newMessage(const uint8_t* data, uint16_t size){
+void Participant::newMessage(const uint8_t* data, DataSize_t size){
     receiver.processMessage(data, size);
 }

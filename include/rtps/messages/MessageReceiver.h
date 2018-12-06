@@ -7,11 +7,21 @@
 #define RTPS_MESSAGERECEIVER_H
 
 #include <cstdint>
-#include "rtps/types.h"
+#include "rtps/common/types.h"
 #include "rtps/config.h"
 
 namespace rtps {
     class Reader;
+    class Writer;
+
+    struct BuiltInEndpoints{
+        Writer* spdpWriter;
+        Reader* spdpReader;
+        Writer* sedpPubWriter;
+        Reader* sedpPubReader;
+        Writer* sedpSubWriter;
+        Reader* sedpSubReader;
+    };
 
     class MessageReceiver {
     public:
@@ -24,33 +34,37 @@ namespace rtps {
 
         void reset();
 
-        bool addWriter(); // for acknack etc.
         bool addReader(Reader& reader); // for new CacheChanges
+        bool addWriter(Writer& writer); // for acks etc.
+        void addBuiltInEndpoints(BuiltInEndpoints& endpoints);
 
-        bool processMessage(const uint8_t* data, data_size_t size);
+        bool processMessage(const uint8_t* data, DataSize_t size);
 
     private:
         struct MessageProcessingInfo{
-            MessageProcessingInfo(const uint8_t* data, data_size_t size)
+            MessageProcessingInfo(const uint8_t* data, DataSize_t size)
                 : data(data), size(size){}
             const uint8_t* data;
-            const data_size_t size;
+            const DataSize_t size;
 
             //! Offset to the next unprocessed byte
-            data_size_t nextPos = 0;
+            DataSize_t nextPos = 0;
 
             inline const uint8_t* getPointerToPos(){
                 return &data[nextPos];
             }
 
             //! Returns the size of data which isn't processed yet
-            inline data_size_t getRemainingSize(){
+            inline DataSize_t getRemainingSize(){
                 return size - nextPos;
             }
         };
 
+        std::array<Writer*, Config::NUM_WRITERS_PER_PARTICIPANT> m_writers{nullptr};
+        uint8_t m_numWriters = 0;
         std::array<Reader*, Config::NUM_READERS_PER_PARTICIPANT> m_readers{nullptr};
         uint8_t m_numReaders = 0;
+
         GuidPrefix_t ourGuid;
 
         // TODO make msgInfo a member

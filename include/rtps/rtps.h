@@ -6,7 +6,7 @@
 #ifndef RTPS_RTPS_H
 #define RTPS_RTPS_H
 
-#include "types.h"
+#include "rtps/common/types.h"
 #include "rtps/ThreadPool.h"
 
 namespace rtps{

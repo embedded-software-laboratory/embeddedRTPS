@@ -19,7 +19,7 @@ using rtps::UdpDriver;
  * @param callback Function that gets called when a packet is received on addr:port.
  * @return True if creation was finished without errors. False otherwise.
  */
-const rtps::UdpConnection* UdpDriver::createUdpConnection(ip4_port_t receivePort, udp_rx_func_t callback, void* args) {
+const rtps::UdpConnection* UdpDriver::createUdpConnection(Ip4Port_t receivePort, udp_rx_func_t callback, void* args) {
 
     for(auto const &conn : m_conns){
         if(conn.port == receivePort){
@@ -61,7 +61,7 @@ bool UdpDriver::joinMultiCastGroup(ip4_addr_t addr) const {
     return true;
 }
 
-bool UdpDriver::sendPacket(const UdpConnection& conn, ip4_addr_t& destAddr, ip4_port_t destPort, pbuf& buffer){
+bool UdpDriver::sendPacket(const UdpConnection& conn, ip4_addr_t& destAddr, Ip4Port_t destPort, pbuf& buffer){
 
     err_t err = udp_sendto(conn.pcb, &buffer, &destAddr, destPort);
 

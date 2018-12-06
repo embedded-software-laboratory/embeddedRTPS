@@ -7,6 +7,7 @@ add_executable(runTests
                         unittests/typesTest.cpp
                         unittests/ThreadPoolTest.cpp
                         unittests/communication/UdpConnectionTest.cpp
+                        unittests/discovery/ParticipantProxyDataTest.cpp
                         unittests/storages/PBufWrapperTest.cpp
                         unittests/entities/DomainTest.cpp
                         unittests/entities/ParticipantTest.cpp

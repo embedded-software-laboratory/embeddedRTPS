@@ -6,7 +6,7 @@
 #ifndef RTPS_CONFIG_H
 #define RTPS_CONFIG_H
 
-#include "rtps/types.h"
+#include "rtps/common/types.h"
 
 namespace rtps {
 
@@ -24,10 +24,12 @@ namespace rtps {
         const uint8_t NUM_WRITERS_PER_PARTICIPANT = 10;
         const uint8_t NUM_READERS_PER_PARTICIPANT = 10;
 
-        const int SPDP_RESEND_PERIOD_MS = 5000;
-        const int SPDP_WRITER_STACKSIZE = 500;
-        const int SPDP_WRITER_PRIO = 3;
-        const Behavior::Duration_t SPDP_LEASE_DURATION = {100, 0};
+        const uint16_t SPDP_RESEND_PERIOD_MS = 5000;
+        const uint16_t SPDP_WRITER_STACKSIZE = 500;
+        const uint8_t SPDP_WRITER_PRIO = 3;
+        const uint8_t SPDP_MAX_NUMBER_FOUND_PARTICIPANTS = 10;
+        const uint8_t SPDP_MAX_NUM_LOCATORS = 10;
+        const Duration_t SPDP_LEASE_DURATION = {100, 0};
 
         const int MAX_NUM_UDP_CONNECTIONS = 20;
 

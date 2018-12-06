@@ -17,6 +17,11 @@ ThreadPool::ThreadPool(Domain& domain) : domain(domain){
 
 }
 
+ThreadPool::~ThreadPool(){
+    stopThreads();
+    sys_msleep(500); // Doesn't matter for real application. The dtor should never be called.
+}
+
 bool ThreadPool::startThreads(){
     if(running){
         return true;
@@ -104,7 +109,7 @@ void ThreadPool::sendFunction(void* arg) {
 }
 
 
-void ThreadPool::readCallback(void* args, udp_pcb* target, pbuf* pbuf, const ip_addr_t* addr, ip4_port_t port) {
+void ThreadPool::readCallback(void* args, udp_pcb* target, pbuf* pbuf, const ip_addr_t* addr, Ip4Port_t port) {
     printf("Received something from %s:%u !!!!\n\r", ipaddr_ntoa(addr), port);
 
     auto& pool = *static_cast<ThreadPool*>(args);

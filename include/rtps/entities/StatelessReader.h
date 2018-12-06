@@ -12,12 +12,12 @@
 namespace rtps{
     class StatelessReader final: public Reader{
     public:
-        void newChange(ChangeKind_t kind, const uint8_t* data, data_size_t size) override;
-        void registerCallback(ddsReaderCallback_fp cb) override;
+        void newChange(ChangeKind_t kind, const uint8_t* data, DataSize_t size) override;
+        void registerCallback(ddsReaderCallback_fp cb, void* callee) override;
 
     private:
-        HistoryCache historyCache;
         ddsReaderCallback_fp m_callback = nullptr;
+        void* m_callee = nullptr;
     };
 
 }

@@ -10,7 +10,7 @@
 #include "rtps/messages/MessageFactory.h"
 #include "rtps/messages/MessageReceiver.h"
 #include "rtps/messages/MessageTypes.h"
-#include "rtps/types.h"
+#include "rtps/common/types.h"
 
 using ::testing::_;
 
@@ -31,7 +31,7 @@ protected:
 
 TEST_F(AMessageReceiver, processMessage_returnsTrueIfValidHeader){
     auto data = reinterpret_cast<uint8_t*>(&validHeader);
-    rtps::data_size_t size = sizeof(validHeader);
+    rtps::DataSize_t size = sizeof(validHeader);
 
     bool valid = receiver.processMessage(data, size);
 
@@ -40,7 +40,7 @@ TEST_F(AMessageReceiver, processMessage_returnsTrueIfValidHeader){
 
 TEST_F(AMessageReceiver, processMessage_setsInfoCorrectIfValidHeader){
     auto data = reinterpret_cast<uint8_t*>(&validHeader);
-    rtps::data_size_t size = sizeof(validHeader);
+    rtps::DataSize_t size = sizeof(validHeader);
 
     bool valid = receiver.processMessage(data, size);
 
@@ -57,7 +57,7 @@ TEST_F(AMessageReceiver, processMessage_returnsFalseIfInvalidProtocolType){
     validHeader.protocolName = {'R', 'T', 'P', '2'};
 
     auto data = reinterpret_cast<uint8_t*>(&validHeader);
-    rtps::data_size_t size = sizeof(validHeader);
+    rtps::DataSize_t size = sizeof(validHeader);
 
     bool valid = receiver.processMessage(data, size);
 
@@ -73,7 +73,7 @@ TEST_F(AMessageReceiver, processMessage_returnsFalseIfMajorVersionLower){
     validHeader.protocolVersion = rtps::PROTOCOLVERSION_1_1;
 
     auto data = reinterpret_cast<uint8_t*>(&validHeader);
-    rtps::data_size_t size = sizeof(validHeader);
+    rtps::DataSize_t size = sizeof(validHeader);
 
     bool valid = receiver.processMessage(data, size);
 
@@ -86,7 +86,7 @@ TEST_F(AMessageReceiver, processMessage_returnsFalseIfMajorVersionIsHigher){
     validHeader.protocolVersion = {3, 0};
 
     auto data = reinterpret_cast<uint8_t*>(&validHeader);
-    rtps::data_size_t size = sizeof(validHeader);
+    rtps::DataSize_t size = sizeof(validHeader);
 
     bool valid = receiver.processMessage(data, size);
 
@@ -97,7 +97,7 @@ TEST_F(AMessageReceiver, processMessage_returnsFalseIfItsOwnPackage){
     validHeader.guidPrefix = receiverGuidPrefix;
 
     auto data = reinterpret_cast<uint8_t*>(&validHeader);
-    rtps::data_size_t size = sizeof(validHeader);
+    rtps::DataSize_t size = sizeof(validHeader);
 
     bool valid = receiver.processMessage(data, size);
 
@@ -128,7 +128,7 @@ TEST_F(AMessageReceiverReceivedDataSubmessage, processMessage_validDataSMAddsCac
     receiver.addReader(correctReaderMock);
     receiver.addReader(anotherReaderMock);
     auto data = validDataMsgBufferMock.buffer.data();
-    auto size = (rtps::data_size_t) validDataMsgBufferMock.buffer.size();
+    auto size = (rtps::DataSize_t) validDataMsgBufferMock.buffer.size();
 
     EXPECT_CALL(correctReaderMock, newChange(_,_,_)).Times(1);
     EXPECT_CALL(anotherReaderMock, newChange(_,_,_)).Times(0);

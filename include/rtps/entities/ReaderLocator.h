@@ -6,7 +6,8 @@
 #ifndef RTPS_READERLOCATOR_H
 #define RTPS_READERLOCATOR_H
 
-#include "rtps/types.h"
+#include "rtps/common/types.h"
+#include "rtps/common/Locator.h"
 
 namespace rtps{
 
@@ -14,11 +15,11 @@ namespace rtps{
         ReaderLocator() : entityId(ENTITYID_UNKNOWN), locator(){
 
         }
-        ReaderLocator(EntityId_t id, Locator_t loc) : entityId(id), locator(loc){
+        ReaderLocator(EntityId_t id, Locator loc) : entityId(id), locator(loc){
 
         }
         EntityId_t entityId;
-        Locator_t locator;
+        Locator locator;
     };
 
 } // rtps
