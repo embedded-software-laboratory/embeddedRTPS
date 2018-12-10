@@ -71,7 +71,7 @@ void StatefullReader::onNewHeartbeat(SubmessageHeartbeat& msg, GuidPrefix_t remo
         return;
     }
 
-    ThreadPool::PacketInfo info;
+    UdpDriver::PacketInfo info;
     info.destAddr = proxy->locator.getIp4Address();
     info.destPort = proxy->locator.port;
     //TODO set sendport

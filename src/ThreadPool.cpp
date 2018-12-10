@@ -35,12 +35,6 @@ bool ThreadPool::startThreads(){
         // TODO ID, err check
         thread = sys_thread_new("WriterThread", writerFunction, this, Config::THREAD_POOL_WRITER_STACKSIZE, Config::THREAD_POOL_WRITER_PRIO);
     }
-
-    //TODO move avoid from here
-    LOCK_TCPIP_CORE();
-    transport.joinMultiCastGroup(transformIP4ToU32(239, 255, 0, 1));
-    UNLOCK_TCPIP_CORE();
-
     return true;
 }
 
@@ -63,51 +57,18 @@ void ThreadPool::writerFunction(void* arg){
         printf("nullptr passed to writer function\n");
         return;
     }
+
     while(pool->running){
-        {
             Workload_t workload;
             auto isWorkToDo = pool->inputQueue.moveFirstInto(workload);
             if(!isWorkToDo){
                 sys_msleep(1);
                 continue;
             }
-            for(uint8_t i=0; i < workload.numCacheChangesToSend; ++i){
-                PacketInfo info;
 
-                if(!workload.pWriter->createMessageCallback(info)){
-                    continue;
-                }
-
-                pool->outputQueue.moveElementIntoBuffer(std::move(info));
-
-                // Execute with tcpip-thread
-                tcpip_callback(sendFunction, pool); // Blocking i.e. thread safe call
-            }
-        }
+            workload.p_writer->progress();
     }
 }
-
-void ThreadPool::sendFunction(void* arg) {
-    auto pool = static_cast<ThreadPool*>(arg);
-    if(pool == nullptr){
-        printf("nullptr passed to send function\n");
-        return;
-    }
-    PacketInfo info;
-    const bool isWorkToDo = pool->outputQueue.moveFirstInto(info);
-    if(!isWorkToDo){
-        printf("Who dares to wake me up if there is nothing to do?!");
-        return;
-    }
-    auto conn = pool->transport.createUdpConnection(info.srcPort, readCallback, pool);
-    if(conn == nullptr){
-        printf("Failed to create connection on port %u \n", info.srcPort);
-        return;
-    }
-
-    pool->transport.sendPacket(*conn, info.destAddr, info.destPort, *info.buffer.firstElement);
-}
-
 
 void ThreadPool::readCallback(void* args, udp_pcb* target, pbuf* pbuf, const ip_addr_t* addr, Ip4Port_t port) {
     printf("Received something from %s:%u !!!!\n\r", ipaddr_ntoa(addr), port);

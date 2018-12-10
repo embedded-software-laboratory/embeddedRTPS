@@ -17,14 +17,16 @@ class EmptyRTPSWriter : public ::testing::Test{
 protected:
     const TopicKind_t arbitraryType = TopicKind_t::NO_KEY;
     const ParticipantId_t arbitraryParticipantId = 1;
+    const Ip4Port_t srcPort = getUserUnicastPort(arbitraryParticipantId);
 
+    UdpDriver transport{nullptr, nullptr};
     StatelessWriter writer;
     static const DataSize_t size = 5;
     const uint8_t data[size] = {0, 1, 2, 3, 4};
 
     void SetUp() override{
         rtps::init();
-        writer.init(arbitraryType, nullptr, GUIDPREFIX_UNKNOWN, ENTITYID_UNKNOWN, arbitraryParticipantId);
+        writer.init(arbitraryType, nullptr, GUIDPREFIX_UNKNOWN, ENTITYID_UNKNOWN, transport, srcPort);
     }
 };
 
@@ -74,13 +76,16 @@ TEST_F(EmptyRTPSWriter, newChange_DoesAllocateExactSize){
 class EmptyRTPSWriterWithoutKey : public ::testing::Test{
 protected:
     const ParticipantId_t arbitraryParticipantId = 1;
+    const Ip4Port_t srcPort = getUserUnicastPort(arbitraryParticipantId);
+
+    UdpDriver transport{nullptr, nullptr};
     StatelessWriter writer;
     static const DataSize_t size = 5;
     const uint8_t data[size] = {0, 1, 2, 3, 4};
 
     void SetUp() override{
         rtps::init();
-        writer.init(TopicKind_t::NO_KEY, nullptr, GUIDPREFIX_UNKNOWN, ENTITYID_UNKNOWN, arbitraryParticipantId);
+        writer.init(TopicKind_t::NO_KEY, nullptr, GUIDPREFIX_UNKNOWN, ENTITYID_UNKNOWN, transport, srcPort);
     }
 };
 
@@ -100,9 +105,12 @@ TEST_F(EmptyRTPSWriterWithoutKey, newChange_IgnoresAllKindThatAreNotAlive){
 class EmptyRTPSWriterWithKey : public ::testing::Test{
 protected:
     const ParticipantId_t arbitraryParticipantId = 1;
+    const Ip4Port_t srcPort = getUserUnicastPort(arbitraryParticipantId);
+
+    UdpDriver transport{nullptr, nullptr};
     StatelessWriter writer;
     void SetUp() override{
-        writer.init(TopicKind_t::WITH_KEY, nullptr, GUIDPREFIX_UNKNOWN, ENTITYID_UNKNOWN, arbitraryParticipantId);
+        writer.init(TopicKind_t::WITH_KEY, nullptr, GUIDPREFIX_UNKNOWN, ENTITYID_UNKNOWN, transport, srcPort);
     };
 };
 

@@ -164,6 +164,12 @@ bool PBufWrapper::reserve(DataSize_t length) {
     return increaseSize(additionalAllocation);
 }
 
+void PBufWrapper::reset(){
+    if(firstElement != nullptr){
+        m_freeSpace = firstElement->tot_len;
+    }
+}
+
 bool PBufWrapper::increaseSize(uint16_t length){
     pbuf* allocation = pbuf_alloc(m_layer, length, m_type);
     if(allocation == nullptr){

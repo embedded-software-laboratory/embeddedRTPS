@@ -18,11 +18,11 @@ namespace rtps {
     class StatelessWriter : public Writer{
     public:
 
-        void init(TopicKind_t topicKind, ThreadPool* threadPool,
-                  GuidPrefix_t guidPrefix, EntityId_t entityId, Ip4Port_t sendPort);
+        void init(TopicKind_t topicKind, ThreadPool* threadPool, GuidPrefix_t guidPrefix,
+                  EntityId_t entityId, UdpDriver& driver, Ip4Port_t sendPort);
 
         bool addNewMatchedReader(ReaderLocator loc) override;
-        bool createMessageCallback(ThreadPool::PacketInfo& packetInfo) override;
+        void progress() override;
         const CacheChange* newChange(ChangeKind_t kind, const uint8_t* data, DataSize_t size) override;
         void unsentChangesReset() override;
 
@@ -36,7 +36,7 @@ namespace rtps {
 
         GuidPrefix_t m_guidPrefix = GUIDPREFIX_UNKNOWN;
         EntityId_t m_entityId = ENTITYID_UNKNOWN;
-        Ip4Port_t m_sendPort = 0;
+        UdpDriver::PacketInfo m_packetInfo;
 
         TopicKind_t m_topicKind = TopicKind_t::NO_KEY;
         SequenceNumber_t m_lastChangeSequenceNumber = {0, 0};

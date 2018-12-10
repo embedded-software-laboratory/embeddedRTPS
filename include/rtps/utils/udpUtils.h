@@ -29,7 +29,7 @@ namespace rtps {
                 MSB};
     }
 
-    inline Ip4Port_t getBuiltInUnicastPort(ParticipantId_t participantId) {
+    constexpr Ip4Port_t getBuiltInUnicastPort(ParticipantId_t participantId) {
         return PB +
                DG * Config::DOMAIN_ID +
                D1 +
@@ -42,7 +42,7 @@ namespace rtps {
                D0;
     }
 
-    inline Ip4Port_t getUserUnicastPort(ParticipantId_t participantId) {
+    constexpr Ip4Port_t getUserUnicastPort(ParticipantId_t participantId) {
         return PB +
                DG * Config::DOMAIN_ID +
                D3 +
@@ -55,7 +55,7 @@ namespace rtps {
                D2;
     }
 
-    inline bool isUserPort(Ip4Port_t port){
+    constexpr bool isUserPort(Ip4Port_t port){
         return (port & 1) == 1;
     }
 

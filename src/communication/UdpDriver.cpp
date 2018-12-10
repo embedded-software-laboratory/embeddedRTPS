@@ -12,6 +12,13 @@
 using rtps::UdpDriver;
 
 
+
+UdpDriver::UdpDriver(rtps::UdpDriver::udpRxFunc_fp callback, void *args)
+    : m_rxCallback(callback), m_callbackArgs(args){
+
+}
+
+
 /**
  *
  * @param addr IP4 address on which we are listening
@@ -19,7 +26,7 @@ using rtps::UdpDriver;
  * @param callback Function that gets called when a packet is received on addr:port.
  * @return True if creation was finished without errors. False otherwise.
  */
-const rtps::UdpConnection* UdpDriver::createUdpConnection(Ip4Port_t receivePort, udp_rx_func_t callback, void* args) {
+const rtps::UdpConnection* UdpDriver::createUdpConnection(Ip4Port_t receivePort) {
 
     for(auto const &conn : m_conns){
         if(conn.port == receivePort){
@@ -41,7 +48,7 @@ const rtps::UdpConnection* UdpDriver::createUdpConnection(Ip4Port_t receivePort,
         return nullptr;
     }
     //LOCK_TCPIP_CORE();
-    udp_recv(udp_conn.pcb, callback, args);
+    udp_recv(udp_conn.pcb, m_rxCallback, m_callbackArgs);
     //UNLOCK_TCPIP_CORE();
 
     m_conns[m_numConns] = std::move(udp_conn);
@@ -71,4 +78,23 @@ bool UdpDriver::sendPacket(const UdpConnection& conn, ip4_addr_t& destAddr, Ip4P
     }
     //printf("Send packet successful \n");
     return true;
+}
+
+void UdpDriver::sendFunction(PacketInfo& packet){
+
+    auto p_conn = createUdpConnection(packet.srcPort);
+    if(p_conn == nullptr){
+        printf("Failed to create connection on port %u \n", packet.srcPort);
+        return;
+    }
+
+    sendPacket(*p_conn, packet.destAddr, packet.destPort, *packet.buffer.firstElement);
+}
+
+/**
+ * This function needs to be executed by the tcpip-thread
+ */
+void UdpDriver::sendFunctionJumppad(void* packetInfo){
+    auto& packet = *static_cast<PacketInfo*>(packetInfo);
+    packet.transport->sendFunction(packet);
 }

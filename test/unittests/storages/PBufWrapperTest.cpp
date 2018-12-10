@@ -76,6 +76,10 @@ TEST_F(EmptyPBufWrapper, Reserve_DoesNothingWhenAlreadyReservedEnough){
     EXPECT_EQ(wrapper.spaceLeft(), 10);
 }
 
+TEST_F(EmptyPBufWrapper, Reset_DoesNotCrash){
+    wrapper.reset();
+}
+
 class PBufWrapperWith10ByteReserved : public ::testing::Test{
 protected:
     PBufWrapper wrapper;
@@ -126,6 +130,16 @@ TEST_F(PBufWrapperWith10ByteReserved, ReserveAppend_WorksWhenNotEnoughSpaceLeft)
     ASSERT_TRUE(successRes);
     bool successAppend = wrapper.append(data.data(), data.size());
     ASSERT_TRUE(successAppend);
+}
+
+TEST_F(PBufWrapperWith10ByteReserved, Reset_canAdd10AfterAdding5andResetting){
+    wrapper.append(data.data(), 5);
+    bool successRes = wrapper.append(data.data(), data.size());
+    ASSERT_FALSE(successRes);
+
+    wrapper.reset();
+    successRes = wrapper.append(data.data(), data.size());
+    EXPECT_TRUE(successRes);
 }
 
 TEST_F(PBufWrapperWith10ByteReserved, GetSize_IsZeroIfOnlyReserved){

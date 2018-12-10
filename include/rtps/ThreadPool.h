@@ -27,37 +27,28 @@ namespace rtps {
         ~ThreadPool();
 
         struct Workload_t{
-            Writer* pWriter;
-            uint8_t numCacheChangesToSend;
-        };
+            Workload_t() : p_writer(nullptr){};
+            explicit Workload_t(Writer* writer) : p_writer(writer){};
 
-        struct PacketInfo{
-            Ip4Port_t srcPort;
-            ip4_addr_t destAddr;
-            Ip4Port_t destPort;
-            PBufWrapper buffer;
+            Writer* p_writer;
         };
 
         bool startThreads();
-
         void stopThreads();
 
         void clearQueues();
-
         void addWorkload(Workload_t workload);
+
+        static void readCallback(void* arg, udp_pcb* pcb, pbuf* p, const ip_addr_t* addr, Ip4Port_t port);
+
 
     private:
         Domain& domain;
         bool running = false;
-        UdpDriver transport;
         std::array<sys_thread_t, Config::THREAD_POOL_NUM_WRITERS> writers;
 
         ThreadSafeCircularBuffer<Workload_t, Config::THREAD_POOL_WORKLOAD_QUEUE_LENGTH> inputQueue;
-        ThreadSafeCircularBuffer<PacketInfo, Config::THREAD_POOL_WORKLOAD_QUEUE_LENGTH> outputQueue;
-
-        static void readCallback(void* arg, udp_pcb* pcb, pbuf* p, const ip_addr_t* addr, Ip4Port_t port);
-
-        static void sendFunction(void* arg);
+        ThreadSafeCircularBuffer<UdpDriver::PacketInfo, Config::THREAD_POOL_WORKLOAD_QUEUE_LENGTH> outputQueue;
 
         static void writerFunction(void* arg);
 

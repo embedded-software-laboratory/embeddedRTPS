@@ -39,18 +39,16 @@ TEST_F(ThreadPoolTest, addWorkload_executesCallbackWithinHalfSecond){
     std::condition_variable cond_var;
     bool done = false;
 
-    EXPECT_CALL(mock, createMessageCallback(::testing::_)).Times(2)
-                                      .WillOnce(testing::Invoke([&](rtps::ThreadPool::PacketInfo&)->bool {
-                                          return false; // No message to send.
-                                      }))
-                                      .WillOnce(testing::Invoke([&](rtps::ThreadPool::PacketInfo&)->bool {
-                                          std::lock_guard<std::mutex> lock(m);
-                                          done = true;
-                                          cond_var.notify_one();
-                                          return false; // No message to send.
-                                      }));
+    EXPECT_CALL(mock, progress()).Times(2)
+                                 .WillOnce(testing::Invoke([&]()->void {}))
+                                 .WillOnce(testing::Invoke([&]()->void {
+                                     std::lock_guard<std::mutex> lock(m);
+                                     done = true;
+                                     cond_var.notify_one();
+                                 }));
 
-    pool.addWorkload(rtps::ThreadPool::Workload_t{&mock, 2});
+    pool.addWorkload(rtps::ThreadPool::Workload_t{&mock});
+    pool.addWorkload(rtps::ThreadPool::Workload_t{&mock});
 
     std::unique_lock<std::mutex> lock(m);
     EXPECT_TRUE(cond_var.wait_for(lock, std::chrono::milliseconds(500), [&done] { return done; }));

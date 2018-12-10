@@ -16,7 +16,9 @@ namespace rtps{
     class Writer{
     public:
         virtual bool addNewMatchedReader(ReaderLocator loc) = 0;
-        virtual bool createMessageCallback(ThreadPool::PacketInfo& buffer) = 0;
+
+        //! Executes required steps like sending packets. Intended to be called by worker threads
+        virtual void progress() = 0;
         virtual const CacheChange* newChange(ChangeKind_t kind, const uint8_t* data, DataSize_t size) = 0;
         virtual void unsentChangesReset() = 0;
 

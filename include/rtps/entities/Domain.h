@@ -29,6 +29,7 @@ namespace rtps{
 
     private:
         ThreadPool m_threadPool;
+        UdpDriver m_transport;
         std::array<Participant, Config::MAX_NUM_PARTICIPANTS> m_participants;
         const uint8_t PARTICIPANT_START_ID = 1;
         ParticipantId_t m_nextParticipantId = PARTICIPANT_START_ID;

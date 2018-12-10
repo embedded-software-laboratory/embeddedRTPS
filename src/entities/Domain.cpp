@@ -8,8 +8,11 @@
 
 using rtps::Domain;
 
-Domain::Domain() : m_threadPool(*this){
-
+Domain::Domain() : m_threadPool(*this), m_transport(ThreadPool::readCallback, &m_threadPool){
+    //TODO move avoid from here
+    LOCK_TCPIP_CORE();
+    m_transport.joinMultiCastGroup(transformIP4ToU32(239, 255, 0, 1));
+    UNLOCK_TCPIP_CORE();
 }
 
 bool Domain::start(){
@@ -59,7 +62,8 @@ rtps::Participant* Domain::createParticipant(){
 void Domain::addDefaultWriterAndReader(Participant& part) {
     //SPDP
     StatelessWriter& spdpWriter = m_statelessWriters[m_numStatelessWriters++];
-    spdpWriter.init(TopicKind_t::WITH_KEY, &m_threadPool, part.guidPrefix, ENTITYID_SPDP_BUILTIN_PARTICIPANT_WRITER, getBuiltInMulticastPort());
+    spdpWriter.init(TopicKind_t::WITH_KEY, &m_threadPool, part.guidPrefix, ENTITYID_SPDP_BUILTIN_PARTICIPANT_WRITER,
+                    m_transport, getBuiltInMulticastPort());
     spdpWriter.addNewMatchedReader(ReaderLocator(ENTITYID_SPDP_BUILTIN_PARTICIPANT_READER, getDefaultSendMulticastLocator()));
 
     StatelessReader& spdpReader = m_statelessReaders[m_numStatelessReaders++];
@@ -85,7 +89,7 @@ rtps::Writer* Domain::createWriter(Participant& part, bool reliable){
         // TODO Distinguish WithKey and NoKey (Also changes EntityKind)
         m_statelessWriters[m_numStatelessWriters].init(TopicKind_t::NO_KEY, &m_threadPool, part.guidPrefix,
                                                        {part.getNextUserEntityKey(), EntityKind_t::USER_DEFINED_WRITER_WITHOUT_KEY},
-                                                       getUserUnicastPort(part.participantId));
+                                                       m_transport, getUserUnicastPort(part.participantId));
 
         return &m_statelessWriters[m_numStatelessWriters++];
     }

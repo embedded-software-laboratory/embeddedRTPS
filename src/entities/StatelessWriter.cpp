@@ -9,16 +9,19 @@
 #include "rtps/messages/MessageFactory.h"
 #include "rtps/storages/PBufWrapper.h"
 #include "rtps/utils/udpUtils.h"
+#include "rtps/communication/UdpDriver.h"
+#include "lwip/tcpip.h"
 
 namespace rtps{
 
     void StatelessWriter::init(TopicKind_t topicKind, ThreadPool* threadPool,
-                          GuidPrefix_t guidPrefix, EntityId_t entityId, Ip4Port_t sendPort){
+                          GuidPrefix_t guidPrefix, EntityId_t entityId, UdpDriver& driver, Ip4Port_t sendPort){
         mp_threadPool = threadPool;
         m_guidPrefix = guidPrefix;
         m_entityId = entityId;
         m_topicKind = topicKind;
-        m_sendPort = sendPort;
+        m_packetInfo.transport = &driver;
+        m_packetInfo.srcPort = sendPort;
         if (sys_mutex_new(&m_mutex) != ERR_OK) {
             printf("Failed to create mutex \n");
         }
@@ -52,16 +55,15 @@ namespace rtps{
         Lock lock(m_mutex);
         auto result = m_history.addChange(std::move(change));
         if(mp_threadPool != nullptr){
-            mp_threadPool->addWorkload(ThreadPool::Workload_t{this, 1});
+            mp_threadPool->addWorkload(ThreadPool::Workload_t{this});
         }
         return result;
     }
 
     void StatelessWriter::unsentChangesReset() {
         Lock lock(m_mutex);
-        auto numReset = m_history.resetSend();
         if(mp_threadPool != nullptr){
-            mp_threadPool->addWorkload(ThreadPool::Workload_t{this, numReset});
+            mp_threadPool->addWorkload(ThreadPool::Workload_t{this});
         }
     }
 
@@ -69,27 +71,32 @@ namespace rtps{
         return kind == ChangeKind_t::INVALID || (m_topicKind == TopicKind_t::NO_KEY && kind != ChangeKind_t::ALIVE);
     }
 
-    bool StatelessWriter::createMessageCallback(ThreadPool::PacketInfo& packetInfo){
+    void StatelessWriter::progress(){
         if(m_readerLocator.entityId == ENTITYID_UNKNOWN){ // TODO UNKNOWN might be okay. Detect not-set locator in another way
-            return false;
+            return;
         }
+        // TODO lock
+        m_packetInfo.buffer.reset();
 
-        MessageFactory::addHeader(packetInfo.buffer, m_guidPrefix);
-        MessageFactory::addSubMessageTimeStamp(packetInfo.buffer);
+        MessageFactory::addHeader(m_packetInfo.buffer, m_guidPrefix);
+        MessageFactory::addSubMessageTimeStamp(m_packetInfo.buffer);
 
         {
             Lock lock(m_mutex);
             const CacheChange* next = m_history.getNextCacheChange();
-            MessageFactory::addSubMessageData(packetInfo.buffer, next->data, false, next->sequenceNumber, m_entityId,
+            if(next == nullptr){
+                return;
+            }
+            MessageFactory::addSubMessageData(m_packetInfo.buffer, next->data, false, next->sequenceNumber, m_entityId,
                                               m_readerLocator.entityId); // TODO
         }
 
         // Just usable for IPv4
         const Locator& locator = m_readerLocator.locator;
 
-        packetInfo.srcPort = m_sendPort;
-        IP4_ADDR((&packetInfo.destAddr), locator.address[12], locator.address[13], locator.address[14], locator.address[15]);
-        packetInfo.destPort = (Ip4Port_t) locator.port;
-        return true;
+        IP4_ADDR((&m_packetInfo.destAddr), locator.address[12], locator.address[13], locator.address[14], locator.address[15]);
+        m_packetInfo.destPort = (Ip4Port_t) locator.port;
+
+        tcpip_callback(UdpDriver::sendFunctionJumppad, static_cast<void*>(&m_packetInfo));
     }
 }

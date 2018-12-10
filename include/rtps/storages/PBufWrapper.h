@@ -48,6 +48,8 @@ namespace rtps {
 
         bool reserve(DataSize_t length);
 
+        void reset();
+
         DataSize_t spaceLeft() const;
 
         DataSize_t getUsedSize() const;
