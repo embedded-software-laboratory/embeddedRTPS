@@ -8,7 +8,6 @@
 
 
 #include "rtps/config.h"
-#include "rtps/common/Locator.h"
 
 namespace rtps {
     namespace {
@@ -82,32 +81,7 @@ namespace rtps {
         }
     }
 
-    inline Locator getBuiltInUnicastLocator(ParticipantId_t participantId) {
-        return Locator::createUDPv4Locator(Config::IP_ADDRESS[0], Config::IP_ADDRESS[1],
-                                             Config::IP_ADDRESS[2], Config::IP_ADDRESS[3],
-                                             getBuiltInUnicastPort(participantId));
-    }
 
-    inline Locator getBuiltInMulticastLocator() {
-        return Locator::createUDPv4Locator(239, 255, 0, 1, getBuiltInMulticastPort());
-    }
-
-    inline Locator getUserUnicastLocator(ParticipantId_t participantId) {
-        return Locator::createUDPv4Locator(Config::IP_ADDRESS[0], Config::IP_ADDRESS[1],
-                                             Config::IP_ADDRESS[2], Config::IP_ADDRESS[3],
-                                             getUserUnicastPort(participantId));
-    }
-
-    inline Locator getUserMulticastLocator() {
-        return Locator::createUDPv4Locator(Config::IP_ADDRESS[0], Config::IP_ADDRESS[1],
-                                             Config::IP_ADDRESS[2], Config::IP_ADDRESS[3],
-                                             getUserMulticastPort());
-    }
-
-    inline Locator getDefaultSendMulticastLocator() {
-        return Locator::createUDPv4Locator(239, 255, 0, 1,
-                                             getBuiltInMulticastPort());
-    }
 }
 
 #endif //RTPS_UDP_H

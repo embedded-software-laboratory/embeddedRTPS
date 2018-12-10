@@ -120,12 +120,13 @@ bool MessageReceiver::processDataSubMessage(MessageProcessingInfo& msgInfo){
     //bool isLittleEndian = (submsgHeader->flags & SubMessageFlag::FLAG_ENDIANESS);
     //bool hasInlineQos = (submsgHeader->flags & SubMessageFlag::FLAG_INLINE_QOS);
 
-
     for(uint16_t i=0; i<m_numReaders; ++i){
         static_assert(sizeof(i) > sizeof(m_numReaders), "Size of loop variable not sufficient");
         Reader& currentReader = *m_readers[i];
         if(currentReader.entityId == submsgData->readerId){
-            currentReader.newChange(ChangeKind_t::ALIVE, serializedData, size);
+            Guid writerGuid{sourceGuidPrefix, submsgData->writerId};
+            ReaderCacheChange change{ChangeKind_t::ALIVE, writerGuid, submsgData->writerSN, serializedData, size};
+            currentReader.newChange(change);
             break;
         }
     }

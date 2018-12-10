@@ -17,6 +17,7 @@ namespace rtps{
     class BuiltInEndpoints;
     class Writer;
     class Reader;
+    class ReaderCacheChange;
 
     class SPDPAgent{
     public:
@@ -38,8 +39,8 @@ namespace rtps{
 
         sys_mutex_t m_mutex;
         bool initialized = false;
-        static void receiveCallback(void* callee, ChangeKind_t kind, const uint8_t* data, DataSize_t length);
-        void handleSPDPPackage(ChangeKind_t kind, const uint8_t* data, DataSize_t size);
+        static void receiveCallback(void* callee, ReaderCacheChange& cacheChange);
+        void handleSPDPPackage(ReaderCacheChange& cacheChange);
 
         void addInlineQos();
         void addParticipantParameters();

@@ -23,6 +23,7 @@ namespace rtps {
         const uint8_t MAX_NUM_PARTICIPANTS = 3;
         const uint8_t NUM_WRITERS_PER_PARTICIPANT = 10;
         const uint8_t NUM_READERS_PER_PARTICIPANT = 10;
+        const uint8_t NUM_WRITER_PROXIES_PER_READER = 10;
 
         const uint16_t SPDP_RESEND_PERIOD_MS = 5000;
         const uint16_t SPDP_WRITER_STACKSIZE = 500;

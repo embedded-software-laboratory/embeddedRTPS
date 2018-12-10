@@ -8,7 +8,7 @@
 
 #include "rtps/common/types.h"
 #include "rtps/config.h"
-#include "rtps/discovery/SPDP.h"
+#include "rtps/discovery/SPDPAgent.h"
 #include "rtps/messages/MessageReceiver.h"
 
 namespace rtps{

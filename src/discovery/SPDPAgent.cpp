@@ -3,7 +3,7 @@
  * Author: Andreas Wüstenberg (andreas.wuestenberg@rwth-aachen.de)
  */
 
-#include "rtps/discovery/SPDP.h"
+#include "rtps/discovery/SPDPAgent.h"
 #include "rtps/messages/MessageTypes.h"
 #include "rtps/utils/udpUtils.h"
 #include "rtps/entities/Participant.h"
@@ -62,12 +62,12 @@ void SPDPAgent::runBroadcast(void *args){
     }
 }
 
-void SPDPAgent::receiveCallback(void *callee, ChangeKind_t kind, const uint8_t *data, DataSize_t length) {
+void SPDPAgent::receiveCallback(void *callee, ReaderCacheChange& cacheChange) {
     auto agent = static_cast<SPDPAgent*>(callee);
-    agent->handleSPDPPackage(kind, data, length);
+    agent->handleSPDPPackage(cacheChange);
 }
 
-void SPDPAgent::handleSPDPPackage(ChangeKind_t kind, const uint8_t* data, DataSize_t size){
+void SPDPAgent::handleSPDPPackage(ReaderCacheChange& cacheChange){
     if(!initialized){
         printf("SPDP: Callback called without initialization");
         return;
@@ -75,16 +75,16 @@ void SPDPAgent::handleSPDPPackage(ChangeKind_t kind, const uint8_t* data, DataSi
     Lock lock{m_mutex};
     printf("SPDP message received\n");
     //TODO InstanceHandle
-    if(size > m_inputBuffer.size()){
+    if(cacheChange.size > m_inputBuffer.size()){
         printf("SPDP: Input buffer to small");
         return;
     }
-    memcpy(m_inputBuffer.data(), data, size);
+    cacheChange.copyInto(m_inputBuffer.data(), m_inputBuffer.size());
 
     ucdrBuffer buffer;
-    ucdr_init_buffer(&buffer, m_inputBuffer.data(), size);
+    ucdr_init_buffer(&buffer, m_inputBuffer.data(), cacheChange.size);
 
-    if(kind == ChangeKind_t::ALIVE){
+    if(cacheChange.kind == ChangeKind_t::ALIVE){
         std::array<uint8_t,2> encapsulation{};
         // Endianess doesn't matter for this since those are single bytes
         ucdr_deserialize_array_uint8_t(&buffer, encapsulation.data(), encapsulation.size());
@@ -105,7 +105,7 @@ void SPDPAgent::handleSPDPPackage(ChangeKind_t kind, const uint8_t* data, DataSi
 
             for(auto& partProxy : m_foundParticipants){
                 if(partProxy.m_guid.prefix.id == m_proxyDataBuffer.m_guid.prefix.id){
-                    // TODO update
+                    partProxy = m_proxyDataBuffer;
                     printf("Found same participant again.\n");
                     return;
                 }

@@ -17,7 +17,8 @@
 
 namespace rtps{
     namespace MessageFactory{
-        constexpr std::array<uint8_t, 4> PROTOCOL_TYPE{'R', 'T', 'P', 'S'};
+        const std::array<uint8_t, 4> PROTOCOL_TYPE{'R', 'T', 'P', 'S'};
+        const uint8_t numBytesUntilEndOfLength = 4; // The first bytes incl. submessagelength don't count
 
         template <class Buffer>
         void addHeader(Buffer& buffer, const GuidPrefix_t& guidPrefix){
@@ -28,7 +29,7 @@ namespace rtps{
             header.vendorId = Config::VENDOR_ID;
             header.guidPrefix = guidPrefix;
 
-            header.serializeInto(buffer);
+            serializeMessage(buffer, header);
         }
 
         template <class Buffer>
@@ -49,7 +50,7 @@ namespace rtps{
                 header.submessageLength = sizeof(Time_t);
             }
 
-            header.serializeInto(buffer);
+            serializeMessage(buffer, header);
 
             if(!setInvalid){
                 buffer.reserve(header.submessageLength);
@@ -69,8 +70,8 @@ namespace rtps{
 #else
             msg.header.flags = FLAG_BIG_ENDIAN;
 #endif
-            const auto offset = 4; // I guess the encapsulation info (CDR scheme and options) doesn't count
-            msg.header.submessageLength = sizeof(SubmessageData) + filledPayload.getUsedSize() - offset;
+
+            msg.header.submessageLength = sizeof(SubmessageData) + filledPayload.getUsedSize() - numBytesUntilEndOfLength;
 
             if(containsInlineQos){
                 msg.header.flags |= FLAG_INLINE_QOS;
@@ -88,12 +89,55 @@ namespace rtps{
             msg.octetsToInlineQos = octetsToInlineQoS;
 
             buffer.reserve(sizeof(SubmessageData));
-            msg.serializeInto(buffer);
+            serializeMessage(buffer, msg);
 
             if(filledPayload.isValid()){
                 Buffer shallowCopy = filledPayload;
                 buffer.append(std::move(shallowCopy));
             }
+        }
+
+        template <class Buffer>
+        void addHeartbeat(Buffer& buffer, EntityId_t writerId, EntityId_t readerId, SequenceNumber_t firstSN,
+                          SequenceNumber_t lastSN, Count_t count){
+            SubmessageHeartbeat subMsg;
+            subMsg.header.submessageId = SubmessageKind::HEARTBEAT;
+            subMsg.header.submessageLength = sizeof(SubmessageHeartbeat) - numBytesUntilEndOfLength;
+#if IS_LITTLE_ENDIAN
+            subMsg.header.flags = FLAG_LITTLE_ENDIAN;
+#else
+            subMsg.header.flags = FLAG_BIG_ENDIAN;
+#endif
+            // Force response by not setting final flag.
+
+            subMsg.writerId = writerId;
+            subMsg.readerId = readerId;
+            subMsg.firstSN = firstSN;
+            subMsg.lastSN = lastSN;
+            subMsg.count = count;
+
+            serializeMessage(buffer, subMsg);
+        }
+
+        template <class Buffer>
+        void addAckNack(Buffer& buffer, EntityId_t writerId, EntityId_t readerId, SequenceNumberSet readerSNState,
+                        Count_t count){
+            SubmessageAckNack subMsg;
+            subMsg.header.submessageId = SubmessageKind::ACKNACK;
+#if IS_LITTLE_ENDIAN
+            subMsg.header.flags = FLAG_LITTLE_ENDIAN;
+#else
+            subMsg.header.flags = FLAG_BIG_ENDIAN;
+#endif
+            subMsg.header.flags |= FLAG_FINAL; // For now, we don't want any response
+            subMsg.header.submessageLength = sizeof(SubmessageAckNack) - numBytesUntilEndOfLength;
+
+            subMsg.writerId = writerId;
+            subMsg.readerId = readerId;
+            subMsg.readerSNState = readerSNState;
+            subMsg.count = count;
+
+            serializeMessage(buffer, subMsg);
         }
     }
 }

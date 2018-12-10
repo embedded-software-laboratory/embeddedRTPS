@@ -39,7 +39,7 @@ protected:
     Locator expectedMetaMultiLoc = Locator::createUDPv4Locator(239,255,0,1, 7400);
     Locator expectedMetaUniLoc = Locator::createUDPv4Locator(192,168,0,45, 7410);
     Locator expectedDefaultUniLoc = Locator::createUDPv4Locator(192,168,0,45, 7411);
-    Duration_t leaseDuration{2147483647, 4294967295};
+    Duration_t leaseDuration{-1, 0xffffffff};
     BuiltinEndpointSet_t expectedEndpoints{0xc3f};
     std::string expectedName{"Participant_pub"};
 

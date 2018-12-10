@@ -7,9 +7,9 @@
 
 using rtps::StatelessReader;
 
-void StatelessReader::newChange(ChangeKind_t kind, const uint8_t* data, DataSize_t size){
+void StatelessReader::newChange(ReaderCacheChange& cacheChange){
     if(m_callback != nullptr){
-        m_callback(m_callee, kind, data, size);
+        m_callback(m_callee, cacheChange);
     }
 }
 

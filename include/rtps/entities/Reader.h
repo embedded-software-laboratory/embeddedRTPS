@@ -11,12 +11,35 @@
 
 namespace rtps{
 
-    typedef void (*ddsReaderCallback_fp)(void* callee, ChangeKind_t kind, const uint8_t* data, DataSize_t size);
+    class ReaderCacheChange{
+    private:
+        const uint8_t* data;
+
+    public:
+        const ChangeKind_t kind;
+        const DataSize_t size;
+        const Guid writerGuid;
+        const SequenceNumber_t sn;
+
+        ReaderCacheChange(ChangeKind_t kind, Guid& writerGuid, SequenceNumber_t sn, const uint8_t* data, DataSize_t size)
+            : data(data), kind(kind), size(size), writerGuid(writerGuid), sn(sn){};
+
+        bool copyInto(uint8_t* buffer, DataSize_t destSize){
+            if(destSize < size){
+                return false;
+            }else{
+                memcpy(buffer, data, size);
+                return true;
+            }
+        }
+    };
+
+    typedef void (*ddsReaderCallback_fp)(void* callee, ReaderCacheChange& cacheChange);
 
     class Reader{
     public:
         EntityId_t entityId = ENTITYID_UNKNOWN;
-        virtual void newChange(ChangeKind_t kind, const uint8_t*, rtps::DataSize_t) = 0;
+        virtual void newChange(ReaderCacheChange& cacheChange) = 0;
         virtual void registerCallback(ddsReaderCallback_fp cb, void* callee) = 0;
     protected:
         virtual ~Reader() = default;

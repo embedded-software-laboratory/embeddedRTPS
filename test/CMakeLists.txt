@@ -4,19 +4,21 @@ include_directories(${gtest_SOURCE_DIR}/include ${gtest_SOURCE_DIR})
 include_directories(${rtps_SOURCE_DIR}/include ${rtps_SOURCE_DIR})
 
 add_executable(runTests
-                        unittests/typesTest.cpp
-                        unittests/ThreadPoolTest.cpp
-                        unittests/communication/UdpConnectionTest.cpp
-                        unittests/discovery/ParticipantProxyDataTest.cpp
-                        unittests/storages/PBufWrapperTest.cpp
-                        unittests/entities/DomainTest.cpp
-                        unittests/entities/ParticipantTest.cpp
-                        unittests/entities/StatelessReaderTest.cpp
-                        unittests/entities/StatelessWriterTest.cpp
-                        unittests/messages/MessageFactoryTest.cpp
-                        unittests/messages/MessageReceiverTest.cpp
-                        unittests/storages/HistoryCacheTest.cpp
-                        unittests/utils/udpUtilsTest.cpp
+        unittests/typesTest.cpp
+        unittests/ThreadPoolTest.cpp
+        unittests/communication/UdpConnectionTest.cpp
+        unittests/discovery/ParticipantProxyDataTest.cpp
+        unittests/discovery/SEDPTest.cpp
+        unittests/storages/PBufWrapperTest.cpp
+        unittests/entities/DomainTest.cpp
+        unittests/entities/ParticipantTest.cpp
+        unittests/entities/StatelessWriterTest.cpp
+        unittests/entities/StatefullReaderTest.cpp
+        unittests/entities/WriterProxyTest.cpp
+        unittests/messages/MessageFactoryTest.cpp
+        unittests/messages/MessageReceiverTest.cpp
+        unittests/storages/HistoryCacheTest.cpp
+        unittests/utils/udpUtilsTest.cpp
         )
 target_link_libraries(runTests gtest gtest_main gmock gmock_main)
 target_link_libraries(runTests rtps lwip)

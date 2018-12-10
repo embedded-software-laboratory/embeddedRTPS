@@ -123,7 +123,8 @@ namespace rtps{
         FLAG_INLINE_QOS     = (1 << 1),
         FLAG_NO_PAYLOAD     = (0 << 3 | 0 << 2),
         FLAG_DATA_PAYLOAD   = (0 << 3 | 1 << 2),
-
+        FLAG_FINAL          = (1 << 1),
+        FLAG_HB_LIVELINESS  = (1 << 2)
     };
 
     const std::array<uint8_t, 4> RTPS_PROTOCOL_NAME = {'R', 'T', 'P', 'S'};
@@ -132,26 +133,12 @@ namespace rtps{
         ProtocolVersion_t protocolVersion;
         VendorId_t vendorId;
         GuidPrefix_t guidPrefix;
-
-        template <class Buffer>
-        void serializeInto(Buffer &buffer){
-            const auto size = sizeof(Header);
-            buffer.reserve(size);
-            buffer.append(reinterpret_cast<uint8_t*>(this), size);
-        }
     } __attribute__((packed));
 
     struct SubmessageHeader{
         SubmessageKind submessageId;
         uint8_t flags;
         uint16_t submessageLength;
-
-        template <class Buffer>
-        void serializeInto(Buffer &buffer){
-            const auto size = sizeof(SubmessageHeader);
-            buffer.reserve(size);
-            buffer.append(reinterpret_cast<uint8_t*>(this), size);
-        }
     } __attribute__((packed));
 
     struct SubmessageData{
@@ -161,15 +148,32 @@ namespace rtps{
         EntityId_t readerId;
         EntityId_t writerId;
         SequenceNumber_t writerSN;
-
-        template <class Buffer>
-        void serializeInto(Buffer &buffer){
-            const auto size = sizeof(SubmessageData);
-            buffer.reserve(size);
-            buffer.append(reinterpret_cast<uint8_t*>(this), size);
-
-        }
     } __attribute__((packed));
+
+    struct SubmessageHeartbeat{
+        SubmessageHeader header;
+        EntityId_t readerId;
+        EntityId_t writerId;
+        SequenceNumber_t firstSN;
+        SequenceNumber_t lastSN;
+        Count_t count;
+    } __attribute__((packed));
+
+    struct SubmessageAckNack{
+        SubmessageHeader header;
+        EntityId_t readerId;
+        EntityId_t writerId;
+        SequenceNumberSet readerSNState;
+        Count_t count;
+    } __attribute((packed));
+
+    template <typename Buffer, typename Message>
+    void serializeMessage(Buffer& buffer, Message& message){
+        const auto size = sizeof(Message);
+        buffer.reserve(size);
+        buffer.append(reinterpret_cast<uint8_t*>(&message), size);
+    }
+
 }
 
 #endif //RTPS_MESSAGES_H

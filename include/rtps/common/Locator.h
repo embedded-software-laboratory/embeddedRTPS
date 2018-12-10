@@ -7,6 +7,8 @@
 #define RTPS_LOCATOR_T_H
 
 #include "ucdr/microcdr.h"
+#include "rtps/utils/udpUtils.h"
+
 #include <array>
 
 namespace rtps{
@@ -49,7 +51,38 @@ namespace rtps{
                 return true;
             }
         }
+
+        ip4_addr_t getIp4Address(){
+            return transformIP4ToU32(address[12], address[13], address[14], address[15]);
+        }
     } __attribute__((packed));
+
+    inline Locator getBuiltInUnicastLocator(ParticipantId_t participantId) {
+        return Locator::createUDPv4Locator(Config::IP_ADDRESS[0], Config::IP_ADDRESS[1],
+                                           Config::IP_ADDRESS[2], Config::IP_ADDRESS[3],
+                                           getBuiltInUnicastPort(participantId));
+    }
+
+    inline Locator getBuiltInMulticastLocator() {
+        return Locator::createUDPv4Locator(239, 255, 0, 1, getBuiltInMulticastPort());
+    }
+
+    inline Locator getUserUnicastLocator(ParticipantId_t participantId) {
+        return Locator::createUDPv4Locator(Config::IP_ADDRESS[0], Config::IP_ADDRESS[1],
+                                           Config::IP_ADDRESS[2], Config::IP_ADDRESS[3],
+                                           getUserUnicastPort(participantId));
+    }
+
+    inline Locator getUserMulticastLocator() {
+        return Locator::createUDPv4Locator(Config::IP_ADDRESS[0], Config::IP_ADDRESS[1],
+                                           Config::IP_ADDRESS[2], Config::IP_ADDRESS[3],
+                                           getUserMulticastPort());
+    }
+
+    inline Locator getDefaultSendMulticastLocator() {
+        return Locator::createUDPv4Locator(239, 255, 0, 1,
+                                           getBuiltInMulticastPort());
+    }
 }
 
 #endif //RTPS_LOCATOR_T_H

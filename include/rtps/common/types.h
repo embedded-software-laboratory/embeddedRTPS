@@ -61,6 +61,10 @@ namespace rtps{
 
     struct GuidPrefix_t{
         std::array<uint8_t, 12> id;
+
+        bool operator==(const GuidPrefix_t& other) const{
+            return this->id == other.id;
+        }
     };
 
 
@@ -81,6 +85,11 @@ namespace rtps{
     struct Guid{
         GuidPrefix_t prefix;
         EntityId_t entityId;
+
+        bool operator==(const Guid& other) const{
+            return this->prefix == other.prefix &&
+                   this->entityId == other.entityId;
+        }
     };
 
     // Described as long but there wasn't any definition. Other than 32 bit does not conform the default values
@@ -118,6 +127,29 @@ namespace rtps{
             return *this;
         }
     };
+
+    const uint32_t SNS_NUM_BITS = 32;
+    struct SequenceNumberSet{
+        SequenceNumber_t base;
+        const uint32_t numBits = SNS_NUM_BITS;
+        std::array<uint32_t, (SNS_NUM_BITS+1)/sizeof(uint32_t)> bitMap;
+
+        SequenceNumberSet& operator=(const SequenceNumberSet& other){
+            this->base = other.base;
+            this->bitMap = other.bitMap;
+            return *this;
+        }
+
+        // We only need 1 byte because atm we don't store packets.
+        bool isSet(uint8_t bit){
+            if(bit >= SNS_NUM_BITS){
+                return true;
+            }
+            const uint8_t bucket = bit / sizeof(uint32_t);
+            const uint8_t pos = bit % sizeof(uint32_t);
+            return (bitMap[bucket] & (1 << pos)) != 0;
+        }
+    } __attribute((packed));
 
     struct FragmentNumber_t{
         uint32_t value;

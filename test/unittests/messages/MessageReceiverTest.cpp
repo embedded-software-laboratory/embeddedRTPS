@@ -4,8 +4,9 @@
  */
 
 #include <gtest/gtest.h>
-#include <test/mocking/BufferMock.h>
+#include "test/mocking/BufferMock.h"
 #include "test/mocking/ReaderMock.h"
+#include "test/mocking/WriterMock.h"
 
 #include "rtps/messages/MessageFactory.h"
 #include "rtps/messages/MessageReceiver.h"
@@ -130,17 +131,29 @@ TEST_F(AMessageReceiverReceivedDataSubmessage, processMessage_validDataSMAddsCac
     auto data = validDataMsgBufferMock.buffer.data();
     auto size = (rtps::DataSize_t) validDataMsgBufferMock.buffer.size();
 
-    EXPECT_CALL(correctReaderMock, newChange(_,_,_)).Times(1);
-    EXPECT_CALL(anotherReaderMock, newChange(_,_,_)).Times(0);
+    EXPECT_CALL(correctReaderMock, newChange(_)).Times(1);
+    EXPECT_CALL(anotherReaderMock, newChange(_)).Times(0);
 
     bool valid = receiver.processMessage(data, size);
 
     EXPECT_TRUE(valid);
 }
 
-/*
-  Test TODOs:
-  - Receiver resets with each new message
+class AMessageReceiverReceivedHeartbeatSubmessage : public ::testing::Test{
+protected:
+    ReaderMock correctReaderMock{rtps::ENTITYID_SEDP_BUILTIN_PUBLICATIONS_READER};
+    ReaderMock anotherReaderMock{rtps::ENTITYID_SPDP_BUILTIN_PARTICIPANT_READER};
+    BufferMock validHeartbeatMsgBufferMock;
+    rtps::GuidPrefix_t somePrefix = {1,2,3,4};
+
+    rtps::GuidPrefix_t receiverGuidPrefix{1};
+    rtps::MessageReceiver receiver{receiverGuidPrefix};
 
 
- */
+    void SetUp() override{
+        rtps::MessageFactory::addHeader(validHeartbeatMsgBufferMock, somePrefix);
+        rtps::MessageFactory::addHeartbeat(validHeartbeatMsgBufferMock, rtps::ENTITYID_SEDP_BUILTIN_PUBLICATIONS_WRITER,
+                rtps::ENTITYID_SEDP_BUILTIN_PUBLICATIONS_READER, rtps::SequenceNumber_t{0,1}, rtps::SequenceNumber_t{0,5},
+                rtps::Count_t{0});
+    };
+};

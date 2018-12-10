@@ -6,7 +6,7 @@
 #include <iostream>
 #include "rtps/ThreadPool.h"
 #include "rtps/rtps.h"
-#include "rtps/discovery/SPDP.h"
+#include "rtps/discovery/SPDPAgent.h"
 #include "rtps/entities/StatelessWriter.h"
 #include "rtps/entities/Domain.h"
 
