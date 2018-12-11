@@ -28,8 +28,8 @@ uint8_t HistoryCache::resetSend() {
             entry.send = false;
         }
         incrementIterator(iterator);
-        m_lastReturned = m_tail;
     }
+    m_lastReturned = m_tail;
     return numReset;
 }
 

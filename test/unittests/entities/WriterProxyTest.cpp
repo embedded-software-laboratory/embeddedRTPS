@@ -13,8 +13,8 @@ protected:
     rtps::Guid someGuid{{0}, {{1,2,3}, rtps::EntityKind_t::USER_DEFINED_WRITER_WITH_KEY}};
 };
 
-TEST_F(AWriterProxy, init_setsSNToZero){
-    rtps::SequenceNumber_t expectedSN{0,0};
+TEST_F(AWriterProxy, init_setsSequenceNumberToOne){
+    rtps::SequenceNumber_t expectedSN{0,1};
     proxy.expectedSN = {1,2};
 
     proxy.init(someGuid);

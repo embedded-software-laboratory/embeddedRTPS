@@ -6,10 +6,10 @@
 #ifndef RTPS_RTPSWRITER_H
 #define RTPS_RTPSWRITER_H
 
+#include "lwip/sys.h"
 #include "rtps/common/types.h"
 #include "rtps/config.h"
 #include "rtps/entities/Writer.h"
-#include "lwip/sys.h"
 
 namespace rtps {
 
@@ -36,7 +36,8 @@ namespace rtps {
 
         GuidPrefix_t m_guidPrefix = GUIDPREFIX_UNKNOWN;
         EntityId_t m_entityId = ENTITYID_UNKNOWN;
-        UdpDriver::PacketInfo m_packetInfo;
+        PacketInfo m_packetInfo;
+        UdpDriver* m_transport;
 
         TopicKind_t m_topicKind = TopicKind_t::NO_KEY;
         SequenceNumber_t m_lastChangeSequenceNumber = {0, 0};

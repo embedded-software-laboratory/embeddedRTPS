@@ -7,6 +7,7 @@
 
 #include "rtps/entities/Reader.h"
 #include "rtps/messages/MessageTypes.h"
+#include "rtps/entities/Writer.h"
 
 using rtps::MessageReceiver;
 
@@ -23,18 +24,24 @@ void MessageReceiver::reset(){
 }
 
 
-bool MessageReceiver::addReader(Reader& reader){
+bool MessageReceiver::addReader(Reader* pReader){
+    if(pReader == nullptr){
+        return false;
+    }
     if(m_numReaders != m_readers.size()){
-        m_readers[m_numReaders++] = &reader;
+        m_readers[m_numReaders++] = pReader;
         return true;
     }else{
         return false;
     }
 }
 
-bool MessageReceiver::addWriter(Writer& writer){
+bool MessageReceiver::addWriter(Writer* pWriter){
+    if(pWriter == nullptr){
+        return false;
+    }
     if(m_numWriters != m_writers.size()){
-        m_writers[m_numWriters++] = &writer;
+        m_writers[m_numWriters++] = pWriter;
         return true;
     }else{
         return false;
@@ -42,12 +49,12 @@ bool MessageReceiver::addWriter(Writer& writer){
 }
 
 void MessageReceiver::addBuiltInEndpoints(BuiltInEndpoints& endpoints){
-    addWriter(*endpoints.spdpWriter);
-    addReader(*endpoints.spdpReader);
-    addWriter(*endpoints.sedpPubWriter);
-    addReader(*endpoints.sedpPubReader);
-    addWriter(*endpoints.sedpSubWriter);
-    addReader(*endpoints.sedpSubReader);
+    addWriter(endpoints.spdpWriter);
+    addReader(endpoints.spdpReader);
+    addWriter(endpoints.sedpPubWriter);
+    addReader(endpoints.sedpPubReader);
+    addWriter(endpoints.sedpSubWriter);
+    addReader(endpoints.sedpSubReader);
 }
 
 bool MessageReceiver::processMessage(const uint8_t* data, DataSize_t size){
@@ -97,8 +104,12 @@ bool MessageReceiver::processSubMessage(MessageProcessingInfo& msgInfo){
     bool success;
     switch(submsgHeader->submessageId){
         case SubmessageKind::DATA:
-            printf("Processing DataSubMessage\n");
-            success = processDataSubMessage(msgInfo);
+            printf("Processing Data submessage\n");
+            success = processDataSubmessage(msgInfo);
+            break;
+        case SubmessageKind::HEARTBEAT:
+            printf("Processing Heartbeat submessage\n");
+            success = processHeartbeatSubmessage(msgInfo);
             break;
         default:
             printf("Submessage of type %u currently not supported. Skipping..\n", static_cast<uint8_t>(submsgHeader->submessageId));
@@ -108,7 +119,7 @@ bool MessageReceiver::processSubMessage(MessageProcessingInfo& msgInfo){
     return success;
 }
 
-bool MessageReceiver::processDataSubMessage(MessageProcessingInfo& msgInfo){
+bool MessageReceiver::processDataSubmessage(MessageProcessingInfo &msgInfo){
     auto submsgData = reinterpret_cast<const SubmessageData*>(msgInfo.getPointerToPos());
     const uint8_t* serializedData = msgInfo.getPointerToPos() + sizeof(SubmessageData);
     const DataSize_t size = msgInfo.size - (msgInfo.nextPos + sizeof(SubmessageData));
@@ -123,7 +134,7 @@ bool MessageReceiver::processDataSubMessage(MessageProcessingInfo& msgInfo){
     for(uint16_t i=0; i<m_numReaders; ++i){
         static_assert(sizeof(i) > sizeof(m_numReaders), "Size of loop variable not sufficient");
         Reader& currentReader = *m_readers[i];
-        if(currentReader.entityId == submsgData->readerId){
+        if(currentReader.m_guid.entityId == submsgData->readerId){
             Guid writerGuid{sourceGuidPrefix, submsgData->writerId};
             ReaderCacheChange change{ChangeKind_t::ALIVE, writerGuid, submsgData->writerSN, serializedData, size};
             currentReader.newChange(change);
@@ -131,5 +142,19 @@ bool MessageReceiver::processDataSubMessage(MessageProcessingInfo& msgInfo){
         }
     }
     return true;
+}
+
+bool MessageReceiver::processHeartbeatSubmessage(MessageProcessingInfo &msgInfo){
+    auto submsgHB = reinterpret_cast<const SubmessageHeartbeat*>(msgInfo.getPointerToPos());
+
+    for(uint8_t i=0; i < m_numReaders; ++i){
+        Reader& reader = *m_readers[i];
+        if(reader.m_guid.entityId == submsgHB->readerId){
+            reader.onNewHeartbeat(*submsgHB, sourceGuidPrefix);
+            return true;
+        }
+    }
+
+    return false;
 }
 

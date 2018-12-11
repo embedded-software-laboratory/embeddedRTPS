@@ -18,7 +18,7 @@ namespace rtps{
 
         void init(Guid& guid){
             remoteWriterGuid = guid;
-            expectedSN = SequenceNumber_t{0,0};
+            expectedSN = SequenceNumber_t{0,1};
             ackNackCount.value = 0;
         }
 

@@ -132,7 +132,7 @@ namespace rtps{
     struct SequenceNumberSet{
         SequenceNumber_t base;
         const uint32_t numBits = SNS_NUM_BITS;
-        std::array<uint32_t, (SNS_NUM_BITS+1)/sizeof(uint32_t)> bitMap;
+        std::array<uint32_t, (SNS_NUM_BITS)/32> bitMap;
 
         SequenceNumberSet& operator=(const SequenceNumberSet& other){
             this->base = other.base;
@@ -145,8 +145,8 @@ namespace rtps{
             if(bit >= SNS_NUM_BITS){
                 return true;
             }
-            const uint8_t bucket = bit / sizeof(uint32_t);
-            const uint8_t pos = bit % sizeof(uint32_t);
+            const uint8_t bucket = bit / static_cast<uint8_t>(32);
+            const uint8_t pos = bit % static_cast<uint8_t>(32);
             return (bitMap[bucket] & (1 << pos)) != 0;
         }
     } __attribute((packed));

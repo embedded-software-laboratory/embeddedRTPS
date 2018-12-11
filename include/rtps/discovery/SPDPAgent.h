@@ -9,12 +9,12 @@
 #include "rtps/common/types.h"
 #include "rtps/config.h"
 #include "rtps/discovery/ParticipantProxyData.h"
+#include "rtps/discovery/BuiltInEndpoints.h"
 #include "lwip/sys.h"
 #include "ucdr/microcdr.h"
 
 namespace rtps{
     class Participant;
-    class BuiltInEndpoints;
     class Writer;
     class Reader;
     class ReaderCacheChange;
@@ -29,8 +29,7 @@ namespace rtps{
     private:
         Participant* mp_participant = nullptr;
         std::array<ParticipantProxyData, Config::SPDP_MAX_NUMBER_FOUND_PARTICIPANTS> m_foundParticipants;
-        Writer* mp_writer = nullptr;
-        Reader* mp_reader = nullptr;
+        BuiltInEndpoints m_buildInEndpoints;
         bool m_running = false;
         std::array<uint8_t, 400> m_outputBuffer{}; // TODO check required size
         std::array<uint8_t, 400> m_inputBuffer{};

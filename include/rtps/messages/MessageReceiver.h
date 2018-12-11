@@ -9,19 +9,11 @@
 #include <cstdint>
 #include "rtps/common/types.h"
 #include "rtps/config.h"
+#include "rtps/discovery/BuiltInEndpoints.h"
 
 namespace rtps {
     class Reader;
     class Writer;
-
-    struct BuiltInEndpoints{
-        Writer* spdpWriter;
-        Reader* spdpReader;
-        Writer* sedpPubWriter;
-        Reader* sedpPubReader;
-        Writer* sedpSubWriter;
-        Reader* sedpSubReader;
-    };
 
     class MessageReceiver {
     public:
@@ -34,8 +26,8 @@ namespace rtps {
 
         void reset();
 
-        bool addReader(Reader& reader); // for new CacheChanges
-        bool addWriter(Writer& writer); // for acks etc.
+        bool addReader(Reader* reader); // for new CacheChanges
+        bool addWriter(Writer* writer); // for acks etc.
         void addBuiltInEndpoints(BuiltInEndpoints& endpoints);
 
         bool processMessage(const uint8_t* data, DataSize_t size);
@@ -77,7 +69,8 @@ namespace rtps {
          */
         bool processHeader(MessageProcessingInfo& msgInfo);
         bool processSubMessage(MessageProcessingInfo& msgInfo);
-        bool processDataSubMessage(MessageProcessingInfo& msgInfo);
+        bool processDataSubmessage(MessageProcessingInfo &msgInfo);
+        bool processHeartbeatSubmessage(MessageProcessingInfo &msgInfo);
     };
 }
 

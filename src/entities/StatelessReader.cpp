@@ -21,3 +21,7 @@ void StatelessReader::registerCallback(ddsReaderCallback_fp cb, void* callee){
         printf("StatelessReader: Callback or callee nullptr");
     }
 }
+
+void StatelessReader::onNewHeartbeat(const SubmessageHeartbeat&, const GuidPrefix_t&){
+    // nothing to do
+}

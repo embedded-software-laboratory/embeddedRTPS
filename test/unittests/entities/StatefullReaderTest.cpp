@@ -7,19 +7,28 @@
 #include <gmock/gmock.h>
 
 #include "rtps/entities/StatefullReader.h"
+#include "rtps/rtps.h"
 
 using namespace rtps;
 
 class AStatefullReader : public ::testing::Test{
 protected:
-    StatefullReader reader{Guid{GUIDPREFIX_UNKNOWN, ENTITYID_UNKNOWN}};
+    const ParticipantId_t arbitraryParticipantId = 1;
+    const Ip4Port_t srcPort = getUserUnicastPort(arbitraryParticipantId);
+    UdpDriver transport{nullptr, nullptr};
+    StatefullReader reader;
+
     constexpr static DataSize_t dataSize = 5;
     uint8_t someData[dataSize] = {0};
-    SequenceNumber_t nextSN{0,0};
+    SequenceNumber_t nextSN = {0,1};
     rtps::Guid someGuid = {{1,1,1,1,1,1,1,1,1,1}, {{1,1,1}, rtps::EntityKind_t::USER_DEFINED_WRITER_WITHOUT_KEY}};
     rtps::Guid anotherGuid = {{2,2,2,2,2,2,2,2,2,2,2,2}, {{2,2,2}, rtps::EntityKind_t::USER_DEFINED_WRITER_WITHOUT_KEY}};
     ReaderCacheChange expectedCacheChange{ChangeKind_t::ALIVE, someGuid, nextSN, someData, dataSize};
 
+    void SetUp() override{
+        rtps::init();
+        reader.init(Guid{GUIDPREFIX_UNKNOWN, ENTITYID_UNKNOWN}, transport, srcPort);
+    }
 };
 
 void callback(void* success, ReaderCacheChange&){
@@ -61,16 +70,22 @@ TEST_F(AStatefullReader, removeWriterProxy_deletesDependingOnGuid){
 
 class AStatefullReaderWithNewWriterProxy : public ::testing::Test{
 protected:
-    StatefullReader reader{{GUIDPREFIX_UNKNOWN, ENTITYID_UNKNOWN}};
+    const ParticipantId_t arbitraryParticipantId = 1;
+    const Ip4Port_t srcPort = getUserUnicastPort(arbitraryParticipantId);
+    UdpDriver transport{nullptr, nullptr};
+    StatefullReader reader;
+
     constexpr static DataSize_t dataSize = 5;
     uint8_t someData[dataSize] = {0};
-    SequenceNumber_t nextSN{0,0};
+    SequenceNumber_t nextSN{0,1};
     rtps::Guid someGuid = {{1,2,3,4,5,6,7,8,9,10}, {{1,2,3}, rtps::EntityKind_t::USER_DEFINED_WRITER_WITHOUT_KEY}};
     ReaderCacheChange firstCacheChange{ChangeKind_t::ALIVE, someGuid, nextSN, someData, dataSize};
     ReaderCacheChange secondCacheChange{ChangeKind_t::ALIVE, someGuid, ++nextSN, someData, dataSize};
     rtps::WriterProxy* proxy;
 
     void SetUp() override{
+        reader.init(Guid{GUIDPREFIX_UNKNOWN, ENTITYID_UNKNOWN}, transport, srcPort);
+
         proxy = reader.createWriterProxy(someGuid);
         proxy->init(someGuid);
     }

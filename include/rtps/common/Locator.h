@@ -39,7 +39,7 @@ namespace rtps{
             kind = LocatorKind_t::LOCATOR_KIND_INVALID;
         }
 
-        bool isValid(){
+        bool isValid() const{
             return kind != LocatorKind_t::LOCATOR_KIND_INVALID;
         }
 
@@ -52,7 +52,7 @@ namespace rtps{
             }
         }
 
-        ip4_addr_t getIp4Address(){
+        ip4_addr_t getIp4Address() const{
             return transformIP4ToU32(address[12], address[13], address[14], address[15]);
         }
     } __attribute__((packed));

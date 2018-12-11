@@ -4,7 +4,10 @@
  */
 
 #include "rtps/communication/UdpDriver.h"
+#include "rtps/communication/PacketInfo.h"
+
 #include "rtps/storages/PBufWrapper.h"
+
 #include <lwip/igmp.h>
 #include <lwip/tcpip.h>
 
@@ -28,9 +31,9 @@ UdpDriver::UdpDriver(rtps::UdpDriver::udpRxFunc_fp callback, void *args)
  */
 const rtps::UdpConnection* UdpDriver::createUdpConnection(Ip4Port_t receivePort) {
 
-    for(auto const &conn : m_conns){
-        if(conn.port == receivePort){
-            return &conn;
+    for(uint8_t i=0; i < m_numConns; ++i){
+        if(m_conns[i].port == receivePort){
+            return &m_conns[i];
         }
     }
 
@@ -59,7 +62,12 @@ const rtps::UdpConnection* UdpDriver::createUdpConnection(Ip4Port_t receivePort)
 }
 
 bool UdpDriver::joinMultiCastGroup(ip4_addr_t addr) const {
-    err_t iret = igmp_joingroup(IP_ADDR_ANY, (&addr));
+    err_t iret;
+
+    {
+        TcpipCoreLock lock;
+        iret = igmp_joingroup(IP_ADDR_ANY, (&addr));
+    }
 
     if(iret != ERR_OK){
         printf("Failed to join IGMP multicast group %s\n", ipaddr_ntoa(&addr));
@@ -76,12 +84,11 @@ bool UdpDriver::sendPacket(const UdpConnection& conn, ip4_addr_t& destAddr, Ip4P
         printf("UDP TRANSMIT NOT SUCCESSFUL %s:%u size: %u err: %i\n", ipaddr_ntoa(&destAddr), destPort, buffer.tot_len, err);
         return false;
     }
-    //printf("Send packet successful \n");
     return true;
 }
 
 void UdpDriver::sendFunction(PacketInfo& packet){
-
+    TcpipCoreLock lock;
     auto p_conn = createUdpConnection(packet.srcPort);
     if(p_conn == nullptr){
         printf("Failed to create connection on port %u \n", packet.srcPort);
@@ -89,12 +96,4 @@ void UdpDriver::sendFunction(PacketInfo& packet){
     }
 
     sendPacket(*p_conn, packet.destAddr, packet.destPort, *packet.buffer.firstElement);
-}
-
-/**
- * This function needs to be executed by the tcpip-thread
- */
-void UdpDriver::sendFunctionJumppad(void* packetInfo){
-    auto& packet = *static_cast<PacketInfo*>(packetInfo);
-    packet.transport->sendFunction(packet);
 }

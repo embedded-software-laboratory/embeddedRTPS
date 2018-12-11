@@ -13,6 +13,6 @@ void SEDPAgent::init(rtps::BuiltInEndpoints endpoints) {
     endpoints.sedpPubReader->registerCallback(receiveCallback, this);
 }
 
-void SEDPAgent::receiveCallback(void* callee, ReaderCacheChange& cacheChange){
+void SEDPAgent::receiveCallback(void* /*callee*/, ReaderCacheChange& /*cacheChange*/){
 
 }

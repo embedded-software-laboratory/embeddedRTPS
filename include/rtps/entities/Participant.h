@@ -27,7 +27,8 @@ namespace rtps{
         bool isValid();
 
         std::array<uint8_t, 3> getNextUserEntityKey();
-        Writer* addUserWriter(Writer& writer);
+        Writer* addUserWriter(Writer* writer);
+        Reader* addUserReader(Reader* reader);
         void addBuiltInEndpoints(BuiltInEndpoints& endpoints);
         void newMessage(const uint8_t* data, DataSize_t size);
 

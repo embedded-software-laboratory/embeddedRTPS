@@ -26,6 +26,8 @@ namespace rtps{
         const CacheChange INVALID_CACHE_CHANGE{};
 
         const CacheChange* addChange(CacheChange&& change);
+
+        //! Return a reference to INVALID_CACHE_CHANGE if it fails to find an unsent change.
         const CacheChange* getNextCacheChange();
 
         const SequenceNumber_t& getSeqNumMin() const;

@@ -13,16 +13,20 @@
 
 using rtps::Reader;
 
+using rtps::SubmessageHeartbeat;
+using rtps::GuidPrefix_t;
+
 class ReaderMock final: public Reader{
 public:
 
-    explicit ReaderMock(rtps::EntityId_t id){
-        entityId = id;
+    explicit ReaderMock(rtps::Guid id){
+        m_guid = id;
     }
     ~ReaderMock() override = default;
 
     MOCK_METHOD1(newChange, void(rtps::ReaderCacheChange&));
     MOCK_METHOD2(registerCallback, void(rtps::ddsReaderCallback_fp, void*));
+    MOCK_METHOD2(onNewHeartbeat, void(const SubmessageHeartbeat&, const GuidPrefix_t&));
 
 };
 

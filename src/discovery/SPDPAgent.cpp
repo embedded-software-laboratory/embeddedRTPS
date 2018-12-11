@@ -28,9 +28,8 @@ void SPDPAgent::init(Participant& participant, BuiltInEndpoints& endpoints){
         return;
     }
     mp_participant = &participant;
-    mp_writer = endpoints.spdpWriter;
-    mp_reader = endpoints.spdpReader;
-    mp_reader->registerCallback(receiveCallback, this);
+    m_buildInEndpoints = endpoints;
+    m_buildInEndpoints.spdpReader->registerCallback(receiveCallback, this);
 
     ucdr_init_buffer(&m_microbuffer, m_outputBuffer.data(), m_outputBuffer.size());
     //addInlineQos();
@@ -54,11 +53,11 @@ void SPDPAgent::stop(){
 void SPDPAgent::runBroadcast(void *args){
     SPDPAgent& agent = *static_cast<SPDPAgent*>(args);
     const DataSize_t size = ucdr_buffer_length(&agent.m_microbuffer);
-    agent.mp_writer->newChange(ChangeKind_t::ALIVE, agent.m_microbuffer.init, size);
+    agent.m_buildInEndpoints.spdpWriter->newChange(ChangeKind_t::ALIVE, agent.m_microbuffer.init, size);
 
     while(agent.m_running){
         sys_msleep(Config::SPDP_RESEND_PERIOD_MS);
-        agent.mp_writer->unsentChangesReset();
+        agent.m_buildInEndpoints.spdpWriter->unsentChangesReset();
     }
 }
 
@@ -114,6 +113,11 @@ void SPDPAgent::handleSPDPPackage(ReaderCacheChange& cacheChange){
             for(auto& partProxy : m_foundParticipants){
                 if(partProxy.m_guid.prefix.id == GUIDPREFIX_UNKNOWN.id){
                     partProxy = m_proxyDataBuffer;
+
+                    // TODO move elsewhere in SEPD e.g.
+                    WriterProxy* proxy = m_buildInEndpoints.sedpPubReader->createWriterProxy({partProxy.m_guid.prefix, ENTITYID_SEDP_BUILTIN_PUBLICATIONS_WRITER});
+                    proxy->locator = m_proxyDataBuffer.m_metatrafficMulticastLocatorList[0];
+
                     printf("Added new participant with guid: ");
                     for(auto i : partProxy.m_guid.prefix.id){
                         printf("%u", i);

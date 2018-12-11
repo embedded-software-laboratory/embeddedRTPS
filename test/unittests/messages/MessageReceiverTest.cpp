@@ -107,8 +107,8 @@ TEST_F(AMessageReceiver, processMessage_returnsFalseIfItsOwnPackage){
 
 class AMessageReceiverReceivedDataSubmessage : public ::testing::Test{
 protected:
-    ReaderMock correctReaderMock{rtps::ENTITYID_SPDP_BUILTIN_PARTICIPANT_READER};
-    ReaderMock anotherReaderMock{rtps::ENTITYID_SEDP_BUILTIN_PUBLICATIONS_READER};
+    ReaderMock correctReaderMock{{rtps::GUIDPREFIX_UNKNOWN, rtps::ENTITYID_SPDP_BUILTIN_PARTICIPANT_READER}};
+    ReaderMock anotherReaderMock{{rtps::GUIDPREFIX_UNKNOWN, rtps::ENTITYID_SEDP_BUILTIN_PUBLICATIONS_READER}};
     BufferMock validDataMsgBufferMock;
     rtps::GuidPrefix_t somePrefix = {1,2,3,4};
     BufferMock somePayload;
@@ -126,8 +126,8 @@ protected:
 };
 
 TEST_F(AMessageReceiverReceivedDataSubmessage, processMessage_validDataSMAddsCacheChangeToCorrectReader){
-    receiver.addReader(correctReaderMock);
-    receiver.addReader(anotherReaderMock);
+    receiver.addReader(&anotherReaderMock);
+    receiver.addReader(&correctReaderMock);
     auto data = validDataMsgBufferMock.buffer.data();
     auto size = (rtps::DataSize_t) validDataMsgBufferMock.buffer.size();
 
@@ -141,8 +141,8 @@ TEST_F(AMessageReceiverReceivedDataSubmessage, processMessage_validDataSMAddsCac
 
 class AMessageReceiverReceivedHeartbeatSubmessage : public ::testing::Test{
 protected:
-    ReaderMock correctReaderMock{rtps::ENTITYID_SEDP_BUILTIN_PUBLICATIONS_READER};
-    ReaderMock anotherReaderMock{rtps::ENTITYID_SPDP_BUILTIN_PARTICIPANT_READER};
+    ReaderMock correctReaderMock{{rtps::GUIDPREFIX_UNKNOWN, rtps::ENTITYID_SEDP_BUILTIN_PUBLICATIONS_READER}};
+    ReaderMock anotherReaderMock{{rtps::GUIDPREFIX_UNKNOWN, rtps::ENTITYID_SPDP_BUILTIN_PARTICIPANT_READER}};
     BufferMock validHeartbeatMsgBufferMock;
     rtps::GuidPrefix_t somePrefix = {1,2,3,4};
 
@@ -151,9 +151,20 @@ protected:
 
 
     void SetUp() override{
+        receiver.addReader(&anotherReaderMock);
+        receiver.addReader(&correctReaderMock);
+
         rtps::MessageFactory::addHeader(validHeartbeatMsgBufferMock, somePrefix);
         rtps::MessageFactory::addHeartbeat(validHeartbeatMsgBufferMock, rtps::ENTITYID_SEDP_BUILTIN_PUBLICATIONS_WRITER,
                 rtps::ENTITYID_SEDP_BUILTIN_PUBLICATIONS_READER, rtps::SequenceNumber_t{0,1}, rtps::SequenceNumber_t{0,5},
                 rtps::Count_t{0});
     };
 };
+
+TEST_F(AMessageReceiverReceivedHeartbeatSubmessage, processMessage_callsCorrectFunction){
+    auto data = validHeartbeatMsgBufferMock.buffer.data();
+    auto size = (rtps::DataSize_t) validHeartbeatMsgBufferMock.buffer.size();
+
+    EXPECT_CALL(correctReaderMock, onNewHeartbeat(_,_)).Times(1);
+    receiver.processMessage(data, size);
+}

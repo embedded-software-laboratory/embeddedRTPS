@@ -5,13 +5,17 @@
 
 #include "rtps/entities/StatefullReader.h"
 #include "rtps/messages/MessageFactory.h"
+#include "lwip/tcpip.h"
 
 
 using rtps::StatefullReader;
 
 
-StatefullReader::StatefullReader(Guid guid) : m_guid(guid){
-
+void StatefullReader::init(Guid guid, UdpDriver& driver, Ip4Port_t sendPort){
+    m_guid = guid;
+    m_transport = &driver;
+    m_packetInfo.srcPort = sendPort;
+    sys_mutex_new(&mutex);
 }
 
 void StatefullReader::newChange(ReaderCacheChange& cacheChange){
@@ -57,7 +61,10 @@ void StatefullReader::removeWriter(const Guid& guid){
     }
 }
 
-void StatefullReader::onNewHeartbeat(SubmessageHeartbeat& msg, GuidPrefix_t remotePartGuidPrefix){
+void StatefullReader::onNewHeartbeat(const SubmessageHeartbeat& msg, const GuidPrefix_t& remotePartGuidPrefix){
+    Lock lock(mutex);
+    PacketInfo info;
+    info.srcPort = m_packetInfo.srcPort;
     WriterProxy* proxy = nullptr;
     for(auto& elem : m_proxies){
         if(elem.valid && elem.writerProxy.remoteWriterGuid.prefix == remotePartGuidPrefix &&
@@ -71,14 +78,11 @@ void StatefullReader::onNewHeartbeat(SubmessageHeartbeat& msg, GuidPrefix_t remo
         return;
     }
 
-    UdpDriver::PacketInfo info;
     info.destAddr = proxy->locator.getIp4Address();
     info.destPort = proxy->locator.port;
-    //TODO set sendport
     rtps::MessageFactory::addHeader(info.buffer, m_guid.prefix);
     rtps::MessageFactory::addAckNack(info.buffer, msg.writerId, msg.readerId, proxy->getMissing(msg.firstSN,
                                      msg.lastSN), proxy->getNextCount());
 
-
-    //TODO send
+    m_transport->sendFunction(info);
 }

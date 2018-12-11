@@ -10,9 +10,7 @@ using rtps::Domain;
 
 Domain::Domain() : m_threadPool(*this), m_transport(ThreadPool::readCallback, &m_threadPool){
     //TODO move avoid from here
-    LOCK_TCPIP_CORE();
     m_transport.joinMultiCastGroup(transformIP4ToU32(239, 255, 0, 1));
-    UNLOCK_TCPIP_CORE();
 }
 
 bool Domain::start(){
@@ -27,21 +25,22 @@ void Domain::stop(){
     m_threadPool.stopThreads();
 }
 
-void Domain::receiveCallback(PBufWrapper buffer, Ip4Port_t destPort){
-    if(buffer.firstElement->next != nullptr){
+void Domain::receiveCallback(const PacketInfo& packet){
+    if(packet.buffer.firstElement->next != nullptr){
         printf("Domain: Cannot handle multiple elements chained. You might want to increase PBUF_POOL_BUFSIZE\n");
     }
-    if(isMultiCastPort(destPort)){
+
+    if(isMultiCastPort(packet.destPort)){
         // Pass to all
         for(auto i=0; i < m_nextParticipantId - PARTICIPANT_START_ID; ++i) {
-            m_participants[i].newMessage(static_cast<uint8_t*>(buffer.firstElement->payload), buffer.firstElement->len);
+            m_participants[i].newMessage(static_cast<uint8_t*>(packet.buffer.firstElement->payload), packet.buffer.firstElement->len);
         }
     }else{
         // Pass to addressed one only
-        ParticipantId_t id = getParticipantIdFromUnicastPort(destPort, isUserPort(destPort));
+        ParticipantId_t id = getParticipantIdFromUnicastPort(packet.destPort, isUserPort(packet.destPort));
         if(id != PARTICIPANT_ID_INVALID){
-            m_participants[id-PARTICIPANT_START_ID].newMessage(static_cast<uint8_t*>(buffer.firstElement->payload),
-                                                               buffer.firstElement->len);
+            m_participants[id-PARTICIPANT_START_ID].newMessage(static_cast<uint8_t*>(packet.buffer.firstElement->payload),
+                                                               packet.buffer.firstElement->len);
         }
     }
 }
@@ -62,17 +61,25 @@ rtps::Participant* Domain::createParticipant(){
 void Domain::addDefaultWriterAndReader(Participant& part) {
     //SPDP
     StatelessWriter& spdpWriter = m_statelessWriters[m_numStatelessWriters++];
+    StatelessReader& spdpReader = m_statelessReaders[m_numStatelessReaders++];
+
     spdpWriter.init(TopicKind_t::WITH_KEY, &m_threadPool, part.guidPrefix, ENTITYID_SPDP_BUILTIN_PARTICIPANT_WRITER,
                     m_transport, getBuiltInMulticastPort());
     spdpWriter.addNewMatchedReader(ReaderLocator(ENTITYID_SPDP_BUILTIN_PARTICIPANT_READER, getDefaultSendMulticastLocator()));
+    spdpReader.m_guid = {part.guidPrefix, ENTITYID_SPDP_BUILTIN_PARTICIPANT_READER};
 
-    StatelessReader& spdpReader = m_statelessReaders[m_numStatelessReaders++];
-    spdpReader.entityId = ENTITYID_SPDP_BUILTIN_PARTICIPANT_READER;
+    // SEDP
+    StatefullReader& sedpPubReader = m_statefullReaders[m_numStatefullReaders++];
+    StatefullReader& sedpSubReader = m_statefullReaders[m_numStatefullReaders++];
 
+    sedpPubReader.init({part.guidPrefix, ENTITYID_SEDP_BUILTIN_PUBLICATIONS_READER}, m_transport, getBuiltInUnicastPort(part.participantId));
+    sedpSubReader.init({part.guidPrefix, ENTITYID_SEDP_BUILTIN_SUBSCRIPTIONS_READER}, m_transport, getBuiltInUnicastPort(part.participantId));
 
     BuiltInEndpoints endpoints{};
     endpoints.spdpWriter = &spdpWriter;
     endpoints.spdpReader = &spdpReader;
+    endpoints.sedpPubReader = &sedpPubReader;
+    endpoints.sedpSubReader = &sedpSubReader;
 
     part.addBuiltInEndpoints(endpoints);
 }

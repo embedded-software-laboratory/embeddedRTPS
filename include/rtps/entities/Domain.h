@@ -8,6 +8,7 @@
 
 #include "rtps/config.h"
 #include "rtps/entities/Participant.h"
+#include "rtps/entities/StatefullReader.h"
 #include "rtps/entities/StatelessReader.h"
 #include "rtps/entities/StatelessWriter.h"
 #include "rtps/storages/PBufWrapper.h"
@@ -22,7 +23,7 @@ namespace rtps{
         bool start();
         void stop();
 
-        void receiveCallback(PBufWrapper buffer, Ip4Port_t destPort);
+        void receiveCallback(const PacketInfo& packet);
 
         Participant* createParticipant();
         Writer* createWriter(Participant& part, bool reliable);
@@ -38,6 +39,8 @@ namespace rtps{
         uint8_t m_numStatelessWriters = 0;
         std::array<StatelessReader, Config::NUM_STATELESS_READERS> m_statelessReaders;
         uint8_t m_numStatelessReaders = 0;
+        std::array<StatefullReader, Config::NUM_STATEFULL_READERS> m_statefullReaders;
+        uint8_t m_numStatefullReaders = 0;
 
         GuidPrefix_t generateGuidPrefix(ParticipantId_t id) const;
         void addDefaultWriterAndReader(Participant& part);

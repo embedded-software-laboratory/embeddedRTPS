@@ -18,8 +18,9 @@ namespace rtps {
         const std::array<uint8_t, 4> IP_ADDRESS = {192,168,0,42};
 
         const uint8_t DOMAIN_ID = 0; // 230 possible with UDP
-        const uint8_t NUM_STATELESS_WRITERS = 30;
-        const uint8_t NUM_STATELESS_READERS = 30;
+        const uint8_t NUM_STATELESS_WRITERS = 10;
+        const uint8_t NUM_STATELESS_READERS = 10;
+        const uint8_t NUM_STATEFULL_READERS = 10;
         const uint8_t MAX_NUM_PARTICIPANTS = 3;
         const uint8_t NUM_WRITERS_PER_PARTICIPANT = 10;
         const uint8_t NUM_READERS_PER_PARTICIPANT = 10;
@@ -35,8 +36,11 @@ namespace rtps {
         const int MAX_NUM_UDP_CONNECTIONS = 20;
 
         const int THREAD_POOL_NUM_WRITERS = 2;
+        const int THREAD_POOL_NUM_READERS = 1;
         const int THREAD_POOL_WRITER_STACKSIZE = 1024;
+        const int THREAD_POOL_READER_STACKSIZE = 1024;
         const int THREAD_POOL_WRITER_PRIO = 3;
+        const int THREAD_POOL_READER_PRIO = 3;
         const int THREAD_POOL_WORKLOAD_QUEUE_LENGTH = 100;
     }
 }

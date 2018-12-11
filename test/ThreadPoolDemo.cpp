@@ -19,7 +19,7 @@ int main(){
     rtps::Domain domain;
     domain.start();
 
-    rtps::Participant* part = domain.createParticipant();
+    auto part = domain.createParticipant();
     //rtps::Participant* part2 = domain.createParticipant();
 
     if(part == nullptr){

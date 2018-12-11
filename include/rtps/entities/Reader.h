@@ -11,6 +11,8 @@
 
 namespace rtps{
 
+    struct SubmessageHeartbeat;
+
     class ReaderCacheChange{
     private:
         const uint8_t* data;
@@ -38,9 +40,10 @@ namespace rtps{
 
     class Reader{
     public:
-        EntityId_t entityId = ENTITYID_UNKNOWN;
+        Guid m_guid = {GUIDPREFIX_UNKNOWN, ENTITYID_UNKNOWN};
         virtual void newChange(ReaderCacheChange& cacheChange) = 0;
         virtual void registerCallback(ddsReaderCallback_fp cb, void* callee) = 0;
+        virtual void onNewHeartbeat(const SubmessageHeartbeat& msg, const GuidPrefix_t& remotePrefix) = 0;
     protected:
         virtual ~Reader() = default;
     };

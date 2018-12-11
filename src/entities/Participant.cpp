@@ -42,9 +42,17 @@ std::array<uint8_t, 3> Participant::getNextUserEntityKey(){
     return result;
 }
 
-rtps::Writer* Participant::addUserWriter(Writer& writer){
-    if(receiver.addWriter(writer)){
-        return &writer;
+rtps::Writer* Participant::addUserWriter(Writer* pWriter){
+    if(receiver.addWriter(pWriter)){
+        return pWriter;
+    }else{
+        return nullptr;
+    }
+}
+
+rtps::Reader* Participant::addUserReader(Reader* pReader){
+    if(receiver.addReader(pReader)){
+        return pReader;
     }else{
         return nullptr;
     }

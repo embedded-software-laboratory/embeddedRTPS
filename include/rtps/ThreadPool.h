@@ -9,6 +9,7 @@
 #include "config.h"
 #include "lwip/sys.h"
 #include "rtps/communication/UdpDriver.h"
+#include "rtps/communication/PacketInfo.h"
 #include "rtps/storages/PBufWrapper.h"
 #include "rtps/storages/ThreadSafeCircularBuffer.h"
 
@@ -46,11 +47,15 @@ namespace rtps {
         Domain& domain;
         bool running = false;
         std::array<sys_thread_t, Config::THREAD_POOL_NUM_WRITERS> writers;
+        std::array<sys_thread_t, Config::THREAD_POOL_NUM_READERS> readers;
 
         ThreadSafeCircularBuffer<Workload_t, Config::THREAD_POOL_WORKLOAD_QUEUE_LENGTH> inputQueue;
-        ThreadSafeCircularBuffer<UdpDriver::PacketInfo, Config::THREAD_POOL_WORKLOAD_QUEUE_LENGTH> outputQueue;
+        ThreadSafeCircularBuffer<PacketInfo, Config::THREAD_POOL_WORKLOAD_QUEUE_LENGTH> outputQueue;
 
-        static void writerFunction(void* arg);
+        static void writerThreadFunction(void* arg);
+        static void readerThreadFunction(void* arg);
+        void doWriterWork();
+        void doReaderWork();
 
     };
 }

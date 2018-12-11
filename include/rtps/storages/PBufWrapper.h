@@ -48,10 +48,10 @@ namespace rtps {
 
         bool reserve(DataSize_t length);
 
+        //! After calling this function, data is added starting from the beginning again. It does not revert reserve.
         void reset();
 
         DataSize_t spaceLeft() const;
-
         DataSize_t getUsedSize() const;
 
         pbuf* getLastElement() const;
@@ -59,10 +59,8 @@ namespace rtps {
 
     private:
 
-
         constexpr static pbuf_layer m_layer = PBUF_TRANSPORT;
         constexpr static pbuf_type m_type = PBUF_POOL;
-
 
         DataSize_t m_freeSpace = 0;
 
