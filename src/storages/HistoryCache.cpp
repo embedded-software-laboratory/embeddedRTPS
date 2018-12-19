@@ -7,15 +7,17 @@
 
 using rtps::HistoryCache;
 
-const rtps::CacheChange* HistoryCache::addChange(CacheChange&& change){
-    auto& entry = m_buffer[m_head];
-    entry.change = change;
-    entry.send = false;
-    entry.change = std::move(change);
+const rtps::CacheChange* HistoryCache::addChange(CacheChange&& newChange){
+    auto& change = m_buffer[m_head];
+    change = std::move(newChange);
 
     incrementHead();
 
-    return &entry.change;
+    return &change;
+}
+
+void HistoryCache::dropFirst() {
+    incrementTail();
 }
 
 bool HistoryCache::isFull() const{
@@ -24,28 +26,13 @@ bool HistoryCache::isFull() const{
     return iterator == m_tail;
 }
 
-uint8_t HistoryCache::resetSend() {
-    uint8_t numReset = 0;
-    auto iterator = m_tail;
-    while(iterator != m_head){
-        auto& entry = m_buffer[iterator];
-        if(entry.send){
-            ++numReset;
-            entry.send = false;
-        }
-        incrementIterator(iterator);
-    }
-    m_lastReturned = m_tail;
-    return numReset;
-}
-
 const rtps::SequenceNumber_t& HistoryCache::getSeqNumMin() const{
     const SequenceNumber_t* pSN = &SEQUENCENUMBER_UNKNOWN;
     auto iterator = m_tail;
     while(iterator != m_head){
-        auto& entry = m_buffer[iterator];
-        if(pSN == &SEQUENCENUMBER_UNKNOWN || entry.change.sequenceNumber < *pSN) {
-            pSN = &entry.change.sequenceNumber;
+        auto& change = m_buffer[iterator];
+        if(pSN == &SEQUENCENUMBER_UNKNOWN || change.sequenceNumber < *pSN) {
+            pSN = &change.sequenceNumber;
         }
     incrementIterator(iterator);
     }
@@ -58,24 +45,26 @@ const rtps::SequenceNumber_t& HistoryCache::getSeqNumMax() const{
 
     auto iterator = m_tail;
     while(iterator != m_head){
-        auto& entry = m_buffer[iterator];
-        if(pSN == &SEQUENCENUMBER_UNKNOWN || *pSN < entry.change.sequenceNumber){
-            pSN = &entry.change.sequenceNumber;
+        auto& change = m_buffer[iterator];
+        if(pSN == &SEQUENCENUMBER_UNKNOWN || *pSN < change.sequenceNumber){
+            pSN = &change.sequenceNumber;
         }
         incrementIterator(iterator);
     }
     return *pSN;
 }
 
-const rtps::CacheChange* HistoryCache::getNextCacheChange(){
-    if(m_lastReturned != m_head){
-        auto& entry = m_buffer[m_lastReturned];
-        entry.send = true;
-        incrementIterator(m_lastReturned);
-        return &entry.change;
-    }else{
-        return &INVALID_CACHE_CHANGE;
+const rtps::CacheChange* HistoryCache::getChangeBySN(const SequenceNumber_t& sn) const{
+    auto iterator = m_tail;
+    while(iterator != m_head){
+        auto& change = m_buffer[iterator];
+        if(change.sequenceNumber == sn){
+            return &change;
+        }
+        incrementIterator(iterator);
     }
+
+    return nullptr;
 }
 
 void HistoryCache::incrementHead() {

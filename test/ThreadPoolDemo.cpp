@@ -28,7 +28,7 @@ int main(){
     }
     rtps::EntityId_t eid = {{1, 2, 3}, rtps::EntityKind_t::USER_DEFINED_READER_WITHOUT_KEY};
     rtps::Locator locator = rtps::Locator::createUDPv4Locator(192, 168, 0, 248, 7400);
-    rtps::ReaderLocator remoteReader{eid, locator};
+    rtps::ReaderProxy remoteReader{{rtps::GUIDPREFIX_UNKNOWN, eid}, locator};
     rtps::Writer* writer = domain.createWriter(*part, false);
     if(writer == nullptr){
         printf("Failed to create writer");

@@ -11,12 +11,12 @@
 
 using rtps::Participant;
 
-Participant::Participant() : guidPrefix(GUIDPREFIX_UNKNOWN), participantId(PARTICIPANT_ID_INVALID),
+Participant::Participant() : m_guidPrefix(GUIDPREFIX_UNKNOWN), m_participantId(PARTICIPANT_ID_INVALID),
                              m_receiver(this){
 
 }
 Participant::Participant(const GuidPrefix_t& guidPrefix, ParticipantId_t participantId)
-        : guidPrefix(guidPrefix), participantId(participantId),
+        : m_guidPrefix(guidPrefix), m_participantId(participantId),
           m_receiver(this){
 
 }
@@ -25,8 +25,13 @@ Participant::~Participant() {
     m_spdpAgent.stop();
 }
 
+void Participant::reuse(const GuidPrefix_t& guidPrefix, ParticipantId_t participantId){
+    m_guidPrefix = guidPrefix;
+    m_participantId = participantId;
+}
+
 bool Participant::isValid(){
-    return participantId != PARTICIPANT_ID_INVALID;
+    return m_participantId != PARTICIPANT_ID_INVALID;
 }
 
 std::array<uint8_t, 3> Participant::getNextUserEntityKey(){
@@ -80,7 +85,7 @@ rtps::Reader* Participant::getReader(EntityId_t id) const{
 }
 
 
-rtps::Writer* Participant::getWriter(const char* topic, const char* type){
+rtps::Writer* Participant::getWriter(const char* topic, const char* type) const{
     for(uint8_t i=0; i < m_numWriters; ++i){
         if((strcmp(m_writers[i]->topicName, topic) == 0) &&
            (strcmp(m_writers[i]->typeName, type) == 0)){
@@ -90,7 +95,7 @@ rtps::Writer* Participant::getWriter(const char* topic, const char* type){
     return nullptr;
 }
 
-rtps::Reader* Participant::getReader(const char* topic, const char* type){
+rtps::Reader* Participant::getReader(const char* topic, const char* type) const{
     for(uint8_t i=0; i < m_numReaders; ++i){
         if((strcmp(m_readers[i]->topicName, topic) == 0) &&
            (strcmp(m_readers[i]->typeName, type) == 0)){

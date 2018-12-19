@@ -18,13 +18,22 @@ namespace rtps{
 
     class Participant{
     public:
-         GuidPrefix_t guidPrefix;
-         ParticipantId_t participantId;
+         GuidPrefix_t m_guidPrefix;
+         ParticipantId_t m_participantId;
 
         Participant();
         explicit Participant(const GuidPrefix_t& guidPrefix, ParticipantId_t participantId);
+
+        // Not allowed because the message receiver contains a pointer to the participant
+        Participant(const Participant&) = delete;
+        Participant(Participant&&) = delete;
+        Participant& operator=(const Participant&) = delete;
+        Participant& operator=(Participant&&) = delete;
+        
         ~Participant();
         bool isValid();
+
+        void reuse(const GuidPrefix_t& guidPrefix, ParticipantId_t participantId);
 
         std::array<uint8_t, 3> getNextUserEntityKey();
 
@@ -35,10 +44,10 @@ namespace rtps{
 
         //! (Probably) Thread safe if writers cannot be removed
         Writer* getWriter(EntityId_t id) const;
-        Writer* getWriter(const char* topic, const char* type);
+        Writer* getWriter(const char* topic, const char* type) const;
         //! (Probably) Thread safe if readers cannot be removed
         Reader* getReader(EntityId_t id) const;
-        Reader* getReader(const char* topic, const char* type);
+        Reader* getReader(const char* topic, const char* type) const;
 
         bool addNewRemoteParticipant(ParticipantProxyData& remotePart);
         const ParticipantProxyData* findRemoteParticipant(const GuidPrefix_t& prefix) const;

@@ -37,6 +37,7 @@ namespace rtps {
 
         TopicKind_t m_topicKind = TopicKind_t::NO_KEY;
         SequenceNumber_t m_lastChangeSequenceNumber = {0, 0};
+        SequenceNumber_t m_nextSequenceNumberToSend = {0, 1};
         HistoryCache m_history;
         ReaderProxy m_readerProxy{};
 

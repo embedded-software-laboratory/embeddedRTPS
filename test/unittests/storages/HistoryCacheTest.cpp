@@ -11,7 +11,15 @@ using rtps::HistoryCache;
 using rtps::CacheChange;
 using rtps::SequenceNumber_t;
 
-class HistoryTest : public ::testing::Test{
+
+TEST(EmptyHistory, ReturnsUnknownSequenceNumberIfEmpty){
+    HistoryCache history;
+    EXPECT_EQ(history.getSeqNumMin(), rtps::SEQUENCENUMBER_UNKNOWN);
+    EXPECT_EQ(history.getSeqNumMin(), rtps::SEQUENCENUMBER_UNKNOWN);
+}
+
+
+class HistoryWithThreeChanges : public ::testing::Test{
 protected:
     HistoryCache history;
 
@@ -22,39 +30,32 @@ protected:
     CacheChange changeOne{rtps::ChangeKind_t::ALIVE, SNOne};
     CacheChange changeTwo{rtps::ChangeKind_t::ALIVE, SNTwo};
     CacheChange changeThree{rtps::ChangeKind_t::ALIVE, SNThree};
+
+    void SetUp() override{
+        history.addChange(std::move(changeOne));
+        history.addChange(std::move(changeTwo));
+        history.addChange(std::move(changeThree));
+    }
 };
 
-TEST_F(HistoryTest, ReturnsCorrectMinAndMaxSequenceNumber){
-
-    history.addChange(std::move(changeOne));
-    history.addChange(std::move(changeTwo));
-    history.addChange(std::move(changeThree));
-
+TEST_F(HistoryWithThreeChanges, ReturnsCorrectMinAndMaxSequenceNumber){
     EXPECT_EQ(history.getSeqNumMin(), SNOne);
     EXPECT_EQ(history.getSeqNumMax(), SNThree);
 }
 
-TEST_F(HistoryTest, getNextCacheChange_outputsInCorrectOder){
 
-    history.addChange(std::move(changeOne));
-    history.addChange(std::move(changeTwo));
-    history.addChange(std::move(changeThree));
 
-    EXPECT_EQ(history.getNextCacheChange()->sequenceNumber, SNOne);
-    EXPECT_EQ(history.getNextCacheChange()->sequenceNumber, SNTwo);
-    EXPECT_EQ(history.getNextCacheChange()->sequenceNumber, SNThree);
-    EXPECT_EQ(history.getNextCacheChange(), &history.INVALID_CACHE_CHANGE);
+TEST_F(HistoryWithThreeChanges, getChangeBySN_returnCorrectChange){
+
+    auto change = history.getChangeBySN(changeTwo.sequenceNumber);
+
+    ASSERT_NE(change, nullptr);
+    EXPECT_EQ(change->sequenceNumber, SNTwo);
 }
 
+TEST_F(HistoryWithThreeChanges, getChangeBySN_cannotFindFirstAfter_dropFirst){
+    history.dropFirst();
 
-TEST_F(HistoryTest, resetSend_returnNumberOfResetChanges){
-    history.addChange(std::move(changeOne));
-    history.addChange(std::move(changeTwo));
-    history.addChange(std::move(changeThree));
-    // Send two
-    history.getNextCacheChange();
-    history.getNextCacheChange();
-
-    auto numReset = history.resetSend();
-    EXPECT_EQ(numReset, 2);
+    auto change = history.getChangeBySN(SNOne);
+    EXPECT_EQ(change, nullptr);
 }

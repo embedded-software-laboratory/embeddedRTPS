@@ -97,7 +97,7 @@ TEST_F(EmptyRTPSWriterWithoutKey, newChange_IgnoresAllKindThatAreNotAlive){
                            ChangeKind_t::NOT_ALIVE_UNREGISTERED};
     for(auto kind : irrelevantKinds){
         const CacheChange* change = writer.newChange(kind, nullptr, 0);
-        EXPECT_EQ(change->kind, ChangeKind_t::INVALID);
+        EXPECT_EQ(change, nullptr);
         EXPECT_EQ(current, writer.getLastSequenceNumber());
     }
 }
@@ -119,7 +119,7 @@ TEST_F(EmptyRTPSWriterWithKey, newChange_IgnoresKindInvalid){
 
     const CacheChange* change = writer.newChange(ChangeKind_t::INVALID, nullptr, 0);
 
-    EXPECT_EQ(change->kind, ChangeKind_t::INVALID);
+    EXPECT_EQ(change, nullptr);
     EXPECT_EQ(current, writer.getLastSequenceNumber());
 
 }

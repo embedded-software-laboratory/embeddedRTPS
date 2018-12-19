@@ -47,8 +47,8 @@ void Domain::receiveCallback(const PacketInfo& packet){
 
 rtps::Participant* Domain::createParticipant(){
     for(auto& entry : m_participants){
-        if(entry.participantId == PARTICIPANT_ID_INVALID){
-            entry = Participant{generateGuidPrefix(m_nextParticipantId), m_nextParticipantId};
+        if(entry.m_participantId == PARTICIPANT_ID_INVALID){
+            entry.reuse(generateGuidPrefix(m_nextParticipantId), m_nextParticipantId);
             addDefaultWriterAndReader(entry);
             registerPort(entry);
             ++m_nextParticipantId;
@@ -63,17 +63,17 @@ void Domain::addDefaultWriterAndReader(Participant& part) {
     StatelessWriter& spdpWriter = m_statelessWriters[m_numStatelessWriters++];
     StatelessReader& spdpReader = m_statelessReaders[m_numStatelessReaders++];
 
-    spdpWriter.init(TopicKind_t::WITH_KEY, &m_threadPool, part.guidPrefix, ENTITYID_SPDP_BUILTIN_PARTICIPANT_WRITER,
+    spdpWriter.init(TopicKind_t::WITH_KEY, &m_threadPool, part.m_guidPrefix, ENTITYID_SPDP_BUILTIN_PARTICIPANT_WRITER,
                     m_transport, getBuiltInMulticastPort());
-    spdpWriter.addNewMatchedReader(ReaderProxy{{part.guidPrefix, ENTITYID_SPDP_BUILTIN_PARTICIPANT_READER}, getBuiltInMulticastLocator()});
-    spdpReader.m_guid = {part.guidPrefix, ENTITYID_SPDP_BUILTIN_PARTICIPANT_READER};
+    spdpWriter.addNewMatchedReader(ReaderProxy{{part.m_guidPrefix, ENTITYID_SPDP_BUILTIN_PARTICIPANT_READER}, getBuiltInMulticastLocator()});
+    spdpReader.m_guid = {part.m_guidPrefix, ENTITYID_SPDP_BUILTIN_PARTICIPANT_READER};
 
     // SEDP
     StatefullReader& sedpPubReader = m_statefullReaders[m_numStatefullReaders++];
     StatefullReader& sedpSubReader = m_statefullReaders[m_numStatefullReaders++];
 
-    sedpPubReader.init({part.guidPrefix, ENTITYID_SEDP_BUILTIN_PUBLICATIONS_READER}, m_transport, getBuiltInUnicastPort(part.participantId));
-    sedpSubReader.init({part.guidPrefix, ENTITYID_SEDP_BUILTIN_SUBSCRIPTIONS_READER}, m_transport, getBuiltInUnicastPort(part.participantId));
+    sedpPubReader.init({part.m_guidPrefix, ENTITYID_SEDP_BUILTIN_PUBLICATIONS_READER}, m_transport, getBuiltInUnicastPort(part.m_participantId));
+    sedpSubReader.init({part.m_guidPrefix, ENTITYID_SEDP_BUILTIN_SUBSCRIPTIONS_READER}, m_transport, getBuiltInUnicastPort(part.m_participantId));
 
     BuiltInEndpoints endpoints{};
     endpoints.spdpWriter = &spdpWriter;
@@ -94,9 +94,9 @@ rtps::Writer* Domain::createWriter(Participant& part, bool reliable){
         return nullptr;
     }else{
         // TODO Distinguish WithKey and NoKey (Also changes EntityKind)
-        m_statelessWriters[m_numStatelessWriters].init(TopicKind_t::NO_KEY, &m_threadPool, part.guidPrefix,
+        m_statelessWriters[m_numStatelessWriters].init(TopicKind_t::NO_KEY, &m_threadPool, part.m_guidPrefix,
                                                        {part.getNextUserEntityKey(), EntityKind_t::USER_DEFINED_WRITER_WITHOUT_KEY},
-                                                       m_transport, getUserUnicastPort(part.participantId));
+                                                       m_transport, getUserUnicastPort(part.m_participantId));
 
         return &m_statelessWriters[m_numStatelessWriters++];
     }

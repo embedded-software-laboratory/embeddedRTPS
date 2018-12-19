@@ -34,6 +34,6 @@ TEST_F(ADomain, DISABLED_createParticipant_generatesDifferentGuids){
     ASSERT_NE(firstPart, nullptr);
     ASSERT_NE(secondPart, nullptr);
 
-    EXPECT_NE(firstPart->guidPrefix.id, secondPart->guidPrefix.id);
+    EXPECT_NE(firstPart->m_guidPrefix.id, secondPart->m_guidPrefix.id);
 }
 

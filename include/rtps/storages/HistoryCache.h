@@ -23,30 +23,22 @@ namespace rtps{
 
     class HistoryCache{
     public:
-        const CacheChange INVALID_CACHE_CHANGE{};
+        /**
+         * Adds a new Change. If the buffer is full, it will override
+         * the oldest one. If you want to avoid this, use isFull() and dropFirst().
+         */
+        const CacheChange* addChange(CacheChange&& newChange);
+        void dropFirst();
+        bool isFull() const;
 
-        const CacheChange* addChange(CacheChange&& change);
-
-        //! Return a reference to INVALID_CACHE_CHANGE if it fails to find an unsent change.
-        const CacheChange* getNextCacheChange();
+        const CacheChange* getChangeBySN(const SequenceNumber_t& sn) const;
 
         const SequenceNumber_t& getSeqNumMin() const;
         const SequenceNumber_t& getSeqNumMax() const;
 
-        /**
-         * @return Number of changes that were already sent
-         */
-        uint8_t resetSend();
-
-        bool isFull() const;
-
     private:
-        struct HistoryEntry{
-            bool send = false;
-            CacheChange change;
-        };
 
-        std::array<HistoryEntry, 10> m_buffer{};
+        std::array<CacheChange, 10> m_buffer{};
         uint16_t m_head = 0;
         uint16_t m_tail = 0;
         uint16_t m_lastReturned = 0;

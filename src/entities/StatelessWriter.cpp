@@ -45,7 +45,7 @@ namespace rtps{
 
     const CacheChange* StatelessWriter::newChange(rtps::ChangeKind_t kind, const uint8_t* data, DataSize_t size) {
         if(isIrrelevant(kind)){
-            return &m_history.INVALID_CACHE_CHANGE;
+            return nullptr; // TODO
         }
 
         ++m_lastChangeSequenceNumber;
@@ -66,7 +66,9 @@ namespace rtps{
 
     void StatelessWriter::unsentChangesReset() {
         Lock lock(m_mutex);
-        m_history.resetSend();
+
+        m_nextSequenceNumberToSend = m_history.getSeqNumMin();
+
         if(mp_threadPool != nullptr){
             mp_threadPool->addWorkload(ThreadPool::Workload_t{this});
         }
@@ -89,11 +91,12 @@ namespace rtps{
 
         {
             Lock lock(m_mutex);
-            const CacheChange* next = m_history.getNextCacheChange();
-            if(next == &m_history.INVALID_CACHE_CHANGE){
+            const CacheChange* next = m_history.getChangeBySN(m_nextSequenceNumberToSend);
+            if(next == nullptr){
                 printf("StatelessWriter: Couldn't get a new CacheChange\n");
                 return;
             }
+            ++m_nextSequenceNumberToSend;
             MessageFactory::addSubMessageData(info.buffer, next->data, false, next->sequenceNumber, m_guid.entityId,
                                               m_readerProxy.remoteReaderGuid.entityId); // TODO
         }

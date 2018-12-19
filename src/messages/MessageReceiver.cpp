@@ -47,7 +47,7 @@ bool MessageReceiver::processHeader(MessageProcessingInfo& msgInfo){
 
     auto header = reinterpret_cast<const Header*>(msgInfo.getPointerToPos());
 
-    if(header->guidPrefix.id == mp_part->guidPrefix.id){
+    if(header->guidPrefix.id == mp_part->m_guidPrefix.id){
         return false; // Don't process our own packet
     }
 
@@ -79,7 +79,7 @@ bool MessageReceiver::processSubMessage(MessageProcessingInfo& msgInfo){
             success = processHeartbeatSubmessage(msgInfo);
             break;
         case SubmessageKind::INFO_DST:
-            printf("Info_DST submessage not relevant.");
+            printf("Info_DST submessage not relevant.\n");
             success = false; // Not relevant
             break;
         default:

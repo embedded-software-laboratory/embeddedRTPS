@@ -9,6 +9,8 @@
 #include "rtps/entities/Participant.h"
 #include "rtps/common/types.h"
 
+#include "test/mocking/ReaderMock.h"
+
 using rtps::Participant;
 
 class SomeParticipant : public ::testing::Test{
@@ -26,4 +28,15 @@ TEST_F(SomeParticipant, getNextUserEntityKey_increasesCorrectly){
     auto nextKey = part.getNextUserEntityKey();
 
     ASSERT_THAT(nextKey, testing::ElementsAre(0,0,1));
+}
+
+TEST_F(SomeParticipant, readerCanBeFoundAfterAdding){
+    rtps::EntityId_t someEntityId{{1,2,3}, rtps::EntityKind_t::USER_DEFINED_READER_WITHOUT_KEY};
+    ReaderMock mock{{somePrefix, someEntityId}};
+
+    rtps::Reader* returnedReader = part.addReader(&mock);
+    EXPECT_NE(returnedReader, nullptr);
+
+    rtps::Reader* foundReader = part.getReader(someEntityId);
+    EXPECT_EQ(foundReader, returnedReader);
 }
