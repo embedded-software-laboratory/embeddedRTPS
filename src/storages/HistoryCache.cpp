@@ -18,6 +18,12 @@ const rtps::CacheChange* HistoryCache::addChange(CacheChange&& change){
     return &entry.change;
 }
 
+bool HistoryCache::isFull() const{
+    auto iterator = m_head;
+    incrementIterator(iterator);
+    return iterator == m_tail;
+}
+
 uint8_t HistoryCache::resetSend() {
     uint8_t numReset = 0;
     auto iterator = m_tail;

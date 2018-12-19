@@ -54,9 +54,9 @@ namespace rtps{
         INVALID, ALIVE, NOT_ALIVE_DISPOSED, NOT_ALIVE_UNREGISTERED
     };
 
-    enum class ReliabilityKind_t : uint8_t{
+    enum class ReliabilityKind_t : uint32_t{
         BEST_EFFORT = 1,
-        RELIABLE    = 3
+        RELIABLE    = 2 // Specification says 3 but eprosima sends 2
     };
 
     struct GuidPrefix_t{

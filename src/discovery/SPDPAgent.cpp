@@ -102,29 +102,25 @@ void SPDPAgent::handleSPDPPackage(ReaderCacheChange& cacheChange){
                 return;
             }
 
-            for(auto& partProxy : m_foundParticipants){
-                if(partProxy.m_guid.prefix.id == m_proxyDataBuffer.m_guid.prefix.id){
-                    partProxy = m_proxyDataBuffer;
-                    printf("Found same participant again.\n");
-                    return;
-                }
+
+            if(mp_participant->findRemoteParticipant(m_proxyDataBuffer.m_guid.prefix) != nullptr){
+                printf("Found same participant again.\n");
+                return;
             }
 
-            for(auto& partProxy : m_foundParticipants){
-                if(partProxy.m_guid.prefix.id == GUIDPREFIX_UNKNOWN.id){
-                    partProxy = m_proxyDataBuffer;
+            if(mp_participant->addNewRemoteParticipant(m_proxyDataBuffer)){
+                // Prepare builtin endpoints for SEDP
+                WriterProxy* proxy = m_buildInEndpoints.sedpPubReader->createWriterProxy({m_proxyDataBuffer.m_guid.prefix, ENTITYID_SEDP_BUILTIN_PUBLICATIONS_WRITER});
+                proxy->locator = m_proxyDataBuffer.m_metatrafficMulticastLocatorList[0];
+                // For now, the readers don't care about remotes
 
-                    // TODO move elsewhere in SEPD e.g.
-                    WriterProxy* proxy = m_buildInEndpoints.sedpPubReader->createWriterProxy({partProxy.m_guid.prefix, ENTITYID_SEDP_BUILTIN_PUBLICATIONS_WRITER});
-                    proxy->locator = m_proxyDataBuffer.m_metatrafficMulticastLocatorList[0];
-
-                    printf("Added new participant with guid: ");
-                    for(auto i : partProxy.m_guid.prefix.id){
-                        printf("%u", i);
-                    }
-                    printf("\n");
-                    return;
+                printf("Added new participant with guid: ");
+                for(auto i : m_proxyDataBuffer.m_guid.prefix.id){
+                    printf("%u", i);
                 }
+                printf("\n");
+            }else{
+                printf("Failed to add new participant");
             }
         }
     }else{

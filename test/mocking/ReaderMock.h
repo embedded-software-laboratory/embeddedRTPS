@@ -26,7 +26,7 @@ public:
 
     MOCK_METHOD1(newChange, void(rtps::ReaderCacheChange&));
     MOCK_METHOD2(registerCallback, void(rtps::ddsReaderCallback_fp, void*));
-    MOCK_METHOD2(onNewHeartbeat, void(const SubmessageHeartbeat&, const GuidPrefix_t&));
+    MOCK_METHOD2(onNewHeartbeat, bool(const SubmessageHeartbeat&, const GuidPrefix_t&));
 
 };
 

@@ -7,6 +7,7 @@
 #define RTPS_READER_H
 
 #include "rtps/common/types.h"
+#include "rtps/config.h"
 #include "rtps/storages/PBufWrapper.h"
 
 namespace rtps{
@@ -41,9 +42,11 @@ namespace rtps{
     class Reader{
     public:
         Guid m_guid = {GUIDPREFIX_UNKNOWN, ENTITYID_UNKNOWN};
+        char topicName[Config::MAX_TOPICNAME_LENGTH] = {'\0'};
+        char typeName[Config::MAX_TYPENAME_LENGTH] = {'\0'};
         virtual void newChange(ReaderCacheChange& cacheChange) = 0;
         virtual void registerCallback(ddsReaderCallback_fp cb, void* callee) = 0;
-        virtual void onNewHeartbeat(const SubmessageHeartbeat& msg, const GuidPrefix_t& remotePrefix) = 0;
+        virtual bool onNewHeartbeat(const SubmessageHeartbeat& msg, const GuidPrefix_t& remotePrefix) = 0;
     protected:
         virtual ~Reader() = default;
     };

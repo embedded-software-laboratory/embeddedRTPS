@@ -38,6 +38,8 @@ namespace rtps{
          */
         uint8_t resetSend();
 
+        bool isFull() const;
+
     private:
         struct HistoryEntry{
             bool send = false;

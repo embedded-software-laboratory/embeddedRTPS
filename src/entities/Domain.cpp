@@ -65,7 +65,7 @@ void Domain::addDefaultWriterAndReader(Participant& part) {
 
     spdpWriter.init(TopicKind_t::WITH_KEY, &m_threadPool, part.guidPrefix, ENTITYID_SPDP_BUILTIN_PARTICIPANT_WRITER,
                     m_transport, getBuiltInMulticastPort());
-    spdpWriter.addNewMatchedReader(ReaderLocator(ENTITYID_SPDP_BUILTIN_PARTICIPANT_READER, getDefaultSendMulticastLocator()));
+    spdpWriter.addNewMatchedReader(ReaderProxy{{part.guidPrefix, ENTITYID_SPDP_BUILTIN_PARTICIPANT_READER}, getBuiltInMulticastLocator()});
     spdpReader.m_guid = {part.guidPrefix, ENTITYID_SPDP_BUILTIN_PARTICIPANT_READER};
 
     // SEDP

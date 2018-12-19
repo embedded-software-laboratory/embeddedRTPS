@@ -9,13 +9,17 @@
 #include "rtps/ThreadPool.h"
 #include "rtps/storages/PBufWrapper.h"
 #include "rtps/storages/HistoryCache.h"
-#include "rtps/entities/ReaderLocator.h"
+#include "rtps/entities/ReaderProxy.h"
 
 namespace rtps{
 
     class Writer{
     public:
-        virtual bool addNewMatchedReader(ReaderLocator loc) = 0;
+        Guid m_guid = {GUIDPREFIX_UNKNOWN, ENTITYID_UNKNOWN};
+        char topicName[Config::MAX_TOPICNAME_LENGTH] = {'\0'};
+        char typeName[Config::MAX_TYPENAME_LENGTH] = {'\0'};
+
+        virtual bool addNewMatchedReader(const ReaderProxy& newProxy) = 0;
 
         //! Executes required steps like sending packets. Intended to be called by worker threads
         virtual void progress() = 0;

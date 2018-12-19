@@ -11,6 +11,7 @@
 #include "rtps/messages/MessageFactory.h"
 #include "rtps/messages/MessageReceiver.h"
 #include "rtps/messages/MessageTypes.h"
+#include "rtps/entities/Participant.h"
 #include "rtps/common/types.h"
 
 using ::testing::_;
@@ -19,10 +20,14 @@ using ::testing::_;
 class AMessageReceiver : public ::testing::Test{
 protected:
     rtps::GuidPrefix_t receiverGuidPrefix{1};
-    rtps::MessageReceiver receiver{receiverGuidPrefix};
+    rtps::ParticipantId_t someID = 0;
+    rtps::Participant part{receiverGuidPrefix, someID};
+    rtps::MessageReceiver* p_receiver;
     rtps::Header validHeader;
 
     void SetUp() override{
+        p_receiver = part.getMessageReceiver();
+
         validHeader.protocolName = {'R', 'T', 'P', 'S'};
         validHeader.guidPrefix = {2};
         validHeader.vendorId = rtps::VENDOR_UNKNOWN;
@@ -34,7 +39,7 @@ TEST_F(AMessageReceiver, processMessage_returnsTrueIfValidHeader){
     auto data = reinterpret_cast<uint8_t*>(&validHeader);
     rtps::DataSize_t size = sizeof(validHeader);
 
-    bool valid = receiver.processMessage(data, size);
+    bool valid = p_receiver->processMessage(data, size);
 
     EXPECT_TRUE(valid);
 }
@@ -43,14 +48,14 @@ TEST_F(AMessageReceiver, processMessage_setsInfoCorrectIfValidHeader){
     auto data = reinterpret_cast<uint8_t*>(&validHeader);
     rtps::DataSize_t size = sizeof(validHeader);
 
-    bool valid = receiver.processMessage(data, size);
+    bool valid = p_receiver->processMessage(data, size);
 
     EXPECT_TRUE(valid);
-    EXPECT_EQ(receiver.sourceGuidPrefix.id, validHeader.guidPrefix.id);
-    EXPECT_EQ(receiver.sourceVendor.vendorId, validHeader.vendorId.vendorId);
-    EXPECT_EQ(receiver.sourceVersion.major, validHeader.protocolVersion.major);
-    EXPECT_EQ(receiver.sourceVersion.minor, validHeader.protocolVersion.minor);
-    EXPECT_FALSE(receiver.haveTimeStamp);
+    EXPECT_EQ(p_receiver->sourceGuidPrefix.id, validHeader.guidPrefix.id);
+    EXPECT_EQ(p_receiver->sourceVendor.vendorId, validHeader.vendorId.vendorId);
+    EXPECT_EQ(p_receiver->sourceVersion.major, validHeader.protocolVersion.major);
+    EXPECT_EQ(p_receiver->sourceVersion.minor, validHeader.protocolVersion.minor);
+    EXPECT_FALSE(p_receiver->haveTimeStamp);
 
 }
 
@@ -60,7 +65,7 @@ TEST_F(AMessageReceiver, processMessage_returnsFalseIfInvalidProtocolType){
     auto data = reinterpret_cast<uint8_t*>(&validHeader);
     rtps::DataSize_t size = sizeof(validHeader);
 
-    bool valid = receiver.processMessage(data, size);
+    bool valid = p_receiver->processMessage(data, size);
 
     EXPECT_FALSE(valid);
 }
@@ -76,7 +81,7 @@ TEST_F(AMessageReceiver, processMessage_returnsFalseIfMajorVersionLower){
     auto data = reinterpret_cast<uint8_t*>(&validHeader);
     rtps::DataSize_t size = sizeof(validHeader);
 
-    bool valid = receiver.processMessage(data, size);
+    bool valid = p_receiver->processMessage(data, size);
 
     EXPECT_FALSE(valid);
 }
@@ -89,7 +94,7 @@ TEST_F(AMessageReceiver, processMessage_returnsFalseIfMajorVersionIsHigher){
     auto data = reinterpret_cast<uint8_t*>(&validHeader);
     rtps::DataSize_t size = sizeof(validHeader);
 
-    bool valid = receiver.processMessage(data, size);
+    bool valid = p_receiver->processMessage(data, size);
 
     EXPECT_FALSE(valid);
 }
@@ -100,7 +105,7 @@ TEST_F(AMessageReceiver, processMessage_returnsFalseIfItsOwnPackage){
     auto data = reinterpret_cast<uint8_t*>(&validHeader);
     rtps::DataSize_t size = sizeof(validHeader);
 
-    bool valid = receiver.processMessage(data, size);
+    bool valid = p_receiver->processMessage(data, size);
 
     EXPECT_FALSE(valid);
 }
@@ -114,7 +119,9 @@ protected:
     BufferMock somePayload;
 
     rtps::GuidPrefix_t receiverGuidPrefix{1};
-    rtps::MessageReceiver receiver{receiverGuidPrefix};
+    rtps::ParticipantId_t someID = 0;
+    rtps::Participant part{receiverGuidPrefix, someID};
+    rtps::MessageReceiver receiver{&part};
 
 
     void SetUp() override{
@@ -126,8 +133,8 @@ protected:
 };
 
 TEST_F(AMessageReceiverReceivedDataSubmessage, processMessage_validDataSMAddsCacheChangeToCorrectReader){
-    receiver.addReader(&anotherReaderMock);
-    receiver.addReader(&correctReaderMock);
+    part.addReader(&anotherReaderMock);
+    part.addReader(&correctReaderMock);
     auto data = validDataMsgBufferMock.buffer.data();
     auto size = (rtps::DataSize_t) validDataMsgBufferMock.buffer.size();
 
@@ -147,12 +154,16 @@ protected:
     rtps::GuidPrefix_t somePrefix = {1,2,3,4};
 
     rtps::GuidPrefix_t receiverGuidPrefix{1};
-    rtps::MessageReceiver receiver{receiverGuidPrefix};
+    rtps::ParticipantId_t someID = 0;
+    rtps::Participant part{receiverGuidPrefix, someID};
+    rtps::MessageReceiver* p_receiver;
 
 
     void SetUp() override{
-        receiver.addReader(&anotherReaderMock);
-        receiver.addReader(&correctReaderMock);
+        part.addReader(&anotherReaderMock);
+        part.addReader(&correctReaderMock);
+
+        p_receiver = part.getMessageReceiver();
 
         rtps::MessageFactory::addHeader(validHeartbeatMsgBufferMock, somePrefix);
         rtps::MessageFactory::addHeartbeat(validHeartbeatMsgBufferMock, rtps::ENTITYID_SEDP_BUILTIN_PUBLICATIONS_WRITER,
@@ -166,5 +177,5 @@ TEST_F(AMessageReceiverReceivedHeartbeatSubmessage, processMessage_callsCorrectF
     auto size = (rtps::DataSize_t) validHeartbeatMsgBufferMock.buffer.size();
 
     EXPECT_CALL(correctReaderMock, onNewHeartbeat(_,_)).Times(1);
-    receiver.processMessage(data, size);
+    p_receiver->processMessage(data, size);
 }

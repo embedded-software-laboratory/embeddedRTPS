@@ -64,6 +64,7 @@ namespace rtps{
             PID_GROUP_ENTITYID                      = 0x0053,
             PID_BUILTIN_ENDPOINT_SET                = 0x0058,
             PID_PROPERTY_LIST                       = 0x0059,
+            PID_ENDPOINT_GUID                       = 0x005a,
             PID_TYPE_MAX_SIZE_SERIALIZED            = 0x0060,
             PID_ENTITY_NAME                         = 0x0062,
             PID_KEY_HASH                            = 0x0070,

@@ -3,6 +3,7 @@
  * Author: Andreas Wüstenberg (andreas.wuestenberg@rwth-aachen.de)
  */
 
+#include <rtps/entities/ReaderProxy.h>
 #include "rtps/entities/StatelessWriter.h"
 
 #include "lwip/tcpip.h"
@@ -14,24 +15,27 @@
 
 namespace rtps{
 
-    void StatelessWriter::init(TopicKind_t topicKind, ThreadPool* threadPool,
-                          GuidPrefix_t guidPrefix, EntityId_t entityId, UdpDriver& driver, Ip4Port_t sendPort){
-        mp_threadPool = threadPool;
-        m_transport = &driver;
-        m_guidPrefix = guidPrefix;
-        m_entityId = entityId;
-        m_topicKind = topicKind;
-        m_packetInfo.srcPort = sendPort;
+    bool StatelessWriter::init(TopicKind_t topicKind, ThreadPool* threadPool,
+                               GuidPrefix_t guidPrefix, EntityId_t entityId, UdpDriver& driver, Ip4Port_t sendPort){
         if (sys_mutex_new(&m_mutex) != ERR_OK) {
             printf("Failed to create mutex \n");
-        }
-    }
-
-    bool StatelessWriter::addNewMatchedReader(ReaderLocator loc){
-        if(m_readerLocator.entityId != ENTITYID_UNKNOWN){
             return false;
         }
-        m_readerLocator = loc;
+        mp_threadPool = threadPool;
+        m_transport = &driver;
+        m_guid.prefix = guidPrefix;
+        m_guid.entityId = entityId;
+        m_topicKind = topicKind;
+        m_packetInfo.srcPort = sendPort;
+
+        return true;
+    }
+
+    bool StatelessWriter::addNewMatchedReader(const ReaderProxy& newProxy){
+        if(m_readerProxy.remoteReaderGuid.entityId != ENTITYID_UNKNOWN){
+            return false;
+        }
+        m_readerProxy = newProxy;
         return true;
     }
 
@@ -73,14 +77,14 @@ namespace rtps{
     }
 
     void StatelessWriter::progress(){
-        if(m_readerLocator.entityId == ENTITYID_UNKNOWN){ // TODO UNKNOWN might be okay. Detect not-set locator in another way
+        if(m_readerProxy.remoteReaderGuid.entityId == ENTITYID_UNKNOWN){ // TODO UNKNOWN might be okay. Detect not-set locator in another way
             return;
         }
 
         PacketInfo info;
         info.srcPort = m_packetInfo.srcPort;
 
-        MessageFactory::addHeader(info.buffer, m_guidPrefix);
+        MessageFactory::addHeader(info.buffer, m_guid.prefix);
         MessageFactory::addSubMessageTimeStamp(info.buffer);
 
         {
@@ -90,12 +94,12 @@ namespace rtps{
                 printf("StatelessWriter: Couldn't get a new CacheChange\n");
                 return;
             }
-            MessageFactory::addSubMessageData(info.buffer, next->data, false, next->sequenceNumber, m_entityId,
-                                              m_readerLocator.entityId); // TODO
+            MessageFactory::addSubMessageData(info.buffer, next->data, false, next->sequenceNumber, m_guid.entityId,
+                                              m_readerProxy.remoteReaderGuid.entityId); // TODO
         }
 
         // Just usable for IPv4
-        const Locator& locator = m_readerLocator.locator;
+        const Locator& locator = m_readerProxy.remoteLocator;
 
         info.destAddr = locator.getIp4Address();
         info.destPort = (Ip4Port_t) locator.port;

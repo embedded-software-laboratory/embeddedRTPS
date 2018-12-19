@@ -3,6 +3,7 @@
  * Author: Andreas Wüstenberg (andreas.wuestenberg@rwth-aachen.de)
  */
 
+#include <rtps/entities/Participant.h>
 #include "rtps/messages/MessageReceiver.h"
 
 #include "rtps/entities/Reader.h"
@@ -11,8 +12,8 @@
 
 using rtps::MessageReceiver;
 
-MessageReceiver::MessageReceiver(GuidPrefix_t partGuid)
-: ourGuid(partGuid){
+MessageReceiver::MessageReceiver(Participant* part)
+: mp_part(part){
 
 }
 
@@ -21,40 +22,6 @@ void MessageReceiver::reset(){
     sourceVersion = PROTOCOLVERSION;
     sourceVendor = VENDOR_UNKNOWN;
     haveTimeStamp = false;
-}
-
-
-bool MessageReceiver::addReader(Reader* pReader){
-    if(pReader == nullptr){
-        return false;
-    }
-    if(m_numReaders != m_readers.size()){
-        m_readers[m_numReaders++] = pReader;
-        return true;
-    }else{
-        return false;
-    }
-}
-
-bool MessageReceiver::addWriter(Writer* pWriter){
-    if(pWriter == nullptr){
-        return false;
-    }
-    if(m_numWriters != m_writers.size()){
-        m_writers[m_numWriters++] = pWriter;
-        return true;
-    }else{
-        return false;
-    }
-}
-
-void MessageReceiver::addBuiltInEndpoints(BuiltInEndpoints& endpoints){
-    addWriter(endpoints.spdpWriter);
-    addReader(endpoints.spdpReader);
-    addWriter(endpoints.sedpPubWriter);
-    addReader(endpoints.sedpPubReader);
-    addWriter(endpoints.sedpSubWriter);
-    addReader(endpoints.sedpSubReader);
 }
 
 bool MessageReceiver::processMessage(const uint8_t* data, DataSize_t size){
@@ -80,7 +47,7 @@ bool MessageReceiver::processHeader(MessageProcessingInfo& msgInfo){
 
     auto header = reinterpret_cast<const Header*>(msgInfo.getPointerToPos());
 
-    if(header->guidPrefix.id == ourGuid.id){
+    if(header->guidPrefix.id == mp_part->guidPrefix.id){
         return false; // Don't process our own packet
     }
 
@@ -111,6 +78,10 @@ bool MessageReceiver::processSubMessage(MessageProcessingInfo& msgInfo){
             printf("Processing Heartbeat submessage\n");
             success = processHeartbeatSubmessage(msgInfo);
             break;
+        case SubmessageKind::INFO_DST:
+            printf("Info_DST submessage not relevant.");
+            success = false; // Not relevant
+            break;
         default:
             printf("Submessage of type %u currently not supported. Skipping..\n", static_cast<uint8_t>(submsgHeader->submessageId));
             success = false;
@@ -131,30 +102,25 @@ bool MessageReceiver::processDataSubmessage(MessageProcessingInfo &msgInfo){
     //bool isLittleEndian = (submsgHeader->flags & SubMessageFlag::FLAG_ENDIANESS);
     //bool hasInlineQos = (submsgHeader->flags & SubMessageFlag::FLAG_INLINE_QOS);
 
-    for(uint16_t i=0; i<m_numReaders; ++i){
-        static_assert(sizeof(i) > sizeof(m_numReaders), "Size of loop variable not sufficient");
-        Reader& currentReader = *m_readers[i];
-        if(currentReader.m_guid.entityId == submsgData->readerId){
-            Guid writerGuid{sourceGuidPrefix, submsgData->writerId};
-            ReaderCacheChange change{ChangeKind_t::ALIVE, writerGuid, submsgData->writerSN, serializedData, size};
-            currentReader.newChange(change);
-            break;
-        }
+    Reader* reader = mp_part->getReader(submsgData->readerId);
+    if(reader != nullptr){
+        Guid writerGuid{sourceGuidPrefix, submsgData->writerId};
+        ReaderCacheChange change{ChangeKind_t::ALIVE, writerGuid, submsgData->writerSN, serializedData, size};
+        reader->newChange(change);
     }
+
     return true;
 }
 
 bool MessageReceiver::processHeartbeatSubmessage(MessageProcessingInfo &msgInfo){
     auto submsgHB = reinterpret_cast<const SubmessageHeartbeat*>(msgInfo.getPointerToPos());
 
-    for(uint8_t i=0; i < m_numReaders; ++i){
-        Reader& reader = *m_readers[i];
-        if(reader.m_guid.entityId == submsgHB->readerId){
-            reader.onNewHeartbeat(*submsgHB, sourceGuidPrefix);
-            return true;
-        }
+    Reader* reader = mp_part->getReader(submsgHB->readerId);
+    if(reader != nullptr){
+        reader->onNewHeartbeat(*submsgHB, sourceGuidPrefix);
+        return true;
+    }else{
+        return false;
     }
-
-    return false;
 }
 

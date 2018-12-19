@@ -14,14 +14,17 @@ namespace rtps{
         Guid remoteWriterGuid;
         SequenceNumber_t expectedSN;
         Count_t ackNackCount;
+        Count_t hbCount;
         Locator locator;
 
         void init(Guid& guid){
             remoteWriterGuid = guid;
             expectedSN = SequenceNumber_t{0,1};
             ackNackCount.value = 0;
+            hbCount.value = 0;
         }
 
+        // For now, we don't store any packets, so we just request all starting from the next expected
         SequenceNumberSet getMissing(const SequenceNumber_t& /*firstAvail*/, const SequenceNumber_t& /*lastAvail*/){
             SequenceNumberSet set;
             set.base = expectedSN;

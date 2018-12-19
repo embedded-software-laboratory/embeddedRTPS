@@ -22,6 +22,7 @@ void StatelessReader::registerCallback(ddsReaderCallback_fp cb, void* callee){
     }
 }
 
-void StatelessReader::onNewHeartbeat(const SubmessageHeartbeat&, const GuidPrefix_t&){
+bool StatelessReader::onNewHeartbeat(const SubmessageHeartbeat&, const GuidPrefix_t&){
     // nothing to do
+    return false;
 }

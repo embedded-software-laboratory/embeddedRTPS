@@ -23,7 +23,7 @@ namespace rtps{
         void registerCallback(ddsReaderCallback_fp cb, void* callee) override;
         WriterProxy* createWriterProxy(Guid guid);
         void removeWriter(const Guid& guid);
-        void onNewHeartbeat(const SubmessageHeartbeat& msg, const GuidPrefix_t& remotePrefix) override;
+        bool onNewHeartbeat(const SubmessageHeartbeat& msg, const GuidPrefix_t& remotePrefix) override;
 
     private:
         struct Element{

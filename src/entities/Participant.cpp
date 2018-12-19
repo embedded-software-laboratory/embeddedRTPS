@@ -12,12 +12,12 @@
 using rtps::Participant;
 
 Participant::Participant() : guidPrefix(GUIDPREFIX_UNKNOWN), participantId(PARTICIPANT_ID_INVALID),
-                             receiver(GUIDPREFIX_UNKNOWN){
+                             m_receiver(this){
 
 }
 Participant::Participant(const GuidPrefix_t& guidPrefix, ParticipantId_t participantId)
         : guidPrefix(guidPrefix), participantId(participantId),
-          receiver(guidPrefix){
+          m_receiver(this){
 
 }
 
@@ -42,29 +42,99 @@ std::array<uint8_t, 3> Participant::getNextUserEntityKey(){
     return result;
 }
 
-rtps::Writer* Participant::addUserWriter(Writer* pWriter){
-    if(receiver.addWriter(pWriter)){
+rtps::Writer* Participant::addWriter(Writer* pWriter){
+    if(pWriter != nullptr && m_numWriters != m_writers.size()){
+        m_writers[m_numWriters++] = pWriter;
         return pWriter;
     }else{
         return nullptr;
     }
 }
 
-rtps::Reader* Participant::addUserReader(Reader* pReader){
-    if(receiver.addReader(pReader)){
+rtps::Reader* Participant::addReader(Reader* pReader){
+    if(pReader != nullptr && m_numReaders != m_readers.size()){
+        m_readers[m_numReaders++] = pReader;
         return pReader;
     }else{
         return nullptr;
     }
 }
 
+
+rtps::Writer* Participant::getWriter(EntityId_t id) const{
+    for(uint8_t i=0; i < m_numWriters; ++i){
+        if(m_writers[i]->m_guid.entityId == id){
+            return m_writers[i];
+        }
+    }
+    return nullptr;
+}
+
+rtps::Reader* Participant::getReader(EntityId_t id) const{
+    for(uint8_t i=0; i < m_numReaders; ++i){
+        if(m_readers[i]->m_guid.entityId == id){
+            return m_readers[i];
+        }
+    }
+    return nullptr;
+}
+
+
+rtps::Writer* Participant::getWriter(const char* topic, const char* type){
+    for(uint8_t i=0; i < m_numWriters; ++i){
+        if((strcmp(m_writers[i]->topicName, topic) == 0) &&
+           (strcmp(m_writers[i]->typeName, type) == 0)){
+            return m_writers[i];
+        }
+    }
+    return nullptr;
+}
+
+rtps::Reader* Participant::getReader(const char* topic, const char* type){
+    for(uint8_t i=0; i < m_numReaders; ++i){
+        if((strcmp(m_readers[i]->topicName, topic) == 0) &&
+           (strcmp(m_readers[i]->typeName, type) == 0)){
+            return m_readers[i];
+        }
+    }
+    return nullptr;
+}
+
+bool Participant::addNewRemoteParticipant(ParticipantProxyData& remotePart){
+    for(auto& partProxy : m_foundParticipants) {
+        if (partProxy.m_guid.prefix.id == GUIDPREFIX_UNKNOWN.id) {
+
+            return true;
+        }
+    }
+    return false;
+}
+
+const rtps::ParticipantProxyData* Participant::findRemoteParticipant(const GuidPrefix_t& prefix) const{
+    for(auto& partProxy : m_foundParticipants){
+        if(partProxy.m_guid.prefix == prefix){
+            return &partProxy;
+        }
+    }
+    return nullptr;
+}
+
+rtps::MessageReceiver* Participant::getMessageReceiver(){
+    return &m_receiver;
+}
+
 void Participant::addBuiltInEndpoints(BuiltInEndpoints& endpoints){
-    receiver.addBuiltInEndpoints(endpoints);
+    addWriter(endpoints.spdpWriter);
+    addReader(endpoints.spdpReader);
+    addWriter(endpoints.sedpPubWriter);
+    addReader(endpoints.sedpPubReader);
+    addWriter(endpoints.sedpSubWriter);
+    addReader(endpoints.sedpSubReader);
 
     m_spdpAgent.init(*this, endpoints);
     m_spdpAgent.start();
 }
 
 void Participant::newMessage(const uint8_t* data, DataSize_t size){
-    receiver.processMessage(data, size);
+    m_receiver.processMessage(data, size);
 }

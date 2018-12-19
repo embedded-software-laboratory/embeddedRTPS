@@ -14,6 +14,7 @@
 namespace rtps {
     class Reader;
     class Writer;
+    class Participant;
 
     class MessageReceiver {
     public:
@@ -22,13 +23,9 @@ namespace rtps {
         VendorId_t sourceVendor = VENDOR_UNKNOWN;
         bool haveTimeStamp = false;
 
-        explicit MessageReceiver(GuidPrefix_t partGuid);
+        explicit MessageReceiver(Participant* part);
 
         void reset();
-
-        bool addReader(Reader* reader); // for new CacheChanges
-        bool addWriter(Writer* writer); // for acks etc.
-        void addBuiltInEndpoints(BuiltInEndpoints& endpoints);
 
         bool processMessage(const uint8_t* data, DataSize_t size);
 
@@ -52,12 +49,7 @@ namespace rtps {
             }
         };
 
-        std::array<Writer*, Config::NUM_WRITERS_PER_PARTICIPANT> m_writers{nullptr};
-        uint8_t m_numWriters = 0;
-        std::array<Reader*, Config::NUM_READERS_PER_PARTICIPANT> m_readers{nullptr};
-        uint8_t m_numReaders = 0;
-
-        GuidPrefix_t ourGuid;
+        Participant* mp_part;
 
         // TODO make msgInfo a member
         // This probably make processing faster, as no parameter needs to be passed around

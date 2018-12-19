@@ -61,7 +61,7 @@ void StatefullReader::removeWriter(const Guid& guid){
     }
 }
 
-void StatefullReader::onNewHeartbeat(const SubmessageHeartbeat& msg, const GuidPrefix_t& remotePartGuidPrefix){
+bool StatefullReader::onNewHeartbeat(const SubmessageHeartbeat& msg, const GuidPrefix_t& remotePartGuidPrefix){
     Lock lock(mutex);
     PacketInfo info;
     info.srcPort = m_packetInfo.srcPort;
@@ -74,10 +74,11 @@ void StatefullReader::onNewHeartbeat(const SubmessageHeartbeat& msg, const GuidP
         }
     }
 
-    if(proxy == nullptr){
-        return;
+    if(proxy == nullptr || msg.count.value <= proxy->hbCount.value){
+        return false;
     }
 
+    proxy->hbCount.value = msg.count.value;
     info.destAddr = proxy->locator.getIp4Address();
     info.destPort = proxy->locator.port;
     rtps::MessageFactory::addHeader(info.buffer, m_guid.prefix);
@@ -85,4 +86,5 @@ void StatefullReader::onNewHeartbeat(const SubmessageHeartbeat& msg, const GuidP
                                      msg.lastSN), proxy->getNextCount());
 
     m_transport->sendFunction(info);
+    return true;
 }

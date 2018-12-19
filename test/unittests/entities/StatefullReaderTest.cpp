@@ -7,6 +7,7 @@
 #include <gmock/gmock.h>
 
 #include "rtps/entities/StatefullReader.h"
+#include "rtps/messages/MessageTypes.h"
 #include "rtps/rtps.h"
 
 using namespace rtps;
@@ -68,7 +69,7 @@ TEST_F(AStatefullReader, removeWriterProxy_deletesDependingOnGuid){
     EXPECT_EQ(proxy2, proxy3);
 }
 
-class AStatefullReaderWithNewWriterProxy : public ::testing::Test{
+class AStatefullReaderWithWriterProxy : public ::testing::Test{
 protected:
     const ParticipantId_t arbitraryParticipantId = 1;
     const Ip4Port_t srcPort = getUserUnicastPort(arbitraryParticipantId);
@@ -78,7 +79,8 @@ protected:
     constexpr static DataSize_t dataSize = 5;
     uint8_t someData[dataSize] = {0};
     SequenceNumber_t nextSN{0,1};
-    rtps::Guid someGuid = {{1,2,3,4,5,6,7,8,9,10}, {{1,2,3}, rtps::EntityKind_t::USER_DEFINED_WRITER_WITHOUT_KEY}};
+    rtps::Guid someGuid = {{1,2,3,4,5,6,7,8,9,10,11}, {{1,2,3}, rtps::EntityKind_t::USER_DEFINED_WRITER_WITHOUT_KEY}};
+    rtps::Guid unusedGuid = {{1}, {{1}, rtps::EntityKind_t::USER_DEFINED_WRITER_WITHOUT_KEY}};
     ReaderCacheChange firstCacheChange{ChangeKind_t::ALIVE, someGuid, nextSN, someData, dataSize};
     ReaderCacheChange secondCacheChange{ChangeKind_t::ALIVE, someGuid, ++nextSN, someData, dataSize};
     rtps::WriterProxy* proxy;
@@ -91,7 +93,7 @@ protected:
     }
 };
 
-TEST_F(AStatefullReaderWithNewWriterProxy, newChange_dropsPacketIfNotExpectedSN){
+TEST_F(AStatefullReaderWithWriterProxy, newChange_dropsPacketIfNotExpectedSN){
     ReaderCacheChange unexpectedChange{ChangeKind_t::ALIVE, someGuid, ++nextSN, someData, dataSize};
     bool success = false;
     reader.registerCallback(callback, &success);
@@ -101,7 +103,7 @@ TEST_F(AStatefullReaderWithNewWriterProxy, newChange_dropsPacketIfNotExpectedSN)
     EXPECT_FALSE(success);
 }
 
-TEST_F(AStatefullReaderWithNewWriterProxy, newChange_acceptsChangesInCorrectOrder){
+TEST_F(AStatefullReaderWithWriterProxy, newChange_acceptsChangesInCorrectOrder){
     bool success = false;
     reader.registerCallback(callback, &success);
 
@@ -112,3 +114,10 @@ TEST_F(AStatefullReaderWithNewWriterProxy, newChange_acceptsChangesInCorrectOrde
     EXPECT_TRUE(success);
 }
 
+TEST_F(AStatefullReaderWithWriterProxy, DISABLED_onNewHeartbeat_failsIfWriterNotFound){
+    // TODO
+}
+
+TEST_F(AStatefullReaderWithWriterProxy, DISABLED_onNewHeartbeat_failsIfAlreadyReceivedCount){
+    // TODO
+}

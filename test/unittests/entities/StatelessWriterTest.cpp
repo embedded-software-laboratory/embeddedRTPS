@@ -63,7 +63,7 @@ TEST_F(EmptyRTPSWriter, newChange_SetCorrectValues){
     EXPECT_THAT(change->data, PBufContains(data, size));
 }
 
-TEST_F(EmptyRTPSWriter, newChange_DoesAllocateExactSize){
+TEST_F(EmptyRTPSWriter, newChange_AllocatesExactSize){
     const DataSize_t size = 5;
     uint8_t data[size] = {};
 

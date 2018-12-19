@@ -28,7 +28,6 @@ namespace rtps{
 
     private:
         Participant* mp_participant = nullptr;
-        std::array<ParticipantProxyData, Config::SPDP_MAX_NUMBER_FOUND_PARTICIPANTS> m_foundParticipants;
         BuiltInEndpoints m_buildInEndpoints;
         bool m_running = false;
         std::array<uint8_t, 400> m_outputBuffer{}; // TODO check required size
