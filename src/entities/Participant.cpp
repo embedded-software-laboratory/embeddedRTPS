@@ -108,7 +108,7 @@ rtps::Reader* Participant::getReader(const char* topic, const char* type) const{
 bool Participant::addNewRemoteParticipant(ParticipantProxyData& remotePart){
     for(auto& partProxy : m_foundParticipants) {
         if (partProxy.m_guid.prefix.id == GUIDPREFIX_UNKNOWN.id) {
-
+            // TODO add. I think we don't need that for now
             return true;
         }
     }

@@ -5,6 +5,7 @@
 
 #include "rtps/discovery/SEDPAgent.h"
 #include "rtps/entities/Reader.h"
+#include "rtps/entities/Writer.h"
 #include "rtps/entities/Participant.h"
 #include "rtps/discovery/BuiltInTopicData.h"
 #include "rtps/messages/MessageTypes.h"
@@ -24,20 +25,20 @@ void SEDPAgent::init(Participant* part, BuiltInEndpoints endpoints){
 
 void SEDPAgent::receiveCallbackPublisher(void* callee, ReaderCacheChange& cacheChange){
     auto agent = static_cast<SEDPAgent*>(callee);
-    agent->newPublisher(cacheChange);
+    agent->onNewPublisher(cacheChange);
 }
 
 void SEDPAgent::receiveCallbackSubscriber(void* callee, ReaderCacheChange& cacheChange){
     auto agent = static_cast<SEDPAgent*>(callee);
-    agent->newSubscriber(cacheChange);
+    agent->onNewSubscriber(cacheChange);
 }
 
-void SEDPAgent::newPublisher(ReaderCacheChange& /*change*/){
+void SEDPAgent::onNewPublisher(ReaderCacheChange & /*change*/){
     // For now, reader don't care about matches
     return;
 }
 
-void SEDPAgent::newSubscriber(ReaderCacheChange& change){
+void SEDPAgent::onNewSubscriber(ReaderCacheChange &change){
     Lock lock{m_mutex};
 
     if(!change.copyInto(m_buffer, sizeof(m_buffer)/sizeof(m_buffer[0]))){
@@ -53,4 +54,12 @@ void SEDPAgent::newSubscriber(ReaderCacheChange& change){
         // TODO check policies
         writer->addNewMatchedReader(ReaderProxy{topicData.endpointGuid, topicData.unicastLocator});
     }
+}
+
+void SEDPAgent::addWriter(Writer& writer){
+
+}
+
+void SEDPAgent::addReader(Reader& reader){
+
 }

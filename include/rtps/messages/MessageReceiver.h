@@ -61,8 +61,9 @@ namespace rtps {
          */
         bool processHeader(MessageProcessingInfo& msgInfo);
         bool processSubMessage(MessageProcessingInfo& msgInfo);
-        bool processDataSubmessage(MessageProcessingInfo &msgInfo);
-        bool processHeartbeatSubmessage(MessageProcessingInfo &msgInfo);
+        bool processDataSubmessage(MessageProcessingInfo& msgInfo);
+        bool processHeartbeatSubmessage(MessageProcessingInfo& msgInfo);
+        bool processAckNackSubmessage(MessageProcessingInfo& msgInfo);
     };
 }
 

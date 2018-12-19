@@ -29,7 +29,7 @@ namespace rtps{
         Participant(Participant&&) = delete;
         Participant& operator=(const Participant&) = delete;
         Participant& operator=(Participant&&) = delete;
-        
+
         ~Participant();
         bool isValid();
 
@@ -64,6 +64,7 @@ namespace rtps{
         uint8_t m_numWriters = 0;
         std::array<Reader*, Config::NUM_READERS_PER_PARTICIPANT> m_readers{nullptr};
         uint8_t m_numReaders = 0;
+        const bool m_pushMode = false; // No other mode supported atm
 
         std::array<ParticipantProxyData, Config::SPDP_MAX_NUMBER_FOUND_PARTICIPANTS> m_foundParticipants;
 

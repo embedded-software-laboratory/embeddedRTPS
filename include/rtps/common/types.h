@@ -20,7 +20,6 @@ namespace rtps{
     typedef uint16_t Ip4Port_t;
     typedef uint16_t DataSize_t;
     typedef int8_t ParticipantId_t; // With UDP only 120 possible
-    typedef uint32_t BuiltinEndpointSet_t;
 
     enum class EntityKind_t : uint8_t{
         USER_DEFINED_UNKNOWN            = 0x00,
@@ -130,23 +129,18 @@ namespace rtps{
 
     const uint32_t SNS_NUM_BITS = 32;
     struct SequenceNumberSet{
-        SequenceNumber_t base;
-        const uint32_t numBits = SNS_NUM_BITS;
-        std::array<uint32_t, (SNS_NUM_BITS)/32> bitMap;
-
-        SequenceNumberSet& operator=(const SequenceNumberSet& other){
-            this->base = other.base;
-            this->bitMap = other.bitMap;
-            return *this;
-        }
+        SequenceNumber_t base = {0,0};
+        // Cannot be static because of packed
+        uint32_t numBits = SNS_NUM_BITS; // TODO was for testing purposes, just forgot to chang back to uint32_t
+        std::array<uint32_t, 8> bitMap{};
 
         // We only need 1 byte because atm we don't store packets.
-        bool isSet(uint8_t bit){
+        bool isSet(uint32_t bit) const{
             if(bit >= SNS_NUM_BITS){
                 return true;
             }
-            const uint8_t bucket = bit / static_cast<uint8_t>(32);
-            const uint8_t pos = bit % static_cast<uint8_t>(32);
+            const auto bucket = static_cast<uint8_t>(bit / 32);
+            const auto pos = static_cast<uint8_t>(bit % 32);
             return (bitMap[bucket] & (1 << pos)) != 0;
         }
     } __attribute((packed));

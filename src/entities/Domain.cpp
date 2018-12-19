@@ -71,15 +71,23 @@ void Domain::addDefaultWriterAndReader(Participant& part) {
     // SEDP
     StatefullReader& sedpPubReader = m_statefullReaders[m_numStatefullReaders++];
     StatefullReader& sedpSubReader = m_statefullReaders[m_numStatefullReaders++];
+    StatefullWriter& sedpPubWriter = m_statefullWriters[m_numStatefullWriters++];
+    StatefullWriter& sedpSubWriter = m_statefullWriters[m_numStatefullWriters++];
+
 
     sedpPubReader.init({part.m_guidPrefix, ENTITYID_SEDP_BUILTIN_PUBLICATIONS_READER}, m_transport, getBuiltInUnicastPort(part.m_participantId));
     sedpSubReader.init({part.m_guidPrefix, ENTITYID_SEDP_BUILTIN_SUBSCRIPTIONS_READER}, m_transport, getBuiltInUnicastPort(part.m_participantId));
+    // TODO Check if no_key
+    sedpPubWriter.init(TopicKind_t::NO_KEY, &m_threadPool, {part.m_guidPrefix, ENTITYID_SEDP_BUILTIN_PUBLICATIONS_WRITER}, m_transport, getBuiltInUnicastPort(part.m_participantId));
+    sedpSubWriter.init(TopicKind_t::NO_KEY, &m_threadPool, {part.m_guidPrefix, ENTITYID_SEDP_BUILTIN_SUBSCRIPTIONS_WRITER}, m_transport, getBuiltInUnicastPort(part.m_participantId));
 
     BuiltInEndpoints endpoints{};
     endpoints.spdpWriter = &spdpWriter;
     endpoints.spdpReader = &spdpReader;
     endpoints.sedpPubReader = &sedpPubReader;
     endpoints.sedpSubReader = &sedpSubReader;
+    endpoints.sedpPubWriter = &sedpPubWriter;
+    endpoints.sedpSubWriter = &sedpSubWriter;
 
     part.addBuiltInEndpoints(endpoints);
 }

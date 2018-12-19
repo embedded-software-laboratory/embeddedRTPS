@@ -74,6 +74,10 @@ namespace rtps{
         }
     }
 
+    void StatelessWriter::onNewAckNack(const SubmessageAckNack& /*msg*/){
+        // Too lazy to respond
+    }
+
     bool StatelessWriter::isIrrelevant(ChangeKind_t kind) const{
         return kind == ChangeKind_t::INVALID || (m_topicKind == TopicKind_t::NO_KEY && kind != ChangeKind_t::ALIVE);
     }

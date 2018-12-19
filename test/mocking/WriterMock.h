@@ -17,5 +17,6 @@ public:
     MOCK_METHOD0(progress, void());
     MOCK_METHOD3(newChange, const rtps::CacheChange*(rtps::ChangeKind_t, const uint8_t*, rtps::DataSize_t));
     MOCK_METHOD0(unsentChangesReset, void());
+    MOCK_METHOD1(onNewAckNack, void(const rtps::SubmessageAckNack&));
 };
 #endif //RTPS_WRITERMOCK_H

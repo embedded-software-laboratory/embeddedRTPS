@@ -10,6 +10,7 @@
 #include "rtps/entities/Writer.h"
 #include "rtps/entities/Reader.h"
 #include "lwip/sys.h"
+#include "rtps/discovery/ParticipantProxyData.h"
 
 using rtps::SPDPAgent;
 using rtps::SMElement::ParameterId;
@@ -108,10 +109,20 @@ void SPDPAgent::handleSPDPPackage(ReaderCacheChange& cacheChange){
                 return;
             }
 
-            if(mp_participant->addNewRemoteParticipant(m_proxyDataBuffer)){
+            if(mp_participant->addNewRemoteParticipant(m_proxyDataBuffer)) {
                 // Prepare builtin endpoints for SEDP
-                WriterProxy* proxy = m_buildInEndpoints.sedpPubReader->createWriterProxy({m_proxyDataBuffer.m_guid.prefix, ENTITYID_SEDP_BUILTIN_PUBLICATIONS_WRITER});
-                proxy->locator = m_proxyDataBuffer.m_metatrafficMulticastLocatorList[0];
+                if (m_proxyDataBuffer.hasPublicationWriter()){
+                    WriterProxy *proxy = m_buildInEndpoints.sedpPubReader->createWriterProxy(
+                            {m_proxyDataBuffer.m_guid.prefix, ENTITYID_SEDP_BUILTIN_PUBLICATIONS_WRITER});
+                    proxy->locator = m_proxyDataBuffer.m_metatrafficMulticastLocatorList[0];
+                }
+
+                if (m_proxyDataBuffer.hasSubscriptionWriter()){
+                    WriterProxy *proxy = m_buildInEndpoints.sedpSubReader->createWriterProxy(
+                            {m_proxyDataBuffer.m_guid.prefix, ENTITYID_SEDP_BUILTIN_SUBSCRIPTIONS_READER});
+                    proxy->locator = m_proxyDataBuffer.m_metatrafficMulticastLocatorList[0];
+                }
+
                 // For now, the readers don't care about remotes
 
                 printf("Added new participant with guid: ");

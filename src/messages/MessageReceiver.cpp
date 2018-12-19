@@ -70,6 +70,10 @@ bool MessageReceiver::processSubMessage(MessageProcessingInfo& msgInfo){
 
     bool success;
     switch(submsgHeader->submessageId){
+        case SubmessageKind::ACKNACK:
+            printf("Processing AckNack submessage\n");
+            success = processAckNackSubmessage(msgInfo);
+            break;
         case SubmessageKind::DATA:
             printf("Processing Data submessage\n");
             success = processDataSubmessage(msgInfo);
@@ -90,7 +94,7 @@ bool MessageReceiver::processSubMessage(MessageProcessingInfo& msgInfo){
     return success;
 }
 
-bool MessageReceiver::processDataSubmessage(MessageProcessingInfo &msgInfo){
+bool MessageReceiver::processDataSubmessage(MessageProcessingInfo& msgInfo){
     auto submsgData = reinterpret_cast<const SubmessageData*>(msgInfo.getPointerToPos());
     const uint8_t* serializedData = msgInfo.getPointerToPos() + sizeof(SubmessageData);
     const DataSize_t size = msgInfo.size - (msgInfo.nextPos + sizeof(SubmessageData));
@@ -112,12 +116,23 @@ bool MessageReceiver::processDataSubmessage(MessageProcessingInfo &msgInfo){
     return true;
 }
 
-bool MessageReceiver::processHeartbeatSubmessage(MessageProcessingInfo &msgInfo){
+bool MessageReceiver::processHeartbeatSubmessage(MessageProcessingInfo& msgInfo){
     auto submsgHB = reinterpret_cast<const SubmessageHeartbeat*>(msgInfo.getPointerToPos());
 
     Reader* reader = mp_part->getReader(submsgHB->readerId);
     if(reader != nullptr){
         reader->onNewHeartbeat(*submsgHB, sourceGuidPrefix);
+        return true;
+    }else{
+        return false;
+    }
+}
+
+bool MessageReceiver::processAckNackSubmessage(MessageProcessingInfo& msgInfo){
+    auto submsgAckNack = reinterpret_cast<const SubmessageAckNack*>(msgInfo.getPointerToPos());
+    Writer* writer = mp_part->getWriter(submsgAckNack->writerId);
+    if(writer != nullptr){
+        writer->onNewAckNack(*submsgAckNack);
         return true;
     }else{
         return false;

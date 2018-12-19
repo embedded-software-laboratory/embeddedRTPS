@@ -21,6 +21,7 @@ namespace rtps {
         const uint8_t NUM_STATELESS_WRITERS = 10;
         const uint8_t NUM_STATELESS_READERS = 10;
         const uint8_t NUM_STATEFULL_READERS = 10;
+        const uint8_t NUM_STATEFULL_WRITERS = 10;
         const uint8_t MAX_NUM_PARTICIPANTS = 3;
         const uint8_t NUM_WRITERS_PER_PARTICIPANT = 10;
         const uint8_t NUM_READERS_PER_PARTICIPANT = 10;

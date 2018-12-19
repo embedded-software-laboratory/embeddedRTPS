@@ -13,6 +13,14 @@ namespace rtps{
     struct ReaderProxy{
         Guid remoteReaderGuid;
         Locator remoteLocator;
+        SequenceNumberSet ackNackSet;
+        Count_t ackNackCount;
+
+        ReaderProxy(){};
+        ReaderProxy(const Guid& guid, const Locator& loc)
+            : remoteReaderGuid(guid), remoteLocator(loc),
+              ackNackSet(), ackNackCount(){};
+
     };
 }
 

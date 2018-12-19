@@ -9,6 +9,7 @@
 #include "rtps/config.h"
 #include "rtps/entities/Participant.h"
 #include "rtps/entities/StatefullReader.h"
+#include "rtps/entities/StatefullWriter.h"
 #include "rtps/entities/StatelessReader.h"
 #include "rtps/entities/StatelessWriter.h"
 #include "rtps/storages/PBufWrapper.h"
@@ -41,6 +42,8 @@ namespace rtps{
         uint8_t m_numStatelessReaders = 0;
         std::array<StatefullReader, Config::NUM_STATEFULL_READERS> m_statefullReaders;
         uint8_t m_numStatefullReaders = 0;
+        std::array<StatefullWriter, Config::NUM_STATEFULL_WRITERS> m_statefullWriters;
+        uint8_t m_numStatefullWriters = 0;
 
         GuidPrefix_t generateGuidPrefix(ParticipantId_t id) const;
         void addDefaultWriterAndReader(Participant& part);
