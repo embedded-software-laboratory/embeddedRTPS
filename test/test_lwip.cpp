@@ -73,10 +73,7 @@ TEST_F(LwIp, SendSelfChainedPBufs){
     ip4_addr addr;
     LWIP_PORT_INIT_IPADDR(&addr); // self
 
-    rtps::UdpDriver driver;
-    LOCK_TCPIP_CORE();
-    const rtps::UdpConnection* conn = driver.createUdpConnection(port, receiveCallback, nullptr);
-    UNLOCK_TCPIP_CORE();
+    rtps::UdpDriver driver{receiveCallback, nullptr};
 
 
     pbuf* first = pbuf_alloc(PBUF_TRANSPORT, 8, PBUF_POOL);
@@ -90,10 +87,13 @@ TEST_F(LwIp, SendSelfChainedPBufs){
 
     std::memcpy(first->payload, data0, 8);
     std::memcpy(second->payload, data1, 8);
+    rtps::PacketInfo packet;
+    packet.destPort = port;
+    packet.srcPort = port;
+    packet.destAddr = addr;
+    packet.buffer = rtps::PBufWrapper(first);
+    driver.sendFunction(packet);
 
-    LOCK_TCPIP_CORE();
-    driver.sendPacket(*conn, addr, port, *first);
-    UNLOCK_TCPIP_CORE();
     sys_msleep(50);
     EXPECT_TRUE(callbackFinished);
 }
@@ -130,23 +130,26 @@ void receiveCallback2(void* arg, udp_pcb*, pbuf*, const ip_addr_t*, uint16_t){
  */
 TEST_F(LwIp, ConnectionContainsInputPort){
     bool called = false;
-    //const uint16_t srcPort = 7050;
+    const uint16_t srcPort = 7050;
     const uint16_t destPort = 7060;
     ip4_addr addr;
     LWIP_PORT_INIT_IPADDR(&addr); // self
 
-    rtps::UdpDriver transport;
-    LOCK_TCPIP_CORE();
-    //const rtps::UdpConnection* conn = transport.createUdpConnection(srcPort, receiveCallback2, &called);
-    const rtps::UdpConnection* conn = transport.createUdpConnection(destPort, receiveCallback2, &called);
-    UNLOCK_TCPIP_CORE();
-    rtps::PBufWrapper wrapper(10);
+    rtps::UdpDriver transport{receiveCallback2, &called};
+    rtps::PacketInfo packet;
+    packet.destAddr = addr;
+    packet.buffer = rtps::PBufWrapper(10);
 
-    LOCK_TCPIP_CORE();
-    err_t err = udp_sendto(conn->pcb, wrapper.firstElement, &addr, destPort);
-    UNLOCK_TCPIP_CORE();
+    // This block just creates the input port TODO
+    packet.destPort = srcPort;
+    packet.srcPort = destPort;
+    transport.sendFunction(packet);
 
-    EXPECT_EQ(err, ERR_OK);
+
+    packet.destPort = destPort;
+    packet.srcPort = srcPort;
+
+    transport.sendFunction(packet);
     sys_msleep(20);
     EXPECT_TRUE(called);
 
