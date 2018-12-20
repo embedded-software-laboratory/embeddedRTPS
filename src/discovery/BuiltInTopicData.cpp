@@ -39,13 +39,13 @@ bool BuiltInTopicData::readFromUcdrBuffer(ucdrBuffer& buffer){
                 length -=4;
                 ucdr_deserialize_array_char(&buffer, topicName, length);
                 break;
-            case ParameterId ::PID_TYPE_NAME:
+            case ParameterId::PID_TYPE_NAME:
                 //TODO Skip 4 bytes. Don't know what they are yet.
                 buffer.iterator+=4;
                 length -=4;
                 ucdr_deserialize_array_char(&buffer, typeName, length);
                 break;
-            case ParameterId ::PID_UNICAST_LOCATOR:
+            case ParameterId::PID_UNICAST_LOCATOR:
                 unicastLocator.readFromUcdrBuffer(buffer);
                 break;
             default:
@@ -58,4 +58,46 @@ bool BuiltInTopicData::readFromUcdrBuffer(ucdrBuffer& buffer){
         buffer.last_data_size = 4; // 4 Byte alignment per element
     }
     return ucdr_buffer_remaining(&buffer) == 0;
+}
+
+bool BuiltInTopicData::serializeIntoUcdrBuffer(ucdrBuffer& buffer){
+    // TODO Check if buffer length is sufficient
+
+    ucdr_serialize_uint16_t(&buffer, ParameterId::PID_UNICAST_LOCATOR);
+    ucdr_serialize_uint16_t(&buffer, sizeof(Locator));
+    ucdr_serialize_array_uint8_t(&buffer, reinterpret_cast<uint8_t*>(&unicastLocator), sizeof(Locator));
+
+    const auto lenTopicName = static_cast<uint16_t>(strlen(topicName) + 1); // + \0
+    uint16_t topicAlignement = 0;
+    if(lenTopicName % 4 != 0){
+        topicAlignement = static_cast<uint8_t>(4 - (lenTopicName % 4));
+    }
+    ucdr_serialize_uint16_t(&buffer, ParameterId::PID_TOPIC_NAME);
+    ucdr_serialize_uint16_t(&buffer, static_cast<uint16_t>(lenTopicName + topicAlignement));
+    ucdr_serialize_array_char(&buffer, topicName, lenTopicName);
+    ucdr_align_to(&buffer,4);
+
+    const auto lenTypeName = static_cast<uint16_t>(strlen(typeName) + 1); // + \0
+    uint16_t typeAlignement = 0;
+    if(lenTypeName % 4 != 0){
+        typeAlignement = static_cast<uint8_t>(4 - (lenTypeName % 4));
+    }
+    ucdr_serialize_uint16_t(&buffer, ParameterId::PID_TOPIC_NAME);
+    ucdr_serialize_uint16_t(&buffer, static_cast<uint16_t>(lenTypeName + typeAlignement));
+    ucdr_serialize_array_char(&buffer, typeName, lenTypeName);
+    ucdr_align_to(&buffer,4);
+
+    ucdr_serialize_uint16_t(&buffer, ParameterId::PID_ENDPOINT_GUID);
+    ucdr_serialize_uint16_t(&buffer, sizeof(Guid));
+    ucdr_serialize_array_uint8_t(&buffer, reinterpret_cast<uint8_t*>(&endpointGuid), sizeof(Guid));
+
+
+    ucdr_serialize_uint16_t(&buffer, ParameterId::PID_RELIABILITY);
+    ucdr_serialize_uint16_t(&buffer, sizeof(ReliabilityKind_t));
+    ucdr_serialize_uint32_t(&buffer, static_cast<uint32_t>(reliabilityKind));
+
+    ucdr_serialize_uint16_t(&buffer, ParameterId::PID_SENTINEL);
+    ucdr_serialize_uint16_t(&buffer, 0);
+
+
 }

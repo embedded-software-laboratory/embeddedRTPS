@@ -18,8 +18,7 @@ namespace rtps {
     class StatelessWriter : public Writer{
     public:
 
-        bool init(TopicKind_t topicKind, ThreadPool* threadPool, GuidPrefix_t guidPrefix,
-                  EntityId_t entityId, UdpDriver& driver, Ip4Port_t sendPort);
+        bool init(BuiltInTopicData attributes, TopicKind_t topicKind, ThreadPool* threadPool, UdpDriver& driver);
 
         bool addNewMatchedReader(const ReaderProxy& newProxy) override;
         void progress() override;

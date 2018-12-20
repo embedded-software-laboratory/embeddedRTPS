@@ -41,6 +41,8 @@ void Domain::receiveCallback(const PacketInfo& packet){
         if(id != PARTICIPANT_ID_INVALID){
             m_participants[id-PARTICIPANT_START_ID].newMessage(static_cast<uint8_t*>(packet.buffer.firstElement->payload),
                                                                packet.buffer.firstElement->len);
+        }else{
+            printf("Got message to port %u: matching participant\n", packet.destPort);
         }
     }
 }
@@ -63,8 +65,15 @@ void Domain::addDefaultWriterAndReader(Participant& part) {
     StatelessWriter& spdpWriter = m_statelessWriters[m_numStatelessWriters++];
     StatelessReader& spdpReader = m_statelessReaders[m_numStatelessReaders++];
 
-    spdpWriter.init(TopicKind_t::WITH_KEY, &m_threadPool, part.m_guidPrefix, ENTITYID_SPDP_BUILTIN_PARTICIPANT_WRITER,
-                    m_transport, getBuiltInMulticastPort());
+    BuiltInTopicData spdpWriterAttributes;
+    spdpWriterAttributes.topicName[0] = '\0';
+    spdpWriterAttributes.typeName[0] = '\0';
+    spdpWriterAttributes.reliabilityKind = ReliabilityKind_t::BEST_EFFORT;
+    spdpWriterAttributes.endpointGuid.prefix = part.m_guidPrefix;
+    spdpWriterAttributes.endpointGuid.entityId = ENTITYID_SPDP_BUILTIN_PARTICIPANT_WRITER;
+    spdpWriterAttributes.unicastLocator = getBuiltInMulticastLocator();
+
+    spdpWriter.init(spdpWriterAttributes, TopicKind_t::WITH_KEY, &m_threadPool, m_transport);
     spdpWriter.addNewMatchedReader(ReaderProxy{{part.m_guidPrefix, ENTITYID_SPDP_BUILTIN_PARTICIPANT_READER}, getBuiltInMulticastLocator()});
     spdpReader.m_guid = {part.m_guidPrefix, ENTITYID_SPDP_BUILTIN_PARTICIPANT_READER};
 
@@ -74,13 +83,25 @@ void Domain::addDefaultWriterAndReader(Participant& part) {
     StatefullWriter& sedpPubWriter = m_statefullWriters[m_numStatefullWriters++];
     StatefullWriter& sedpSubWriter = m_statefullWriters[m_numStatefullWriters++];
 
-
+    // READER
     sedpPubReader.init({part.m_guidPrefix, ENTITYID_SEDP_BUILTIN_PUBLICATIONS_READER}, m_transport, getBuiltInUnicastPort(part.m_participantId));
     sedpSubReader.init({part.m_guidPrefix, ENTITYID_SEDP_BUILTIN_SUBSCRIPTIONS_READER}, m_transport, getBuiltInUnicastPort(part.m_participantId));
-    // TODO Check if no_key
-    sedpPubWriter.init(TopicKind_t::NO_KEY, &m_threadPool, {part.m_guidPrefix, ENTITYID_SEDP_BUILTIN_PUBLICATIONS_WRITER}, m_transport, getBuiltInUnicastPort(part.m_participantId));
-    sedpSubWriter.init(TopicKind_t::NO_KEY, &m_threadPool, {part.m_guidPrefix, ENTITYID_SEDP_BUILTIN_SUBSCRIPTIONS_WRITER}, m_transport, getBuiltInUnicastPort(part.m_participantId));
 
+    // WRITER
+    BuiltInTopicData sedpWriterAttributes;
+    sedpWriterAttributes.topicName[0] = '\0';
+    sedpWriterAttributes.typeName[0] = '\0';
+    sedpWriterAttributes.reliabilityKind = ReliabilityKind_t::RELIABLE;
+    sedpWriterAttributes.endpointGuid.prefix = part.m_guidPrefix;
+    sedpWriterAttributes.unicastLocator = getBuiltInUnicastLocator(part.m_participantId);
+
+    sedpWriterAttributes.endpointGuid.entityId = ENTITYID_SEDP_BUILTIN_PUBLICATIONS_WRITER;
+    sedpPubWriter.init(sedpWriterAttributes, TopicKind_t::NO_KEY, &m_threadPool, m_transport);
+
+    sedpWriterAttributes.endpointGuid.entityId = ENTITYID_SEDP_BUILTIN_SUBSCRIPTIONS_WRITER;
+    sedpSubWriter.init(sedpWriterAttributes, TopicKind_t::NO_KEY, &m_threadPool, m_transport);
+
+    // COLLECT
     BuiltInEndpoints endpoints{};
     endpoints.spdpWriter = &spdpWriter;
     endpoints.spdpReader = &spdpReader;
@@ -92,21 +113,48 @@ void Domain::addDefaultWriterAndReader(Participant& part) {
     part.addBuiltInEndpoints(endpoints);
 }
 
-void Domain::registerPort(Participant& /*part*/){
+void Domain::registerPort(Participant& part){
     // TODO Issue #10
+
 }
 
-rtps::Writer* Domain::createWriter(Participant& part, bool reliable){
-    if(reliable){
-        // TODO StatefulWriter
-        return nullptr;
-    }else{
-        // TODO Distinguish WithKey and NoKey (Also changes EntityKind)
-        m_statelessWriters[m_numStatelessWriters].init(TopicKind_t::NO_KEY, &m_threadPool, part.m_guidPrefix,
-                                                       {part.getNextUserEntityKey(), EntityKind_t::USER_DEFINED_WRITER_WITHOUT_KEY},
-                                                       m_transport, getUserUnicastPort(part.m_participantId));
+rtps::Writer* Domain::createWriter(Participant& part, char* topicName, char* typeName, bool reliable){
+    // TODO Distinguish WithKey and NoKey (Also changes EntityKind)
+    BuiltInTopicData attributes;
 
-        return &m_statelessWriters[m_numStatelessWriters++];
+    if(strlen(topicName) > Config::MAX_TOPICNAME_LENGTH || strlen(typeName) > Config::MAX_TYPENAME_LENGTH){
+        return nullptr;
+    }
+    strcpy(attributes.topicName, topicName);
+    strcpy(attributes.typeName, typeName);
+    attributes.endpointGuid.prefix = part.m_guidPrefix;
+    attributes.endpointGuid.entityId = {part.getNextUserEntityKey(), EntityKind_t::USER_DEFINED_WRITER_WITHOUT_KEY};
+    attributes.unicastLocator = getUserUnicastLocator(part.m_participantId);
+
+    if(reliable){
+        if(m_numStatefullWriters == m_statefullWriters.size()){
+            return nullptr;
+        }
+
+        attributes.reliabilityKind = ReliabilityKind_t::RELIABLE;
+
+        StatefullWriter& writer = m_statefullWriters[m_numStatefullWriters];
+        writer.init(attributes, TopicKind_t::NO_KEY, &m_threadPool, m_transport);
+
+        part.addWriter(&writer);
+        return &writer;
+    }else{
+        if(m_numStatelessWriters == m_statelessWriters.size()){
+            return nullptr;
+        }
+
+        attributes.reliabilityKind = ReliabilityKind_t::BEST_EFFORT;
+
+        StatelessWriter& writer = m_statelessWriters[m_numStatelessWriters];
+        writer.init(attributes, TopicKind_t::NO_KEY, &m_threadPool, m_transport);
+
+        part.addWriter(&writer);
+        return &writer;
     }
 }
 

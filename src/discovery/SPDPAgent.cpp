@@ -17,6 +17,8 @@ using rtps::SMElement::ParameterId;
 using rtps::SMElement::BuildInEndpointSet;
 
 
+//#define SPDP_VERBOSE
+
 SPDPAgent::~SPDPAgent(){
     if(initialized){
         sys_mutex_free(&m_mutex);
@@ -73,7 +75,9 @@ void SPDPAgent::handleSPDPPackage(ReaderCacheChange& cacheChange){
         return;
     }
     Lock lock{m_mutex};
+#ifdef SPDP_VERBOSE
     printf("SPDP message received\n");
+#endif
     //TODO InstanceHandle
     if(cacheChange.size > m_inputBuffer.size()){
         printf("SPDP: Input buffer to small");
@@ -99,13 +103,11 @@ void SPDPAgent::handleSPDPPackage(ReaderCacheChange& cacheChange){
         if(m_proxyDataBuffer.readFromUcdrBuffer(buffer)){
             // TODO In case we store the history we can free the history mutex here
             if(m_proxyDataBuffer.m_guid.prefix.id == mp_participant->m_guidPrefix.id){
-                printf("Received our own broadcast.\n");
                 return;
             }
 
-
+            // Check if it's already in our list
             if(mp_participant->findRemoteParticipant(m_proxyDataBuffer.m_guid.prefix) != nullptr){
-                printf("Found same participant again.\n");
                 return;
             }
 
@@ -119,8 +121,20 @@ void SPDPAgent::handleSPDPPackage(ReaderCacheChange& cacheChange){
 
                 if (m_proxyDataBuffer.hasSubscriptionWriter()){
                     WriterProxy *proxy = m_buildInEndpoints.sedpSubReader->createWriterProxy(
-                            {m_proxyDataBuffer.m_guid.prefix, ENTITYID_SEDP_BUILTIN_SUBSCRIPTIONS_READER});
+                            {m_proxyDataBuffer.m_guid.prefix, ENTITYID_SEDP_BUILTIN_SUBSCRIPTIONS_WRITER});
                     proxy->locator = m_proxyDataBuffer.m_metatrafficMulticastLocatorList[0];
+                }
+
+                if(m_proxyDataBuffer.hasPublicationReader()){
+                    const ReaderProxy proxy{{m_proxyDataBuffer.m_guid.prefix, ENTITYID_SEDP_BUILTIN_PUBLICATIONS_READER},
+                                            m_proxyDataBuffer.m_metatrafficUnicastLocatorList[0]};
+                    m_buildInEndpoints.sedpPubWriter->addNewMatchedReader(proxy);
+                }
+
+                if(m_proxyDataBuffer.hasSubscriptionReader()){
+                    const ReaderProxy proxy{{m_proxyDataBuffer.m_guid.prefix, ENTITYID_SEDP_BUILTIN_SUBSCRIPTIONS_READER},
+                                            m_proxyDataBuffer.m_metatrafficUnicastLocatorList[0]};
+                    m_buildInEndpoints.sedpPubWriter->addNewMatchedReader(proxy);
                 }
 
                 // For now, the readers don't care about remotes
@@ -219,5 +233,7 @@ void SPDPAgent::addParticipantParameters(){
 
     endCurrentList();
 }
+
+#undef SPDP_VERBOSE
 
 

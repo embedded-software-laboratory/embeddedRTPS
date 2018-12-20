@@ -13,7 +13,7 @@ namespace rtps{
 
     class StatefullWriter final : public Writer{
     public:
-        bool init(TopicKind_t topicKind, ThreadPool* threadPool, Guid guid, UdpDriver& driver, Ip4Port_t sendPort);
+        bool init(BuiltInTopicData attributes, TopicKind_t topicKind, ThreadPool* threadPool, UdpDriver& driver);
 
         bool addNewMatchedReader(const ReaderProxy& newProxy) override;
         //! Executes required steps like sending packets. Intended to be called by worker threads
@@ -34,7 +34,7 @@ namespace rtps{
         HistoryCache m_history;
         static const uint32_t m_heartbeatPeriodMs = 1000; // TODO
         sys_thread_t m_heartbeatThread;
-        Count_t m_hbCount{0};
+        Count_t m_hbCount{1};
 
         uint32_t m_proxySlotUsedBitMap = 0;
         static_assert(sizeof(m_proxySlotUsedBitMap)*8 >= Config::NUM_READER_PROXIES_PER_WRITER,

@@ -20,14 +20,14 @@ namespace rtps{
         void init(Guid& guid){
             remoteWriterGuid = guid;
             expectedSN = SequenceNumber_t{0,1};
-            ackNackCount.value = 0;
+            ackNackCount.value = 1;
             hbCount.value = 0;
         }
 
         // For now, we don't store any packets, so we just request all starting from the next expected
         SequenceNumberSet getMissing(const SequenceNumber_t& /*firstAvail*/, const SequenceNumber_t& /*lastAvail*/){
             SequenceNumberSet set;
-            set.numBits = SNS_NUM_BITS;
+            set.numBits = 32*set.bitMap.size();
             set.base = expectedSN;
             for(uint8_t bucket=0; bucket < set.bitMap.size(); ++bucket){
                 set.bitMap[bucket] = ~static_cast<uint32_t>(0);

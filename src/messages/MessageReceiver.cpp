@@ -12,6 +12,8 @@
 
 using rtps::MessageReceiver;
 
+//#define RECV_VERBOSE
+
 MessageReceiver::MessageReceiver(Participant* part)
 : mp_part(part){
 
@@ -71,24 +73,38 @@ bool MessageReceiver::processSubMessage(MessageProcessingInfo& msgInfo){
     bool success;
     switch(submsgHeader->submessageId){
         case SubmessageKind::ACKNACK:
+#ifdef RECV_VERBOSE
             printf("Processing AckNack submessage\n");
+#endif
             success = processAckNackSubmessage(msgInfo);
             break;
         case SubmessageKind::DATA:
+#ifdef RECV_VERBOSE
             printf("Processing Data submessage\n");
+#endif
             success = processDataSubmessage(msgInfo);
             break;
         case SubmessageKind::HEARTBEAT:
+#ifdef RECV_VERBOSE
             printf("Processing Heartbeat submessage\n");
+#endif
             success = processHeartbeatSubmessage(msgInfo);
             break;
         case SubmessageKind::INFO_DST:
+#ifdef RECV_VERBOSE
             printf("Info_DST submessage not relevant.\n");
-            success = false; // Not relevant
+#endif
+            success = true; // Not relevant
+            break;
+        case SubmessageKind::INFO_TS:
+#ifdef RECV_VERBOSE
+            printf("Info_TS submessage not relevant.\n");
+#endif
+            success = true; // Not relevant now
             break;
         default:
             printf("Submessage of type %u currently not supported. Skipping..\n", static_cast<uint8_t>(submsgHeader->submessageId));
-            success = false;
+            success = true;
     }
     msgInfo.nextPos+= submsgHeader->submessageLength + sizeof(SubmessageHeader);
     return success;
@@ -138,4 +154,6 @@ bool MessageReceiver::processAckNackSubmessage(MessageProcessingInfo& msgInfo){
         return false;
     }
 }
+
+#undef RECV_VERBOSE
 

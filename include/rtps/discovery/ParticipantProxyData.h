@@ -31,7 +31,7 @@ namespace rtps{
         std::array<Locator, Config::SPDP_MAX_NUM_LOCATORS> m_metatrafficMulticastLocatorList;
         std::array<Locator, Config::SPDP_MAX_NUM_LOCATORS> m_defaultUnicastLocatorList;
         std::array<Locator, Config::SPDP_MAX_NUM_LOCATORS> m_defaultMulticastLocatorList;
-        Count_t m_manualLivelinessCount{};
+        Count_t m_manualLivelinessCount{1};
         Duration_t m_leaseDuration = Config::SPDP_LEASE_DURATION;
 
         void reset();

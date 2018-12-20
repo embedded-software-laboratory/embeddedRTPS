@@ -9,6 +9,7 @@
 #include "rtps/common/types.h"
 #include "rtps/config.h"
 #include "rtps/discovery/SPDPAgent.h"
+#include "rtps/discovery/SEDPAgent.h"
 #include "rtps/messages/MessageReceiver.h"
 
 namespace rtps{
@@ -69,6 +70,7 @@ namespace rtps{
         std::array<ParticipantProxyData, Config::SPDP_MAX_NUMBER_FOUND_PARTICIPANTS> m_foundParticipants;
 
         SPDPAgent m_spdpAgent;
+        SEDPAgent m_sedpAgent;
     };
 }
 

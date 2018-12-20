@@ -19,7 +19,7 @@ namespace rtps{
         ReaderProxy(){};
         ReaderProxy(const Guid& guid, const Locator& loc)
             : remoteReaderGuid(guid), remoteLocator(loc),
-              ackNackSet(), ackNackCount(){};
+              ackNackSet(), ackNackCount{0}{};
 
     };
 }

@@ -80,8 +80,6 @@ void ThreadPool::doWriterWork(){
 }
 
 void ThreadPool::readCallback(void* args, udp_pcb* target, pbuf* pbuf, const ip_addr_t* addr, Ip4Port_t port) {
-    printf("Received something from %s:%u !!!!\n\r", ipaddr_ntoa(addr), port);
-
     auto& pool = *static_cast<ThreadPool*>(args);
 
     PacketInfo packet;

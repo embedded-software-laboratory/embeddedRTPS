@@ -46,3 +46,11 @@ TEST(GetParticipantIdFromPort, returnsInvalidIdIfPortIsMultiCast){
     rtps::ParticipantId_t id2 = rtps::getParticipantIdFromUnicastPort(builtinMultiCastPort, true);
     EXPECT_EQ(id2, rtps::PARTICIPANT_ID_INVALID);
 }
+
+TEST(GetParticipantIdFromPort, DISABLED_returnsValidIdforUserPort){
+    // TODO
+}
+
+TEST(GetParticipantIdFromPort, DISABLED_returnsValidIdforNonUserPort){
+    // TODO
+}

@@ -141,7 +141,7 @@ namespace rtps{
             }
             const auto bucket = static_cast<uint8_t>(bit / 32);
             const auto pos = static_cast<uint8_t>(bit % 32);
-            return (bitMap[bucket] & (1 << pos)) != 0;
+            return (bitMap[bucket] & (1 << (31 - pos))) != 0;
         }
     } __attribute((packed));
 

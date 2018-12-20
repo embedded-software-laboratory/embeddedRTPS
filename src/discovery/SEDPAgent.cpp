@@ -9,16 +9,19 @@
 #include "rtps/entities/Participant.h"
 #include "rtps/discovery/BuiltInTopicData.h"
 #include "rtps/messages/MessageTypes.h"
+#include "ucdr/microcdr.h"
 
 using rtps::SEDPAgent;
 
-void SEDPAgent::init(Participant* part, BuiltInEndpoints endpoints){
-    m_part = part;
+void SEDPAgent::init(Participant& part, BuiltInEndpoints endpoints){
+    m_part = &part;
     // TODO move
     if(sys_mutex_new(&m_mutex) != ERR_OK){
         printf("SEDPAgent failed to create mutex\n");
         return;
     }
+
+    m_endpoints = endpoints;
     endpoints.sedpPubReader->registerCallback(receiveCallbackPublisher, this);
     endpoints.sedpSubReader->registerCallback(receiveCallbackSubscriber, this);
 }
@@ -39,6 +42,7 @@ void SEDPAgent::onNewPublisher(ReaderCacheChange & /*change*/){
 }
 
 void SEDPAgent::onNewSubscriber(ReaderCacheChange &change){
+    printf("Found a new Subscriber\n");
     Lock lock{m_mutex};
 
     if(!change.copyInto(m_buffer, sizeof(m_buffer)/sizeof(m_buffer[0]))){
@@ -57,7 +61,17 @@ void SEDPAgent::onNewSubscriber(ReaderCacheChange &change){
 }
 
 void SEDPAgent::addWriter(Writer& writer){
+    EntityKind_t writerKind = writer.m_attributes.endpointGuid.entityId.entityKind;
+    if(writerKind == EntityKind_t::BUILD_IN_WRITER_WITH_KEY || writerKind == EntityKind_t::BUILD_IN_WRITER_WITHOUT_KEY){
+        return; // No need to announce builtin endpoints
+    }
 
+    Lock lock{m_mutex};
+    ucdrBuffer microbuffer;
+    ucdr_init_buffer(&microbuffer, m_buffer, sizeof(m_buffer)/sizeof(m_buffer[0]));
+    writer.m_attributes.serializeIntoUcdrBuffer(microbuffer);
+    m_endpoints.sedpPubWriter->newChange(ChangeKind_t::ALIVE, m_buffer, ucdr_buffer_length(&microbuffer));
+    printf("Added new change to sedpPubWriter.\n");
 }
 
 void SEDPAgent::addReader(Reader& reader){

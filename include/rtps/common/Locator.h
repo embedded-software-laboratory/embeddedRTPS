@@ -52,6 +52,14 @@ namespace rtps{
             }
         }
 
+        bool serializeIntoUdcrBuffer(ucdrBuffer& buffer){
+            if(ucdr_buffer_remaining(&buffer) < sizeof(Locator)){
+                return false;
+            }else{
+                ucdr_serialize_array_uint8_t(&buffer, reinterpret_cast<uint8_t*>(this), sizeof(Locator));
+            }
+        }
+
         ip4_addr_t getIp4Address() const{
             return transformIP4ToU32(address[12], address[13], address[14], address[15]);
         }

@@ -9,7 +9,7 @@ using rtps::ParticipantProxyData;
 
 void ParticipantProxyData::reset(){
     m_guid = Guid{GUIDPREFIX_UNKNOWN, ENTITYID_UNKNOWN};
-    m_manualLivelinessCount = Count_t{};
+    m_manualLivelinessCount = Count_t{1};
     m_expectsInlineQos = false;
     for(int i=0; i < 10; ++i){
         m_metatrafficUnicastLocatorList[i].setInvalid();

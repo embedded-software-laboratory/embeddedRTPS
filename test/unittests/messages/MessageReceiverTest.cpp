@@ -168,7 +168,7 @@ protected:
         rtps::MessageFactory::addHeader(validHeartbeatMsgBufferMock, somePrefix);
         rtps::MessageFactory::addHeartbeat(validHeartbeatMsgBufferMock, rtps::ENTITYID_SEDP_BUILTIN_PUBLICATIONS_WRITER,
                 rtps::ENTITYID_SEDP_BUILTIN_PUBLICATIONS_READER, rtps::SequenceNumber_t{0,1}, rtps::SequenceNumber_t{0,5},
-                rtps::Count_t{0});
+                rtps::Count_t{1});
     };
 };
 

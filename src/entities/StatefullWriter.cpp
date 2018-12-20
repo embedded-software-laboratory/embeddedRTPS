@@ -9,8 +9,7 @@
 
 using rtps::StatefullWriter;
 
-bool StatefullWriter::init(TopicKind_t topicKind, ThreadPool* threadPool,
-                           Guid guid, UdpDriver& driver, Ip4Port_t sendPort){
+bool StatefullWriter::init(BuiltInTopicData attributes, TopicKind_t topicKind, ThreadPool* threadPool, UdpDriver& driver){
     if (sys_mutex_new(&m_mutex) != ERR_OK) {
         printf("Failed to create mutex \n");
         return false;
@@ -18,9 +17,9 @@ bool StatefullWriter::init(TopicKind_t topicKind, ThreadPool* threadPool,
 
     mp_threadPool = threadPool;
     m_transport = &driver;
-    m_guid = guid;
+    m_attributes = attributes;
     m_topicKind = topicKind;
-    m_packetInfo.srcPort = sendPort;
+    m_packetInfo.srcPort = attributes.unicastLocator.port;
 
     m_heartbeatThread = sys_thread_new("HeartbeatThread", hbFunctionJumppad, this, Config::THREAD_POOL_WRITER_STACKSIZE, Config::THREAD_POOL_WRITER_PRIO);
 
@@ -33,6 +32,7 @@ bool StatefullWriter::addNewMatchedReader(const ReaderProxy& newProxy){
 
         if((m_proxySlotUsedBitMap & (1 << i)) == 0){
             m_proxies[i] = newProxy;
+            m_proxySlotUsedBitMap |= (1 << i);
             return true;
         }
     }
@@ -68,7 +68,7 @@ void StatefullWriter::onNewAckNack(const SubmessageAckNack& msg){
     // Search for reader
     ReaderProxy* proxy = nullptr;
     for(uint8_t i=0; i < sizeof(m_proxies)/sizeof(m_proxies[0]); ++i){
-        if(((m_proxySlotUsedBitMap & (1 << i)) == 1) && m_proxies[i].remoteReaderGuid.entityId == msg.readerId){
+        if(((m_proxySlotUsedBitMap & (1 << i)) != 0) && m_proxies[i].remoteReaderGuid.entityId == msg.readerId){
             proxy = &m_proxies[i];
             break;
         }
@@ -84,6 +84,7 @@ void StatefullWriter::onNewAckNack(const SubmessageAckNack& msg){
     SequenceNumber_t nextSN = msg.readerSNState.base;
     for(uint32_t i=0; i < msg.readerSNState.numBits; ++i, ++nextSN){
         if(msg.readerSNState.isSet(i)){
+            printf("Send Packet on acknack\n");
             sendData(*proxy, nextSN);
         }
     }
@@ -93,7 +94,7 @@ void StatefullWriter::sendData(const ReaderProxy &reader, const SequenceNumber_t
     PacketInfo info;
     info.srcPort = m_packetInfo.srcPort;
 
-    MessageFactory::addHeader(info.buffer, m_guid.prefix);
+    MessageFactory::addHeader(info.buffer, m_attributes.endpointGuid.prefix);
     MessageFactory::addSubMessageTimeStamp(info.buffer);
 
     {
@@ -103,7 +104,7 @@ void StatefullWriter::sendData(const ReaderProxy &reader, const SequenceNumber_t
             printf("StatelessWriter: Couldn't get a CacheChange with SN (%i,%u)\n", sn.high, sn.low);
             return;
         }
-        MessageFactory::addSubMessageData(info.buffer, next->data, false, next->sequenceNumber, m_guid.entityId,
+        MessageFactory::addSubMessageData(info.buffer, next->data, false, next->sequenceNumber, m_attributes.endpointGuid.entityId,
                                           reader.remoteReaderGuid.entityId);
     }
 
@@ -130,7 +131,7 @@ void StatefullWriter::sendHeartBeat() {
 
     SequenceNumber_t firstSN;
     SequenceNumber_t lastSN;
-    MessageFactory::addHeader(info.buffer, m_guid.prefix);
+    MessageFactory::addHeader(info.buffer, m_attributes.endpointGuid.prefix);
     {
         Lock lock(m_mutex);
         firstSN = m_history.getSeqNumMin();
@@ -140,7 +141,7 @@ void StatefullWriter::sendHeartBeat() {
         return;
     }
 
-    MessageFactory::addHeartbeat(info.buffer, m_guid.entityId, ENTITYID_UNKNOWN, firstSN, lastSN, m_hbCount);
+    MessageFactory::addHeartbeat(info.buffer, m_attributes.endpointGuid.entityId, ENTITYID_UNKNOWN, firstSN, lastSN, m_hbCount);
 
     // Just usable for IPv4
     const Locator& locator = getBuiltInMulticastLocator();

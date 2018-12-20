@@ -28,11 +28,14 @@ void StatefullReader::newChange(ReaderCacheChange& cacheChange){
             if(cacheChange.sn == proxy.writerProxy.expectedSN){
                 m_callback(m_callee, cacheChange);
                 ++proxy.writerProxy.expectedSN;
+                return;
             }else{
+                printf("SequenceNumber is %u, expected: %u\n", cacheChange.sn.low, proxy.writerProxy.expectedSN);
                 return;
             }
         }
     }
+    printf("No matching WriterProxy found\n");
 }
 
 void StatefullReader::registerCallback(ddsReaderCallback_fp cb, void* callee){

@@ -10,15 +10,13 @@
 #include "rtps/storages/PBufWrapper.h"
 #include "rtps/storages/HistoryCache.h"
 #include "rtps/entities/ReaderProxy.h"
+#include "rtps/discovery/BuiltInTopicData.h"
 
 namespace rtps{
 
     class Writer{
     public:
-        Guid m_guid = {GUIDPREFIX_UNKNOWN, ENTITYID_UNKNOWN};
-        char topicName[Config::MAX_TOPICNAME_LENGTH] = {'\0'};
-        char typeName[Config::MAX_TYPENAME_LENGTH] = {'\0'};
-
+        BuiltInTopicData m_attributes;
         virtual bool addNewMatchedReader(const ReaderProxy& newProxy) = 0;
 
         //! Executes required steps like sending packets. Intended to be called by worker threads

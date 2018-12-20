@@ -26,29 +26,26 @@ int main(){
         printf("Failed to create participant");
         return 1;
     }
-    rtps::EntityId_t eid = {{1, 2, 3}, rtps::EntityKind_t::USER_DEFINED_READER_WITHOUT_KEY};
-    rtps::Locator locator = rtps::Locator::createUDPv4Locator(192, 168, 0, 248, 7400);
-    rtps::ReaderProxy remoteReader{{rtps::GUIDPREFIX_UNKNOWN, eid}, locator};
-    rtps::Writer* writer = domain.createWriter(*part, false);
+
+    char topicName[] = "HelloWorldTopic";
+    char typeName[] = "HelloWorld";
+
+    rtps::Writer* writer = domain.createWriter(*part, topicName, typeName, false);
     if(writer == nullptr){
         printf("Failed to create writer");
         return 2;
     }
 
-    writer->addNewMatchedReader(remoteReader);
-
-    uint8_t data0[] = {'d', 'e', 'a', 'd', 'b', 'e', 'e', 'f'};
-    uint8_t data1[] = {'d', 'e', 'c', 'a', 'f', 'b', 'a', 'd'};
-    uint8_t data2[] = {'b', 'a', 'd', 'c', 'o', 'd', 'e', 'd'};
-    uint8_t data3[] = {'b', 'a', 'd', 'c', 'a', 'b', '1', 'e'};
-
-    std::array<uint8_t*, 4> dataArray = {data0, data1, data2, data3};
+    char message[] = "Hello World";
+    uint8_t buffer[16];
+    ucdrBuffer microbuffer;
     uint32_t i = 0;
     while(true){
-
-        //writer->newChange(rtps::ChangeKind_t::ALIVE, dataArray[i%4], 8);
-        i++;
-        sys_msleep(20+(i%200));
+        ucdr_init_buffer(&microbuffer, buffer, sizeof(buffer)/ sizeof(buffer[0]));
+        ucdr_serialize_uint32_t(&microbuffer, i);
+        ucdr_serialize_array_char(&microbuffer, message, sizeof(message)/sizeof(message[0]));
+        //writer->newChange(rtps::ChangeKind_t::ALIVE, buffer, sizeof(buffer)/ sizeof(buffer[0]));
+        sys_msleep(5000);
 
     }
 

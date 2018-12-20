@@ -18,7 +18,7 @@ namespace rtps{
 
     class SEDPAgent{
     public:
-        void init(Participant* part, BuiltInEndpoints endpoints);
+        void init(Participant& part, BuiltInEndpoints endpoints);
         void addWriter(Writer& writer);
         void addReader(Reader& reader);
 
@@ -26,6 +26,7 @@ namespace rtps{
         Participant* m_part;
         sys_mutex_t m_mutex;
         uint8_t m_buffer[300];
+        BuiltInEndpoints m_endpoints;
 
         static void receiveCallbackPublisher(void* callee, ReaderCacheChange& cacheChange);
         static void receiveCallbackSubscriber(void* callee, ReaderCacheChange& cacheChange);

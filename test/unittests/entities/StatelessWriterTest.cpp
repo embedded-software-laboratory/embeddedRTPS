@@ -16,8 +16,10 @@ using namespace rtps;
 class EmptyRTPSWriter : public ::testing::Test{
 protected:
     const TopicKind_t arbitraryType = TopicKind_t::NO_KEY;
-    const ParticipantId_t arbitraryParticipantId = 1;
-    const Ip4Port_t srcPort = getUserUnicastPort(arbitraryParticipantId);
+    const ParticipantId_t someParticipantId = 1;
+    const BuiltInTopicData attributes{{GUIDPREFIX_UNKNOWN, ENTITYID_UNKNOWN},
+                                          ReliabilityKind_t::BEST_EFFORT,
+                                          getUserUnicastLocator(someParticipantId)};
 
     UdpDriver transport{nullptr, nullptr};
     StatelessWriter writer;
@@ -26,7 +28,8 @@ protected:
 
     void SetUp() override{
         rtps::init();
-        writer.init(arbitraryType, nullptr, GUIDPREFIX_UNKNOWN, ENTITYID_UNKNOWN, transport, srcPort);
+
+        writer.init(attributes, arbitraryType, nullptr, transport);
     }
 };
 
@@ -75,8 +78,10 @@ TEST_F(EmptyRTPSWriter, newChange_AllocatesExactSize){
 
 class EmptyRTPSWriterWithoutKey : public ::testing::Test{
 protected:
-    const ParticipantId_t arbitraryParticipantId = 1;
-    const Ip4Port_t srcPort = getUserUnicastPort(arbitraryParticipantId);
+    const ParticipantId_t someParticipantId = 1;
+    const BuiltInTopicData attributes{{GUIDPREFIX_UNKNOWN, ENTITYID_UNKNOWN},
+                                      ReliabilityKind_t::BEST_EFFORT,
+                                      getUserUnicastLocator(someParticipantId)};
 
     UdpDriver transport{nullptr, nullptr};
     StatelessWriter writer;
@@ -85,7 +90,7 @@ protected:
 
     void SetUp() override{
         rtps::init();
-        writer.init(TopicKind_t::NO_KEY, nullptr, GUIDPREFIX_UNKNOWN, ENTITYID_UNKNOWN, transport, srcPort);
+        writer.init(attributes, TopicKind_t::NO_KEY, nullptr, transport);
     }
 };
 
@@ -104,13 +109,15 @@ TEST_F(EmptyRTPSWriterWithoutKey, newChange_IgnoresAllKindThatAreNotAlive){
 
 class EmptyRTPSWriterWithKey : public ::testing::Test{
 protected:
-    const ParticipantId_t arbitraryParticipantId = 1;
-    const Ip4Port_t srcPort = getUserUnicastPort(arbitraryParticipantId);
+    const ParticipantId_t someParticipantId = 1;
+    const BuiltInTopicData attributes{{GUIDPREFIX_UNKNOWN, ENTITYID_UNKNOWN},
+                                      ReliabilityKind_t::BEST_EFFORT,
+                                      getUserUnicastLocator(someParticipantId)};
 
     UdpDriver transport{nullptr, nullptr};
     StatelessWriter writer;
     void SetUp() override{
-        writer.init(TopicKind_t::WITH_KEY, nullptr, GUIDPREFIX_UNKNOWN, ENTITYID_UNKNOWN, transport, srcPort);
+        writer.init(attributes, TopicKind_t::WITH_KEY, nullptr, transport);
     };
 };
 

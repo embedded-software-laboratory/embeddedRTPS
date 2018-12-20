@@ -18,15 +18,19 @@ namespace rtps{
     };
 
     struct BuiltInTopicData{
-        //BuiltInTopicKey key;
-        //BuiltInTopicKey participantKey;
-        ReliabilityKind_t reliabilityKind;
+        Guid endpointGuid;
         char typeName[Config::MAX_TYPENAME_LENGTH];
         char topicName[Config::MAX_TOPICNAME_LENGTH];
+        ReliabilityKind_t reliabilityKind;
         Locator unicastLocator;
-        Guid endpointGuid;
+
+        BuiltInTopicData(){};
+        BuiltInTopicData(Guid guid, ReliabilityKind_t reliability, Locator loc)
+            : endpointGuid(guid), typeName{'\0'}, topicName{'\0'},
+              reliabilityKind(reliability), unicastLocator(loc){}
 
         bool readFromUcdrBuffer(ucdrBuffer& buffer);
+        bool serializeIntoUcdrBuffer(ucdrBuffer& buffer);
     };
 }
 

@@ -15,18 +15,17 @@
 
 namespace rtps{
 
-    bool StatelessWriter::init(TopicKind_t topicKind, ThreadPool* threadPool,
-                               GuidPrefix_t guidPrefix, EntityId_t entityId, UdpDriver& driver, Ip4Port_t sendPort){
+    bool StatelessWriter::init(BuiltInTopicData attributes, TopicKind_t topicKind, ThreadPool* threadPool, UdpDriver& driver){
         if (sys_mutex_new(&m_mutex) != ERR_OK) {
             printf("Failed to create mutex \n");
             return false;
         }
+
+        m_attributes = attributes;
+        m_packetInfo.srcPort = attributes.unicastLocator.port;
+        m_topicKind = topicKind;
         mp_threadPool = threadPool;
         m_transport = &driver;
-        m_guid.prefix = guidPrefix;
-        m_guid.entityId = entityId;
-        m_topicKind = topicKind;
-        m_packetInfo.srcPort = sendPort;
 
         return true;
     }
@@ -90,7 +89,7 @@ namespace rtps{
         PacketInfo info;
         info.srcPort = m_packetInfo.srcPort;
 
-        MessageFactory::addHeader(info.buffer, m_guid.prefix);
+        MessageFactory::addHeader(info.buffer, m_attributes.endpointGuid.prefix);
         MessageFactory::addSubMessageTimeStamp(info.buffer);
 
         {
@@ -101,7 +100,7 @@ namespace rtps{
                 return;
             }
             ++m_nextSequenceNumberToSend;
-            MessageFactory::addSubMessageData(info.buffer, next->data, false, next->sequenceNumber, m_guid.entityId,
+            MessageFactory::addSubMessageData(info.buffer, next->data, false, next->sequenceNumber, m_attributes.endpointGuid.entityId,
                                               m_readerProxy.remoteReaderGuid.entityId); // TODO
         }
 

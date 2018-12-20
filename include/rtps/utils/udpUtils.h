@@ -65,16 +65,24 @@ namespace rtps {
     }
 
     inline ParticipantId_t getParticipantIdFromUnicastPort(Ip4Port_t port, bool isUserPort){
-        const auto basePart = PB + DG*Config::DOMAIN_ID;
-        ParticipantId_t participantPart = port - basePart;
-        if(isUserPort){
-            participantPart -= D3;
-        }else{
-            participantPart -= D1;
+        if(isMultiCastPort(port)){ // TODO remove?
+            return PARTICIPANT_ID_INVALID;
         }
 
+        const auto basePart = PB + DG*Config::DOMAIN_ID;
+        ParticipantId_t participantPart = port - basePart;
+
+        uint16_t offset = 0;
+        if(isUserPort){
+            offset = D3;
+        }else{
+            offset = D1;
+        }
+
+        participantPart -= offset;
+
         auto id = static_cast<ParticipantId_t>(participantPart / PG);
-        if(id*PG + basePart == port){
+        if(id*PG + basePart + offset == port){
             return id;
         }else{
             return PARTICIPANT_ID_INVALID;

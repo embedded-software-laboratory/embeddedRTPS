@@ -50,6 +50,7 @@ std::array<uint8_t, 3> Participant::getNextUserEntityKey(){
 rtps::Writer* Participant::addWriter(Writer* pWriter){
     if(pWriter != nullptr && m_numWriters != m_writers.size()){
         m_writers[m_numWriters++] = pWriter;
+        m_sedpAgent.addWriter(*pWriter);
         return pWriter;
     }else{
         return nullptr;
@@ -59,6 +60,7 @@ rtps::Writer* Participant::addWriter(Writer* pWriter){
 rtps::Reader* Participant::addReader(Reader* pReader){
     if(pReader != nullptr && m_numReaders != m_readers.size()){
         m_readers[m_numReaders++] = pReader;
+        m_sedpAgent.addReader(*pReader);
         return pReader;
     }else{
         return nullptr;
@@ -68,7 +70,7 @@ rtps::Reader* Participant::addReader(Reader* pReader){
 
 rtps::Writer* Participant::getWriter(EntityId_t id) const{
     for(uint8_t i=0; i < m_numWriters; ++i){
-        if(m_writers[i]->m_guid.entityId == id){
+        if(m_writers[i]->m_attributes.endpointGuid.entityId == id){
             return m_writers[i];
         }
     }
@@ -87,8 +89,8 @@ rtps::Reader* Participant::getReader(EntityId_t id) const{
 
 rtps::Writer* Participant::getWriter(const char* topic, const char* type) const{
     for(uint8_t i=0; i < m_numWriters; ++i){
-        if((strcmp(m_writers[i]->topicName, topic) == 0) &&
-           (strcmp(m_writers[i]->typeName, type) == 0)){
+        if((strcmp(m_writers[i]->m_attributes.topicName, topic) == 0) &&
+           (strcmp(m_writers[i]->m_attributes.typeName, type) == 0)){
             return m_writers[i];
         }
     }
@@ -108,7 +110,7 @@ rtps::Reader* Participant::getReader(const char* topic, const char* type) const{
 bool Participant::addNewRemoteParticipant(ParticipantProxyData& remotePart){
     for(auto& partProxy : m_foundParticipants) {
         if (partProxy.m_guid.prefix.id == GUIDPREFIX_UNKNOWN.id) {
-            // TODO add. I think we don't need that for now
+            partProxy = remotePart;
             return true;
         }
     }
@@ -129,15 +131,17 @@ rtps::MessageReceiver* Participant::getMessageReceiver(){
 }
 
 void Participant::addBuiltInEndpoints(BuiltInEndpoints& endpoints){
+    m_spdpAgent.init(*this, endpoints);
+    m_spdpAgent.start();
+    m_sedpAgent.init(*this, endpoints);
+
+    // This needs to be done after initializing the agents
     addWriter(endpoints.spdpWriter);
     addReader(endpoints.spdpReader);
     addWriter(endpoints.sedpPubWriter);
     addReader(endpoints.sedpPubReader);
     addWriter(endpoints.sedpSubWriter);
     addReader(endpoints.sedpSubReader);
-
-    m_spdpAgent.init(*this, endpoints);
-    m_spdpAgent.start();
 }
 
 void Participant::newMessage(const uint8_t* data, DataSize_t size){

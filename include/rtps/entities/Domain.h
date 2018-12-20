@@ -27,7 +27,7 @@ namespace rtps{
         void receiveCallback(const PacketInfo& packet);
 
         Participant* createParticipant();
-        Writer* createWriter(Participant& part, bool reliable);
+        Writer* createWriter(Participant& part, char* topicName, char* typeName, bool reliable);
 
     private:
         ThreadPool m_threadPool;
