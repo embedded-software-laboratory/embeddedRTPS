@@ -9,21 +9,19 @@
 
 class AWriterProxy : public ::testing::Test{
 protected:
-    rtps::WriterProxy proxy;
     rtps::Guid someGuid{{0}, {{1,2,3}, rtps::EntityKind_t::USER_DEFINED_WRITER_WITH_KEY}};
+    rtps::Locator someLocator = rtps::Locator::createUDPv4Locator(1,2,3,4,5);
+
+    rtps::WriterProxy proxy{someGuid, someLocator};
 };
 
-TEST_F(AWriterProxy, init_setsSequenceNumberToOne){
+TEST_F(AWriterProxy, startsWithSequenceNumberOne){
     rtps::SequenceNumber_t expectedSN{0,1};
-    proxy.expectedSN = {1,2};
-
-    proxy.init(someGuid);
 
     EXPECT_EQ(proxy.expectedSN, expectedSN);
 }
 
 TEST_F(AWriterProxy, getMissingChanges_returnsAllFromFirstMissing){
-    proxy.init(someGuid);
     proxy.expectedSN = {0,2};
     rtps::SequenceNumber_t firstAvail{0,0};
     rtps::SequenceNumber_t lastAvail{0,52};

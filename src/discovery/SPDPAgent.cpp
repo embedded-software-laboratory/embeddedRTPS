@@ -114,15 +114,15 @@ void SPDPAgent::handleSPDPPackage(ReaderCacheChange& cacheChange){
             if(mp_participant->addNewRemoteParticipant(m_proxyDataBuffer)) {
                 // Prepare builtin endpoints for SEDP
                 if (m_proxyDataBuffer.hasPublicationWriter()){
-                    WriterProxy *proxy = m_buildInEndpoints.sedpPubReader->createWriterProxy(
-                            {m_proxyDataBuffer.m_guid.prefix, ENTITYID_SEDP_BUILTIN_PUBLICATIONS_WRITER});
-                    proxy->locator = m_proxyDataBuffer.m_metatrafficMulticastLocatorList[0];
+                    const WriterProxy proxy{{m_proxyDataBuffer.m_guid.prefix, ENTITYID_SEDP_BUILTIN_PUBLICATIONS_WRITER},
+                                             m_proxyDataBuffer.m_metatrafficMulticastLocatorList[0]};
+                    m_buildInEndpoints.sedpPubReader->addNewMatchedWriter(proxy);
                 }
 
                 if (m_proxyDataBuffer.hasSubscriptionWriter()){
-                    WriterProxy *proxy = m_buildInEndpoints.sedpSubReader->createWriterProxy(
-                            {m_proxyDataBuffer.m_guid.prefix, ENTITYID_SEDP_BUILTIN_SUBSCRIPTIONS_WRITER});
-                    proxy->locator = m_proxyDataBuffer.m_metatrafficMulticastLocatorList[0];
+                    const WriterProxy proxy{{m_proxyDataBuffer.m_guid.prefix, ENTITYID_SEDP_BUILTIN_SUBSCRIPTIONS_WRITER},
+                                            m_proxyDataBuffer.m_metatrafficMulticastLocatorList[0]};
+                    m_buildInEndpoints.sedpSubReader->addNewMatchedWriter(proxy);
                 }
 
                 if(m_proxyDataBuffer.hasPublicationReader()){

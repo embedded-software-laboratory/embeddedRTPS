@@ -18,6 +18,7 @@ add_executable(runTests
         unittests/entities/WriterProxyTest.cpp
         unittests/messages/MessageFactoryTest.cpp
         unittests/messages/MessageReceiverTest.cpp
+        unittests/storages/MemoryPoolTest.cpp
         unittests/storages/HistoryCacheTest.cpp
         unittests/utils/udpUtilsTest.cpp
         )

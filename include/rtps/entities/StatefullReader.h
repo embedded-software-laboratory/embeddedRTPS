@@ -11,33 +11,37 @@
 #include "rtps/config.h"
 #include "rtps/entities/Reader.h"
 #include "rtps/entities/WriterProxy.h"
+#include "rtps/storages/MemoryPool.h"
 
 namespace rtps{
     struct SubmessageHeartbeat;
 
-    class StatefullReader final: public Reader{
+    template <class NetworkDriver=UdpDriver>
+    class StatefullReaderT : public Reader{
     public:
 
-        void init(Guid guid, UdpDriver& driver, Ip4Port_t sendPort);
+        void init(Guid guid, NetworkDriver& driver, Ip4Port_t sendPort);
         void newChange(ReaderCacheChange& cacheChange) override;
         void registerCallback(ddsReaderCallback_fp cb, void* callee) override;
-        WriterProxy* createWriterProxy(Guid guid);
+        bool addNewMatchedWriter(const WriterProxy& newProxy);
         void removeWriter(const Guid& guid);
         bool onNewHeartbeat(const SubmessageHeartbeat& msg, const GuidPrefix_t& remotePrefix) override;
 
     private:
-        struct Element{
-            bool valid = false;
-            WriterProxy writerProxy;
-        };
         PacketInfo m_packetInfo;
-        UdpDriver* m_transport;
-        sys_mutex_t mutex;
-        Element m_proxies[Config::NUM_WRITER_PROXIES_PER_READER];
+        NetworkDriver* m_transport;
+        MemoryPool<WriterProxy, Config::NUM_WRITER_PROXIES_PER_READER> m_proxies;
         ddsReaderCallback_fp m_callback = nullptr;
         void* m_callee = nullptr;
+        sys_mutex_t mutex;
 
     };
 
+    using StatefullReader = StatefullReaderT<UdpDriver>;
+
 }
+
+#include <rtps/entities/StatefullReader.tpp>
+
+
 #endif //RTPS_STATEFULLREADER_H

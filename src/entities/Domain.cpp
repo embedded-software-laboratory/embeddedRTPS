@@ -32,6 +32,7 @@ void Domain::receiveCallback(const PacketInfo& packet){
 
     if(isMultiCastPort(packet.destPort)){
         // Pass to all
+        printf("Multicast to port %u\n", packet.destPort);
         for(auto i=0; i < m_nextParticipantId - PARTICIPANT_START_ID; ++i) {
             m_participants[i].newMessage(static_cast<uint8_t*>(packet.buffer.firstElement->payload), packet.buffer.firstElement->len);
         }
@@ -39,10 +40,11 @@ void Domain::receiveCallback(const PacketInfo& packet){
         // Pass to addressed one only
         ParticipantId_t id = getParticipantIdFromUnicastPort(packet.destPort, isUserPort(packet.destPort));
         if(id != PARTICIPANT_ID_INVALID){
+            printf("Got unicast message\n");
             m_participants[id-PARTICIPANT_START_ID].newMessage(static_cast<uint8_t*>(packet.buffer.firstElement->payload),
                                                                packet.buffer.firstElement->len);
         }else{
-            printf("Got message to port %u: matching participant\n", packet.destPort);
+            printf("Got message to port %u: no matching participant\n", packet.destPort);
         }
     }
 }

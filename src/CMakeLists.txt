@@ -11,7 +11,6 @@ target_sources(rtps
         "${CMAKE_CURRENT_LIST_DIR}/discovery/BuiltInTopicData.cpp"
         "${CMAKE_CURRENT_LIST_DIR}/entities/Domain.cpp"
         "${CMAKE_CURRENT_LIST_DIR}/entities/Participant.cpp"
-        "${CMAKE_CURRENT_LIST_DIR}/entities/StatefullReader.cpp"
         "${CMAKE_CURRENT_LIST_DIR}/entities/StatefullWriter.cpp"
         "${CMAKE_CURRENT_LIST_DIR}/entities/StatelessReader.cpp"
         "${CMAKE_CURRENT_LIST_DIR}/entities/StatelessWriter.cpp"

@@ -42,8 +42,8 @@ void SEDPAgent::onNewPublisher(ReaderCacheChange & /*change*/){
 }
 
 void SEDPAgent::onNewSubscriber(ReaderCacheChange &change){
-    printf("Found a new Subscriber\n");
     Lock lock{m_mutex};
+    printf("New subscriber");
 
     if(!change.copyInto(m_buffer, sizeof(m_buffer)/sizeof(m_buffer[0]))){
         printf("SEDPAgent: Buffer too small.");
@@ -56,6 +56,13 @@ void SEDPAgent::onNewSubscriber(ReaderCacheChange &change){
     if(topicData.readFromUcdrBuffer(cdrBuffer)){
         Writer* writer = m_part->getWriter(topicData.topicName, topicData.typeName);
         // TODO check policies
+        printf("Found a new ");
+        if(topicData.reliabilityKind == ReliabilityKind_t::RELIABLE){
+            printf("reliable ");
+        }else{
+            printf("best-effort ");
+        }
+        printf("Subscriber\n");
         writer->addNewMatchedReader(ReaderProxy{topicData.endpointGuid, topicData.unicastLocator});
     }
 }
