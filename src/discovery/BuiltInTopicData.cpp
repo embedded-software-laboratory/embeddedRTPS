@@ -34,16 +34,14 @@ bool BuiltInTopicData::readFromUcdrBuffer(ucdrBuffer& buffer){
             case ParameterId::PID_SENTINEL:
                 return true;
             case ParameterId::PID_TOPIC_NAME:
-                //TODO Skip 4 bytes. Don't know what they are yet.
-                buffer.iterator+=4;
-                length -=4;
-                ucdr_deserialize_array_char(&buffer, topicName, length);
+                uint32_t topicNameLength;
+                ucdr_deserialize_uint32_t(&buffer, &topicNameLength);
+                ucdr_deserialize_array_char(&buffer, topicName, topicNameLength);
                 break;
             case ParameterId::PID_TYPE_NAME:
-                //TODO Skip 4 bytes. Don't know what they are yet.
-                buffer.iterator+=4;
-                length -=4;
-                ucdr_deserialize_array_char(&buffer, typeName, length);
+                uint32_t typeNameLength;
+                ucdr_deserialize_uint32_t(&buffer, &typeNameLength);
+                ucdr_deserialize_array_char(&buffer, typeName, typeNameLength);
                 break;
             case ParameterId::PID_UNICAST_LOCATOR:
                 unicastLocator.readFromUcdrBuffer(buffer);
@@ -67,37 +65,51 @@ bool BuiltInTopicData::serializeIntoUcdrBuffer(ucdrBuffer& buffer){
     ucdr_serialize_uint16_t(&buffer, sizeof(Locator));
     ucdr_serialize_array_uint8_t(&buffer, reinterpret_cast<uint8_t*>(&unicastLocator), sizeof(Locator));
 
-    const auto lenTopicName = static_cast<uint16_t>(strlen(topicName) + 1); // + \0
+    // It's a 32 bit instead of 16 because it seems like the field is padded.
+    const auto lenTopicName = static_cast<uint32_t>(strlen(topicName) + 1); // + \0
     uint16_t topicAlignement = 0;
     if(lenTopicName % 4 != 0){
         topicAlignement = static_cast<uint8_t>(4 - (lenTopicName % 4));
     }
+    const auto totalLengthTopicNameField = static_cast<uint16_t>(sizeof(lenTopicName) + lenTopicName + topicAlignement);
     ucdr_serialize_uint16_t(&buffer, ParameterId::PID_TOPIC_NAME);
-    ucdr_serialize_uint16_t(&buffer, static_cast<uint16_t>(lenTopicName + topicAlignement));
+    ucdr_serialize_uint16_t(&buffer, totalLengthTopicNameField);
+    ucdr_serialize_uint32_t(&buffer, lenTopicName);
     ucdr_serialize_array_char(&buffer, topicName, lenTopicName);
     ucdr_align_to(&buffer,4);
 
-    const auto lenTypeName = static_cast<uint16_t>(strlen(typeName) + 1); // + \0
+    // It's a 32 bit instead of 16 because it seems like the field is padded.
+    const auto lenTypeName = static_cast<uint32_t>(strlen(typeName) + 1); // + \0
     uint16_t typeAlignement = 0;
     if(lenTypeName % 4 != 0){
         typeAlignement = static_cast<uint8_t>(4 - (lenTypeName % 4));
     }
-    ucdr_serialize_uint16_t(&buffer, ParameterId::PID_TOPIC_NAME);
-    ucdr_serialize_uint16_t(&buffer, static_cast<uint16_t>(lenTypeName + typeAlignement));
+    const auto totalLengthTypeNameField = static_cast<uint16_t>(sizeof(lenTypeName) + lenTypeName + typeAlignement);
+
+    ucdr_serialize_uint16_t(&buffer, ParameterId::PID_TYPE_NAME);
+    ucdr_serialize_uint16_t(&buffer, totalLengthTypeNameField);
+    ucdr_serialize_uint32_t(&buffer, lenTypeName);
     ucdr_serialize_array_char(&buffer, typeName, lenTypeName);
     ucdr_align_to(&buffer,4);
+
+    ucdr_serialize_uint16_t(&buffer, ParameterId::PID_KEY_HASH);
+    ucdr_serialize_uint16_t(&buffer, sizeof(Guid));
+    ucdr_serialize_array_uint8_t(&buffer, reinterpret_cast<uint8_t*>(&endpointGuid), sizeof(Guid));
 
     ucdr_serialize_uint16_t(&buffer, ParameterId::PID_ENDPOINT_GUID);
     ucdr_serialize_uint16_t(&buffer, sizeof(Guid));
     ucdr_serialize_array_uint8_t(&buffer, reinterpret_cast<uint8_t*>(&endpointGuid), sizeof(Guid));
 
-
+    const uint8_t unidentifiedOffset = 8;
     ucdr_serialize_uint16_t(&buffer, ParameterId::PID_RELIABILITY);
-    ucdr_serialize_uint16_t(&buffer, sizeof(ReliabilityKind_t));
+    ucdr_serialize_uint16_t(&buffer, sizeof(ReliabilityKind_t) + unidentifiedOffset);
     ucdr_serialize_uint32_t(&buffer, static_cast<uint32_t>(reliabilityKind));
+    ucdr_serialize_uint32_t(&buffer, 0); // unidentified additional value
+    ucdr_serialize_uint32_t(&buffer, 0); // unidentified additional value
+
 
     ucdr_serialize_uint16_t(&buffer, ParameterId::PID_SENTINEL);
     ucdr_serialize_uint16_t(&buffer, 0);
 
-
+    return true;
 }

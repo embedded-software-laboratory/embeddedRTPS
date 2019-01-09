@@ -11,13 +11,17 @@
 #include "rtps/messages/MessageTypes.h"
 #include "ucdr/microcdr.h"
 
+#define SEDP_VERBOSE 1
+
 using rtps::SEDPAgent;
 
 void SEDPAgent::init(Participant& part, BuiltInEndpoints endpoints){
     m_part = &part;
     // TODO move
     if(sys_mutex_new(&m_mutex) != ERR_OK){
+#if SEDP_VERBOSE
         printf("SEDPAgent failed to create mutex\n");
+#endif
         return;
     }
 
@@ -43,10 +47,14 @@ void SEDPAgent::onNewPublisher(ReaderCacheChange & /*change*/){
 
 void SEDPAgent::onNewSubscriber(ReaderCacheChange &change){
     Lock lock{m_mutex};
-    printf("New subscriber");
+#if SEDP_VERBOSE
+    printf("New subscriber\n");
+#endif
 
     if(!change.copyInto(m_buffer, sizeof(m_buffer)/sizeof(m_buffer[0]))){
+#if SEDP_VERBOSE
         printf("SEDPAgent: Buffer too small.");
+#endif
         return;
     }
     ucdrBuffer cdrBuffer;
@@ -56,6 +64,7 @@ void SEDPAgent::onNewSubscriber(ReaderCacheChange &change){
     if(topicData.readFromUcdrBuffer(cdrBuffer)){
         Writer* writer = m_part->getWriter(topicData.topicName, topicData.typeName);
         // TODO check policies
+#if SEDP_VERBOSE
         printf("Found a new ");
         if(topicData.reliabilityKind == ReliabilityKind_t::RELIABLE){
             printf("reliable ");
@@ -63,6 +72,7 @@ void SEDPAgent::onNewSubscriber(ReaderCacheChange &change){
             printf("best-effort ");
         }
         printf("Subscriber\n");
+#endif
         writer->addNewMatchedReader(ReaderProxy{topicData.endpointGuid, topicData.unicastLocator});
     }
 }
@@ -76,9 +86,15 @@ void SEDPAgent::addWriter(Writer& writer){
     Lock lock{m_mutex};
     ucdrBuffer microbuffer;
     ucdr_init_buffer(&microbuffer, m_buffer, sizeof(m_buffer)/sizeof(m_buffer[0]));
+    const uint16_t zero_options = 0;
+
+    ucdr_serialize_array_uint8_t(&microbuffer, rtps::SMElement::SCHEME_PL_CDR_LE.data(), rtps::SMElement::SCHEME_PL_CDR_LE.size());
+    ucdr_serialize_uint16_t(&microbuffer, zero_options);
     writer.m_attributes.serializeIntoUcdrBuffer(microbuffer);
     m_endpoints.sedpPubWriter->newChange(ChangeKind_t::ALIVE, m_buffer, ucdr_buffer_length(&microbuffer));
+#if SEDP_VERBOSE
     printf("Added new change to sedpPubWriter.\n");
+#endif
 }
 
 void SEDPAgent::addReader(Reader& reader){

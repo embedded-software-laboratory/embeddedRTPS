@@ -9,11 +9,12 @@
 
 using rtps::StatefullWriterT;
 
+#define SFW_VERBOSE 1
 
 template <class NetworkDriver>
 bool StatefullWriterT<NetworkDriver>::init(BuiltInTopicData attributes, TopicKind_t topicKind, ThreadPool* threadPool, UdpDriver& driver){
     if (sys_mutex_new(&m_mutex) != ERR_OK) {
-        printf("Failed to create mutex \n");
+        printf("StatefullWriter: Failed to create mutex.\n");
         return false;
     }
 
@@ -30,6 +31,9 @@ bool StatefullWriterT<NetworkDriver>::init(BuiltInTopicData attributes, TopicKin
 
 template <class NetworkDriver>
 bool StatefullWriterT<NetworkDriver>::addNewMatchedReader(const ReaderProxy& newProxy){
+#if SFW_VERBOSE
+    printf("StatefullWriter[%s]: New reader added.\n", &this->m_attributes.topicName[0]);
+#endif
     for(uint32_t i=0; i < sizeof(m_proxies)/sizeof(m_proxies[0]); ++i){
         static_assert(sizeof(i)*8 >= sizeof(m_proxySlotUsedBitMap), "StatelessWriter: Loop variable too small");
 
@@ -62,6 +66,9 @@ const rtps::CacheChange* StatefullWriterT<NetworkDriver>::newChange(ChangeKind_t
     change.data.append(data, size);
     change.sequenceNumber = m_lastChangeSequenceNumber;
 
+#if SFW_VERBOSE
+    printf("StatefullWriter[%s]: Adding new data.\n", this->m_attributes.topicName);
+#endif
     return m_history.addChange(std::move(change));
 }
 
@@ -72,6 +79,7 @@ void StatefullWriterT<NetworkDriver>::unsentChangesReset(){
 
 template <class NetworkDriver>
 void StatefullWriterT<NetworkDriver>::onNewAckNack(const SubmessageAckNack& msg){
+
     // Search for reader
     ReaderProxy* proxy = nullptr;
     for(uint8_t i=0; i < sizeof(m_proxies)/sizeof(m_proxies[0]); ++i){
@@ -82,6 +90,9 @@ void StatefullWriterT<NetworkDriver>::onNewAckNack(const SubmessageAckNack& msg)
     }
 
     if(proxy == nullptr || msg.count.value < proxy->ackNackCount.value){
+#if SFW_VERBOSE
+        printf("StatefullWriter[%s]: Dropping acknack.\n", &this->m_attributes.topicName[0]);
+#endif
         return;
     }
 
@@ -89,9 +100,18 @@ void StatefullWriterT<NetworkDriver>::onNewAckNack(const SubmessageAckNack& msg)
 
     // Send missing packets
     SequenceNumber_t nextSN = msg.readerSNState.base;
+#if SFW_VERBOSE
+    if(nextSN.low == 0 && nextSN.high == 0){
+        printf("StatefullWriter[%s]: Received preemptive acknack.\n", &this->m_attributes.topicName[0]);
+    }else{
+        printf("StatefullWriter[%s]: Received non-preemptive acknack.\n", &this->m_attributes.topicName[0]);
+    }
+#endif
     for(uint32_t i=0; i < msg.readerSNState.numBits; ++i, ++nextSN){
         if(msg.readerSNState.isSet(i)){
-            printf("Send Packet on acknack\n");
+#if SFW_VERBOSE
+            printf("StatefullWriter[%s]: Send Packet on acknack.\n", this->m_attributes.topicName);
+#endif
             sendData(*proxy, nextSN);
         }
     }
@@ -109,7 +129,9 @@ void StatefullWriterT<NetworkDriver>::sendData(const ReaderProxy &reader, const 
         Lock lock(m_mutex);
         const CacheChange* next = m_history.getChangeBySN(sn);
         if(next == nullptr){
-            printf("StatelessWriter: Couldn't get a CacheChange with SN (%i,%u)\n", sn.high, sn.low);
+#if SFW_VERBOSE
+            printf("StatefullWriter[%s]: Couldn't get a CacheChange with SN (%i,%u)\n", &this->m_attributes.topicName[0], sn.high, sn.low);
+#endif
             return;
         }
         MessageFactory::addSubMessageData(info.buffer, next->data, false, next->sequenceNumber, m_attributes.endpointGuid.entityId,
@@ -148,6 +170,11 @@ void StatefullWriterT<NetworkDriver>::sendHeartBeat() {
         lastSN = m_history.getSeqNumMax();
     }
     if(firstSN == SEQUENCENUMBER_UNKNOWN || lastSN == SEQUENCENUMBER_UNKNOWN){
+#if SFW_VERBOSE
+        if(strlen(&this->m_attributes.typeName[0]) != 0){
+            printf("StatefullWriter[%s]: Skipping heartbeat. No data.\n", this->m_attributes.topicName);
+        }
+#endif
         return;
     }
 

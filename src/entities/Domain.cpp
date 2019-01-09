@@ -6,6 +6,8 @@
 #include "rtps/entities/Domain.h"
 #include "rtps/utils/udpUtils.h"
 
+#define DOMAIN_VERBOSE 0
+
 using rtps::Domain;
 
 Domain::Domain() : m_threadPool(*this), m_transport(ThreadPool::readCallback, &m_threadPool){
@@ -16,7 +18,9 @@ Domain::Domain() : m_threadPool(*this), m_transport(ThreadPool::readCallback, &m
 bool Domain::start(){
     bool started = m_threadPool.startThreads();
     if(!started){
+#if DOMAIN_VERBOSE
         printf("Failed starting threads");
+#endif
     }
     return started;
 }
@@ -27,12 +31,16 @@ void Domain::stop(){
 
 void Domain::receiveCallback(const PacketInfo& packet){
     if(packet.buffer.firstElement->next != nullptr){
+#if DOMAIN_VERBOSE
         printf("Domain: Cannot handle multiple elements chained. You might want to increase PBUF_POOL_BUFSIZE\n");
+#endif
     }
 
     if(isMultiCastPort(packet.destPort)){
         // Pass to all
+#if DOMAIN_VERBOSE
         printf("Multicast to port %u\n", packet.destPort);
+#endif
         for(auto i=0; i < m_nextParticipantId - PARTICIPANT_START_ID; ++i) {
             m_participants[i].newMessage(static_cast<uint8_t*>(packet.buffer.firstElement->payload), packet.buffer.firstElement->len);
         }
@@ -40,11 +48,15 @@ void Domain::receiveCallback(const PacketInfo& packet){
         // Pass to addressed one only
         ParticipantId_t id = getParticipantIdFromUnicastPort(packet.destPort, isUserPort(packet.destPort));
         if(id != PARTICIPANT_ID_INVALID){
+#if DOMAIN_VERBOSE
             printf("Got unicast message\n");
+#endif
             m_participants[id-PARTICIPANT_START_ID].newMessage(static_cast<uint8_t*>(packet.buffer.firstElement->payload),
                                                                packet.buffer.firstElement->len);
         }else{
+#if DOMAIN_VERBOSE
             printf("Got message to port %u: no matching participant\n", packet.destPort);
+#endif
         }
     }
 }
@@ -159,6 +171,7 @@ rtps::Writer* Domain::createWriter(Participant& part, char* topicName, char* typ
         return &writer;
     }
 }
+
 
 rtps::GuidPrefix_t Domain::generateGuidPrefix(ParticipantId_t id) const{
     // TODO
