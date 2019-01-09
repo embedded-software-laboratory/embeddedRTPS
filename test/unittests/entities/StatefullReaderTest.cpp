@@ -6,6 +6,7 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
+#include "rtps/discovery/BuiltInTopicData.h"
 #include "rtps/entities/StatefullReader.h"
 #include "rtps/messages/MessageTypes.h"
 #include "test/mocking/NetworkDriverMock.h"
@@ -16,10 +17,19 @@ void setVariableToTrue(void* success, ReaderCacheChange&){
     *static_cast<bool*>(success) = true; // using callee pointer for feedback
 }
 
+static BuiltInTopicData getDefaultAttributes(){
+    const ParticipantId_t arbitraryParticipantId = 1;
+    BuiltInTopicData attributes;
+    attributes.topicName[0] = '\0';
+    attributes.typeName[0] = '\0';
+    attributes.reliabilityKind = ReliabilityKind_t::RELIABLE;
+    attributes.endpointGuid.prefix = GUIDPREFIX_UNKNOWN;
+    attributes.unicastLocator = getBuiltInUnicastLocator(arbitraryParticipantId);
+    return attributes;
+}
+
 class StatefullReaderWithoutProxies : public ::testing::Test{
 protected:
-    const ParticipantId_t arbitraryParticipantId = 1;
-    const Ip4Port_t srcPort = getUserUnicastPort(arbitraryParticipantId);
     NetworkDriverMock mockDriver;
     StatefullReaderT<NetworkDriverMock> reader;
 
@@ -31,7 +41,7 @@ protected:
 
     void SetUp() override{
         rtps::init();
-        reader.init(Guid{GUIDPREFIX_UNKNOWN, ENTITYID_UNKNOWN}, mockDriver, srcPort);
+        reader.init(getDefaultAttributes(), mockDriver);
     }
 };
 
@@ -67,7 +77,9 @@ protected:
 
     void SetUp() override{
         rtps::init();
-        reader.init(Guid{GUIDPREFIX_UNKNOWN, ENTITYID_UNKNOWN}, mockDriver, srcPort);
+
+        reader.init(getDefaultAttributes(), mockDriver);
+
         someProxy.hbCount = {2};
         reader.addNewMatchedWriter(someProxy);
 
@@ -76,7 +88,7 @@ protected:
         hbMsg.header.flags = FLAG_LITTLE_ENDIAN;
         // Force response by not setting final flag.
         hbMsg.writerId = someProxy.remoteWriterGuid.entityId;
-        hbMsg.readerId = reader.m_guid.entityId;
+        hbMsg.readerId = reader.m_attributes.endpointGuid.entityId;
         hbMsg.firstSN = SequenceNumber_t{0,1};
         hbMsg.lastSN = SequenceNumber_t{0,50};
         hbMsg.count = {someProxy.hbCount.value + 1};
@@ -177,7 +189,9 @@ protected:
 
     void SetUp() override{
         rtps::init();
-        reader.init(Guid{GUIDPREFIX_UNKNOWN, ENTITYID_UNKNOWN}, mockDriver, srcPort);
+
+        reader.init(getDefaultAttributes(), mockDriver);
+
         reader.addNewMatchedWriter(firstProxy);
         reader.addNewMatchedWriter(secondProxy);
     }

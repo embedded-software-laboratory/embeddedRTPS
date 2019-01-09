@@ -7,6 +7,10 @@
 
 using rtps::StatelessReader;
 
+void StatelessReader::init(const BuiltInTopicData& attributes){
+    m_attributes = attributes;
+}
+
 void StatelessReader::newChange(ReaderCacheChange& cacheChange){
     if(m_callback != nullptr){
         m_callback(m_callee, cacheChange);

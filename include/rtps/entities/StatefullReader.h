@@ -20,7 +20,7 @@ namespace rtps{
     class StatefullReaderT : public Reader{
     public:
 
-        void init(Guid guid, NetworkDriver& driver, Ip4Port_t sendPort);
+        void init(const BuiltInTopicData& attributes, NetworkDriver& driver);
         void newChange(ReaderCacheChange& cacheChange) override;
         void registerCallback(ddsReaderCallback_fp cb, void* callee) override;
         bool addNewMatchedWriter(const WriterProxy& newProxy);
@@ -28,7 +28,7 @@ namespace rtps{
         bool onNewHeartbeat(const SubmessageHeartbeat& msg, const GuidPrefix_t& remotePrefix) override;
 
     private:
-        PacketInfo m_packetInfo;
+        PacketInfo m_packetInfo; // TODO intended for reuse but buffer not used as such
         NetworkDriver* m_transport;
         MemoryPool<WriterProxy, Config::NUM_WRITER_PROXIES_PER_READER> m_proxies;
         ddsReaderCallback_fp m_callback = nullptr;

@@ -79,7 +79,7 @@ rtps::Writer* Participant::getWriter(EntityId_t id) const{
 
 rtps::Reader* Participant::getReader(EntityId_t id) const{
     for(uint8_t i=0; i < m_numReaders; ++i){
-        if(m_readers[i]->m_guid.entityId == id){
+        if(m_readers[i]->m_attributes.endpointGuid.entityId == id){
             return m_readers[i];
         }
     }
@@ -99,8 +99,8 @@ rtps::Writer* Participant::getWriter(const char* topic, const char* type) const{
 
 rtps::Reader* Participant::getReader(const char* topic, const char* type) const{
     for(uint8_t i=0; i < m_numReaders; ++i){
-        if((strcmp(m_readers[i]->topicName, topic) == 0) &&
-           (strcmp(m_readers[i]->typeName, type) == 0)){
+        if((strcmp(m_readers[i]->m_attributes.topicName, topic) == 0) &&
+           (strcmp(m_readers[i]->m_attributes.typeName, type) == 0)){
             return m_readers[i];
         }
     }

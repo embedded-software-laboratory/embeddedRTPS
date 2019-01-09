@@ -134,7 +134,7 @@ void SPDPAgent::handleSPDPPackage(ReaderCacheChange& cacheChange){
                 if(m_proxyDataBuffer.hasSubscriptionReader()){
                     const ReaderProxy proxy{{m_proxyDataBuffer.m_guid.prefix, ENTITYID_SEDP_BUILTIN_SUBSCRIPTIONS_READER},
                                             m_proxyDataBuffer.m_metatrafficUnicastLocatorList[0]};
-                    m_buildInEndpoints.sedpPubWriter->addNewMatchedReader(proxy);
+                    m_buildInEndpoints.sedpSubWriter->addNewMatchedReader(proxy);
                 }
 
                 // For now, the readers don't care about remotes

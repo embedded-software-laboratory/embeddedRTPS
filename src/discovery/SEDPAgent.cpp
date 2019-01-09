@@ -98,5 +98,22 @@ void SEDPAgent::addWriter(Writer& writer){
 }
 
 void SEDPAgent::addReader(Reader& reader){
+    EntityKind_t readerKind = reader.m_attributes.endpointGuid.entityId.entityKind;
+    if(readerKind == EntityKind_t::BUILD_IN_READER_WITH_KEY || readerKind == EntityKind_t::BUILD_IN_READER_WITHOUT_KEY){
+        return; // No need to announce builtin endpoints
+    }
 
+    Lock lock{m_mutex};
+    ucdrBuffer microbuffer;
+    ucdr_init_buffer(&microbuffer, m_buffer, sizeof(m_buffer)/sizeof(m_buffer[0]));
+    const uint16_t zero_options = 0;
+
+    ucdr_serialize_array_uint8_t(&microbuffer, rtps::SMElement::SCHEME_PL_CDR_LE.data(), rtps::SMElement::SCHEME_PL_CDR_LE.size());
+    ucdr_serialize_uint16_t(&microbuffer, zero_options);
+    reader.m_attributes.serializeIntoUcdrBuffer(microbuffer);
+    m_endpoints.sedpSubWriter->newChange(ChangeKind_t::ALIVE, m_buffer, ucdr_buffer_length(&microbuffer));
+
+#if SEDP_VERBOSE
+    printf("Added new change to sedpSubWriter.\n");
+#endif
 }

@@ -10,10 +10,10 @@
 using rtps::StatefullReaderT;
 
 template <class NetworkDriver>
-void StatefullReaderT<NetworkDriver>::init(Guid guid, NetworkDriver& driver, Ip4Port_t sendPort){
-    m_guid = guid;
+void StatefullReaderT<NetworkDriver>::init(const BuiltInTopicData& attributes, NetworkDriver& driver){
+    m_attributes = attributes;
     m_transport = &driver;
-    m_packetInfo.srcPort = sendPort;
+    m_packetInfo.srcPort = attributes.unicastLocator.port;
     sys_mutex_new(&mutex);
 }
 
@@ -23,7 +23,7 @@ void StatefullReaderT<NetworkDriver>::newChange(ReaderCacheChange& cacheChange){
     if(m_callback == nullptr){
         return;
     }
-//    printf("StatefullReader got a new change.\n");
+
     for(auto& proxy : m_proxies){
         if(proxy.remoteWriterGuid == cacheChange.writerGuid){
             if(proxy.expectedSN == cacheChange.sn){
@@ -33,7 +33,6 @@ void StatefullReaderT<NetworkDriver>::newChange(ReaderCacheChange& cacheChange){
             }
         }
     }
-//    printf("No matching WriterProxy found\n");
 }
 
 template <class NetworkDriver>
@@ -78,7 +77,7 @@ bool StatefullReaderT<NetworkDriver>::onNewHeartbeat(const SubmessageHeartbeat& 
     writer->hbCount.value = msg.count.value;
     info.destAddr = writer->locator.getIp4Address();
     info.destPort = writer->locator.port;
-    rtps::MessageFactory::addHeader(info.buffer, m_guid.prefix);
+    rtps::MessageFactory::addHeader(info.buffer, m_attributes.endpointGuid.prefix);
     rtps::MessageFactory::addAckNack(info.buffer, msg.writerId, msg.readerId, writer->getMissing(msg.firstSN,
                                      msg.lastSN), writer->getNextCount());
 

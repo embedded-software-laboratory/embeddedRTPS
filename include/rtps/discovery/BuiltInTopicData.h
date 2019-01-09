@@ -30,7 +30,7 @@ namespace rtps{
               reliabilityKind(reliability), unicastLocator(loc){}
 
         bool readFromUcdrBuffer(ucdrBuffer& buffer);
-        bool serializeIntoUcdrBuffer(ucdrBuffer& buffer);
+        bool serializeIntoUcdrBuffer(ucdrBuffer& buffer) const;
     };
 }
 

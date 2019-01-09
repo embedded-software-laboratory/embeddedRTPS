@@ -20,7 +20,7 @@ class ReaderMock final: public Reader{
 public:
 
     explicit ReaderMock(rtps::Guid id){
-        m_guid = id;
+        m_attributes.endpointGuid = id;
     }
     ~ReaderMock() override = default;
 

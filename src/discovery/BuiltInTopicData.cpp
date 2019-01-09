@@ -58,20 +58,20 @@ bool BuiltInTopicData::readFromUcdrBuffer(ucdrBuffer& buffer){
     return ucdr_buffer_remaining(&buffer) == 0;
 }
 
-bool BuiltInTopicData::serializeIntoUcdrBuffer(ucdrBuffer& buffer){
+bool BuiltInTopicData::serializeIntoUcdrBuffer(ucdrBuffer& buffer) const{
     // TODO Check if buffer length is sufficient
 
     ucdr_serialize_uint16_t(&buffer, ParameterId::PID_UNICAST_LOCATOR);
     ucdr_serialize_uint16_t(&buffer, sizeof(Locator));
-    ucdr_serialize_array_uint8_t(&buffer, reinterpret_cast<uint8_t*>(&unicastLocator), sizeof(Locator));
+    ucdr_serialize_array_uint8_t(&buffer, reinterpret_cast<const uint8_t*>(&unicastLocator), sizeof(Locator));
 
     // It's a 32 bit instead of 16 because it seems like the field is padded.
     const auto lenTopicName = static_cast<uint32_t>(strlen(topicName) + 1); // + \0
-    uint16_t topicAlignement = 0;
+    uint16_t topicAlignment = 0;
     if(lenTopicName % 4 != 0){
-        topicAlignement = static_cast<uint8_t>(4 - (lenTopicName % 4));
+        topicAlignment = static_cast<uint8_t>(4 - (lenTopicName % 4));
     }
-    const auto totalLengthTopicNameField = static_cast<uint16_t>(sizeof(lenTopicName) + lenTopicName + topicAlignement);
+    const auto totalLengthTopicNameField = static_cast<uint16_t>(sizeof(lenTopicName) + lenTopicName + topicAlignment);
     ucdr_serialize_uint16_t(&buffer, ParameterId::PID_TOPIC_NAME);
     ucdr_serialize_uint16_t(&buffer, totalLengthTopicNameField);
     ucdr_serialize_uint32_t(&buffer, lenTopicName);
@@ -80,11 +80,11 @@ bool BuiltInTopicData::serializeIntoUcdrBuffer(ucdrBuffer& buffer){
 
     // It's a 32 bit instead of 16 because it seems like the field is padded.
     const auto lenTypeName = static_cast<uint32_t>(strlen(typeName) + 1); // + \0
-    uint16_t typeAlignement = 0;
+    uint16_t typeAlignment = 0;
     if(lenTypeName % 4 != 0){
-        typeAlignement = static_cast<uint8_t>(4 - (lenTypeName % 4));
+        typeAlignment = static_cast<uint8_t>(4 - (lenTypeName % 4));
     }
-    const auto totalLengthTypeNameField = static_cast<uint16_t>(sizeof(lenTypeName) + lenTypeName + typeAlignement);
+    const auto totalLengthTypeNameField = static_cast<uint16_t>(sizeof(lenTypeName) + lenTypeName + typeAlignment);
 
     ucdr_serialize_uint16_t(&buffer, ParameterId::PID_TYPE_NAME);
     ucdr_serialize_uint16_t(&buffer, totalLengthTypeNameField);
@@ -94,11 +94,11 @@ bool BuiltInTopicData::serializeIntoUcdrBuffer(ucdrBuffer& buffer){
 
     ucdr_serialize_uint16_t(&buffer, ParameterId::PID_KEY_HASH);
     ucdr_serialize_uint16_t(&buffer, sizeof(Guid));
-    ucdr_serialize_array_uint8_t(&buffer, reinterpret_cast<uint8_t*>(&endpointGuid), sizeof(Guid));
+    ucdr_serialize_array_uint8_t(&buffer, reinterpret_cast<const uint8_t*>(&endpointGuid), sizeof(Guid));
 
     ucdr_serialize_uint16_t(&buffer, ParameterId::PID_ENDPOINT_GUID);
     ucdr_serialize_uint16_t(&buffer, sizeof(Guid));
-    ucdr_serialize_array_uint8_t(&buffer, reinterpret_cast<uint8_t*>(&endpointGuid), sizeof(Guid));
+    ucdr_serialize_array_uint8_t(&buffer, reinterpret_cast<const uint8_t*>(&endpointGuid), sizeof(Guid));
 
     const uint8_t unidentifiedOffset = 8;
     ucdr_serialize_uint16_t(&buffer, ParameterId::PID_RELIABILITY);

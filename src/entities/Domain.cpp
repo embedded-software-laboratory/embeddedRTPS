@@ -89,7 +89,7 @@ void Domain::addDefaultWriterAndReader(Participant& part) {
 
     spdpWriter.init(spdpWriterAttributes, TopicKind_t::WITH_KEY, &m_threadPool, m_transport);
     spdpWriter.addNewMatchedReader(ReaderProxy{{part.m_guidPrefix, ENTITYID_SPDP_BUILTIN_PARTICIPANT_READER}, getBuiltInMulticastLocator()});
-    spdpReader.m_guid = {part.m_guidPrefix, ENTITYID_SPDP_BUILTIN_PARTICIPANT_READER};
+    spdpReader.m_attributes.endpointGuid = {part.m_guidPrefix, ENTITYID_SPDP_BUILTIN_PARTICIPANT_READER};
 
     // SEDP
     StatefullReader& sedpPubReader = m_statefullReaders[m_numStatefullReaders++];
@@ -97,23 +97,28 @@ void Domain::addDefaultWriterAndReader(Participant& part) {
     StatefullWriter& sedpPubWriter = m_statefullWriters[m_numStatefullWriters++];
     StatefullWriter& sedpSubWriter = m_statefullWriters[m_numStatefullWriters++];
 
+    // Prepare attributes
+    BuiltInTopicData sedpAttributes;
+    sedpAttributes.topicName[0] = '\0';
+    sedpAttributes.typeName[0] = '\0';
+    sedpAttributes.reliabilityKind = ReliabilityKind_t::RELIABLE;
+    sedpAttributes.endpointGuid.prefix = part.m_guidPrefix;
+    sedpAttributes.unicastLocator = getBuiltInUnicastLocator(part.m_participantId);
+
     // READER
-    sedpPubReader.init({part.m_guidPrefix, ENTITYID_SEDP_BUILTIN_PUBLICATIONS_READER}, m_transport, getBuiltInUnicastPort(part.m_participantId));
-    sedpSubReader.init({part.m_guidPrefix, ENTITYID_SEDP_BUILTIN_SUBSCRIPTIONS_READER}, m_transport, getBuiltInUnicastPort(part.m_participantId));
+    sedpAttributes.endpointGuid.entityId = ENTITYID_SEDP_BUILTIN_PUBLICATIONS_READER;
+    sedpPubReader.init(sedpAttributes, m_transport);
+    sedpAttributes.endpointGuid.entityId = ENTITYID_SEDP_BUILTIN_SUBSCRIPTIONS_READER;
+    sedpSubReader.init(sedpAttributes, m_transport);
 
     // WRITER
-    BuiltInTopicData sedpWriterAttributes;
-    sedpWriterAttributes.topicName[0] = '\0';
-    sedpWriterAttributes.typeName[0] = '\0';
-    sedpWriterAttributes.reliabilityKind = ReliabilityKind_t::RELIABLE;
-    sedpWriterAttributes.endpointGuid.prefix = part.m_guidPrefix;
-    sedpWriterAttributes.unicastLocator = getBuiltInUnicastLocator(part.m_participantId);
 
-    sedpWriterAttributes.endpointGuid.entityId = ENTITYID_SEDP_BUILTIN_PUBLICATIONS_WRITER;
-    sedpPubWriter.init(sedpWriterAttributes, TopicKind_t::NO_KEY, &m_threadPool, m_transport);
 
-    sedpWriterAttributes.endpointGuid.entityId = ENTITYID_SEDP_BUILTIN_SUBSCRIPTIONS_WRITER;
-    sedpSubWriter.init(sedpWriterAttributes, TopicKind_t::NO_KEY, &m_threadPool, m_transport);
+    sedpAttributes.endpointGuid.entityId = ENTITYID_SEDP_BUILTIN_PUBLICATIONS_WRITER;
+    sedpPubWriter.init(sedpAttributes, TopicKind_t::NO_KEY, &m_threadPool, m_transport);
+
+    sedpAttributes.endpointGuid.entityId = ENTITYID_SEDP_BUILTIN_SUBSCRIPTIONS_WRITER;
+    sedpSubWriter.init(sedpAttributes, TopicKind_t::NO_KEY, &m_threadPool, m_transport);
 
     // COLLECT
     BuiltInEndpoints endpoints{};
@@ -129,7 +134,6 @@ void Domain::addDefaultWriterAndReader(Participant& part) {
 
 void Domain::registerPort(Participant& part){
     // TODO Issue #10
-
 }
 
 rtps::Writer* Domain::createWriter(Participant& part, char* topicName, char* typeName, bool reliable){
@@ -172,6 +176,46 @@ rtps::Writer* Domain::createWriter(Participant& part, char* topicName, char* typ
     }
 }
 
+
+rtps::Reader* Domain::createReader(Participant& part, char* topicName, char* typeName, bool reliable){
+    // TODO Distinguish WithKey and NoKey (Also changes EntityKind)
+    BuiltInTopicData attributes;
+
+    if(strlen(topicName) > Config::MAX_TOPICNAME_LENGTH || strlen(typeName) > Config::MAX_TYPENAME_LENGTH){
+        return nullptr;
+    }
+    strcpy(attributes.topicName, topicName);
+    strcpy(attributes.typeName, typeName);
+    attributes.endpointGuid.prefix = part.m_guidPrefix;
+    attributes.endpointGuid.entityId = {part.getNextUserEntityKey(), EntityKind_t::USER_DEFINED_READER_WITHOUT_KEY};
+    attributes.unicastLocator = getUserUnicastLocator(part.m_participantId);
+
+    if(reliable){
+        if(m_numStatefullReaders == m_statefullReaders.size()){
+            return nullptr;
+        }
+
+        attributes.reliabilityKind = ReliabilityKind_t::RELIABLE;
+
+        StatefullReader& reader = m_statefullReaders[m_numStatefullReaders];
+        reader.init(attributes, m_transport);
+
+        part.addReader(&reader);
+        return &reader;
+    }else{
+        if(m_numStatelessReaders == m_statelessReaders.size()){
+            return nullptr;
+        }
+
+        attributes.reliabilityKind = ReliabilityKind_t::BEST_EFFORT;
+
+        StatelessReader& reader = m_statelessReaders[m_numStatelessReaders];
+        reader.init(attributes);
+
+        part.addReader(&reader);
+        return &reader;
+    }
+}
 
 rtps::GuidPrefix_t Domain::generateGuidPrefix(ParticipantId_t id) const{
     // TODO
