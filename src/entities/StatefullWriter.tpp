@@ -7,9 +7,11 @@
 
 #include "rtps/messages/MessageFactory.h"
 
-using rtps::StatefullWriter;
+using rtps::StatefullWriterT;
 
-bool StatefullWriter::init(BuiltInTopicData attributes, TopicKind_t topicKind, ThreadPool* threadPool, UdpDriver& driver){
+
+template <class NetworkDriver>
+bool StatefullWriterT<NetworkDriver>::init(BuiltInTopicData attributes, TopicKind_t topicKind, ThreadPool* threadPool, UdpDriver& driver){
     if (sys_mutex_new(&m_mutex) != ERR_OK) {
         printf("Failed to create mutex \n");
         return false;
@@ -26,7 +28,8 @@ bool StatefullWriter::init(BuiltInTopicData attributes, TopicKind_t topicKind, T
     return true;
 }
 
-bool StatefullWriter::addNewMatchedReader(const ReaderProxy& newProxy){
+template <class NetworkDriver>
+bool StatefullWriterT<NetworkDriver>::addNewMatchedReader(const ReaderProxy& newProxy){
     for(uint32_t i=0; i < sizeof(m_proxies)/sizeof(m_proxies[0]); ++i){
         static_assert(sizeof(i)*8 >= sizeof(m_proxySlotUsedBitMap), "StatelessWriter: Loop variable too small");
 
@@ -40,11 +43,13 @@ bool StatefullWriter::addNewMatchedReader(const ReaderProxy& newProxy){
     return false;
 }
 
-void StatefullWriter::progress(){
+template <class NetworkDriver>
+void StatefullWriterT<NetworkDriver>::progress(){
 
 }
 
-const rtps::CacheChange* StatefullWriter::newChange(ChangeKind_t kind, const uint8_t* data, DataSize_t size){
+template <class NetworkDriver>
+const rtps::CacheChange* StatefullWriterT<NetworkDriver>::newChange(ChangeKind_t kind, const uint8_t* data, DataSize_t size){
     Lock lock{m_mutex};
     if(m_history.isFull()){
         return nullptr;
@@ -60,11 +65,13 @@ const rtps::CacheChange* StatefullWriter::newChange(ChangeKind_t kind, const uin
     return m_history.addChange(std::move(change));
 }
 
-void StatefullWriter::unsentChangesReset(){
+template <class NetworkDriver>
+void StatefullWriterT<NetworkDriver>::unsentChangesReset(){
     // Don't see a reason why this might be needed for a reliable writer
 }
 
-void StatefullWriter::onNewAckNack(const SubmessageAckNack& msg){
+template <class NetworkDriver>
+void StatefullWriterT<NetworkDriver>::onNewAckNack(const SubmessageAckNack& msg){
     // Search for reader
     ReaderProxy* proxy = nullptr;
     for(uint8_t i=0; i < sizeof(m_proxies)/sizeof(m_proxies[0]); ++i){
@@ -90,7 +97,8 @@ void StatefullWriter::onNewAckNack(const SubmessageAckNack& msg){
     }
 }
 
-void StatefullWriter::sendData(const ReaderProxy &reader, const SequenceNumber_t &sn){
+template <class NetworkDriver>
+void StatefullWriterT<NetworkDriver>::sendData(const ReaderProxy &reader, const SequenceNumber_t &sn){
     PacketInfo info;
     info.srcPort = m_packetInfo.srcPort;
 
@@ -117,7 +125,8 @@ void StatefullWriter::sendData(const ReaderProxy &reader, const SequenceNumber_t
     m_transport->sendFunction(info);
 }
 
-void StatefullWriter::hbFunctionJumppad(void* thisPointer){
+template <class NetworkDriver>
+void StatefullWriterT<NetworkDriver>::hbFunctionJumppad(void* thisPointer){
     auto writer = static_cast<StatefullWriter*>(thisPointer);
     while(1){
         writer->sendHeartBeat();
@@ -125,7 +134,8 @@ void StatefullWriter::hbFunctionJumppad(void* thisPointer){
     }
 }
 
-void StatefullWriter::sendHeartBeat() {
+template <class NetworkDriver>
+void StatefullWriterT<NetworkDriver>::sendHeartBeat() {
     PacketInfo info;
     info.srcPort = m_packetInfo.srcPort;
 

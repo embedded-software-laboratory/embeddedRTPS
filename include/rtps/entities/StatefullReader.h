@@ -41,7 +41,7 @@ namespace rtps{
 
 }
 
-#include <rtps/entities/StatefullReader.tpp>
+#include "../../src/entities/StatefullReader.tpp"
 
 
 #endif //RTPS_STATEFULLREADER_H

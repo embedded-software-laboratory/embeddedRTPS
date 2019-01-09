@@ -58,13 +58,13 @@ void StatefullReaderT<NetworkDriver>::removeWriter(const Guid& guid){
 }
 
 template <class NetworkDriver>
-bool StatefullReaderT<NetworkDriver>::onNewHeartbeat(const SubmessageHeartbeat& msg, const GuidPrefix_t& remotePartGuidPrefix){
+bool StatefullReaderT<NetworkDriver>::onNewHeartbeat(const SubmessageHeartbeat& msg, const GuidPrefix_t& remotePrefix){
     Lock lock(mutex);
     PacketInfo info;
     info.srcPort = m_packetInfo.srcPort;
     WriterProxy* writer = nullptr;
     for(auto& proxy : m_proxies){
-        if(proxy.remoteWriterGuid.prefix == remotePartGuidPrefix &&
+        if(proxy.remoteWriterGuid.prefix == remotePrefix &&
            proxy.remoteWriterGuid.entityId == msg.writerId){
             writer = &proxy;
             break;

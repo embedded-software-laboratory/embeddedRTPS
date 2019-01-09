@@ -11,7 +11,8 @@
 
 namespace rtps{
 
-    class StatefullWriter final : public Writer{
+    template <class NetworkDriver>
+    class StatefullWriterT final : public Writer{
     public:
         bool init(BuiltInTopicData attributes, TopicKind_t topicKind, ThreadPool* threadPool, UdpDriver& driver);
 
@@ -27,7 +28,7 @@ namespace rtps{
         ThreadPool* mp_threadPool = nullptr;
 
         PacketInfo m_packetInfo;
-        UdpDriver* m_transport;
+        NetworkDriver* m_transport;
 
         TopicKind_t m_topicKind = TopicKind_t::NO_KEY;
         SequenceNumber_t m_lastChangeSequenceNumber = {0, 0};
@@ -46,6 +47,9 @@ namespace rtps{
         void sendHeartBeat();
     };
 
+    using StatefullWriter = StatefullWriterT<UdpDriver>;
 }
+
+#include "../../src/entities/StatefullWriter.tpp"
 
 #endif //RTPS_STATEFULLWRITER_H

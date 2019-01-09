@@ -15,7 +15,8 @@ namespace rtps {
 
     struct PBufWrapper;
 
-    class StatelessWriter : public Writer{
+    template <typename NetworkDriver>
+    class StatelessWriterT : public Writer{
     public:
 
         bool init(BuiltInTopicData attributes, TopicKind_t topicKind, ThreadPool* threadPool, UdpDriver& driver);
@@ -33,7 +34,7 @@ namespace rtps {
         ThreadPool* mp_threadPool = nullptr;
 
         PacketInfo m_packetInfo;
-        UdpDriver* m_transport;
+        NetworkDriver* m_transport;
 
         TopicKind_t m_topicKind = TopicKind_t::NO_KEY;
         SequenceNumber_t m_lastChangeSequenceNumber = {0, 0};
@@ -45,6 +46,10 @@ namespace rtps {
 
     };
 
+    using StatelessWriter = StatelessWriterT<UdpDriver>;
+
 }
+
+#include "../../src/entities/StatelessWriter.tpp"
 
 #endif //RTPS_RTPSWRITER_H

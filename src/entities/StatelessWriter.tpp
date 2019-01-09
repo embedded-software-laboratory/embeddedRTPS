@@ -1,0 +1,123 @@
+/*
+ *
+ * Author: Andreas Wüstenberg (andreas.wuestenberg@rwth-aachen.de)
+ */
+
+#include <rtps/entities/ReaderProxy.h>
+
+#include "lwip/tcpip.h"
+#include "rtps/communication/UdpDriver.h"
+#include "rtps/messages/MessageFactory.h"
+#include "rtps/storages/PBufWrapper.h"
+#include "rtps/ThreadPool.h"
+#include "rtps/utils/udpUtils.h"
+
+using rtps::StatelessWriterT;
+using rtps::SequenceNumber_t;
+using rtps::CacheChange;
+
+template <typename NetworkDriver>
+bool StatelessWriterT<NetworkDriver>::init(BuiltInTopicData attributes, TopicKind_t topicKind, ThreadPool* threadPool, UdpDriver& driver){
+    if (sys_mutex_new(&m_mutex) != ERR_OK) {
+        printf("Failed to create mutex \n");
+        return false;
+    }
+
+    m_attributes = attributes;
+    m_packetInfo.srcPort = attributes.unicastLocator.port;
+    m_topicKind = topicKind;
+    mp_threadPool = threadPool;
+    m_transport = &driver;
+
+    return true;
+}
+
+template <typename NetworkDriver>
+bool StatelessWriterT<NetworkDriver>::addNewMatchedReader(const ReaderProxy& newProxy){
+    if(m_readerProxy.remoteReaderGuid.entityId != ENTITYID_UNKNOWN){
+        return false;
+    }
+    m_readerProxy = newProxy;
+    return true;
+}
+
+template <typename NetworkDriver>
+SequenceNumber_t StatelessWriterT<NetworkDriver>::getLastSequenceNumber() const{
+    return m_lastChangeSequenceNumber;
+}
+
+template <typename NetworkDriver>
+const CacheChange* StatelessWriterT<NetworkDriver>::newChange(rtps::ChangeKind_t kind, const uint8_t* data, DataSize_t size) {
+    if(isIrrelevant(kind)){
+        return nullptr; // TODO
+    }
+
+    ++m_lastChangeSequenceNumber;
+    CacheChange change{};
+    change.kind = kind;
+    change.data.reserve(size);
+    change.data.append(data, size);
+    change.sequenceNumber = m_lastChangeSequenceNumber;
+
+
+    Lock lock(m_mutex);
+    auto result = m_history.addChange(std::move(change));
+    if(mp_threadPool != nullptr){
+        mp_threadPool->addWorkload(ThreadPool::Workload_t{this});
+    }
+    return result;
+}
+
+template <typename NetworkDriver>
+void StatelessWriterT<NetworkDriver>::unsentChangesReset() {
+    Lock lock(m_mutex);
+
+    m_nextSequenceNumberToSend = m_history.getSeqNumMin();
+
+    if(mp_threadPool != nullptr){
+        mp_threadPool->addWorkload(ThreadPool::Workload_t{this});
+    }
+}
+
+template <typename NetworkDriver>
+void StatelessWriterT<NetworkDriver>::onNewAckNack(const SubmessageAckNack& /*msg*/){
+    // Too lazy to respond
+}
+
+template <typename NetworkDriver>
+bool StatelessWriterT<NetworkDriver>::isIrrelevant(ChangeKind_t kind) const{
+    return kind == ChangeKind_t::INVALID || (m_topicKind == TopicKind_t::NO_KEY && kind != ChangeKind_t::ALIVE);
+}
+
+template <typename NetworkDriver>
+void StatelessWriterT<NetworkDriver>::progress(){
+    if(m_readerProxy.remoteReaderGuid.entityId == ENTITYID_UNKNOWN){ // TODO UNKNOWN might be okay. Detect not-set locator in another way
+        return;
+    }
+
+    PacketInfo info;
+    info.srcPort = m_packetInfo.srcPort;
+
+    MessageFactory::addHeader(info.buffer, m_attributes.endpointGuid.prefix);
+    MessageFactory::addSubMessageTimeStamp(info.buffer);
+
+    {
+        Lock lock(m_mutex);
+        const CacheChange* next = m_history.getChangeBySN(m_nextSequenceNumberToSend);
+        if(next == nullptr){
+            printf("StatelessWriter: Couldn't get a new CacheChange\n");
+            return;
+        }
+        ++m_nextSequenceNumberToSend;
+        MessageFactory::addSubMessageData(info.buffer, next->data, false, next->sequenceNumber, m_attributes.endpointGuid.entityId,
+                                          m_readerProxy.remoteReaderGuid.entityId); // TODO
+    }
+
+    // Just usable for IPv4
+    const Locator& locator = m_readerProxy.remoteLocator;
+
+    info.destAddr = locator.getIp4Address();
+    info.destPort = (Ip4Port_t) locator.port;
+
+    m_transport->sendFunction(info);
+}
