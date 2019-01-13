@@ -4,6 +4,7 @@
  */
 #include "rtps/discovery/BuiltInTopicData.h"
 #include "rtps/messages/MessageTypes.h"
+#include <cstring>
 
 using rtps::BuiltInTopicData;
 using rtps::SMElement::ParameterId;

@@ -7,8 +7,17 @@ add_subdirectory(googletest)
 
 SET(LWIP_CONTRIB_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../../contrib")
 SET(LWIP_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../../lwip")
-SET(WPDPACK_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../../WpdPack")
-set(ARCH_DIR "${LWIP_CONTRIB_DIR}/ports/win32/include")
+
+if(WIN32)
+	SET(WPDPACK_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../../WpdPack/Include")
+	SET(PORT_ROOT "${LWIP_CONTRIB_DIR}/ports/win32")
+	SET(ARCH_DIR "${PORT_ROOT}/include")
+endif (WIN32)
+
+if(UNIX)
+	SET(PORT_ROOT "${LWIP_CONTRIB_DIR}/ports/unix")
+	SET(ARCH_DIR "${PORT_ROOT}/port/include")
+endif (UNIX)
 
 include(${LWIP_CONTRIB_DIR}/ports/CMakeCommon.cmake)
 
@@ -18,16 +27,29 @@ set (LWIP_INCLUDE_DIRS
         "${LWIP_CONTRIB_DIR}"
         "${ARCH_DIR}"
         "${CMAKE_CURRENT_SOURCE_DIR}/lwip"
-        "${WPDPACK_DIR}/Include"
+        "${WPDPACK_INCLUDE_DIR}"
         )
 
 include(${LWIP_DIR}/src/Filelists.cmake)
 include(${LWIP_CONTRIB_DIR}/Filelists.cmake)
-include(${LWIP_CONTRIB_DIR}/ports/win32/Filelists.cmake)
+include(${PORT_ROOT}/Filelists.cmake)
 
-add_library(lwip STATIC ${lwipcore_SRCS} ${lwipcore3_SRCS} ${lwipcontribportwindows_SRCS} "${CMAKE_CURRENT_SOURCE_DIR}/lwip/default_netif.c")
+if(WIN32)
+	add_library(lwip STATIC ${lwipcore_SRCS} ${lwipcore3_SRCS} "${CMAKE_CURRENT_SOURCE_DIR}/lwip/default_netif.c" ${lwipcontribportwindows_SRCS})
+endif(WIN32)
+
+if(UNIX)
+	add_library(lwip STATIC ${lwipcore_SRCS} ${lwipcore3_SRCS} ${lwipcontribportunix_SRCS})
+endif (UNIX)
+	
 target_include_directories(lwip PUBLIC ${LWIP_INCLUDE_DIRS})
 target_compile_options(lwip PRIVATE ${LWIP_COMPILER_FLAGS})
 target_compile_definitions(lwip PRIVATE ${LWIP_DEFINITIONS})
-target_link_libraries(lwip ${LWIP_SANITIZER_LIBS}  lwipcontribaddons lwipallapps lwipcore lwipcontribportwindows)
 
+if(WIN32)
+	target_link_libraries(lwip ${LWIP_SANITIZER_LIBS}  lwipcontribaddons lwipallapps lwipcore lwipcontribportwindows)
+endif(WIN32)
+
+if(UNIX)
+	target_link_libraries(lwip ${LWIP_SANITIZER_LIBS}  lwipcontribaddons lwipallapps lwipcore lwipcontribportunix)
+endif(UNIX)

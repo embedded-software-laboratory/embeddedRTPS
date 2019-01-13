@@ -10,6 +10,7 @@
 #include "rtps/config.h"
 #include "rtps/discovery/BuiltInTopicData.h"
 #include "rtps/storages/PBufWrapper.h"
+#include <cstring>
 
 namespace rtps{
 

@@ -6,6 +6,7 @@
 #include "rtps/entities/StatefullWriter.h"
 
 #include "rtps/messages/MessageFactory.h"
+#include <cstring>
 
 using rtps::StatefullWriterT;
 

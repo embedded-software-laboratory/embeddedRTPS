@@ -1,5 +1,6 @@
 #Folders
 .idea
+build
 cmake-build-debug
 thirdParty/googletest
 thirdParty/Micro-CDR

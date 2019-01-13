@@ -15,9 +15,11 @@
 
 #ifdef HIGHTEC_TOOLCHAIN
     #include "ethernetif.h"
-#else
+#elif defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
     #include "default_netif.h"
     #include "../pcapif.h"
+#else
+    #include "netif/tapif.h"
 #endif
 
 static struct netif netif;
@@ -39,10 +41,13 @@ static void init(void* arg){
     printf("Starting lwIP, local interface IP is %s\n", ip4addr_ntoa(&ipaddr));
 
 #ifdef HIGHTEC_TOOLCHAIN
-    netif_add(&netif, &ipaddr, &netmask, &gw, NULL, &ethernetif_init, &tcpip_input);
-#else
+    netif_add(&netif, &ipaddr, &netmask, &gw, nullptr, ethernetif_init, tcpip_input);
+#elif defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
     netif_add(&netif, &ipaddr, &netmask, &gw, nullptr, pcapif_init, tcpip_input);
+#else
+    netif_add(&netif, &ipaddr, &netmask, &gw, nullptr, tapif_init, tcpip_input);
 #endif
+
     netif_set_default(&netif);
     netif_set_up(netif_default);
 
