@@ -2,7 +2,7 @@
 
 ## Fresh setup without repo
 ## Compiler
-install mingw-w64 [https://mingw-w64.org/doku.php/download/mingw-builds].
+install [mingw-w64](https://mingw-w64.org/doku.php/download/mingw-builds).
 There are problems with mingw32, as ntddndis.h is placed in "ddk/" and does not, e.g., define "NDIS_MEDIA_STATE".
 
 Working setup configuration:  
@@ -27,6 +27,8 @@ Starting point was this [repository](https://github.com/yarrick/lwip-contrib/tre
 5. Clone the [RTPS repository](https://git.rwth-aachen.de/CPM/Project/UNICARagil/Students/Wuestenberg/rtps) into the LWIP_Windows folder and name it rtps.
 6. Clone or download and extract the [googletest repository](https://github.com/google/googletest) into LWIP_Windows/rtps/thirdparty/googletest.
 Add all files in the repository, not just the ones in the goolgletest subfolder.
+7. Clone or download and extract the [MicroCDR](https://github.com/eProsima/Micro-CDR) into LWIP_Windows/rtps/thirdparty/Micro-CDR. Go to the folder include/ucdr and rename config.h.in to config.h.
+
 
 Code modifications:
 1. Because of a "wrong" pointer cast and non-c90-compliant things like long long, some compiler flags need to be removed. This can be simply done by editing contrib/prots/CMakeCommon.cmake. Just remove/comment out the line 82 set(LWIP_COMPILER_FLAGS ${LWIP_COMPILER_FLAGS_GNU_CLANG}) for GNU within the if CMAKE_C_COMPILER_ID STREQUAL GNU.
@@ -74,3 +76,54 @@ Value: 201103L
 ## LwIp
 -  Assertion **Function called without core lock** failed, even though locks are used:  
 There is a problem when using nested "LOCK_TCPIP_CORE()" calls. Lock is granted (each time), the first unlock frees it and other threads can proceed.
+
+
+
+# Preparation on Linux (Tested on Ubuntu 18.04.1 LTS)
+
+## Prepare necessary folders and files
+Create a folder e.g. named LWIP_Windows.
+After the following steps, the structure within looks like this:
+- check (optional for unit tests of lwip)
+- contrib
+- lwip
+- rtps
+
+1. Download lwip-2.1.0.zip and contrib-2.1.0.zip from [here](http://download.savannah.nongnu.org/releases/lwip/).
+2. Extract both in the LWIP_Windows folder and name them lwip and contrib, respectively.
+3. If you want to run the unit tests for lwip, too, [check](https://github.com/libcheck/check/releases/) (not tested for Linux) and extracted as well to a folder called check.
+4. Clone the [RTPS repository](https://git.rwth-aachen.de/CPM/Project/UNICARagil/Students/Wuestenberg/rtps) into the LWIP_Windows folder and name it rtps.
+5. Clone or download and extract the [googletest repository](https://github.com/google/googletest) into LWIP_Windows/rtps/thirdparty/googletest.
+Add all files in the repository, not just the ones in the goolgletest subfolder.
+6. Clone or download and extract the [MicroCDR](https://github.com/eProsima/Micro-CDR) into LWIP_Windows/rtps/thirdparty/Micro-CDR. Go to the folder include/ucdr and rename config.h.in to config.h.
+
+## Further configuration
+Under linux lwip connects to a tap interface. This needs to be created beforehand to make the program run without root privileges. Execute the following commands:
+``` bash
+# Note: - the names tap0 and br0 can be chosen arbitrarily.
+#       - eth0 needs to be adjusted to the ethernet interface
+#       - username need to be the user executing the program
+#       - the ip address should be unique in the network
+
+# Create tap, turn on and configure. Replace [username].
+ip tuntap add dev tap0 mode tap user [username]
+ip link set tap0 up
+ip addr add 192.168.0.42/24 dev tap0
+
+# Create bridge
+ip link add name br0 type bridge
+ip link set br0 up
+
+# Make sure interface is up to add it to the bridge
+ip link set eth0 up
+
+# Adding both to bridge
+ip link set eth0 master br0
+ip link set tap0 master br0
+
+# Check if it worked
+bridge link
+
+# Enable forwarding
+sysctl -w net.ipv4.conf.all.forwarding=1
+```

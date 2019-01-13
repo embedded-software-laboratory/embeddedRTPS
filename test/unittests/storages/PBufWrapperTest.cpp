@@ -274,6 +274,7 @@ protected:
     uint16_t combinedSize;
 
     void SetUp() override{
+        rtps::init();
         ASSERT_TRUE(thisWrapper.isValid());
         ASSERT_TRUE(otherWrapper.isValid());
 

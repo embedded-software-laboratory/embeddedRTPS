@@ -11,36 +11,46 @@
 #include "rtps/entities/Reader.h"
 #include "rtps/entities/Domain.h"
 
-#define PUB 0
+#define PUB 1
 
 void receiveCallback(void* /*callee*/, rtps::ReaderCacheChange& /*cacheChange*/){
     printf("Received hello world message.\n");
 }
 
+void startProgram(void*);
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wmissing-noreturn"
-int main(){
+int main() {
     rtps::init();
+
+    sys_thread_new("Main Program", startProgram, nullptr, 1024, 3);
+    while(true);
+}
+
+void startProgram(void* /*args*/){
     rtps::Domain domain;
     domain.start();
 
     auto part = domain.createParticipant();
-    //rtps::Participant* part2 = domain.createParticipant();
 
     if(part == nullptr){
         printf("Failed to create participant");
-        return 1;
+        return;
     }
 
     char topicName[] = "HelloWorldTopic";
     char typeName[] = "HelloWorld";
 
+    //auto part2 = domain.createParticipant();
+    //rtps::Reader* reader = domain.createReader(*part2, topicName, typeName, true);
+    //reader->registerCallback(receiveCallback, nullptr);
+
 #if PUB
     rtps::Writer* writer = domain.createWriter(*part, topicName, typeName, true);
     if(writer == nullptr){
         printf("Failed to create writer");
-        return 2;
+        return;
     }
 
     char message[] = "Hello World";
@@ -51,12 +61,16 @@ int main(){
         ucdr_init_buffer(&microbuffer, buffer, sizeof(buffer)/ sizeof(buffer[0]));
         ucdr_serialize_uint32_t(&microbuffer, i);
         ucdr_serialize_array_char(&microbuffer, message, sizeof(message)/sizeof(message[0]));
-        writer->newChange(rtps::ChangeKind_t::ALIVE, buffer, sizeof(buffer)/ sizeof(buffer[0]));
+        auto change = writer->newChange(rtps::ChangeKind_t::ALIVE, buffer, sizeof(buffer)/ sizeof(buffer[0]));
+        if(change == nullptr){
+            printf("History full.\n");
+        }
         sys_msleep(5000);
 
     }
 
 #else
+
     rtps::Reader* reader = domain.createReader(*part, topicName, typeName, true);
     reader->registerCallback(receiveCallback, nullptr);
 
@@ -65,7 +79,6 @@ int main(){
     }
 
 #endif
-
 }
 
 #pragma clang diagnostic pop

@@ -33,7 +33,7 @@ namespace rtps{
         TopicKind_t m_topicKind = TopicKind_t::NO_KEY;
         SequenceNumber_t m_lastChangeSequenceNumber = {0, 0};
         HistoryCache m_history;
-        static const uint32_t m_heartbeatPeriodMs = 1000; // TODO
+        static const uint32_t m_heartbeatPeriodMs = 4000; // TODO
         sys_thread_t m_heartbeatThread;
         Count_t m_hbCount{1};
 

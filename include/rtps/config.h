@@ -31,7 +31,7 @@ namespace rtps {
         const uint8_t MAX_TYPENAME_LENGTH = 20;
         const uint8_t MAX_TOPICNAME_LENGTH = 20;
 
-        const uint16_t SPDP_RESEND_PERIOD_MS = 5000;
+        const uint16_t SPDP_RESEND_PERIOD_MS = 10000;
         const uint16_t SPDP_WRITER_STACKSIZE = 500;
         const uint8_t SPDP_WRITER_PRIO = 3;
         const uint8_t SPDP_MAX_NUMBER_FOUND_PARTICIPANTS = 10;
@@ -40,7 +40,7 @@ namespace rtps {
 
         const int MAX_NUM_UDP_CONNECTIONS = 20;
 
-        const int THREAD_POOL_NUM_WRITERS = 2;
+        const int THREAD_POOL_NUM_WRITERS = 1;
         const int THREAD_POOL_NUM_READERS = 1;
         const int THREAD_POOL_WRITER_STACKSIZE = 1024;
         const int THREAD_POOL_READER_STACKSIZE = 1024;

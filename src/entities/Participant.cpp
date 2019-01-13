@@ -50,7 +50,9 @@ std::array<uint8_t, 3> Participant::getNextUserEntityKey(){
 rtps::Writer* Participant::addWriter(Writer* pWriter){
     if(pWriter != nullptr && m_numWriters != m_writers.size()){
         m_writers[m_numWriters++] = pWriter;
-        m_sedpAgent.addWriter(*pWriter);
+        if(m_hasBuilInEndpoints){
+            m_sedpAgent.addWriter(*pWriter);
+        }
         return pWriter;
     }else{
         return nullptr;
@@ -60,7 +62,9 @@ rtps::Writer* Participant::addWriter(Writer* pWriter){
 rtps::Reader* Participant::addReader(Reader* pReader){
     if(pReader != nullptr && m_numReaders != m_readers.size()){
         m_readers[m_numReaders++] = pReader;
-        m_sedpAgent.addReader(*pReader);
+        if(m_hasBuilInEndpoints){
+            m_sedpAgent.addReader(*pReader);
+        }
         return pReader;
     }else{
         return nullptr;
@@ -131,6 +135,7 @@ rtps::MessageReceiver* Participant::getMessageReceiver(){
 }
 
 void Participant::addBuiltInEndpoints(BuiltInEndpoints& endpoints){
+    m_hasBuilInEndpoints = true;
     m_spdpAgent.init(*this, endpoints);
     m_spdpAgent.start();
     m_sedpAgent.init(*this, endpoints);
@@ -142,6 +147,8 @@ void Participant::addBuiltInEndpoints(BuiltInEndpoints& endpoints){
     addReader(endpoints.sedpPubReader);
     addWriter(endpoints.sedpSubWriter);
     addReader(endpoints.sedpSubReader);
+
+    // TODO add all existing writers and readers in case there were added before the endpoints
 }
 
 void Participant::newMessage(const uint8_t* data, DataSize_t size){

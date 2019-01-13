@@ -25,22 +25,18 @@ namespace rtps {
 
         UdpDriver(udpRxFunc_fp callback, void* args);
 
+        const rtps::UdpConnection* createUdpConnection(Ip4Port_t receivePort);
         bool joinMultiCastGroup(ip4_addr_t addr) const;
         void sendFunction(PacketInfo& info);
 
     private:
-        class TcpipCoreLock{
-        public:
-            TcpipCoreLock(){LOCK_TCPIP_CORE();}
-            ~TcpipCoreLock(){UNLOCK_TCPIP_CORE();}
-        };
         std::array<UdpConnection, Config::MAX_NUM_UDP_CONNECTIONS> m_conns;
         std::size_t m_numConns = 0;
         udpRxFunc_fp m_rxCallback = nullptr;
         void* m_callbackArgs = nullptr;
 
         bool sendPacket(const UdpConnection& conn, ip4_addr_t& destAddr, Ip4Port_t destPort, pbuf& buffer);
-        const rtps::UdpConnection* createUdpConnection(Ip4Port_t receivePort);
+
     };
 }
 

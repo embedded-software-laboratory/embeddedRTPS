@@ -119,7 +119,7 @@ bool PBufWrapper::append(const uint8_t *const data, DataSize_t length){
 
 void PBufWrapper::append(PBufWrapper&& other){
     if(this == &other){
-        printf("PBufWrapper::append applied to itself");
+        printf("PBufWrapper::append applied to itself\n");
         return;
     }
     if(this->firstElement == nullptr){

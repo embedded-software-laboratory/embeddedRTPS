@@ -5,6 +5,7 @@
 
 #include "rtps/communication/UdpDriver.h"
 #include "rtps/communication/PacketInfo.h"
+#include "rtps/communication/TcpipCoreLock.h"
 
 #include "rtps/storages/PBufWrapper.h"
 
@@ -41,22 +42,24 @@ const rtps::UdpConnection* UdpDriver::createUdpConnection(Ip4Port_t receivePort)
     }
 
     UdpConnection udp_conn(receivePort);
-    //LOCK_TCPIP_CORE();
-    err_t err = udp_bind(udp_conn.pcb, IP_ADDR_ANY, receivePort); //to receive multicast
-    //UNLOCK_TCPIP_CORE();
 
-    if(err != ERR_OK && err != ERR_USE){
-        printf("Failed to bind to port%u: error %u\n", receivePort, err);
-        return nullptr;
+    {
+        TcpipCoreLock lock;
+        err_t err = udp_bind(udp_conn.pcb, IP_ADDR_ANY, receivePort); //to receive multicast
+
+        if(err != ERR_OK && err != ERR_USE){
+            printf("Failed to bind to port%u: error %u\n", receivePort, err);
+            return nullptr;
+        }
+
+        udp_recv(udp_conn.pcb, m_rxCallback, m_callbackArgs);
     }
-    //LOCK_TCPIP_CORE();
-    udp_recv(udp_conn.pcb, m_rxCallback, m_callbackArgs);
-    //UNLOCK_TCPIP_CORE();
+
 
     m_conns[m_numConns] = std::move(udp_conn);
     m_numConns++;
 
-    printf("Success creating UDP connection on port %u \n", receivePort);
+    printf("Successfully created UDP connection on port %u \n", receivePort);
     return &m_conns[m_numConns-1];
 }
 
@@ -71,13 +74,18 @@ bool UdpDriver::joinMultiCastGroup(ip4_addr_t addr) const {
     if(iret != ERR_OK){
         printf("Failed to join IGMP multicast group %s\n", ipaddr_ntoa(&addr));
         return false;
+    }else{
+        printf("Succesfully joined  IGMP multicast group %s\n", ipaddr_ntoa(&addr));
     }
     return true;
 }
 
 bool UdpDriver::sendPacket(const UdpConnection& conn, ip4_addr_t& destAddr, Ip4Port_t destPort, pbuf& buffer){
-
-    err_t err = udp_sendto(conn.pcb, &buffer, &destAddr, destPort);
+    err_t err;
+    {
+        TcpipCoreLock lock;
+        err = udp_sendto(conn.pcb, &buffer, &destAddr, destPort);
+    }
 
     if(err != ERR_OK){
         printf("UDP TRANSMIT NOT SUCCESSFUL %s:%u size: %u err: %i\n", ipaddr_ntoa(&destAddr), destPort, buffer.tot_len, err);
@@ -87,7 +95,6 @@ bool UdpDriver::sendPacket(const UdpConnection& conn, ip4_addr_t& destAddr, Ip4P
 }
 
 void UdpDriver::sendFunction(PacketInfo& packet){
-    TcpipCoreLock lock;
     auto p_conn = createUdpConnection(packet.srcPort);
     if(p_conn == nullptr){
         printf("Failed to create connection on port %u \n", packet.srcPort);

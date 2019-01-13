@@ -87,6 +87,7 @@ void ThreadPool::readCallback(void* args, udp_pcb* target, pbuf* pbuf, const ip_
     packet.destPort = target->local_port;
     packet.srcPort = port;
     packet.buffer = PBufWrapper{pbuf};
+    printf("Putting new received package into queue.\n");
     pool.outputQueue.moveElementIntoBuffer(std::move(packet));
 }
 
@@ -105,8 +106,7 @@ void ThreadPool::doReaderWork(){
     while(running){
         PacketInfo packet;
         auto isWorkToDo = outputQueue.moveFirstInto(packet);
-        if(!isWorkToDo){
-
+        if(!isWorkToDo) {
             sys_msleep(1);
             continue;
         }

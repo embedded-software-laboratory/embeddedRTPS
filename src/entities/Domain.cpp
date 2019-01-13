@@ -6,12 +6,14 @@
 #include "rtps/entities/Domain.h"
 #include "rtps/utils/udpUtils.h"
 
-#define DOMAIN_VERBOSE 0
+#define DOMAIN_VERBOSE 1
 
 using rtps::Domain;
 
 Domain::Domain() : m_threadPool(*this), m_transport(ThreadPool::readCallback, &m_threadPool){
-    //TODO move avoid from here
+    //TODO move away from here
+    m_transport.createUdpConnection(getUserMulticastPort());
+    m_transport.createUdpConnection(getBuiltInMulticastPort());
     m_transport.joinMultiCastGroup(transformIP4ToU32(239, 255, 0, 1));
 }
 
@@ -19,7 +21,7 @@ bool Domain::start(){
     bool started = m_threadPool.startThreads();
     if(!started){
 #if DOMAIN_VERBOSE
-        printf("Failed starting threads");
+        printf("Failed starting threads\n");
 #endif
     }
     return started;
@@ -49,7 +51,7 @@ void Domain::receiveCallback(const PacketInfo& packet){
         ParticipantId_t id = getParticipantIdFromUnicastPort(packet.destPort, isUserPort(packet.destPort));
         if(id != PARTICIPANT_ID_INVALID){
 #if DOMAIN_VERBOSE
-            printf("Got unicast message\n");
+            printf("Got unicast message on port %u\n", packet.destPort);
 #endif
             m_participants[id-PARTICIPANT_START_ID].newMessage(static_cast<uint8_t*>(packet.buffer.firstElement->payload),
                                                                packet.buffer.firstElement->len);
@@ -62,6 +64,9 @@ void Domain::receiveCallback(const PacketInfo& packet){
 }
 
 rtps::Participant* Domain::createParticipant(){
+#if DOMAIN_VERBOSE
+    printf("Creating new participant.\n");
+#endif
     for(auto& entry : m_participants){
         if(entry.m_participantId == PARTICIPANT_ID_INVALID){
             entry.reuse(generateGuidPrefix(m_nextParticipantId), m_nextParticipantId);
@@ -112,8 +117,6 @@ void Domain::addDefaultWriterAndReader(Participant& part) {
     sedpSubReader.init(sedpAttributes, m_transport);
 
     // WRITER
-
-
     sedpAttributes.endpointGuid.entityId = ENTITYID_SEDP_BUILTIN_PUBLICATIONS_WRITER;
     sedpPubWriter.init(sedpAttributes, TopicKind_t::NO_KEY, &m_threadPool, m_transport);
 
@@ -133,7 +136,8 @@ void Domain::addDefaultWriterAndReader(Participant& part) {
 }
 
 void Domain::registerPort(Participant& part){
-    // TODO Issue #10
+    m_transport.createUdpConnection(getUserUnicastPort(part.m_participantId));
+    m_transport.createUdpConnection(getBuiltInUnicastPort(part.m_participantId));
 }
 
 rtps::Writer* Domain::createWriter(Participant& part, char* topicName, char* typeName, bool reliable){

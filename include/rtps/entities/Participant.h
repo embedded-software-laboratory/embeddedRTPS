@@ -60,6 +60,7 @@ namespace rtps{
 
     private:
         MessageReceiver m_receiver;
+        bool m_hasBuilInEndpoints = false;
         std::array<uint8_t, 3> m_nextUserEntityId{0,0,0};
         std::array<Writer*, Config::NUM_WRITERS_PER_PARTICIPANT> m_writers{nullptr};
         uint8_t m_numWriters = 0;

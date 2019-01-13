@@ -92,7 +92,14 @@ void StatefullWriterT<NetworkDriver>::onNewAckNack(const SubmessageAckNack& msg)
 
     if(proxy == nullptr || msg.count.value < proxy->ackNackCount.value){
 #if SFW_VERBOSE
-        printf("StatefullWriter[%s]: Dropping acknack.\n", &this->m_attributes.topicName[0]);
+        printf("StatefullWriter[%s]: No proxy found. Dropping acknack.\n", &this->m_attributes.topicName[0]);
+#endif
+        return;
+    }
+
+    if(msg.count.value < proxy->ackNackCount.value){
+#if SFW_VERBOSE
+        printf("StatefullWriter[%s]: Count too small. Dropping acknack.\n", &this->m_attributes.topicName[0]);
 #endif
         return;
     }
@@ -179,13 +186,25 @@ void StatefullWriterT<NetworkDriver>::sendHeartBeat() {
         return;
     }
 
-    MessageFactory::addHeartbeat(info.buffer, m_attributes.endpointGuid.entityId, ENTITYID_UNKNOWN, firstSN, lastSN, m_hbCount);
+    // TODO adjust to multiple proxies
+    if((m_proxySlotUsedBitMap & 1) == 0){
+#if SFW_VERBOSE
+        if(strlen(&this->m_attributes.typeName[0]) != 0){
+            printf("StatefullWriter[%s]: Skipping heartbeat. No proxies.\n", this->m_attributes.topicName);
+        }
+#endif
+        return;
+    }
+
+    // TODO adjust to multiple proxies
+    MessageFactory::addHeartbeat(info.buffer, m_attributes.endpointGuid.entityId, m_proxies[0].remoteReaderGuid.entityId, firstSN, lastSN, m_hbCount);
 
     // Just usable for IPv4
     const Locator& locator = getBuiltInMulticastLocator();
 
-    info.destAddr = locator.getIp4Address();
-    info.destPort = (Ip4Port_t) locator.port;
+    info.destAddr = m_proxies[0].remoteLocator.getIp4Address();
+    info.destPort = m_proxies[0].remoteLocator.port;
 
     m_transport->sendFunction(info);
+    m_hbCount.value++;
 }

@@ -20,9 +20,7 @@ namespace rtps {
         UdpConnectionT() = default;
 
         explicit UdpConnectionT(uint16_t port): port(port) {
-            //LOCK_TCPIP_CORE();
             pcb = UdpInterface::udpNew();
-            //UNLOCK_TCPIP_CORE();
         }
 
         UdpConnectionT &operator=(UdpConnectionT &&other) noexcept{
@@ -31,6 +29,7 @@ namespace rtps {
 
             if (other.pcb != nullptr) {
                 if (pcb != nullptr) {
+                    printf("Destructing old connection.\n");
                     UdpInterface::udpRemove(pcb);
                 }
                 pcb = other.pcb;
