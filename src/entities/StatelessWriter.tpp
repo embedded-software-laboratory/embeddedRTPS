@@ -16,6 +16,12 @@ using rtps::StatelessWriterT;
 using rtps::SequenceNumber_t;
 using rtps::CacheChange;
 
+#define SLW_VERBOSE 1
+
+#if SLW_VERBOSE
+#include "rtps/utils/printutils.h"
+#endif
+
 template <typename NetworkDriver>
 bool StatelessWriterT<NetworkDriver>::init(BuiltInTopicData attributes, TopicKind_t topicKind, ThreadPool* threadPool, UdpDriver& driver){
     if (sys_mutex_new(&m_mutex) != ERR_OK) {
@@ -34,6 +40,12 @@ bool StatelessWriterT<NetworkDriver>::init(BuiltInTopicData attributes, TopicKin
 
 template <typename NetworkDriver>
 bool StatelessWriterT<NetworkDriver>::addNewMatchedReader(const ReaderProxy& newProxy){
+#if SLW_VERBOSE
+    printf("StatelessWriter[%s]: New reader added with id: ", &this->m_attributes.topicName[0]);
+    printGuid(newProxy.remoteReaderGuid);
+    printf("\n");
+#endif
+
     if(m_readerProxy.remoteReaderGuid.entityId != ENTITYID_UNKNOWN){
         return false;
     }
@@ -65,6 +77,10 @@ const CacheChange* StatelessWriterT<NetworkDriver>::newChange(rtps::ChangeKind_t
     if(mp_threadPool != nullptr){
         mp_threadPool->addWorkload(ThreadPool::Workload_t{this});
     }
+
+#if SLW_VERBOSE
+    printf("StatelessWriter[%s]: Adding new data.\n", this->m_attributes.topicName);
+#endif
     return result;
 }
 
@@ -95,6 +111,10 @@ void StatelessWriterT<NetworkDriver>::progress(){
         return;
     }
 
+#if SLW_VERBOSE
+    printf("StatelessWriter[%s]: Progess.\n", this->m_attributes.topicName);
+#endif
+
     PacketInfo info;
     info.srcPort = m_packetInfo.srcPort;
 
@@ -120,4 +140,7 @@ void StatelessWriterT<NetworkDriver>::progress(){
     info.destPort = (Ip4Port_t) locator.port;
 
     m_transport->sendFunction(info);
+#if SLW_VERBOSE
+    printf("StatelessWriter[%s]: Send.\n", this->m_attributes.topicName);
+#endif
 }

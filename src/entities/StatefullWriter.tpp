@@ -12,6 +12,10 @@ using rtps::StatefullWriterT;
 
 #define SFW_VERBOSE 1
 
+#if SFW_VERBOSE
+#include "rtps/utils/printutils.h"
+#endif
+
 template <class NetworkDriver>
 bool StatefullWriterT<NetworkDriver>::init(BuiltInTopicData attributes, TopicKind_t topicKind, ThreadPool* threadPool, UdpDriver& driver){
     if (sys_mutex_new(&m_mutex) != ERR_OK) {
@@ -33,7 +37,9 @@ bool StatefullWriterT<NetworkDriver>::init(BuiltInTopicData attributes, TopicKin
 template <class NetworkDriver>
 bool StatefullWriterT<NetworkDriver>::addNewMatchedReader(const ReaderProxy& newProxy){
 #if SFW_VERBOSE
-    printf("StatefullWriter[%s]: New reader added.\n", &this->m_attributes.topicName[0]);
+    printf("StatefullWriter[%s]: New reader added with id: ", &this->m_attributes.topicName[0]);
+    printGuid(newProxy.remoteReaderGuid);
+    printf("\n");
 #endif
     for(uint32_t i=0; i < sizeof(m_proxies)/sizeof(m_proxies[0]); ++i){
         static_assert(sizeof(i)*8 >= sizeof(m_proxySlotUsedBitMap), "StatelessWriter: Loop variable too small");
@@ -92,7 +98,9 @@ void StatefullWriterT<NetworkDriver>::onNewAckNack(const SubmessageAckNack& msg)
 
     if(proxy == nullptr || msg.count.value < proxy->ackNackCount.value){
 #if SFW_VERBOSE
-        printf("StatefullWriter[%s]: No proxy found. Dropping acknack.\n", &this->m_attributes.topicName[0]);
+        printf("StatefullWriter[%s]: No proxy found with id: ", &this->m_attributes.topicName[0]);
+        printEntityId(msg.readerId);
+        printf(" Dropping acknack.\n");
 #endif
         return;
     }
