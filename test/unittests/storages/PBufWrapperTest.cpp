@@ -220,12 +220,6 @@ protected:
         first = static_cast<uint8_t*>(wrapper.firstElement->payload);
         second = static_cast<uint8_t*>(wrapper.firstElement->next->payload);
     }
-
-    void TearDown() override{
-        // Wrapper cannot clean up those
-        delete wrapper.firstElement->next;
-        wrapper.firstElement->next = nullptr;
-    }
 };
 
 TEST_F(PBufWrapperWithTwoElementChain, Append_FillsBothCorrectly){

@@ -14,7 +14,6 @@ class LwipInterfaceMock {
 public:
     static udp_pcb *udpNew(void) {
         static udp_pcb *id = new udp_pcb;
-        id++;
         return id;
     }
 

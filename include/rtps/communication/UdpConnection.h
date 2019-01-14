@@ -40,9 +40,7 @@ namespace rtps {
 
         ~UdpConnectionT() {
             if (pcb != nullptr) {
-                LOCK_TCPIP_CORE();
                 UdpInterface::udpRemove(pcb);
-                UNLOCK_TCPIP_CORE();
                 pcb = nullptr;
             }
         }
