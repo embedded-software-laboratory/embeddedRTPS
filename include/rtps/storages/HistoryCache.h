@@ -38,7 +38,7 @@ namespace rtps{
 
     private:
 
-        std::array<CacheChange, 10> m_buffer{};
+        std::array<CacheChange, 15> m_buffer{};
         uint16_t m_head = 0;
         uint16_t m_tail = 0;
         uint16_t m_lastReturned = 0;

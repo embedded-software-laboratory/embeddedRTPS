@@ -5,6 +5,7 @@
 
 #include <iostream>
 #include "rtps/rtps.h"
+#include "rtps/messages/MessageTypes.h"
 #include "rtps/entities/Domain.h"
 
 #define PUB 1
@@ -58,18 +59,21 @@ void startProgram(void* /*args*/){
     }
 
     char message[] = "Hello World";
-    uint8_t buffer[16];
+    uint8_t buffer[20];
     ucdrBuffer microbuffer;
     uint32_t i = 0;
     while(true){
         ucdr_init_buffer(&microbuffer, buffer, sizeof(buffer)/ sizeof(buffer[0]));
-        ucdr_serialize_uint32_t(&microbuffer, i);
+        ucdr_serialize_array_uint8_t(&microbuffer, rtps::SMElement::SCHEME_CDR_LE.data(), rtps::SMElement::SCHEME_CDR_LE.size());
+        ucdr_serialize_uint16_t(&microbuffer, 0); // options
+        ucdr_serialize_uint32_t(&microbuffer, i++);
         ucdr_serialize_array_char(&microbuffer, message, sizeof(message)/sizeof(message[0]));
         auto change = writer->newChange(rtps::ChangeKind_t::ALIVE, buffer, sizeof(buffer)/ sizeof(buffer[0]));
         if(change == nullptr){
             printf("History full.\n");
+            while(true);
         }
-        sys_msleep(5000);
+        //sys_msleep(5000);
 
     }
 

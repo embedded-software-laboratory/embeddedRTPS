@@ -96,7 +96,7 @@ void StatefullWriterT<NetworkDriver>::onNewAckNack(const SubmessageAckNack& msg)
         }
     }
 
-    if(proxy == nullptr || msg.count.value < proxy->ackNackCount.value){
+    if(proxy == nullptr){
 #if SFW_VERBOSE
         printf("StatefullWriter[%s]: No proxy found with id: ", &this->m_attributes.topicName[0]);
         printEntityId(msg.readerId);
@@ -118,7 +118,7 @@ void StatefullWriterT<NetworkDriver>::onNewAckNack(const SubmessageAckNack& msg)
     SequenceNumber_t nextSN = msg.readerSNState.base;
 #if SFW_VERBOSE
     if(nextSN.low == 0 && nextSN.high == 0){
-        printf("StatefullWriter[%s]: Received preemptive acknack.\n", &this->m_attributes.topicName[0]);
+        printf("StatefullWriter[%s]: Received preemptive acknack. Ignored.\n", &this->m_attributes.topicName[0]);
     }else{
         printf("StatefullWriter[%s]: Received non-preemptive acknack.\n", &this->m_attributes.topicName[0]);
     }
