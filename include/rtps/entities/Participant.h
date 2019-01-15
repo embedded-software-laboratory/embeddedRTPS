@@ -61,10 +61,10 @@ namespace rtps{
     private:
         MessageReceiver m_receiver;
         bool m_hasBuilInEndpoints = false;
-        std::array<uint8_t, 3> m_nextUserEntityId{0,0,0};
-        std::array<Writer*, Config::NUM_WRITERS_PER_PARTICIPANT> m_writers{nullptr};
+        std::array<uint8_t, 3> m_nextUserEntityId{};
+        std::array<Writer*, Config::NUM_WRITERS_PER_PARTICIPANT> m_writers{};
         uint8_t m_numWriters = 0;
-        std::array<Reader*, Config::NUM_READERS_PER_PARTICIPANT> m_readers{nullptr};
+        std::array<Reader*, Config::NUM_READERS_PER_PARTICIPANT> m_readers{};
         uint8_t m_numReaders = 0;
         const bool m_pushMode = false; // No other mode supported atm
 

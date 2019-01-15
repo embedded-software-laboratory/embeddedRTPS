@@ -4,11 +4,7 @@
  */
 
 #include <iostream>
-#include "rtps/ThreadPool.h"
 #include "rtps/rtps.h"
-#include "rtps/discovery/SPDPAgent.h"
-#include "rtps/entities/Writer.h"
-#include "rtps/entities/Reader.h"
 #include "rtps/entities/Domain.h"
 
 #define PUB 1
