@@ -26,7 +26,12 @@ void StatelessReader::registerCallback(ddsReaderCallback_fp cb, void* callee){
     }
 }
 
+bool StatelessReader::addNewMatchedWriter(const WriterProxy& /*newProxy*/){
+    // Nothing to do
+    return true;
+}
+
 bool StatelessReader::onNewHeartbeat(const SubmessageHeartbeat&, const GuidPrefix_t&){
     // nothing to do
-    return false;
+    return true;
 }

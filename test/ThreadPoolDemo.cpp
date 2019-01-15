@@ -9,8 +9,16 @@
 
 #define PUB 1
 
-void receiveCallback(void* /*callee*/, rtps::ReaderCacheChange& /*cacheChange*/){
-    printf("Received hello world message.\n");
+void receiveCallback(void* /*callee*/, rtps::ReaderCacheChange& cacheChange){
+    uint8_t buffer[50];
+    bool success = cacheChange.copyInto(buffer, 50);
+    if(success){
+        uint8_t offset = 4; // Encoding info and options
+        printf("Received hello world message with index: %u\n", *reinterpret_cast<uint32_t*>(buffer + offset));
+    }else{
+        printf("Received hello world message but copying failed\n");
+    }
+
 }
 
 void startProgram(void*);

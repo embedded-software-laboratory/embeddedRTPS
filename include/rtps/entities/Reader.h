@@ -9,6 +9,7 @@
 #include "rtps/common/types.h"
 #include "rtps/config.h"
 #include "rtps/discovery/BuiltInTopicData.h"
+#include "rtps/entities/WriterProxy.h"
 #include "rtps/storages/PBufWrapper.h"
 #include <cstring>
 
@@ -47,6 +48,7 @@ namespace rtps{
         virtual void newChange(ReaderCacheChange& cacheChange) = 0;
         virtual void registerCallback(ddsReaderCallback_fp cb, void* callee) = 0;
         virtual bool onNewHeartbeat(const SubmessageHeartbeat& msg, const GuidPrefix_t& remotePrefix) = 0;
+        virtual bool addNewMatchedWriter(const WriterProxy& newProxy) = 0;
     protected:
         virtual ~Reader() = default;
     };

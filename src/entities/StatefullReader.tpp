@@ -7,6 +7,8 @@
 #include "rtps/messages/MessageFactory.h"
 #include "lwip/tcpip.h"
 
+#define SFR_VERBOSE 1
+
 using rtps::StatefullReaderT;
 
 template <class NetworkDriver>
@@ -43,6 +45,11 @@ void StatefullReaderT<NetworkDriver>::registerCallback(ddsReaderCallback_fp cb, 
 
 template <class NetworkDriver>
 bool StatefullReaderT<NetworkDriver>::addNewMatchedWriter(const WriterProxy& newProxy){
+#if SFR_VERBOSE
+    printf("StatefullReader[%s]: New writer added with id: ", &this->m_attributes.topicName[0]);
+    printGuid(newProxy.remoteWriterGuid);
+    printf("\n");
+#endif
     return m_proxies.add(newProxy);
 }
 
@@ -70,8 +77,20 @@ bool StatefullReaderT<NetworkDriver>::onNewHeartbeat(const SubmessageHeartbeat& 
         }
     }
 
-    if(writer == nullptr || msg.count.value <= writer->hbCount.value){
+    if(writer == nullptr){
+#if SFR_VERBOSE
+      printf("StatefullReader[%s]: Ignore heartbeat. Couldn't find a matching writer with id: ", &this->m_attributes.topicName[0]);
+      printEntityId(msg.writerId);
+      printf("\n");
+#endif
         return false;
+    }
+
+    if(msg.count.value <= writer->hbCount.value){
+#if SFR_VERBOSE
+        printf("StatefullReader[%s]: Ignore heartbeat. Count too low.\n", &this->m_attributes.topicName[0]);
+        return false;
+#endif
     }
 
     writer->hbCount.value = msg.count.value;
@@ -81,6 +100,11 @@ bool StatefullReaderT<NetworkDriver>::onNewHeartbeat(const SubmessageHeartbeat& 
     rtps::MessageFactory::addAckNack(info.buffer, msg.writerId, msg.readerId, writer->getMissing(msg.firstSN,
                                      msg.lastSN), writer->getNextCount());
 
+#if SFR_VERBOSE
+    printf("StatefullReader[%s]: Sending acknack.\n", &this->m_attributes.topicName[0]);
+#endif
     m_transport->sendFunction(info);
     return true;
 }
+
+#undef SFR_VERBOSE

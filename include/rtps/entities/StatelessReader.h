@@ -16,6 +16,7 @@ namespace rtps{
         void newChange(ReaderCacheChange& cacheChange) override;
         void registerCallback(ddsReaderCallback_fp cb, void* callee) override;
         bool onNewHeartbeat(const SubmessageHeartbeat& msg, const GuidPrefix_t& remotePrefix) override;
+        bool addNewMatchedWriter(const WriterProxy& newProxy) override;
     private:
         ddsReaderCallback_fp m_callback = nullptr;
         void* m_callee = nullptr;

@@ -40,12 +40,39 @@ void SEDPAgent::receiveCallbackSubscriber(void* callee, ReaderCacheChange& cache
     agent->onNewSubscriber(cacheChange);
 }
 
-void SEDPAgent::onNewPublisher(ReaderCacheChange & /*change*/){
-    // For now, reader don't care about matches
-    return;
+void SEDPAgent::onNewPublisher(ReaderCacheChange& change){
+    Lock lock{m_mutex};
+#if SEDP_VERBOSE
+    printf("New publisher\n");
+#endif
+
+    if(!change.copyInto(m_buffer, sizeof(m_buffer)/sizeof(m_buffer[0]))){
+#if SEDP_VERBOSE
+        printf("SEDPAgent: Buffer too small.");
+#endif
+        return;
+    }
+    ucdrBuffer cdrBuffer;
+    ucdr_init_buffer(&cdrBuffer, m_buffer, change.size);
+
+    BuiltInTopicData topicData;
+    if(topicData.readFromUcdrBuffer(cdrBuffer)){
+        Reader* reader = m_part->getReader(topicData.topicName, topicData.typeName);
+        // TODO check policies
+#if SEDP_VERBOSE
+        printf("Found a new ");
+        if(topicData.reliabilityKind == ReliabilityKind_t::RELIABLE){
+            printf("reliable ");
+        }else{
+            printf("best-effort ");
+        }
+        printf("publisher\n");
+#endif
+        reader->addNewMatchedWriter(WriterProxy{topicData.endpointGuid, topicData.unicastLocator});
+    }
 }
 
-void SEDPAgent::onNewSubscriber(ReaderCacheChange &change){
+void SEDPAgent::onNewSubscriber(ReaderCacheChange& change){
     Lock lock{m_mutex};
 #if SEDP_VERBOSE
     printf("New subscriber\n");

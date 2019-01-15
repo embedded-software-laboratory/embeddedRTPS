@@ -12,7 +12,7 @@
 
 using rtps::MessageReceiver;
 
-//#define RECV_VERBOSE
+#define RECV_VERBOSE 1
 
 MessageReceiver::MessageReceiver(Participant* part)
 : mp_part(part){
@@ -73,13 +73,13 @@ bool MessageReceiver::processSubMessage(MessageProcessingInfo& msgInfo){
     bool success;
     switch(submsgHeader->submessageId){
         case SubmessageKind::ACKNACK:
-#ifdef RECV_VERBOSE
+#if RECV_VERBOSE
             printf("Processing AckNack submessage\n");
 #endif
             success = processAckNackSubmessage(msgInfo);
             break;
         case SubmessageKind::DATA:
-#ifdef RECV_VERBOSE
+#if RECV_VERBOSE
             printf("Processing Data submessage\n");
 #endif
             success = processDataSubmessage(msgInfo);
@@ -91,13 +91,13 @@ bool MessageReceiver::processSubMessage(MessageProcessingInfo& msgInfo){
             success = processHeartbeatSubmessage(msgInfo);
             break;
         case SubmessageKind::INFO_DST:
-#ifdef RECV_VERBOSE
+#if RECV_VERBOSE
             printf("Info_DST submessage not relevant.\n");
 #endif
             success = true; // Not relevant
             break;
         case SubmessageKind::INFO_TS:
-#ifdef RECV_VERBOSE
+#if RECV_VERBOSE
             printf("Info_TS submessage not relevant.\n");
 #endif
             success = true; // Not relevant now
@@ -127,6 +127,12 @@ bool MessageReceiver::processDataSubmessage(MessageProcessingInfo& msgInfo){
         Guid writerGuid{sourceGuidPrefix, submsgData->writerId};
         ReaderCacheChange change{ChangeKind_t::ALIVE, writerGuid, submsgData->writerSN, serializedData, size};
         reader->newChange(change);
+    }else{
+#if RECV_VERBOSE
+        printf("Couldn't find a reader with id: ");
+        printEntityId(submsgData->readerId);
+        printf("\n");
+#endif
     }
 
     return true;

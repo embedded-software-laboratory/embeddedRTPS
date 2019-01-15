@@ -137,8 +137,6 @@ void SPDPAgent::handleSPDPPackage(ReaderCacheChange& cacheChange){
                     m_buildInEndpoints.sedpSubWriter->addNewMatchedReader(proxy);
                 }
 
-                // For now, the readers don't care about remotes
-
                 printf("Added new participant with guid: ");
                 for(auto i : m_proxyDataBuffer.m_guid.prefix.id){
                     printf("%u", i);
