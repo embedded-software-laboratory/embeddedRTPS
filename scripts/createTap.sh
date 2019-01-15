@@ -46,6 +46,9 @@ if [[ $REPLY =~ ^[Yy]$ ]]; then
       sudo ip link add name "$bridge_name" type bridge
       sudo ip link set "$bridge_name" up
 
+      # Allow unicast to pass
+      sudo brctl setageing "$bridge_name" 0
+
       # Make sure interface is up to add it to the bridge
       sudo ip link set "$eth_name" up
 
