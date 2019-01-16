@@ -36,7 +36,7 @@ protected:
 
 TEST_F(EmptyRTPSWriter, StartsWithSequenceNumberZero){
     SequenceNumber_t expectedResult{0,0};
-    EXPECT_EQ(writer.getLastSequenceNumber(), expectedResult);
+    EXPECT_EQ(writer.getLastUsedSequenceNumber(), expectedResult);
 }
 
 TEST_F(EmptyRTPSWriter, newChange_IncreasesSequenceNumber){
@@ -44,7 +44,7 @@ TEST_F(EmptyRTPSWriter, newChange_IncreasesSequenceNumber){
 
     writer.newChange(ChangeKind_t::ALIVE, nullptr, 0);
 
-    EXPECT_EQ(writer.getLastSequenceNumber(), expectedResult);
+    EXPECT_EQ(writer.getLastUsedSequenceNumber(), expectedResult);
 }
 
 TEST_F(EmptyRTPSWriter, newChange_ReturnsCorrectChange){
@@ -63,7 +63,7 @@ TEST_F(EmptyRTPSWriter, newChange_SetCorrectValues){
     const CacheChange* change = writer.newChange(expectedKind, data.data(), data.size());
 
     EXPECT_EQ(change->kind, expectedKind);
-    EXPECT_EQ(change->sequenceNumber, writer.getLastSequenceNumber());
+    EXPECT_EQ(change->sequenceNumber, writer.getLastUsedSequenceNumber());
     EXPECT_THAT(change->data, PBufContains(data));
 }
 
@@ -96,7 +96,7 @@ protected:
 };
 
 TEST_F(EmptyRTPSWriterWithoutKey, newChange_IgnoresAllKindThatAreNotAlive){
-    SequenceNumber_t current = writer.getLastSequenceNumber();
+    SequenceNumber_t current = writer.getLastUsedSequenceNumber();
 
     ChangeKind_t irrelevantKinds[] = {ChangeKind_t::INVALID,
                            ChangeKind_t::NOT_ALIVE_DISPOSED,
@@ -104,7 +104,7 @@ TEST_F(EmptyRTPSWriterWithoutKey, newChange_IgnoresAllKindThatAreNotAlive){
     for(auto kind : irrelevantKinds){
         const CacheChange* change = writer.newChange(kind, nullptr, 0);
         EXPECT_EQ(change, nullptr);
-        EXPECT_EQ(current, writer.getLastSequenceNumber());
+        EXPECT_EQ(current, writer.getLastUsedSequenceNumber());
     }
 }
 
@@ -123,12 +123,12 @@ protected:
 };
 
 TEST_F(EmptyRTPSWriterWithKey, newChange_IgnoresKindInvalid){
-    SequenceNumber_t current = writer.getLastSequenceNumber();
+    SequenceNumber_t current = writer.getLastUsedSequenceNumber();
 
     const CacheChange* change = writer.newChange(ChangeKind_t::INVALID, nullptr, 0);
 
     EXPECT_EQ(change, nullptr);
-    EXPECT_EQ(current, writer.getLastSequenceNumber());
+    EXPECT_EQ(current, writer.getLastUsedSequenceNumber());
 
 }
 TEST_F(EmptyRTPSWriterWithKey, newChange_AddsAllKindsBesideInvalid){
@@ -136,11 +136,11 @@ TEST_F(EmptyRTPSWriterWithKey, newChange_AddsAllKindsBesideInvalid){
                                     ChangeKind_t::NOT_ALIVE_DISPOSED,
                                     ChangeKind_t::NOT_ALIVE_UNREGISTERED};
     for(auto kind : relevantKinds){
-        SequenceNumber_t expected = ++writer.getLastSequenceNumber();
+        SequenceNumber_t expected = ++writer.getLastUsedSequenceNumber();
 
         const CacheChange* change = writer.newChange(kind, nullptr, 0);
         EXPECT_EQ(change->kind, kind);
-        EXPECT_EQ(writer.getLastSequenceNumber(), expected);
+        EXPECT_EQ(writer.getLastUsedSequenceNumber(), expected);
     }
 }
 
@@ -148,9 +148,6 @@ class FullRTPSWriterWithProxy : public ::testing::Test{
 protected:
     const ParticipantId_t someParticipantId = 1;
     const BuiltInTopicData writerAttributes{TestGlobals::someWriterGuid,
-                                      ReliabilityKind_t::BEST_EFFORT,
-                                      getUserUnicastLocator(someParticipantId)};
-    const BuiltInTopicData readerAttributes{TestGlobals::someWriterGuid,
                                       ReliabilityKind_t::BEST_EFFORT,
                                       getUserUnicastLocator(someParticipantId)};
 
@@ -177,3 +174,20 @@ TEST_F(FullRTPSWriterWithProxy, progess_sendsMessageAfterAddingOneMore){
 
     writer.progress();
 }
+
+TEST_F(FullRTPSWriterWithProxy, progess_sendsAllMessagesAfterSendingOneAndAddingANewOne){
+    EXPECT_CALL(transport, sendFunction).Times(1);
+    writer.progress();
+    testing::Mock::VerifyAndClearExpectations(&writer); // This and EXPECT_CALL are used to avoid warning about uninteresting call
+
+    const CacheChange* change = writer.newChange(ChangeKind_t::ALIVE, data, size);
+    ASSERT_NE(change, nullptr);
+
+    EXPECT_CALL(transport, sendFunction).Times(Config::HISTORY_SIZE);
+
+    const int randomValueToCallMoreThanNecessary = 5;
+    for(int i=0; i < Config::HISTORY_SIZE + randomValueToCallMoreThanNecessary; i++){
+        writer.progress();
+    }
+}
+

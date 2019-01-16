@@ -54,8 +54,8 @@ bool StatelessWriterT<NetworkDriver>::addNewMatchedReader(const ReaderProxy& new
 }
 
 template <typename NetworkDriver>
-SequenceNumber_t StatelessWriterT<NetworkDriver>::getLastSequenceNumber() const{
-    return m_lastChangeSequenceNumber;
+SequenceNumber_t StatelessWriterT<NetworkDriver>::getLastUsedSequenceNumber() const{
+    return m_lastUsedChangeSequenceNumber;
 }
 
 template <typename NetworkDriver>
@@ -63,19 +63,22 @@ const CacheChange* StatelessWriterT<NetworkDriver>::newChange(rtps::ChangeKind_t
     if(isIrrelevant(kind)){
         return nullptr; // TODO
     }
+    Lock lock(m_mutex);
 
-    ++m_lastChangeSequenceNumber;
+    ++m_lastUsedChangeSequenceNumber;
     CacheChange change{};
     change.kind = kind;
     change.data.reserve(size);
     change.data.append(data, size);
-    change.sequenceNumber = m_lastChangeSequenceNumber;
+    change.sequenceNumber = m_lastUsedChangeSequenceNumber;
 
-
-    Lock lock(m_mutex);
     if(m_history.isFull()){
-        ++m_nextSequenceNumberToSend; // Make sure we have the correct sn to send
+        SequenceNumber_t newMin = ++SequenceNumber_t{m_history.getSeqNumMin()};
+        if(m_nextSequenceNumberToSend < newMin){
+            m_nextSequenceNumberToSend = newMin; // Make sure we have the correct sn to send
+        }
     }
+
     auto result = m_history.addChange(std::move(change));
     if(mp_threadPool != nullptr){
         mp_threadPool->addWorkload(ThreadPool::Workload_t{this});
@@ -128,9 +131,16 @@ void StatelessWriterT<NetworkDriver>::progress(){
         Lock lock(m_mutex);
         const CacheChange* next = m_history.getChangeBySN(m_nextSequenceNumberToSend);
         if(next == nullptr){
+#if SLW_VERBOSE
             printf("StatelessWriter[%s]: Couldn't get a new CacheChange with SN (%i,%i)\n",
                     &m_attributes.topicName[0], m_nextSequenceNumberToSend.high, m_nextSequenceNumberToSend.low);
+#endif
             return;
+        }else{
+#if SLW_VERBOSE
+            printf("StatelessWriter[%s]: Sending change with SN (%i,%i)\n",
+                   &m_attributes.topicName[0], m_nextSequenceNumberToSend.high, m_nextSequenceNumberToSend.low);
+#endif
         }
         ++m_nextSequenceNumberToSend;
         MessageFactory::addSubMessageData(info.buffer, next->data, false, next->sequenceNumber, m_attributes.endpointGuid.entityId,
@@ -144,7 +154,4 @@ void StatelessWriterT<NetworkDriver>::progress(){
     info.destPort = (Ip4Port_t) locator.port;
 
     m_transport->sendFunction(info);
-#if SLW_VERBOSE
-    printf("StatelessWriter[%s]: Send.\n", this->m_attributes.topicName);
-#endif
 }

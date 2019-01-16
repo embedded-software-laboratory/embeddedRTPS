@@ -28,6 +28,8 @@ namespace rtps {
         const uint8_t NUM_WRITER_PROXIES_PER_READER = 10;
         const uint8_t NUM_READER_PROXIES_PER_WRITER = 10;
 
+        const uint8_t HISTORY_SIZE = 15;
+
         const uint8_t MAX_TYPENAME_LENGTH = 20;
         const uint8_t MAX_TOPICNAME_LENGTH = 20;
 

@@ -27,7 +27,7 @@ namespace rtps {
         void unsentChangesReset() override;
         void onNewAckNack(const SubmessageAckNack& msg) override;
 
-        SequenceNumber_t getLastSequenceNumber() const;
+        SequenceNumber_t getLastUsedSequenceNumber() const;
 
     private:
         sys_mutex_t m_mutex;
@@ -37,7 +37,7 @@ namespace rtps {
         NetworkDriver* m_transport;
 
         TopicKind_t m_topicKind = TopicKind_t::NO_KEY;
-        SequenceNumber_t m_lastChangeSequenceNumber = {0, 0};
+        SequenceNumber_t m_lastUsedChangeSequenceNumber = {0, 0};
         SequenceNumber_t m_nextSequenceNumberToSend = {0, 1};
         HistoryCache m_history;
         ReaderProxy m_readerProxy{};

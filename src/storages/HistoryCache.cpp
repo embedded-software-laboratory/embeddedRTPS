@@ -75,9 +75,6 @@ void HistoryCache::incrementHead() {
 }
 
 void HistoryCache::incrementTail() {
-    if(m_lastReturned == m_tail){
-        incrementIterator(m_lastReturned);
-    }
     incrementIterator(m_tail);
 }
 

@@ -114,6 +114,11 @@ namespace rtps{
         bool operator==(const SequenceNumber_t& other) const{
             return high == other.high && low == other.low;
         }
+
+        bool operator!=(const SequenceNumber_t& other) const{
+            return !(*this == other);
+        }
+
         bool operator<(const SequenceNumber_t& other) const{
             return high < other.high || (high == other.high && low < other.low);
         }
@@ -124,6 +129,12 @@ namespace rtps{
                 ++high;
             }
             return *this;
+        }
+
+        SequenceNumber_t operator++(int){
+            SequenceNumber_t tmp(*this);
+            ++*this;
+            return tmp;
         }
     };
 
