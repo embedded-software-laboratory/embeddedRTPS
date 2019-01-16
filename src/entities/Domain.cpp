@@ -6,7 +6,7 @@
 #include "rtps/entities/Domain.h"
 #include "rtps/utils/udpUtils.h"
 
-#define DOMAIN_VERBOSE 1
+#define DOMAIN_VERBOSE 0
 
 using rtps::Domain;
 

@@ -18,7 +18,7 @@ namespace rtps{
         PBufWrapper buffer;
 
         void copyTriviallyCopyable(const PacketInfo& other){
-            this->srcPort = other.srcPort;
+            this->srcPort = other.srcPort; // TODO Do we need that?
             this->destPort = other.destPort;
             this->destAddr = other.destAddr;
         }

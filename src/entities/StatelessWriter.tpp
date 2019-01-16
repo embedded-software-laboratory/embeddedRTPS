@@ -16,7 +16,7 @@ using rtps::StatelessWriterT;
 using rtps::SequenceNumber_t;
 using rtps::CacheChange;
 
-#define SLW_VERBOSE 1
+#define SLW_VERBOSE 0
 
 #if SLW_VERBOSE
 #include "rtps/utils/printutils.h"

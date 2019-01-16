@@ -7,7 +7,11 @@
 #include "rtps/messages/MessageFactory.h"
 #include "lwip/tcpip.h"
 
-#define SFR_VERBOSE 1
+#define SFR_VERBOSE 0
+
+#if SFR_VERBOSE
+#include "rtps/utils/printutils.h"
+#endif
 
 using rtps::StatefullReaderT;
 
@@ -39,8 +43,14 @@ void StatefullReaderT<NetworkDriver>::newChange(ReaderCacheChange& cacheChange){
 
 template <class NetworkDriver>
 void StatefullReaderT<NetworkDriver>::registerCallback(ddsReaderCallback_fp cb, void* callee){
-    m_callback = cb;
-    m_callee = callee;
+    if(cb != nullptr){
+        m_callback = cb;
+        m_callee = callee; // It's okay if this is null
+    }else{
+#if SLR_VERBOSE
+        printf("StatefullReader[%s]: Passed callback is nullptr\n", &m_attributes.topicName[0]);
+#endif
+    }
 }
 
 template <class NetworkDriver>
@@ -89,8 +99,8 @@ bool StatefullReaderT<NetworkDriver>::onNewHeartbeat(const SubmessageHeartbeat& 
     if(msg.count.value <= writer->hbCount.value){
 #if SFR_VERBOSE
         printf("StatefullReader[%s]: Ignore heartbeat. Count too low.\n", &this->m_attributes.topicName[0]);
-        return false;
 #endif
+        return false;
     }
 
     writer->hbCount.value = msg.count.value;

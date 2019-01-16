@@ -131,7 +131,7 @@ namespace rtps{
     struct SequenceNumberSet{
         SequenceNumber_t base = {0,0};
         // Cannot be static because of packed
-        uint32_t numBits = SNS_NUM_BITS; // TODO was for testing purposes, just forgot to chang back to uint32_t
+        uint32_t numBits = SNS_NUM_BITS;
         std::array<uint32_t, 8> bitMap{};
 
         // We only need 1 byte because atm we don't store packets.

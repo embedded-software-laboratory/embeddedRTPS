@@ -8,7 +8,7 @@
 #include "rtps/messages/MessageTypes.h"
 #include "rtps/entities/Domain.h"
 
-#define PUB 1
+#define PUB 0
 
 void receiveCallback(void* /*callee*/, rtps::ReaderCacheChange& cacheChange){
     uint8_t buffer[50];
@@ -79,7 +79,12 @@ void startProgram(void* /*args*/){
 
 #else
 
-    rtps::Reader* reader = domain.createReader(*part, topicName, typeName, true);
+    rtps::Reader* reader = domain.createReader(*part, topicName, typeName, false);
+    if(reader == nullptr){
+        printf("Failed to create reader\n");
+        return;
+    }
+
     reader->registerCallback(receiveCallback, nullptr);
 
     while(true){

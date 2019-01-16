@@ -10,7 +10,7 @@
 
 using rtps::StatefullWriterT;
 
-#define SFW_VERBOSE 1
+#define SFW_VERBOSE 0
 
 #if SFW_VERBOSE
 #include "rtps/utils/printutils.h"

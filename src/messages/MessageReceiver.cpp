@@ -12,7 +12,11 @@
 
 using rtps::MessageReceiver;
 
-#define RECV_VERBOSE 1
+#define RECV_VERBOSE 0
+
+#if RECV_VERBOSE
+#include "rtps/utils/printutils.h"
+#endif
 
 MessageReceiver::MessageReceiver(Participant* part)
 : mp_part(part){
@@ -50,6 +54,9 @@ bool MessageReceiver::processHeader(MessageProcessingInfo& msgInfo){
     auto header = reinterpret_cast<const Header*>(msgInfo.getPointerToPos());
 
     if(header->guidPrefix.id == mp_part->m_guidPrefix.id){
+#if RECV_VERBOSE
+      printf("[MessageReceiver]: Received own message.\n");
+#endif
         return false; // Don't process our own packet
     }
 
@@ -85,7 +92,7 @@ bool MessageReceiver::processSubMessage(MessageProcessingInfo& msgInfo){
             success = processDataSubmessage(msgInfo);
             break;
         case SubmessageKind::HEARTBEAT:
-#ifdef RECV_VERBOSE
+#if RECV_VERBOSE
             printf("Processing Heartbeat submessage\n");
 #endif
             success = processHeartbeatSubmessage(msgInfo);
