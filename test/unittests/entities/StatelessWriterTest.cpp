@@ -10,6 +10,8 @@
 #include "rtps/rtps.h"
 
 #include "test/CustomMatcher.h"
+#include "test/globals.h"
+#include "test/mocking/NetworkDriverMock.h"
 
 using namespace rtps;
 
@@ -17,18 +19,17 @@ class EmptyRTPSWriter : public ::testing::Test{
 protected:
     const TopicKind_t arbitraryType = TopicKind_t::NO_KEY;
     const ParticipantId_t someParticipantId = 1;
-    const BuiltInTopicData attributes{{GUIDPREFIX_UNKNOWN, ENTITYID_UNKNOWN},
+    const BuiltInTopicData attributes{TestGlobals::someWriterGuid,
                                           ReliabilityKind_t::BEST_EFFORT,
                                           getUserUnicastLocator(someParticipantId)};
 
-    UdpDriver transport{nullptr, nullptr};
-    StatelessWriter writer;
+    NetworkDriverMock transport;
+    StatelessWriterT<NetworkDriverMock> writer;
     static const DataSize_t size = 5;
     const uint8_t data[size] = {0, 1, 2, 3, 4};
 
     void SetUp() override{
         rtps::init();
-
         writer.init(attributes, arbitraryType, nullptr, transport);
     }
 };
@@ -46,24 +47,24 @@ TEST_F(EmptyRTPSWriter, newChange_IncreasesSequenceNumber){
     EXPECT_EQ(writer.getLastSequenceNumber(), expectedResult);
 }
 
-TEST_F(EmptyRTPSWriter, newChange_ReturnsChange){
+TEST_F(EmptyRTPSWriter, newChange_ReturnsCorrectChange){
     ChangeKind_t expectedKind = ChangeKind_t::ALIVE;
 
     const CacheChange* change = writer.newChange(expectedKind, data, size);
 
-    EXPECT_NE(change, nullptr);
+    ASSERT_NE(change, nullptr);
+    //EXPECT_EQ(change->data.firstElement->tot_len, size);
 }
 
 TEST_F(EmptyRTPSWriter, newChange_SetCorrectValues){
     ChangeKind_t expectedKind = ChangeKind_t::ALIVE;
-    const DataSize_t size = 5;
-    uint8_t data[size] = {};
+    std::array<uint8_t, 5> data{};
 
-    const CacheChange* change = writer.newChange(expectedKind, data, size);
+    const CacheChange* change = writer.newChange(expectedKind, data.data(), data.size());
 
     EXPECT_EQ(change->kind, expectedKind);
     EXPECT_EQ(change->sequenceNumber, writer.getLastSequenceNumber());
-    EXPECT_THAT(change->data, PBufContains(data, size));
+    EXPECT_THAT(change->data, PBufContains(data));
 }
 
 TEST_F(EmptyRTPSWriter, newChange_AllocatesExactSize){
@@ -79,12 +80,12 @@ TEST_F(EmptyRTPSWriter, newChange_AllocatesExactSize){
 class EmptyRTPSWriterWithoutKey : public ::testing::Test{
 protected:
     const ParticipantId_t someParticipantId = 1;
-    const BuiltInTopicData attributes{{GUIDPREFIX_UNKNOWN, ENTITYID_UNKNOWN},
+    const BuiltInTopicData attributes{TestGlobals::someWriterGuid,
                                       ReliabilityKind_t::BEST_EFFORT,
                                       getUserUnicastLocator(someParticipantId)};
 
-    UdpDriver transport{nullptr, nullptr};
-    StatelessWriter writer;
+    NetworkDriverMock transport;
+    StatelessWriterT<NetworkDriverMock> writer;
     static const DataSize_t size = 5;
     const uint8_t data[size] = {0, 1, 2, 3, 4};
 
@@ -110,12 +111,12 @@ TEST_F(EmptyRTPSWriterWithoutKey, newChange_IgnoresAllKindThatAreNotAlive){
 class EmptyRTPSWriterWithKey : public ::testing::Test{
 protected:
     const ParticipantId_t someParticipantId = 1;
-    const BuiltInTopicData attributes{{GUIDPREFIX_UNKNOWN, ENTITYID_UNKNOWN},
+    const BuiltInTopicData attributes{TestGlobals::someWriterGuid,
                                       ReliabilityKind_t::BEST_EFFORT,
                                       getUserUnicastLocator(someParticipantId)};
 
-    UdpDriver transport{nullptr, nullptr};
-    StatelessWriter writer;
+    NetworkDriverMock transport;
+    StatelessWriterT<NetworkDriverMock> writer;
     void SetUp() override{
         writer.init(attributes, TopicKind_t::WITH_KEY, nullptr, transport);
     };
@@ -143,9 +144,36 @@ TEST_F(EmptyRTPSWriterWithKey, newChange_AddsAllKindsBesideInvalid){
     }
 }
 
+class FullRTPSWriterWithProxy : public ::testing::Test{
+protected:
+    const ParticipantId_t someParticipantId = 1;
+    const BuiltInTopicData writerAttributes{TestGlobals::someWriterGuid,
+                                      ReliabilityKind_t::BEST_EFFORT,
+                                      getUserUnicastLocator(someParticipantId)};
+    const BuiltInTopicData readerAttributes{TestGlobals::someWriterGuid,
+                                      ReliabilityKind_t::BEST_EFFORT,
+                                      getUserUnicastLocator(someParticipantId)};
 
+    NetworkDriverMock transport;
+    StatelessWriterT<NetworkDriverMock> writer;
+    static const DataSize_t size = 5;
+    const uint8_t data[size] = {0, 1, 2, 3, 4};
 
+    void SetUp() override{
+        writer.init(writerAttributes, TopicKind_t::WITH_KEY, nullptr, transport);
+        writer.addNewMatchedReader(ReaderProxy(TestGlobals::someReaderGuid, TestGlobals::someUserUnicastLocator));
+        for(int i=0; i < Config::HISTORY_SIZE; i++){
+            const CacheChange* change = writer.newChange(ChangeKind_t::ALIVE, data, size);
+            ASSERT_NE(change, nullptr);
+        }
+    };
+};
 
+TEST_F(FullRTPSWriterWithProxy, progess_sendsMessageAfterAddingOneMore){
+    const CacheChange* change = writer.newChange(ChangeKind_t::ALIVE, data, size);
+    ASSERT_NE(change, nullptr);
 
+    EXPECT_CALL(transport, sendFunction);
 
-
+    writer.progress();
+}

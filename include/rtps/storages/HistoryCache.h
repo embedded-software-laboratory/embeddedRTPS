@@ -7,6 +7,7 @@
 #define RTPS_HISTORYCACHE_H
 
 #include "rtps/common/types.h"
+#include "rtps/config.h"
 #include "rtps/storages/PBufWrapper.h"
 
 namespace rtps{
@@ -38,7 +39,7 @@ namespace rtps{
 
     private:
 
-        std::array<CacheChange, 15> m_buffer{};
+        std::array<CacheChange, Config::HISTORY_SIZE + 1> m_buffer{};
         uint16_t m_head = 0;
         uint16_t m_tail = 0;
         uint16_t m_lastReturned = 0;

@@ -23,7 +23,7 @@ using rtps::CacheChange;
 #endif
 
 template <typename NetworkDriver>
-bool StatelessWriterT<NetworkDriver>::init(BuiltInTopicData attributes, TopicKind_t topicKind, ThreadPool* threadPool, UdpDriver& driver){
+bool StatelessWriterT<NetworkDriver>::init(BuiltInTopicData attributes, TopicKind_t topicKind, ThreadPool* threadPool, NetworkDriver& driver){
     if (sys_mutex_new(&m_mutex) != ERR_OK) {
         printf("Failed to create mutex \n");
         return false;
@@ -73,6 +73,9 @@ const CacheChange* StatelessWriterT<NetworkDriver>::newChange(rtps::ChangeKind_t
 
 
     Lock lock(m_mutex);
+    if(m_history.isFull()){
+        ++m_nextSequenceNumberToSend; // Make sure we have the correct sn to send
+    }
     auto result = m_history.addChange(std::move(change));
     if(mp_threadPool != nullptr){
         mp_threadPool->addWorkload(ThreadPool::Workload_t{this});
@@ -125,7 +128,8 @@ void StatelessWriterT<NetworkDriver>::progress(){
         Lock lock(m_mutex);
         const CacheChange* next = m_history.getChangeBySN(m_nextSequenceNumberToSend);
         if(next == nullptr){
-            printf("StatelessWriter: Couldn't get a new CacheChange\n");
+            printf("StatelessWriter[%s]: Couldn't get a new CacheChange with SN (%i,%i)\n",
+                    &m_attributes.topicName[0], m_nextSequenceNumberToSend.high, m_nextSequenceNumberToSend.low);
             return;
         }
         ++m_nextSequenceNumberToSend;
