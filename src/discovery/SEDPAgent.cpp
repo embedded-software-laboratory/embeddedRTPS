@@ -58,6 +58,12 @@ void SEDPAgent::onNewPublisher(ReaderCacheChange& change){
     BuiltInTopicData topicData;
     if(topicData.readFromUcdrBuffer(cdrBuffer)){
         Reader* reader = m_part->getReader(topicData.topicName, topicData.typeName);
+        if(reader == nullptr){
+#if SEDP_VERBOSE
+            printf("SEDPAgent: Couldn't find reader for new Publisher.");
+#endif
+            return;
+        }
         // TODO check policies
 #if SEDP_VERBOSE
         printf("Found a new ");
@@ -90,6 +96,13 @@ void SEDPAgent::onNewSubscriber(ReaderCacheChange& change){
     BuiltInTopicData topicData;
     if(topicData.readFromUcdrBuffer(cdrBuffer)){
         Writer* writer = m_part->getWriter(topicData.topicName, topicData.typeName);
+        if(writer == nullptr) {
+#if SEDP_VERBOSE
+            printf("SEDPAgent: Couldn't find writer for new subscriber.");
+#endif
+            return;
+        }
+
         // TODO check policies
 #if SEDP_VERBOSE
         printf("Found a new ");

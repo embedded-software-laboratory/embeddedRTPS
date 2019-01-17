@@ -14,9 +14,9 @@
 #define MEASUREMENT 1
 
 #if MEASUREMENT
-#define RESPONDER 0
+#define RESPONDER 1
 #else
-#define PUB 1
+#define PUB 0
 #endif
 
 std::array<uint8_t,50> buffer;
@@ -30,18 +30,28 @@ void responderCallback(void* vp_writer, rtps::ReaderCacheChange& cacheChange){
 
     bool success = cacheChange.copyInto(buffer.data(), buffer.size());
     if(success){
-        //uint8_t offset = 4; // Encoding info and options
-        //printf("Received hello world message with index: %u\n", *reinterpret_cast<uint32_t*>(buffer + offset));
         writer->newChange(rtps::ChangeKind_t::ALIVE, buffer.data(), buffer.size());
     }else{
         printf("Received hello world message but copying failed\n");
     }
 }
 
-void measurementCallack(void* /*callee*/, rtps::ReaderCacheChange& cacheChange){
+void measurementCallback(void* /*callee*/, rtps::ReaderCacheChange& cacheChange){
     auto end = std::chrono::steady_clock::now();
     times.push_back(std::chrono::duration<double, std::micro>(end - start) - overhead);
     send = true;
+}
+
+void receiveCallback(void* vp_writer, rtps::ReaderCacheChange& cacheChange){
+    auto writer = static_cast<rtps::Writer*>(vp_writer);
+
+    bool success = cacheChange.copyInto(buffer.data(), buffer.size());
+    if(success){
+        uint8_t offset = 4; // Encoding info and options
+        printf("Received hello world message with index: %u\n", *reinterpret_cast<uint32_t*>(buffer.data() + offset));
+    }else{
+        printf("Received hello world message but copying failed\n");
+    }
 }
 
 void startProgram(void*);
@@ -57,6 +67,7 @@ int main() {
 
 void startProgram(void* /*args*/){
     rtps::Domain domain;
+    std::cout << "Size of domain: " << sizeof(domain) << "bytes.\n";
     domain.start();
 
     auto part = domain.createParticipant();
@@ -78,7 +89,6 @@ void startProgram(void* /*args*/){
             printf("Failed to create endpoints.\n");
             return;
         }
-
         reader->registerCallback(responderCallback, writer);
     #else
 
@@ -95,6 +105,13 @@ void startProgram(void* /*args*/){
 
         // Start
         rtps::Writer* writer = domain.createWriter(*part, topicName, typeName, false);
+        rtps::Reader* reader = domain.createReader(*part, topicName, typeName, false);
+        if(writer == nullptr || reader == nullptr){
+            printf("Failed to create endpoints.\n");
+            return;
+        }
+
+        reader->registerCallback(measurementCallback, nullptr);
 
         char message[] = "Hello World";
         uint8_t buffer[20];
@@ -172,6 +189,8 @@ void startProgram(void* /*args*/){
     #endif
 
 #endif
+
+        while(true);
 }
 
 #undef MEASUREMENT

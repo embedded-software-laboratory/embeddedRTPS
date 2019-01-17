@@ -21,7 +21,7 @@ bool Domain::start(){
     bool started = m_threadPool.startThreads();
     if(!started){
 #if DOMAIN_VERBOSE
-        printf("Failed starting threads\n");
+        printf("Domain: Failed starting threads\n");
 #endif
     }
     return started;
@@ -41,7 +41,7 @@ void Domain::receiveCallback(const PacketInfo& packet){
     if(isMultiCastPort(packet.destPort)){
         // Pass to all
 #if DOMAIN_VERBOSE
-        printf("Multicast to port %u\n", packet.destPort);
+        printf("Domain: Multicast to port %u\n", packet.destPort);
 #endif
         for(auto i=0; i < m_nextParticipantId - PARTICIPANT_START_ID; ++i) {
             m_participants[i].newMessage(static_cast<uint8_t*>(packet.buffer.firstElement->payload), packet.buffer.firstElement->len);
@@ -51,13 +51,20 @@ void Domain::receiveCallback(const PacketInfo& packet){
         ParticipantId_t id = getParticipantIdFromUnicastPort(packet.destPort, isUserPort(packet.destPort));
         if(id != PARTICIPANT_ID_INVALID){
 #if DOMAIN_VERBOSE
-            printf("Got unicast message on port %u\n", packet.destPort);
+            printf("Domain: Got unicast message on port %u\n", packet.destPort);
 #endif
-            m_participants[id-PARTICIPANT_START_ID].newMessage(static_cast<uint8_t*>(packet.buffer.firstElement->payload),
-                                                               packet.buffer.firstElement->len);
+            if(id < m_nextParticipantId) {
+                m_participants[id - PARTICIPANT_START_ID].newMessage(
+                        static_cast<uint8_t *>(packet.buffer.firstElement->payload),
+                        packet.buffer.firstElement->len);
+            }else{
+#if DOMAIN_VERBOSE
+                printf("Domain: Participant id too high.\n");
+#endif
+            }
         }else{
 #if DOMAIN_VERBOSE
-            printf("Got message to port %u: no matching participant\n", packet.destPort);
+            printf("Domain: Got message to port %u: no matching participant\n", packet.destPort);
 #endif
         }
     }
@@ -65,7 +72,7 @@ void Domain::receiveCallback(const PacketInfo& packet){
 
 rtps::Participant* Domain::createParticipant(){
 #if DOMAIN_VERBOSE
-    printf("Creating new participant.\n");
+    printf("Domain: Creating new participant.\n");
 #endif
     for(auto& entry : m_participants){
         if(entry.m_participantId == PARTICIPANT_ID_INVALID){
