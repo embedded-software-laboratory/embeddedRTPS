@@ -147,7 +147,7 @@ void Domain::registerPort(Participant& part){
     m_transport.createUdpConnection(getBuiltInUnicastPort(part.m_participantId));
 }
 
-rtps::Writer* Domain::createWriter(Participant& part, char* topicName, char* typeName, bool reliable){
+rtps::Writer* Domain::createWriter(Participant& part, const char* topicName, const char* typeName, bool reliable){
     // TODO Distinguish WithKey and NoKey (Also changes EntityKind)
     BuiltInTopicData attributes;
 
@@ -160,6 +160,9 @@ rtps::Writer* Domain::createWriter(Participant& part, char* topicName, char* typ
     attributes.endpointGuid.entityId = {part.getNextUserEntityKey(), EntityKind_t::USER_DEFINED_WRITER_WITHOUT_KEY};
     attributes.unicastLocator = getUserUnicastLocator(part.m_participantId);
 
+#if DOMAIN_VERBOSE
+    printf("Creating writer[%s, %s]\n", topicName, typeName);
+#endif
     if(reliable){
         if(m_numStatefullWriters == m_statefullWriters.size()){
             return nullptr;
@@ -188,7 +191,7 @@ rtps::Writer* Domain::createWriter(Participant& part, char* topicName, char* typ
 }
 
 
-rtps::Reader* Domain::createReader(Participant& part, char* topicName, char* typeName, bool reliable){
+rtps::Reader* Domain::createReader(Participant& part, const char* topicName, const char* typeName, bool reliable){
     // TODO Distinguish WithKey and NoKey (Also changes EntityKind)
     BuiltInTopicData attributes;
 
@@ -200,6 +203,10 @@ rtps::Reader* Domain::createReader(Participant& part, char* topicName, char* typ
     attributes.endpointGuid.prefix = part.m_guidPrefix;
     attributes.endpointGuid.entityId = {part.getNextUserEntityKey(), EntityKind_t::USER_DEFINED_READER_WITHOUT_KEY};
     attributes.unicastLocator = getUserUnicastLocator(part.m_participantId);
+
+#if DOMAIN_VERBOSE
+    printf("Creating reader[%s, %s]\n", topicName, typeName);
+#endif
 
     if(reliable){
         if(m_numStatefullReaders == m_statefullReaders.size()){
@@ -229,7 +236,7 @@ rtps::Reader* Domain::createReader(Participant& part, char* topicName, char* typ
 }
 
 rtps::GuidPrefix_t Domain::generateGuidPrefix(ParticipantId_t id) const{
-    // TODO
-    GuidPrefix_t prefix{1,2,3,4,5,6,7,8,9,10,11, *reinterpret_cast<uint8_t*>(&id)};
+    GuidPrefix_t prefix = Config::BASE_GUID_PREFIX;
+    prefix.id[prefix.id.size()-1] = *reinterpret_cast<uint8_t*>(&id);
     return prefix;
 }

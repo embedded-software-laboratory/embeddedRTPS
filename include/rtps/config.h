@@ -16,6 +16,7 @@ namespace rtps {
     namespace Config {
         const VendorId_t VENDOR_ID = {13, 37};
         const std::array<uint8_t, 4> IP_ADDRESS = {192,168,0,42};
+        const GuidPrefix_t BASE_GUID_PREFIX{1,2,3,4,5,6,7,8,9,10,11};
 
         const uint8_t DOMAIN_ID = 0; // 230 possible with UDP
         const uint8_t NUM_STATELESS_WRITERS = 10;

@@ -48,7 +48,7 @@ void SEDPAgent::onNewPublisher(ReaderCacheChange& change){
 
     if(!change.copyInto(m_buffer, sizeof(m_buffer)/sizeof(m_buffer[0]))){
 #if SEDP_VERBOSE
-        printf("SEDPAgent: Buffer too small.");
+        printf("SEDPAgent: Buffer too small.\n");
 #endif
         return;
     }
@@ -60,7 +60,7 @@ void SEDPAgent::onNewPublisher(ReaderCacheChange& change){
         Reader* reader = m_part->getReader(topicData.topicName, topicData.typeName);
         if(reader == nullptr){
 #if SEDP_VERBOSE
-            printf("SEDPAgent: Couldn't find reader for new Publisher.");
+            printf("SEDPAgent: Couldn't find reader for new Publisher[%s, %s]\n", topicData.topicName, topicData.typeName);
 #endif
             return;
         }
@@ -98,7 +98,7 @@ void SEDPAgent::onNewSubscriber(ReaderCacheChange& change){
         Writer* writer = m_part->getWriter(topicData.topicName, topicData.typeName);
         if(writer == nullptr) {
 #if SEDP_VERBOSE
-            printf("SEDPAgent: Couldn't find writer for new subscriber.");
+            printf("SEDPAgent: Couldn't find writer for new subscriber[%s, %s]\n", topicData.topicName, topicData.typeName);
 #endif
             return;
         }

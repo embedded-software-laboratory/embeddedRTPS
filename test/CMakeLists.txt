@@ -31,3 +31,9 @@ target_link_libraries(runThreadPoolDemo rtps lwip)
 
 add_executable(lwipTests test_lwip.cpp)
 target_link_libraries(lwipTests rtps lwip gtest gtest_main gmock gmock_main)
+
+add_executable(latencyTest
+        performance/LatencyTest.cpp
+        performance/MeasurementUnit.cpp
+        performance/ResponderUnit.cpp)
+target_link_libraries(latencyTest rtps lwip)
