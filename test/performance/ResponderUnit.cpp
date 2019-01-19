@@ -43,7 +43,7 @@ void ResponderUnit::responderCallback(rtps::ReaderCacheChange& cacheChange){
 
     bool success = cacheChange.copyInto(m_buffer.data(), m_buffer.size());
     if(success){
-        mp_dataWriter->newChange(rtps::ChangeKind_t::ALIVE, m_buffer.data(), m_buffer.size());
+        mp_dataWriter->newChange(rtps::ChangeKind_t::ALIVE, m_buffer.data(), cacheChange.size);
     }else{
         printf("Received hello world message but copying failed\n");
     }

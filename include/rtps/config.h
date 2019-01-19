@@ -43,8 +43,8 @@ namespace rtps {
 
         const int MAX_NUM_UDP_CONNECTIONS = 20;
 
-        const int THREAD_POOL_NUM_WRITERS = 1;
-        const int THREAD_POOL_NUM_READERS = 1;
+        const int THREAD_POOL_NUM_WRITERS = 3;
+        const int THREAD_POOL_NUM_READERS = 3;
         const int THREAD_POOL_WRITER_STACKSIZE = 1024;
         const int THREAD_POOL_READER_STACKSIZE = 1024;
         const int THREAD_POOL_WRITER_PRIO = 3;
