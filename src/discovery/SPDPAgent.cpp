@@ -17,7 +17,11 @@ using rtps::SMElement::ParameterId;
 using rtps::SMElement::BuildInEndpointSet;
 
 
-//#define SPDP_VERBOSE
+#define SPDP_VERBOSE 1
+
+#if SPDP_VERBOSE
+#include "rtps/utils/printutils.h"
+#endif
 
 SPDPAgent::~SPDPAgent(){
     if(initialized){
@@ -70,17 +74,18 @@ void SPDPAgent::receiveCallback(void *callee, ReaderCacheChange& cacheChange) {
 }
 
 void SPDPAgent::handleSPDPPackage(ReaderCacheChange& cacheChange){
-    if(!initialized){
-        printf("SPDP: Callback called without initialization");
-        return;
-    }
-    Lock lock{m_mutex};
-#ifdef SPDP_VERBOSE
+#if SPDP_VERBOSE
     printf("SPDP message received\n");
 #endif
-    //TODO InstanceHandle
+
+    if(!initialized){
+        printf("SPDP: Callback called without initialization\n");
+        return;
+    }
+
+    Lock lock{m_mutex};
     if(cacheChange.size > m_inputBuffer.size()){
-        printf("SPDP: Input buffer to small");
+        printf("SPDP: Input buffer to small\n");
         return;
     }
     cacheChange.copyInto(m_inputBuffer.data(), m_inputBuffer.size());
@@ -89,68 +94,78 @@ void SPDPAgent::handleSPDPPackage(ReaderCacheChange& cacheChange){
     ucdr_init_buffer(&buffer, m_inputBuffer.data(), cacheChange.size);
 
     if(cacheChange.kind == ChangeKind_t::ALIVE){
-        std::array<uint8_t,2> encapsulation{};
-        // Endianess doesn't matter for this since those are single bytes
-        ucdr_deserialize_array_uint8_t(&buffer, encapsulation.data(), encapsulation.size());
-        if(encapsulation == SMElement::SCHEME_PL_CDR_LE) {
-            buffer.endianness = UCDR_LITTLE_ENDIANNESS;
-        }else{
-            buffer.endianness = UCDR_BIG_ENDIANNESS;
-        }
-        // Reuse buffer to skip encapsulation options
-        ucdr_deserialize_array_uint8_t(&buffer, encapsulation.data(), encapsulation.size());
-
+        configureEndianessAndOptions(buffer);
         if(m_proxyDataBuffer.readFromUcdrBuffer(buffer)){
             // TODO In case we store the history we can free the history mutex here
-            if(m_proxyDataBuffer.m_guid.prefix.id == mp_participant->m_guidPrefix.id){
-                return;
-            }
-
-            // Check if it's already in our list
-            if(mp_participant->findRemoteParticipant(m_proxyDataBuffer.m_guid.prefix) != nullptr){
-                return;
-            }
-
-            if(mp_participant->addNewRemoteParticipant(m_proxyDataBuffer)) {
-                // Prepare builtin endpoints for SEDP
-                if (m_proxyDataBuffer.hasPublicationWriter()){
-                    const WriterProxy proxy{{m_proxyDataBuffer.m_guid.prefix, ENTITYID_SEDP_BUILTIN_PUBLICATIONS_WRITER},
-                                             m_proxyDataBuffer.m_metatrafficMulticastLocatorList[0]};
-                    m_buildInEndpoints.sedpPubReader->addNewMatchedWriter(proxy);
-                }
-
-                if (m_proxyDataBuffer.hasSubscriptionWriter()){
-                    const WriterProxy proxy{{m_proxyDataBuffer.m_guid.prefix, ENTITYID_SEDP_BUILTIN_SUBSCRIPTIONS_WRITER},
-                                            m_proxyDataBuffer.m_metatrafficMulticastLocatorList[0]};
-                    m_buildInEndpoints.sedpSubReader->addNewMatchedWriter(proxy);
-                }
-
-                if(m_proxyDataBuffer.hasPublicationReader()){
-                    const ReaderProxy proxy{{m_proxyDataBuffer.m_guid.prefix, ENTITYID_SEDP_BUILTIN_PUBLICATIONS_READER},
-                                            m_proxyDataBuffer.m_metatrafficUnicastLocatorList[0]};
-                    m_buildInEndpoints.sedpPubWriter->addNewMatchedReader(proxy);
-                }
-
-                if(m_proxyDataBuffer.hasSubscriptionReader()){
-                    const ReaderProxy proxy{{m_proxyDataBuffer.m_guid.prefix, ENTITYID_SEDP_BUILTIN_SUBSCRIPTIONS_READER},
-                                            m_proxyDataBuffer.m_metatrafficUnicastLocatorList[0]};
-                    m_buildInEndpoints.sedpSubWriter->addNewMatchedReader(proxy);
-                }
-
-                printf("Added new participant with guid: ");
-                for(auto i : m_proxyDataBuffer.m_guid.prefix.id){
-                    printf("%u", i);
-                }
-                printf("\n");
-            }else{
-                printf("Failed to add new participant");
-            }
+            processProxyData();
         }
     }else{
-        // RemoveParticipant
+        // TODO RemoveParticipant
+    }
+}
+
+void SPDPAgent::configureEndianessAndOptions(ucdrBuffer& buffer){
+    std::array<uint8_t,2> encapsulation{};
+    // Endianess doesn't matter for this since those are single bytes
+    ucdr_deserialize_array_uint8_t(&buffer, encapsulation.data(), encapsulation.size());
+    if(encapsulation == SMElement::SCHEME_PL_CDR_LE) {
+        buffer.endianness = UCDR_LITTLE_ENDIANNESS;
+    }else{
+        buffer.endianness = UCDR_BIG_ENDIANNESS;
+    }
+    // Reuse encapsulation buffer to skip options
+    ucdr_deserialize_array_uint8_t(&buffer, encapsulation.data(), encapsulation.size());
+}
+
+void SPDPAgent::processProxyData(){
+    if(m_proxyDataBuffer.m_guid.prefix.id == mp_participant->m_guidPrefix.id){
+        return; // Our own packet
     }
 
+    if(mp_participant->findRemoteParticipant(m_proxyDataBuffer.m_guid.prefix) != nullptr){
+        return; // Already in our list
+    }
 
+    // New participant, help him join fast by broadcasting data again
+    m_buildInEndpoints.spdpWriter->unsentChangesReset();
+
+    if(mp_participant->addNewRemoteParticipant(m_proxyDataBuffer)) {
+        addProxiesForBuiltInEndpoints();
+
+#if SPDP_VERBOSE
+        printf("Added new participant with guid: ");
+        printGuidPrefix(m_proxyDataBuffer.m_guid.prefix);
+        printf("\n");
+    }else{
+        printf("Failed to add new participant");
+#endif
+    }
+}
+
+void SPDPAgent::addProxiesForBuiltInEndpoints(){
+    if (m_proxyDataBuffer.hasPublicationWriter()){
+        const WriterProxy proxy{{m_proxyDataBuffer.m_guid.prefix, ENTITYID_SEDP_BUILTIN_PUBLICATIONS_WRITER},
+                                m_proxyDataBuffer.m_metatrafficMulticastLocatorList[0]};
+        m_buildInEndpoints.sedpPubReader->addNewMatchedWriter(proxy);
+    }
+
+    if (m_proxyDataBuffer.hasSubscriptionWriter()){
+        const WriterProxy proxy{{m_proxyDataBuffer.m_guid.prefix, ENTITYID_SEDP_BUILTIN_SUBSCRIPTIONS_WRITER},
+                                m_proxyDataBuffer.m_metatrafficMulticastLocatorList[0]};
+        m_buildInEndpoints.sedpSubReader->addNewMatchedWriter(proxy);
+    }
+
+    if(m_proxyDataBuffer.hasPublicationReader()){
+        const ReaderProxy proxy{{m_proxyDataBuffer.m_guid.prefix, ENTITYID_SEDP_BUILTIN_PUBLICATIONS_READER},
+                                m_proxyDataBuffer.m_metatrafficUnicastLocatorList[0]};
+        m_buildInEndpoints.sedpPubWriter->addNewMatchedReader(proxy);
+    }
+
+    if(m_proxyDataBuffer.hasSubscriptionReader()){
+        const ReaderProxy proxy{{m_proxyDataBuffer.m_guid.prefix, ENTITYID_SEDP_BUILTIN_SUBSCRIPTIONS_READER},
+                                m_proxyDataBuffer.m_metatrafficUnicastLocatorList[0]};
+        m_buildInEndpoints.sedpSubWriter->addNewMatchedReader(proxy);
+    }
 }
 
 

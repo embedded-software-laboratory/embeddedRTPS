@@ -39,6 +39,9 @@ namespace rtps{
         bool initialized = false;
         static void receiveCallback(void* callee, ReaderCacheChange& cacheChange);
         void handleSPDPPackage(ReaderCacheChange& cacheChange);
+        void configureEndianessAndOptions(ucdrBuffer& buffer);
+        void processProxyData();
+        void addProxiesForBuiltInEndpoints();
 
         void addInlineQos();
         void addParticipantParameters();
