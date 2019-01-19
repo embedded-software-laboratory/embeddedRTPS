@@ -62,10 +62,13 @@ void MeasurementUnit::measurementJumppad(void* callee, rtps::ReaderCacheChange& 
 void MeasurementUnit::measurementCallback(rtps::ReaderCacheChange& /*cacheChange*/){
     const auto end = std::chrono::steady_clock::now();
     m_times.push_back(std::chrono::duration<double, std::micro>(end - m_start) - m_overhead);
-    //
-    // std::cout << "Duration: " << m_times[m_times.size()-1].count() << "ns" << '\n';
+
+    //std::cout << "Duration: " << m_times[m_times.size()-1].count() << "ns" << '\n';
     {
         std::lock_guard<std::mutex> guard(m_mutex);
+        if(m_receivedResponse){
+            std::cout << "Received response was already signalized\n";
+        }
         m_receivedResponse = true;
     }
     m_condVar.notify_one();
@@ -110,15 +113,15 @@ void MeasurementUnit::runWithSpecificSize(){
             return;
         }
 
-        m_condVar.wait_for(lock, std::chrono::duration<double, std::milli>(50),
+        m_condVar.wait_for(lock, std::chrono::duration<double, std::milli>(100),
                            [this]{return this->m_receivedResponse;});
     }
 }
 
 void MeasurementUnit::evaluate(){
 
-    const auto minDuration = std::min(m_times.begin(), m_times.end());
-    const auto maxDuration = std::max(m_times.begin(), m_times.end());
+    const auto minDuration = std::min_element(m_times.begin(), m_times.end());
+    const auto maxDuration = std::max_element(m_times.begin(), m_times.end());
     const auto meanDuration = std::accumulate(m_times.begin(), m_times.end(), std::chrono::duration<double,std::micro>(0)).count()/m_times.size();
 
     double variance = 0;
