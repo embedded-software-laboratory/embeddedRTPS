@@ -112,16 +112,16 @@ void MeasurementUnit::runWithSpecificSize(){
             std::cout << "History full. Abort. \n";
             return;
         }
-
-        m_condVar.wait_for(lock, std::chrono::duration<double, std::milli>(100),
+        //m_condVar.wait(lock, [this]{return this->m_receivedResponse;});
+        m_condVar.wait_for(lock, std::chrono::duration<double, std::milli>(1000),
                            [this]{return this->m_receivedResponse;});
     }
 }
 
 void MeasurementUnit::evaluate(){
 
-    const auto minDuration = std::min_element(m_times.begin(), m_times.end());
-    const auto maxDuration = std::max_element(m_times.begin(), m_times.end());
+    const auto minDuration = *std::min_element(m_times.begin(), m_times.end());
+    const auto maxDuration = *std::max_element(m_times.begin(), m_times.end());
     const auto meanDuration = std::accumulate(m_times.begin(), m_times.end(), std::chrono::duration<double,std::micro>(0)).count()/m_times.size();
 
     double variance = 0;
@@ -147,7 +147,7 @@ void MeasurementUnit::evaluate(){
 
     static_assert(quantiles.size() == 4, "Not enough quantiles.");
     printf("%8u,%8" PRIu64 ",%8.2f,%8.2f,%8.2f,%8.2f,%8.2f,%8.2f,%8.2f,%8.2f \n",
-           m_numBytes, m_times.size(), stddev, meanDuration, minDuration->count(),
+           m_numBytes, m_times.size(), stddev, meanDuration, minDuration.count(),
            quantilesResult[0], quantilesResult[1], quantilesResult[2], quantilesResult[3],
-           maxDuration->count());
+           maxDuration.count());
 }

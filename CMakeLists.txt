@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.10)
 set(CMAKE_CXX_STANDARD 11)
 
-set (CMAKE_CXX_FLAGS "-Wall -Wextra -Wnon-virtual-dtor -Wpedantic -fno-non-call-exceptions -fno-exceptions -fno-rtti")
+set (CMAKE_CXX_FLAGS "-O3 -Wall -Wextra -Wnon-virtual-dtor -Wpedantic -fno-non-call-exceptions -fno-exceptions -fno-rtti")
 # TODO -Wshadow
 
 if(WIN32)
