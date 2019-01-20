@@ -2,6 +2,7 @@
 #ifndef RTPS_THREADSAFECIRCULARBUFFER_TPP
 #define RTPS_THREADSAFECIRCULARBUFFER_TPP
 
+#define TSCB_VERBOSE 0
 namespace rtps {
 
 
@@ -11,10 +12,14 @@ namespace rtps {
             return true;
         }
         if (sys_mutex_new(&m_mutex) != ERR_OK) {
+#if TSCB_VERBOSE
             printf("Failed to create mutex \n");
+#endif
             return false;
         } else {
+#if TSCB_VERBOSE
             printf("Successfully created mutex at %p\n", static_cast<void*>(&m_mutex));
+#endif
             m_initialized = true;
             return true;
         }
