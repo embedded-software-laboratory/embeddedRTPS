@@ -53,10 +53,10 @@ void LwipMeasurementUnit::calculateTimerOverhead(){
 
 void LwipMeasurementUnit::measurementJumppad(void* callee, udp_pcb* target, pbuf* pbuf, const ip_addr_t* addr, Ip4Port_t port){
     auto measurementUnit = static_cast<LwipMeasurementUnit*>(callee);
-    measurementUnit->measurementCallback();
+    measurementUnit->measurementCallback(pbuf);
 }
 
-void LwipMeasurementUnit::measurementCallback(){
+void LwipMeasurementUnit::measurementCallback(pbuf* pbuf){
     const auto end = std::chrono::steady_clock::now();
     m_times.push_back(std::chrono::duration<double, std::micro>(end - m_start) - m_overhead);
 
@@ -67,14 +67,13 @@ void LwipMeasurementUnit::measurementCallback(){
             std::cout << "Received response was already signalized\n";
         }
         m_receivedResponse = true;
+
+        pbuf_free(pbuf);
     }
     m_condVar.notify_one();
 }
 
 void LwipMeasurementUnit::run() {
-    std::cout << "Waiting 15 sec for startup...." << '\n';
-    sys_msleep(15000); // Wait for initialization
-    std::cout << "Go!" << '\n';
 
     printf("Printing round-trip times in us, statistics for %d samples\n", m_numSamples);
     printf("   Bytes, Samples,   stdev,    mean,     min,     50%%,     90%%,     99%%,  99.99%%,     max\n");
@@ -96,14 +95,15 @@ void LwipMeasurementUnit::prepare(uint32_t numBytes){
 
 void LwipMeasurementUnit::runWithSpecificSize(){
     LatencyPacket packet(m_numBytes);
-    pbuf* buffer = pbuf_alloc(PBUF_TRANSPORT, m_numBytes, PBUF_POOL);
+
 
     for(uint64_t i=0; i < m_numSamples; i++) {
         static_assert(sizeof(m_numSamples) <= sizeof(i), "MeasurementUnit: loop variable too small.");
 
+        pbuf* buffer = pbuf_alloc(PBUF_TRANSPORT, m_numBytes, PBUF_POOL);
+        sys_msleep(10);
         std::unique_lock<std::mutex> lock(m_mutex);
         m_receivedResponse = false;
-
         m_start = std::chrono::steady_clock::now();
         LOCK_TCPIP_CORE();
         err_t err = udp_sendto(m_pcb, buffer, &m_destAddr, m_destPort);
@@ -116,6 +116,8 @@ void LwipMeasurementUnit::runWithSpecificSize(){
         //m_condVar.wait(lock, [this]{return this->m_receivedResponse;});
         m_condVar.wait_for(lock, std::chrono::duration<double, std::milli>(5000),
                            [this]{return this->m_receivedResponse;});
+        m_receivedResponse = true;
+        pbuf_free(buffer);
     }
 }
 

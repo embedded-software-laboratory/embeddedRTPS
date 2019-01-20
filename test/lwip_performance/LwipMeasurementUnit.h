@@ -26,7 +26,7 @@ namespace rtps{
 
         private:
             udp_pcb* m_pcb;
-            uint16_t m_recvPort;
+            uint16_t m_recvPort = 7410;
             uint16_t m_destPort = 7410;
             ip4_addr m_destAddr = transformIP4ToU32(192, 168, 0, 42);
 
@@ -47,7 +47,7 @@ namespace rtps{
             void prepareLWIP();
             void calculateTimerOverhead();
             static void measurementJumppad(void* callee, udp_pcb* target, pbuf* pbuf, const ip_addr_t* addr, Ip4Port_t port);
-            void measurementCallback();
+            void measurementCallback(pbuf* pbuf);
             void prepare(uint32_t numBytes);
             void runWithSpecificSize();
             void evaluate();
