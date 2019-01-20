@@ -11,7 +11,7 @@
 #include "rtps/messages/MessageTypes.h"
 #include "ucdr/microcdr.h"
 
-#define SEDP_VERBOSE 1
+#define SEDP_VERBOSE 0
 
 using rtps::SEDPAgent;
 

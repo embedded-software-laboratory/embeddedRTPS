@@ -8,6 +8,8 @@
 
 using rtps::PBufWrapper;
 
+#define PBUF_WRAP_VERBOSE 0
+
 PBufWrapper::PBufWrapper(pbuf* bufferToWrap) : firstElement(bufferToWrap){
     m_freeSpace = 0; // Assume it to be full
 }
@@ -74,7 +76,9 @@ PBufWrapper PBufWrapper::deepCopy() const{
     clone.firstElement = pbuf_alloc(m_layer, this->firstElement->tot_len, m_type);
     if(clone.firstElement != nullptr){
         if(pbuf_copy(clone.firstElement, this->firstElement) != ERR_OK){
+#if PBUF_WRAP_VERBOSE
             printf("PBufWrapper::deepCopy: Copy of pbuf failed");
+#endif
         }
     }else{
         clone.m_freeSpace = 0;
@@ -119,7 +123,6 @@ bool PBufWrapper::append(const uint8_t *const data, DataSize_t length){
 
 void PBufWrapper::append(PBufWrapper&& other){
     if(this == &other){
-        printf("PBufWrapper::append applied to itself\n");
         return;
     }
     if(this->firstElement == nullptr){
@@ -187,5 +190,6 @@ bool PBufWrapper::increaseSize(uint16_t length){
     return true;
 }
 
+#undef PBUF_WRAP_VERBOSE
 
 

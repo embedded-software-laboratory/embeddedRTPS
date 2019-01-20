@@ -19,7 +19,9 @@ using rtps::StatefullWriterT;
 template <class NetworkDriver>
 bool StatefullWriterT<NetworkDriver>::init(BuiltInTopicData attributes, TopicKind_t topicKind, ThreadPool* threadPool, UdpDriver& driver){
     if (sys_mutex_new(&m_mutex) != ERR_OK) {
+#if SFW_VERBOSE
         printf("StatefullWriter: Failed to create mutex.\n");
+#endif
         return false;
     }
 

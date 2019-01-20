@@ -42,8 +42,9 @@ TEST_F(ThreadPoolTest, DISABLED_addWorkload_executesCallbackWithinHalfSecond){
     EXPECT_CALL(mock, progress()).Times(2)
                                  .WillOnce(testing::Invoke([&]()->void {}))
                                  .WillOnce(testing::Invoke([&]()->void {
-                                     std::lock_guard<std::mutex> lock(m);
+                                     std::unique_lock<std::mutex> lock(m);
                                      done = true;
+                                     lock.unlock();
                                      cond_var.notify_one();
                                  }));
 

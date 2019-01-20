@@ -12,6 +12,8 @@
 
 using rtps::ThreadPool;
 
+#define THREAD_POOL_VERBOSE 0
+
 
 ThreadPool::ThreadPool(Domain& domain) : domain(domain){
 
@@ -59,7 +61,9 @@ void ThreadPool::addWorkload(Workload_t workload){
 void ThreadPool::writerThreadFunction(void* arg){
     auto pool = static_cast<ThreadPool*>(arg);
     if(pool == nullptr){
+#if THREAD_POOL_VERBOSE
         printf("nullptr passed to writer function\n");
+#endif
         return;
     }
 
@@ -94,7 +98,9 @@ void ThreadPool::readCallback(void* args, udp_pcb* target, pbuf* pbuf, const ip_
 void ThreadPool::readerThreadFunction(void* arg){
     auto pool = static_cast<ThreadPool*>(arg);
     if(pool == nullptr){
+#if THREAD_POOL_VERBOSE
         printf("nullptr passed to reader function\n");
+#endif
         return;
     }
         pool->doReaderWork();
@@ -112,3 +118,5 @@ void ThreadPool::doReaderWork(){
         domain.receiveCallback(const_cast<const PacketInfo&>(packet));
     }
 }
+
+#undef THREAD_POOL_VERBOSE

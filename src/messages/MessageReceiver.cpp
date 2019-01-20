@@ -110,7 +110,9 @@ bool MessageReceiver::processSubMessage(MessageProcessingInfo& msgInfo){
             success = true; // Not relevant now
             break;
         default:
+#if RECV_VERBOSE
             printf("Submessage of type %u currently not supported. Skipping..\n", static_cast<uint8_t>(submsgHeader->submessageId));
+#endif
             success = true;
     }
     msgInfo.nextPos+= submsgHeader->submessageLength + sizeof(SubmessageHeader);

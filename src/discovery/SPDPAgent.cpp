@@ -17,7 +17,7 @@ using rtps::SMElement::ParameterId;
 using rtps::SMElement::BuildInEndpointSet;
 
 
-#define SPDP_VERBOSE 1
+#define SPDP_VERBOSE 0
 
 #if SPDP_VERBOSE
 #include "rtps/utils/printutils.h"
@@ -31,7 +31,9 @@ SPDPAgent::~SPDPAgent(){
 
 void SPDPAgent::init(Participant& participant, BuiltInEndpoints& endpoints){
     if(sys_mutex_new(&m_mutex) != ERR_OK){
+#if SPDP_VERBOSE
         printf("Could not alloc mutex");
+#endif
         return;
     }
     mp_participant = &participant;
@@ -74,18 +76,18 @@ void SPDPAgent::receiveCallback(void *callee, ReaderCacheChange& cacheChange) {
 }
 
 void SPDPAgent::handleSPDPPackage(ReaderCacheChange& cacheChange){
-#if SPDP_VERBOSE
-    printf("SPDP message received\n");
-#endif
-
     if(!initialized){
+#if SPDP_VERBOSE
         printf("SPDP: Callback called without initialization\n");
+#endif
         return;
     }
 
     Lock lock{m_mutex};
     if(cacheChange.size > m_inputBuffer.size()){
+#if SPDP_VERBOSE
         printf("SPDP: Input buffer to small\n");
+#endif
         return;
     }
     cacheChange.copyInto(m_inputBuffer.data(), m_inputBuffer.size());

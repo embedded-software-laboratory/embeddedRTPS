@@ -29,7 +29,6 @@ namespace rtps {
 
             if (other.pcb != nullptr) {
                 if (pcb != nullptr) {
-                    printf("Destructing old connection.\n");
                     UdpInterface::udpRemove(pcb);
                 }
                 pcb = other.pcb;

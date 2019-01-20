@@ -157,7 +157,7 @@ bool ParticipantProxyData::readLocatorIntoList(ucdrBuffer& buffer, std::array<Lo
             return true;
         }
     }
-    printf("SPDP: m_metatrafficMulticastLocatorList full.");
+    // TODO printf("SPDP: m_metatrafficMulticastLocatorList full.");
     return false;
 }
 

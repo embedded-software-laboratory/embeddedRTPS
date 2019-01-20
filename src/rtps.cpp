@@ -22,11 +22,16 @@
     #include "netif/tapif.h"
 #endif
 
+#define INIT_VERBOSE 0
+
 static struct netif netif;
 
 static void init(void* arg){
     if(arg == nullptr){
+#if INIT_VERBOSE
         printf("Failed to init. nullptr passed");
+#endif
+        return;
     }
     auto init_sem = static_cast<sys_sem_t*>(arg);
 
@@ -38,7 +43,9 @@ static void init(void* arg){
     LWIP_PORT_INIT_GW(&gw);
     LWIP_PORT_INIT_IPADDR(&ipaddr);
     LWIP_PORT_INIT_NETMASK(&netmask);
+#if INIT_VERBOSE
     printf("Starting lwIP, local interface IP is %s\n", ip4addr_ntoa(&ipaddr));
+#endif
 
 #ifdef HIGHTEC_TOOLCHAIN
     netif_add(&netif, &ipaddr, &netmask, &gw, nullptr, ethernetif_init, tcpip_input);
@@ -88,3 +95,6 @@ rtps::Time_t rtps::getCurrentTimeStamp(){
     now.fraction = ((nowMs % 1000)/1000);
     return now;
 }
+
+
+#undef INIT_VERBOSE
