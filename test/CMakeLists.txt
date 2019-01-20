@@ -37,3 +37,9 @@ add_executable(latencyTest
         performance/MeasurementUnit.cpp
         performance/ResponderUnit.cpp)
 target_link_libraries(latencyTest rtps lwip)
+
+add_executable(lwipLatencyTest
+        lwip_performance/LwipLatencyTest.cpp
+        lwip_performance/LwipMeasurementUnit.cpp
+        lwip_performance/LwipResponderUnit.cpp)
+target_link_libraries(lwipLatencyTest rtps lwip)
