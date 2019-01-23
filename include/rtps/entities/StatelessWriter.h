@@ -50,6 +50,6 @@ namespace rtps {
 
 }
 
-#include "../../src/entities/StatelessWriter.tpp"
+#include "StatelessWriter.tpp"
 
 #endif //RTPS_RTPSWRITER_H

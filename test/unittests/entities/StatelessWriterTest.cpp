@@ -76,6 +76,15 @@ TEST_F(EmptyRTPSWriter, newChange_AllocatesExactSize){
     EXPECT_EQ(change->data.firstElement->tot_len, size);
 }
 
+TEST_F(EmptyRTPSWriter, progress_doesNotSendAnyChangesAfterAddingOne){
+    const DataSize_t size = 5;
+    uint8_t data[size] = {};
+    const CacheChange* change = writer.newChange(ChangeKind_t::ALIVE, data, size);
+    ASSERT_NE(change, nullptr);
+    EXPECT_CALL(transport, sendFunction).Times(0);
+
+    writer.progress();
+}
 
 class EmptyRTPSWriterWithoutKey : public ::testing::Test{
 protected:

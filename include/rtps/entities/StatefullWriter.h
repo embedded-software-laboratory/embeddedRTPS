@@ -50,6 +50,6 @@ namespace rtps{
     using StatefullWriter = StatefullWriterT<UdpDriver>;
 }
 
-#include "../../src/entities/StatefullWriter.tpp"
+#include "StatefullWriter.tpp"
 
 #endif //RTPS_STATEFULLWRITER_H
