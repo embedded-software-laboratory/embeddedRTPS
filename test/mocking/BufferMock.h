@@ -33,6 +33,7 @@ struct BufferMock{
     void assertEnoughSpace(rtps::DataSize_t length){
         ASSERT_LE(length, reserved);
     }
+
     bool append(const uint8_t *const data, rtps::DataSize_t length){
         assertEnoughSpace(length);
         if(reserved < length){
@@ -52,7 +53,9 @@ struct BufferMock{
     }
 
     bool reserve(rtps::DataSize_t length){
-        reserved = length;
+        if(length > reserved){
+            reserved = length;
+        }
         return true;
     }
 

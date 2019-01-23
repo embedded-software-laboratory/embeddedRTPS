@@ -203,6 +203,7 @@ namespace rtps{
 	template<typename Buffer>
 	void serializeMessage(Buffer& buffer, SubmessageHeader& header){
 		buffer.reserve(SubmessageHeader::getRawSize());
+
 		buffer.append(reinterpret_cast<uint8_t*>(&header.submessageId), sizeof(SubmessageKind));
 		buffer.append(&header.flags, sizeof(uint8_t));
 		buffer.append(reinterpret_cast<uint8_t*>(&header.submessageLength), sizeof(uint16_t));
@@ -213,9 +214,6 @@ namespace rtps{
 		buffer.reserve(SubmessageData::getRawSize());
 
 		serializeMessage(buffer, msg.header);
-		char output[10];
-		sprintf(output, "locator: %lu", sizeof(Locator));
-		TFT_PrintLine(3, output);
 
 		buffer.append(reinterpret_cast<uint8_t*>(&msg.extraFlags), sizeof(uint16_t));
 		buffer.append(reinterpret_cast<uint8_t*>(&msg.octetsToInlineQos), sizeof(uint16_t));
