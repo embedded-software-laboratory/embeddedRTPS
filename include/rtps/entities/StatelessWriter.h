@@ -40,7 +40,7 @@ namespace rtps {
         SequenceNumber_t m_lastUsedChangeSequenceNumber = {0, 0};
         SequenceNumber_t m_nextSequenceNumberToSend = {0, 1};
         HistoryCache m_history;
-        ReaderProxy m_readerProxy{};
+        ReaderProxy m_readerProxy;
 
         bool isIrrelevant(ChangeKind_t kind) const;
 

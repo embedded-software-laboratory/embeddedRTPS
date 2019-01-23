@@ -16,7 +16,7 @@ namespace rtps{
         SequenceNumberSet ackNackSet;
         Count_t ackNackCount;
 
-        ReaderProxy(){};
+        ReaderProxy() : remoteReaderGuid({GUIDPREFIX_UNKNOWN, ENTITYID_UNKNOWN}){};
         ReaderProxy(const Guid& guid, const Locator& loc)
             : remoteReaderGuid(guid), remoteLocator(loc),
               ackNackSet(), ackNackCount{0}{};
