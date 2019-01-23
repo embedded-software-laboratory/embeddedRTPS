@@ -192,7 +192,10 @@ void SPDPAgent::addParticipantParameters(){
     const uint16_t vendorIdSize = Config::VENDOR_ID.vendorId.size();
     const uint16_t locatorSize = sizeof(Locator);
     const uint16_t durationSize = sizeof(Duration_t::seconds) + sizeof(Duration_t::fraction);
-    const uint16_t guidSize = sizeof(GuidPrefix_t::id) + sizeof(EntityId_t::entityKey) + sizeof(EntityId_t::entityKind);
+    const uint16_t entityKeySize = 3;
+    const uint16_t entityKindSize = 1;
+    const uint16_t entityIdSize = entityKeySize + entityKindSize;
+    const uint16_t guidSize = sizeof(GuidPrefix_t::id) + entityIdSize;
 
     const Locator userUniCastLocator = getUserUnicastLocator(mp_participant->m_participantId);
     const Locator builtInUniCastLocator = getBuiltInUnicastLocator(mp_participant->m_participantId);
@@ -234,7 +237,7 @@ void SPDPAgent::addParticipantParameters(){
     ucdr_serialize_uint16_t(&m_microbuffer,      ParameterId::PID_PARTICIPANT_GUID);
     ucdr_serialize_uint16_t(&m_microbuffer,      guidSize);
     ucdr_serialize_array_uint8_t(&m_microbuffer, mp_participant->m_guidPrefix.id.data(), sizeof(GuidPrefix_t::id));
-    ucdr_serialize_array_uint8_t(&m_microbuffer, ENTITYID_BUILD_IN_PARTICIPANT.entityKey.data(), sizeof(EntityId_t::entityKey));
+    ucdr_serialize_array_uint8_t(&m_microbuffer, ENTITYID_BUILD_IN_PARTICIPANT.entityKey.data(), entityKeySize);
     ucdr_serialize_uint8_t(&m_microbuffer,       static_cast<uint8_t>(ENTITYID_BUILD_IN_PARTICIPANT.entityKind));
 
     ucdr_serialize_uint16_t(&m_microbuffer,      ParameterId::PID_BUILTIN_ENDPOINT_SET);

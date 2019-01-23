@@ -71,7 +71,7 @@ namespace rtps{
             msg.header.flags = FLAG_BIG_ENDIAN;
 #endif
 
-            msg.header.submessageLength = sizeof(SubmessageData) + filledPayload.getUsedSize() - numBytesUntilEndOfLength;
+            msg.header.submessageLength = SubmessageData::getRawSize() + filledPayload.getUsedSize() - numBytesUntilEndOfLength;
 
             if(containsInlineQos){
                 msg.header.flags |= FLAG_INLINE_QOS;
@@ -88,7 +88,6 @@ namespace rtps{
             constexpr uint16_t octetsToInlineQoS = 4 + 4 + 8; // EntityIds + SequenceNumber
             msg.octetsToInlineQos = octetsToInlineQoS;
 
-            buffer.reserve(sizeof(SubmessageData));
             serializeMessage(buffer, msg);
 
             if(filledPayload.isValid()){
@@ -102,7 +101,7 @@ namespace rtps{
                           SequenceNumber_t lastSN, Count_t count){
             SubmessageHeartbeat subMsg;
             subMsg.header.submessageId = SubmessageKind::HEARTBEAT;
-            subMsg.header.submessageLength = sizeof(SubmessageHeartbeat) - numBytesUntilEndOfLength;
+            subMsg.header.submessageLength = SubmessageHeartbeat::getRawSize() - numBytesUntilEndOfLength;
 #if IS_LITTLE_ENDIAN
             subMsg.header.flags = FLAG_LITTLE_ENDIAN;
 #else
@@ -130,7 +129,7 @@ namespace rtps{
             subMsg.header.flags = FLAG_BIG_ENDIAN;
 #endif
             subMsg.header.flags |= FLAG_FINAL; // For now, we don't want any response
-            subMsg.header.submessageLength = sizeof(SubmessageAckNack) - numBytesUntilEndOfLength;
+            subMsg.header.submessageLength = SubmessageAckNack::getRawSize() - numBytesUntilEndOfLength;
 
             subMsg.writerId = writerId;
             subMsg.readerId = readerId;

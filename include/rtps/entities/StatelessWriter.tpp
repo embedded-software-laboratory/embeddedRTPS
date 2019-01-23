@@ -75,7 +75,7 @@ const CacheChange* StatelessWriterT<NetworkDriver>::newChange(rtps::ChangeKind_t
     change.sequenceNumber = m_lastUsedChangeSequenceNumber;
 
     if(m_history.isFull()){
-        SequenceNumber_t newMin = ++SequenceNumber_t{m_history.getSeqNumMin()};
+        SequenceNumber_t newMin = ++SequenceNumber_t(m_history.getSeqNumMin());
         if(m_nextSequenceNumberToSend < newMin){
             m_nextSequenceNumberToSend = newMin; // Make sure we have the correct sn to send
         }

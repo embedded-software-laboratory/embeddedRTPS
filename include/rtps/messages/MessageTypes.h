@@ -134,12 +134,18 @@ namespace rtps{
         ProtocolVersion_t protocolVersion;
         VendorId_t vendorId;
         GuidPrefix_t guidPrefix;
+        static constexpr size_t getRawSize(){
+        	return sizeof(std::array<uint8_t, 4>) + sizeof(ProtocolVersion_t) + sizeof(VendorId_t) + sizeof(GuidPrefix_t);
+        }
     } __attribute__((packed));
 
     struct SubmessageHeader{
         SubmessageKind submessageId;
         uint8_t flags;
         uint16_t submessageLength;
+        static constexpr size_t getRawSize(){
+			return sizeof(SubmessageKind) + sizeof(uint8_t) + sizeof(uint16_t);
+		}
     } __attribute__((packed));
 
     struct SubmessageData{
@@ -149,6 +155,11 @@ namespace rtps{
         EntityId_t readerId;
         EntityId_t writerId;
         SequenceNumber_t writerSN;
+        static constexpr size_t getRawSize(){
+			return SubmessageHeader::getRawSize() +  sizeof(uint16_t) + sizeof(uint16_t)
+					+ (2*3+2*1) // EntityID
+					+ sizeof(SequenceNumber_t);
+		}
     } __attribute__((packed));
 
     struct SubmessageHeartbeat{
@@ -158,6 +169,11 @@ namespace rtps{
         SequenceNumber_t firstSN;
         SequenceNumber_t lastSN;
         Count_t count;
+        static constexpr size_t getRawSize(){
+			return SubmessageHeader::getRawSize()
+				   + (2*3+2*1) // EntityID
+				   + sizeof(Count_t) + sizeof(SequenceNumber_t) + sizeof(uint32_t) + sizeof(std::array<uint32_t, 8>); // SequenceNumberSet
+		}
     } __attribute__((packed));
 
     struct SubmessageAckNack{
@@ -166,15 +182,82 @@ namespace rtps{
         EntityId_t writerId;
         SequenceNumberSet readerSNState;
         Count_t count;
+        static constexpr size_t getRawSize(){
+			return SubmessageHeader::getRawSize()
+			       + (2*3+2*1) // EntityID
+				   + 2*sizeof(SequenceNumber_t) + sizeof(Count_t);
+		}
     } __attribute((packed));
 
-    template <typename Buffer, typename Message>
-    void serializeMessage(Buffer& buffer, Message& message){
-        const auto size = sizeof(Message);
-        buffer.reserve(size);
-        buffer.append(reinterpret_cast<uint8_t*>(&message), size);
-    }
+	template<typename Buffer>
+	void serializeMessage(Buffer& buffer, Header& header){
+		buffer.reserve(Header::getRawSize());
 
+		buffer.reserve(Header::getRawSize());
+		buffer.append(header.protocolName.data(), sizeof(std::array<uint8_t, 4>));
+		buffer.append(reinterpret_cast<uint8_t*>(&header.protocolVersion), sizeof(ProtocolVersion_t));
+		buffer.append(header.vendorId.vendorId.data(), sizeof(VendorId_t));
+		buffer.append(header.guidPrefix.id.data(), sizeof(GuidPrefix_t));
+	}
+
+	template<typename Buffer>
+	void serializeMessage(Buffer& buffer, SubmessageHeader& header){
+		buffer.reserve(SubmessageHeader::getRawSize());
+		buffer.append(reinterpret_cast<uint8_t*>(&header.submessageId), sizeof(SubmessageKind));
+		buffer.append(&header.flags, sizeof(uint8_t));
+		buffer.append(reinterpret_cast<uint8_t*>(&header.submessageLength), sizeof(uint16_t));
+	}
+
+	template<typename Buffer>
+	void serializeMessage(Buffer& buffer, SubmessageData& msg){
+		buffer.reserve(SubmessageData::getRawSize());
+
+		serializeMessage(buffer, msg.header);
+		char output[10];
+		sprintf(output, "locator: %lu", sizeof(Locator));
+		TFT_PrintLine(3, output);
+
+		buffer.append(reinterpret_cast<uint8_t*>(&msg.extraFlags), sizeof(uint16_t));
+		buffer.append(reinterpret_cast<uint8_t*>(&msg.octetsToInlineQos), sizeof(uint16_t));
+		buffer.append(msg.readerId.entityKey.data(), msg.readerId.entityKey.size());
+		buffer.append(reinterpret_cast<uint8_t*>(&msg.readerId.entityKind), sizeof(EntityKind_t));
+		buffer.append(msg.writerId.entityKey.data(), msg.writerId.entityKey.size());
+		buffer.append(reinterpret_cast<uint8_t*>(&msg.writerId.entityKind), sizeof(EntityKind_t));
+		buffer.append(reinterpret_cast<uint8_t*>(&msg.writerSN.high), sizeof(msg.writerSN.high));
+		buffer.append(reinterpret_cast<uint8_t*>(&msg.writerSN.low), sizeof(msg.writerSN.low));
+	}
+
+	template<typename Buffer>
+	void serializeMessage(Buffer& buffer, SubmessageHeartbeat& msg){
+		buffer.reserve(SubmessageHeartbeat::getRawSize());
+
+		serializeMessage(buffer, msg.header);
+
+		buffer.append(msg.readerId.entityKey.data(), msg.readerId.entityKey.size());
+		buffer.append(reinterpret_cast<uint8_t*>(&msg.readerId.entityKind), sizeof(EntityKind_t));
+		buffer.append(msg.writerId.entityKey.data(), msg.writerId.entityKey.size());
+		buffer.append(reinterpret_cast<uint8_t*>(&msg.writerId.entityKind), sizeof(EntityKind_t));
+		buffer.append(reinterpret_cast<uint8_t*>(&msg.firstSN.high), sizeof(msg.firstSN.high));
+		buffer.append(reinterpret_cast<uint8_t*>(&msg.firstSN.low), sizeof(msg.firstSN.low));
+		buffer.append(reinterpret_cast<uint8_t*>(&msg.lastSN.high), sizeof(msg.lastSN.high));
+		buffer.append(reinterpret_cast<uint8_t*>(&msg.lastSN.low), sizeof(msg.lastSN.low));
+		buffer.append(reinterpret_cast<uint8_t*>(&msg.count.value), sizeof(msg.count.value));
+	}
+
+	template<typename Buffer>
+	void serializeMessage(Buffer& buffer, SubmessageAckNack& msg){
+		buffer.reserve(SubmessageAckNack::getRawSize());
+
+		serializeMessage(buffer, msg.header);
+
+		buffer.append(msg.readerId.entityKey.data(), msg.readerId.entityKey.size());
+		buffer.append(reinterpret_cast<uint8_t*>(&msg.readerId.entityKind), sizeof(EntityKind_t));
+		buffer.append(msg.writerId.entityKey.data(), msg.writerId.entityKey.size());
+		buffer.append(reinterpret_cast<uint8_t*>(&msg.writerId.entityKind), sizeof(EntityKind_t));
+		buffer.append(reinterpret_cast<uint8_t*>(&msg.readerSNState.base.high), sizeof(msg.readerSNState.base.high));
+		buffer.append(reinterpret_cast<uint8_t*>(&msg.readerSNState.base.low), sizeof(msg.readerSNState.base.low));
+		buffer.append(reinterpret_cast<uint8_t*>(&msg.count.value), sizeof(msg.count.value));
+	}
 }
 
 #endif //RTPS_MESSAGES_H
