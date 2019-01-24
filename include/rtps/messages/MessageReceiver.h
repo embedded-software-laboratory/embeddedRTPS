@@ -15,6 +15,7 @@ namespace rtps {
     class Reader;
     class Writer;
     class Participant;
+    class MessageProcessingInfo;
 
     class MessageReceiver {
     public:
@@ -30,24 +31,6 @@ namespace rtps {
         bool processMessage(const uint8_t* data, DataSize_t size);
 
     private:
-        struct MessageProcessingInfo{
-            MessageProcessingInfo(const uint8_t* data, DataSize_t size)
-                : data(data), size(size){}
-            const uint8_t* data;
-            const DataSize_t size;
-
-            //! Offset to the next unprocessed byte
-            DataSize_t nextPos = 0;
-
-            inline const uint8_t* getPointerToPos(){
-                return &data[nextPos];
-            }
-
-            //! Returns the size of data which isn't processed yet
-            inline DataSize_t getRemainingSize(){
-                return size - nextPos;
-            }
-        };
 
         Participant* mp_part;
 

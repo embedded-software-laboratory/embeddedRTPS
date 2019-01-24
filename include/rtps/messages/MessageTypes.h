@@ -193,7 +193,6 @@ namespace rtps{
 	void serializeMessage(Buffer& buffer, Header& header){
 		buffer.reserve(Header::getRawSize());
 
-		buffer.reserve(Header::getRawSize());
 		buffer.append(header.protocolName.data(), sizeof(std::array<uint8_t, 4>));
 		buffer.append(reinterpret_cast<uint8_t*>(&header.protocolVersion), sizeof(ProtocolVersion_t));
 		buffer.append(header.vendorId.vendorId.data(), sizeof(VendorId_t));
@@ -256,6 +255,37 @@ namespace rtps{
 		buffer.append(reinterpret_cast<uint8_t*>(&msg.readerSNState.base.low), sizeof(msg.readerSNState.base.low));
 		buffer.append(reinterpret_cast<uint8_t*>(&msg.count.value), sizeof(msg.count.value));
 	}
+
+
+    struct MessageProcessingInfo{
+        MessageProcessingInfo(const uint8_t* data, DataSize_t size)
+                : data(data), size(size){}
+        const uint8_t* data;
+        const DataSize_t size;
+
+        //! Offset to the next unprocessed byte
+        DataSize_t nextPos = 0;
+
+        inline const uint8_t* getPointerToPos() const{
+            return &data[nextPos];
+        }
+
+        //! Returns the size of data which isn't processed yet
+        inline DataSize_t getRemainingSize() const{
+            return size - nextPos;
+        }
+    };
+
+	void deserializeMessage(const MessageProcessingInfo& info, Header& header);
+
+    void deserializeMessage(const MessageProcessingInfo& info, SubmessageHeader& header);
+
+    void deserializeMessage(const MessageProcessingInfo& info, SubmessageData& msg);
+
+    void deserializeMessage(const MessageProcessingInfo& info, SubmessageHeartbeat& msg);
+
+    void deserializeMessage(const MessageProcessingInfo& info, SubmessageAckNack& msg);
+
 }
 
 #endif //RTPS_MESSAGES_H

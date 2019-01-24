@@ -37,7 +37,7 @@ protected:
 
 TEST_F(AMessageReceiver, processMessage_returnsTrueIfValidHeader){
     auto data = reinterpret_cast<uint8_t*>(&validHeader);
-    rtps::DataSize_t size = sizeof(validHeader);
+    rtps::DataSize_t size = rtps::Header::getRawSize();
 
     bool valid = p_receiver->processMessage(data, size);
 

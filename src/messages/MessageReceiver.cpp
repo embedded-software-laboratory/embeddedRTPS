@@ -7,8 +7,8 @@
 #include "rtps/messages/MessageReceiver.h"
 
 #include "rtps/entities/Reader.h"
-#include "rtps/messages/MessageTypes.h"
 #include "rtps/entities/Writer.h"
+#include "rtps/messages/MessageTypes.h"
 
 using rtps::MessageReceiver;
 
@@ -32,7 +32,7 @@ void MessageReceiver::reset(){
 
 bool MessageReceiver::processMessage(const uint8_t* data, DataSize_t size){
 
-    MessageProcessingInfo msgInfo{data, size};
+    MessageProcessingInfo msgInfo(data, size);
 
     if(!processHeader(msgInfo)){
         return false;
@@ -47,38 +47,40 @@ bool MessageReceiver::processMessage(const uint8_t* data, DataSize_t size){
 }
 
 bool MessageReceiver::processHeader(MessageProcessingInfo& msgInfo){
-    if(msgInfo.size < sizeof(rtps::Header)){
+    if(msgInfo.size < rtps::Header::getRawSize()){
         return false;
     }
 
-    auto header = reinterpret_cast<const Header*>(msgInfo.getPointerToPos());
+    Header header;
+    deserializeMessage(msgInfo, header);
 
-    if(header->guidPrefix.id == mp_part->m_guidPrefix.id){
+    if(header.guidPrefix.id == mp_part->m_guidPrefix.id){
 #if RECV_VERBOSE
       printf("[MessageReceiver]: Received own message.\n");
 #endif
         return false; // Don't process our own packet
     }
 
-    if(header->protocolName != RTPS_PROTOCOL_NAME ||
-       header->protocolVersion.major != PROTOCOLVERSION.major){
+    if(header.protocolName != RTPS_PROTOCOL_NAME ||
+       header.protocolVersion.major != PROTOCOLVERSION.major){
         return false;
     }
 
-    sourceGuidPrefix = header->guidPrefix;
-    sourceVendor = header->vendorId;
-    sourceVersion = header->protocolVersion;
+    sourceGuidPrefix = header.guidPrefix;
+    sourceVendor = header.vendorId;
+    sourceVersion = header.protocolVersion;
 
-    msgInfo.nextPos+= sizeof(Header);
+    msgInfo.nextPos += Header::getRawSize();
     return true;
 }
 
 bool MessageReceiver::processSubMessage(MessageProcessingInfo& msgInfo){
 
-    auto submsgHeader = reinterpret_cast<const SubmessageHeader*>(msgInfo.getPointerToPos());
+    SubmessageHeader submsgHeader;
+    deserializeMessage(msgInfo, submsgHeader);
 
     bool success;
-    switch(submsgHeader->submessageId){
+    switch(submsgHeader.submessageId){
         case SubmessageKind::ACKNACK:
 #if RECV_VERBOSE
             printf("Processing AckNack submessage\n");
@@ -115,12 +117,14 @@ bool MessageReceiver::processSubMessage(MessageProcessingInfo& msgInfo){
 #endif
             success = true;
     }
-    msgInfo.nextPos+= submsgHeader->submessageLength + sizeof(SubmessageHeader);
+    msgInfo.nextPos += submsgHeader.submessageLength + SubmessageHeader::getRawSize();
     return success;
 }
 
 bool MessageReceiver::processDataSubmessage(MessageProcessingInfo& msgInfo){
-    auto submsgData = reinterpret_cast<const SubmessageData*>(msgInfo.getPointerToPos());
+    SubmessageData submsgData;
+    deserializeMessage(msgInfo, submsgData);
+
     const uint8_t* serializedData = msgInfo.getPointerToPos() + sizeof(SubmessageData);
     const DataSize_t size = msgInfo.size - (msgInfo.nextPos + sizeof(SubmessageData));
 
@@ -131,10 +135,10 @@ bool MessageReceiver::processDataSubmessage(MessageProcessingInfo& msgInfo){
     //bool isLittleEndian = (submsgHeader->flags & SubMessageFlag::FLAG_ENDIANESS);
     //bool hasInlineQos = (submsgHeader->flags & SubMessageFlag::FLAG_INLINE_QOS);
 
-    Reader* reader = mp_part->getReader(submsgData->readerId);
+    Reader* reader = mp_part->getReader(submsgData.readerId);
     if(reader != nullptr){
-        Guid writerGuid{sourceGuidPrefix, submsgData->writerId};
-        ReaderCacheChange change{ChangeKind_t::ALIVE, writerGuid, submsgData->writerSN, serializedData, size};
+        Guid writerGuid{sourceGuidPrefix, submsgData.writerId};
+        ReaderCacheChange change{ChangeKind_t::ALIVE, writerGuid, submsgData.writerSN, serializedData, size};
         reader->newChange(change);
     }else{
 #if RECV_VERBOSE
@@ -148,11 +152,12 @@ bool MessageReceiver::processDataSubmessage(MessageProcessingInfo& msgInfo){
 }
 
 bool MessageReceiver::processHeartbeatSubmessage(MessageProcessingInfo& msgInfo){
-    auto submsgHB = reinterpret_cast<const SubmessageHeartbeat*>(msgInfo.getPointerToPos());
+    SubmessageHeartbeat submsgHB;
+    deserializeMessage(msgInfo, submsgHB);
 
-    Reader* reader = mp_part->getReader(submsgHB->readerId);
+    Reader* reader = mp_part->getReader(submsgHB.readerId);
     if(reader != nullptr){
-        reader->onNewHeartbeat(*submsgHB, sourceGuidPrefix);
+        reader->onNewHeartbeat(submsgHB, sourceGuidPrefix);
         return true;
     }else{
         return false;
@@ -160,10 +165,12 @@ bool MessageReceiver::processHeartbeatSubmessage(MessageProcessingInfo& msgInfo)
 }
 
 bool MessageReceiver::processAckNackSubmessage(MessageProcessingInfo& msgInfo){
-    auto submsgAckNack = reinterpret_cast<const SubmessageAckNack*>(msgInfo.getPointerToPos());
-    Writer* writer = mp_part->getWriter(submsgAckNack->writerId);
+    SubmessageAckNack submsgAckNack;
+    deserializeMessage(msgInfo, submsgAckNack);
+
+    Writer* writer = mp_part->getWriter(submsgAckNack.writerId);
     if(writer != nullptr){
-        writer->onNewAckNack(*submsgAckNack);
+        writer->onNewAckNack(submsgAckNack);
         return true;
     }else{
         return false;
