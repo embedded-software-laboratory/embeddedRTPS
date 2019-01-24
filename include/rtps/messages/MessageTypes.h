@@ -172,7 +172,9 @@ namespace rtps{
         static constexpr size_t getRawSize(){
 			return SubmessageHeader::getRawSize()
 				   + (2*3+2*1) // EntityID
-				   + sizeof(Count_t) + sizeof(SequenceNumber_t) + sizeof(uint32_t) + sizeof(std::array<uint32_t, 8>); // SequenceNumberSet
+				   + 2*sizeof(SequenceNumber_t)
+				   + sizeof(Count_t);
+
 		}
     } __attribute__((packed));
 
@@ -185,7 +187,8 @@ namespace rtps{
         static constexpr size_t getRawSize(){
 			return SubmessageHeader::getRawSize()
 			       + (2*3+2*1) // EntityID
-				   + 2*sizeof(SequenceNumber_t) + sizeof(Count_t);
+			       + sizeof(SequenceNumber_t) + sizeof(uint32_t) + 4 //sizeof(std::array<uint32_t, 8>) // SequenceNumberSet
+			       + sizeof(Count_t);
 		}
     } __attribute((packed));
 
@@ -253,6 +256,8 @@ namespace rtps{
 		buffer.append(reinterpret_cast<uint8_t*>(&msg.writerId.entityKind), sizeof(EntityKind_t));
 		buffer.append(reinterpret_cast<uint8_t*>(&msg.readerSNState.base.high), sizeof(msg.readerSNState.base.high));
 		buffer.append(reinterpret_cast<uint8_t*>(&msg.readerSNState.base.low), sizeof(msg.readerSNState.base.low));
+		buffer.append(reinterpret_cast<uint8_t*>(&msg.readerSNState.numBits), sizeof(uint32_t));
+		buffer.append(reinterpret_cast<uint8_t*>(msg.readerSNState.bitMap.data()), 4);
 		buffer.append(reinterpret_cast<uint8_t*>(&msg.count.value), sizeof(msg.count.value));
 	}
 

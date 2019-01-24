@@ -4,6 +4,8 @@
  */
 
 #include "rtps/messages/MessageTypes.h"
+#include <cstring>
+
 using namespace rtps;
 
 void doCopyAndMoveOn(uint8_t* dst, const uint8_t*& src, size_t size){
@@ -65,5 +67,7 @@ void rtps::deserializeMessage(const MessageProcessingInfo& info, SubmessageAckNa
     msg.writerId.entityKind = static_cast<EntityKind_t>(*currentPos++);
     doCopyAndMoveOn(reinterpret_cast<uint8_t*>(&msg.readerSNState.base.high), currentPos, sizeof(msg.readerSNState.base.high));
     doCopyAndMoveOn(reinterpret_cast<uint8_t*>(&msg.readerSNState.base.low), currentPos, sizeof(msg.readerSNState.base.low));
+    doCopyAndMoveOn(reinterpret_cast<uint8_t*>(&msg.readerSNState.numBits), currentPos, sizeof(uint32_t));
+    doCopyAndMoveOn(reinterpret_cast<uint8_t*>(msg.readerSNState.bitMap.data()), currentPos, 4);
     doCopyAndMoveOn(reinterpret_cast<uint8_t*>(&msg.count.value), currentPos, sizeof(msg.count.value));
 }
