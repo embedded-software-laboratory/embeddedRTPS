@@ -154,7 +154,7 @@ namespace rtps{
             const auto pos = static_cast<uint8_t>(bit % 32);
             return (bitMap[bucket] & (1 << (31 - pos))) != 0;
         }
-    } __attribute((packed));
+    };
 
     struct FragmentNumber_t{
         uint32_t value;

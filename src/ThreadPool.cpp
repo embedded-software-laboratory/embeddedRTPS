@@ -10,6 +10,11 @@
 #include "rtps/entities/Writer.h"
 #include "rtps/utils/udpUtils.h"
 
+
+#ifdef HIGHTEC_TOOLCHAIN
+#include "led.h"
+#endif
+
 using rtps::ThreadPool;
 
 #define THREAD_POOL_VERBOSE 0
@@ -110,9 +115,12 @@ void ThreadPool::doReaderWork(){
 
     while(running){
         PacketInfo packet;
+#ifdef HIGHTEC_TOOLCHAIN
+        ToggleLED(2); // TODO remove
+#endif
         auto isWorkToDo = outputQueue.moveFirstInto(packet);
         if(!isWorkToDo) {
-            sys_msleep(1);
+            //sys_msleep(1);
             continue;
         }
         domain.receiveCallback(const_cast<const PacketInfo&>(packet));

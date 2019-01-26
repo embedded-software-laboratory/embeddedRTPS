@@ -20,16 +20,15 @@ void StatefullReaderT<NetworkDriver>::init(const BuiltInTopicData& attributes, N
     m_attributes = attributes;
     m_transport = &driver;
     m_packetInfo.srcPort = attributes.unicastLocator.port;
-    sys_mutex_new(&mutex);
+    sys_mutex_new(&m_mutex);
 }
 
 template <class NetworkDriver>
 void StatefullReaderT<NetworkDriver>::newChange(ReaderCacheChange& cacheChange){
-
     if(m_callback == nullptr){
         return;
     }
-
+    Lock lock{m_mutex};
     for(auto& proxy : m_proxies){
         if(proxy.remoteWriterGuid == cacheChange.writerGuid){
             if(proxy.expectedSN == cacheChange.sn){
@@ -60,7 +59,17 @@ bool StatefullReaderT<NetworkDriver>::addNewMatchedWriter(const WriterProxy& new
     printGuid(newProxy.remoteWriterGuid);
     printf("\n");
 #endif
-    return m_proxies.add(newProxy);
+    for(uint32_t i=0; i < sizeof(m_proxies)/sizeof(m_proxies[0]); ++i){
+		static_assert(sizeof(i)*8 >= sizeof(m_proxySlotUsedBitMap), "StatefullReader: Loop variable too small");
+
+		if((m_proxySlotUsedBitMap & (1 << i)) == 0){
+			m_proxies[i] = newProxy;
+			m_proxySlotUsedBitMap |= (1 << i);
+			return true;
+		}
+	}
+
+    return false;
 }
 
 template <class NetworkDriver>
@@ -70,22 +79,22 @@ void StatefullReaderT<NetworkDriver>::removeWriter(const Guid& guid){
     };
     auto thunk=[](void* arg, const WriterProxy& value){return (*static_cast<decltype(isElementToRemove)*>(arg))(value);};
 
-    m_proxies.remove(thunk, &isElementToRemove);
+    //m_proxies.remove(thunk, &isElementToRemove);
 }
 
 template <class NetworkDriver>
-bool StatefullReaderT<NetworkDriver>::onNewHeartbeat(const SubmessageHeartbeat& msg, const GuidPrefix_t& remotePrefix){
-    Lock lock(mutex);
+bool StatefullReaderT<NetworkDriver>::onNewHeartbeat(const SubmessageHeartbeat& msg, const GuidPrefix_t& /*remotePrefix*/){
+    Lock lock(m_mutex);
     PacketInfo info;
     info.srcPort = m_packetInfo.srcPort;
     WriterProxy* writer = nullptr;
-    for(auto& proxy : m_proxies){
-        if(proxy.remoteWriterGuid.prefix == remotePrefix &&
-           proxy.remoteWriterGuid.entityId == msg.writerId){
-            writer = &proxy;
-            break;
-        }
-    }
+    // Search for reader
+	for(uint8_t i=0; i < sizeof(m_proxies)/sizeof(m_proxies[0]); ++i){
+		if(((m_proxySlotUsedBitMap & (1 << i)) != 0) && m_proxies[i].remoteWriterGuid.entityId == msg.writerId){
+			writer = &m_proxies[i];
+			break;
+		}
+	}
 
     if(writer == nullptr){
 #if SFR_VERBOSE

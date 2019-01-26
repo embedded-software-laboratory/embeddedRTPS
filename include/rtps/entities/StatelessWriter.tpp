@@ -11,6 +11,7 @@
 #include "rtps/storages/PBufWrapper.h"
 #include "rtps/ThreadPool.h"
 #include "rtps/utils/udpUtils.h"
+#include "rtps/utils/Log.h"
 
 using rtps::StatelessWriterT;
 using rtps::SequenceNumber_t;
@@ -26,7 +27,7 @@ template <typename NetworkDriver>
 bool StatelessWriterT<NetworkDriver>::init(BuiltInTopicData attributes, TopicKind_t topicKind, ThreadPool* threadPool, NetworkDriver& driver){
     if (sys_mutex_new(&m_mutex) != ERR_OK) {
 #if SLW_VERBOSE
-        printf("Failed to create mutex \n");
+        Log::printLine("SFW:Failed to create mutex \n");
 #endif
         return false;
     }

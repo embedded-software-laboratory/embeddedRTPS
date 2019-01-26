@@ -63,7 +63,6 @@ void SPDPAgent::runBroadcast(void *args){
     SPDPAgent& agent = *static_cast<SPDPAgent*>(args);
     const DataSize_t size = ucdr_buffer_length(&agent.m_microbuffer);
     agent.m_buildInEndpoints.spdpWriter->newChange(ChangeKind_t::ALIVE, agent.m_microbuffer.init, size);
-
     while(agent.m_running){
         sys_msleep(Config::SPDP_RESEND_PERIOD_MS);
         agent.m_buildInEndpoints.spdpWriter->unsentChangesReset();
@@ -97,7 +96,8 @@ void SPDPAgent::handleSPDPPackage(ReaderCacheChange& cacheChange){
 
     if(cacheChange.kind == ChangeKind_t::ALIVE){
         configureEndianessAndOptions(buffer);
-        if(m_proxyDataBuffer.readFromUcdrBuffer(buffer)){
+        volatile bool success = m_proxyDataBuffer.readFromUcdrBuffer(buffer);
+        if(success){
             // TODO In case we store the history we can free the history mutex here
             processProxyData();
         }
@@ -130,7 +130,6 @@ void SPDPAgent::processProxyData(){
 
     // New participant, help him join fast by broadcasting data again
     m_buildInEndpoints.spdpWriter->unsentChangesReset();
-
     if(mp_participant->addNewRemoteParticipant(m_proxyDataBuffer)) {
         addProxiesForBuiltInEndpoints();
 

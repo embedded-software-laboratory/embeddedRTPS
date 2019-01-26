@@ -30,7 +30,7 @@ namespace rtps{
             set.numBits = 1;
             set.base = expectedSN;
             for(uint8_t bucket=0; bucket < set.bitMap.size(); ++bucket){
-                set.bitMap[bucket] = ~static_cast<uint32_t>(0);
+                set.bitMap[bucket] = uint32_t{1} << 31;
             }
             return set;
         }

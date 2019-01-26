@@ -41,7 +41,7 @@ void SEDPAgent::receiveCallbackSubscriber(void* callee, ReaderCacheChange& cache
 }
 
 void SEDPAgent::onNewPublisher(ReaderCacheChange& change){
-    Lock lock{m_mutex};
+    //Lock lock{m_mutex};
 #if SEDP_VERBOSE
     printf("New publisher\n");
 #endif
@@ -79,7 +79,7 @@ void SEDPAgent::onNewPublisher(ReaderCacheChange& change){
 }
 
 void SEDPAgent::onNewSubscriber(ReaderCacheChange& change){
-    Lock lock{m_mutex};
+    //Lock lock{m_mutex};
 #if SEDP_VERBOSE
     printf("New subscriber\n");
 #endif

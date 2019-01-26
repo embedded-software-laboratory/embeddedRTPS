@@ -125,8 +125,8 @@ bool MessageReceiver::processDataSubmessage(MessageProcessingInfo& msgInfo){
     SubmessageData submsgData;
     deserializeMessage(msgInfo, submsgData);
 
-    const uint8_t* serializedData = msgInfo.getPointerToPos() + sizeof(SubmessageData);
-    const DataSize_t size = msgInfo.size - (msgInfo.nextPos + sizeof(SubmessageData));
+    const uint8_t* serializedData = msgInfo.getPointerToPos() + SubmessageData::getRawSize();
+    const DataSize_t size = msgInfo.size - (msgInfo.nextPos + SubmessageData::getRawSize());
 
     //if(submsgHeader->submessageLength > msgInfo.size - msgInfo.nextPos){
     //    return false;

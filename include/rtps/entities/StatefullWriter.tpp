@@ -30,8 +30,13 @@ bool StatefullWriterT<NetworkDriver>::init(BuiltInTopicData attributes, TopicKin
     m_attributes = attributes;
     m_topicKind = topicKind;
     m_packetInfo.srcPort = attributes.unicastLocator.port;
-
-    m_heartbeatThread = sys_thread_new("HeartbeatThread", hbFunctionJumppad, this, Config::THREAD_POOL_WRITER_STACKSIZE, Config::THREAD_POOL_WRITER_PRIO);
+    if(m_attributes.endpointGuid.entityId == ENTITYID_SEDP_BUILTIN_PUBLICATIONS_WRITER){
+    	m_heartbeatThread = sys_thread_new("HBThreadPub", hbFunctionJumppad, this, Config::HEARTBEAT_STACKSIZE, Config::THREAD_POOL_WRITER_PRIO);
+    }else if(m_attributes.endpointGuid.entityId == ENTITYID_SEDP_BUILTIN_SUBSCRIPTIONS_WRITER){
+    	m_heartbeatThread = sys_thread_new("HBThreadSub", hbFunctionJumppad, this, Config::HEARTBEAT_STACKSIZE, Config::THREAD_POOL_WRITER_PRIO);
+    }else{
+    	 m_heartbeatThread = sys_thread_new("HBThread", hbFunctionJumppad, this, Config::HEARTBEAT_STACKSIZE, Config::THREAD_POOL_WRITER_PRIO);
+    }
 
     return true;
 }
@@ -44,7 +49,7 @@ bool StatefullWriterT<NetworkDriver>::addNewMatchedReader(const ReaderProxy& new
     printf("\n");
 #endif
     for(uint32_t i=0; i < sizeof(m_proxies)/sizeof(m_proxies[0]); ++i){
-        static_assert(sizeof(i)*8 >= sizeof(m_proxySlotUsedBitMap), "StatelessWriter: Loop variable too small");
+        static_assert(sizeof(i)*8 >= sizeof(m_proxySlotUsedBitMap), "StatefullWriter: Loop variable too small");
 
         if((m_proxySlotUsedBitMap & (1 << i)) == 0){
             m_proxies[i] = newProxy;
@@ -88,7 +93,7 @@ void StatefullWriterT<NetworkDriver>::unsentChangesReset(){
 
 template <class NetworkDriver>
 void StatefullWriterT<NetworkDriver>::onNewAckNack(const SubmessageAckNack& msg){
-
+	//Lock lock{m_mutex};
     // Search for reader
     ReaderProxy* proxy = nullptr;
     for(uint8_t i=0; i < sizeof(m_proxies)/sizeof(m_proxies[0]); ++i){
@@ -195,7 +200,6 @@ void StatefullWriterT<NetworkDriver>::sendHeartBeat() {
 #endif
         return;
     }
-
     // TODO adjust to multiple proxies
     if((m_proxySlotUsedBitMap & 1) == 0){
 #if SFW_VERBOSE

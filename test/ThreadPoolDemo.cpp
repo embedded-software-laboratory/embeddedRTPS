@@ -10,7 +10,7 @@
 #include <iostream>
 
 
-static const bool isPublisher = true;
+static const bool isPublisher = false;
 
 void receiveCallback(void* /*callee*/, rtps::ReaderCacheChange& cacheChange){
     std::array<uint8_t, 25> buffer;
@@ -74,7 +74,7 @@ void startProgram(void* /*args*/){
                 printf("History full.\n");
                 while (true);
             } else {
-                printf("Added change with id %i\n", i);
+                //printf("Added change with id %i\n", i);
             }
             sys_msleep(200);
 

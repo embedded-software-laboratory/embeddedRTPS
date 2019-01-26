@@ -21,16 +21,15 @@ TEST_F(AWriterProxy, startsWithSequenceNumberOne){
     EXPECT_EQ(proxy.expectedSN, expectedSN);
 }
 
-TEST_F(AWriterProxy, getMissingChanges_returnsAllFromFirstMissing){
+TEST_F(AWriterProxy, getMissingChanges_returnsOnlyExpectedMissing){
     proxy.expectedSN = {0,2};
     rtps::SequenceNumber_t firstAvail{0,0};
     rtps::SequenceNumber_t lastAvail{0,52};
 
     rtps::SequenceNumberSet set = proxy.getMissing(firstAvail, lastAvail);
 
-    for(uint32_t bit=proxy.expectedSN.low; bit <= lastAvail.low; ++bit){
-        EXPECT_TRUE(set.isSet(bit));
-    }
+    EXPECT_TRUE(set.isSet(0));
+    EXPECT_EQ(set.numBits, 1);
 }
 
 TEST_F(AWriterProxy, getNextCount_deliversIncreasingNumbers){

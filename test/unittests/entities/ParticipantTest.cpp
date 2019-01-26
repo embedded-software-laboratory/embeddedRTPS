@@ -23,11 +23,11 @@ protected:
 TEST_F(SomeParticipant, getNextUserEntityKey_increasesCorrectly){
     auto zeroKey = part.getNextUserEntityKey();
 
-    ASSERT_THAT(zeroKey, testing::ElementsAre(0,0,0));
+    ASSERT_THAT(zeroKey, testing::ElementsAre(0,0,1));
 
     auto nextKey = part.getNextUserEntityKey();
 
-    ASSERT_THAT(nextKey, testing::ElementsAre(0,0,1));
+    ASSERT_THAT(nextKey, testing::ElementsAre(0,0,2));
 }
 
 TEST_F(SomeParticipant, readerCanBeFoundAfterAdding){

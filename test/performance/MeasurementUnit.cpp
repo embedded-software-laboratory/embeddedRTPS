@@ -30,9 +30,10 @@ void MeasurementUnit::prepareRTPS(){
        std::cout << "Failed to create participant\n";
         return;
     }
-
     mp_dataWriter = m_domain.createWriter(*part, LatencyPacket::topicName, LatencyPacket::typeName, false);
     mp_dataReader = m_domain.createReader(*part, LatencyPacket::topicName, LatencyPacket::typeName, false);
+
+
     if(mp_dataWriter == nullptr || mp_dataReader == nullptr){
         std::cout << "Failed to create endpoints.\n";
         return;
@@ -113,7 +114,7 @@ void MeasurementUnit::runWithSpecificSize(){
             return;
         }
         //m_condVar.wait(lock, [this]{return this->m_receivedResponse;});
-        m_condVar.wait_for(lock, std::chrono::duration<double, std::milli>(1000),
+        m_condVar.wait_for(lock, std::chrono::duration<double, std::milli>(2000),
                            [this]{return this->m_receivedResponse;});
     }
 }
@@ -146,7 +147,7 @@ void MeasurementUnit::evaluate(){
     }
 
     static_assert(quantiles.size() == 4, "Not enough quantiles.");
-    printf("%8u,%8" PRIu64 ",%8.2f,%8.2f,%8.2f,%8.2f,%8.2f,%8.2f,%8.2f,%8.2f \n",
+    printf("%8u,%8u,%8.2f,%8.2f,%8.2f,%8.2f,%8.2f,%8.2f,%8.2f,%8.2f \n",
            m_numBytes, m_times.size(), stddev, meanDuration, minDuration.count(),
            quantilesResult[0], quantilesResult[1], quantilesResult[2], quantilesResult[3],
            maxDuration.count());

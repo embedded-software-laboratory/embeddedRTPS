@@ -137,7 +137,7 @@ namespace rtps{
         static constexpr size_t getRawSize(){
         	return sizeof(std::array<uint8_t, 4>) + sizeof(ProtocolVersion_t) + sizeof(VendorId_t) + sizeof(GuidPrefix_t);
         }
-    } __attribute__((packed));
+    };
 
     struct SubmessageHeader{
         SubmessageKind submessageId;
@@ -146,7 +146,7 @@ namespace rtps{
         static constexpr size_t getRawSize(){
 			return sizeof(SubmessageKind) + sizeof(uint8_t) + sizeof(uint16_t);
 		}
-    } __attribute__((packed));
+    };
 
     struct SubmessageData{
         SubmessageHeader header;
@@ -160,7 +160,7 @@ namespace rtps{
 					+ (2*3+2*1) // EntityID
 					+ sizeof(SequenceNumber_t);
 		}
-    } __attribute__((packed));
+    };
 
     struct SubmessageHeartbeat{
         SubmessageHeader header;
@@ -176,7 +176,7 @@ namespace rtps{
 				   + sizeof(Count_t);
 
 		}
-    } __attribute__((packed));
+    };
 
     struct SubmessageAckNack{
         SubmessageHeader header;
@@ -190,7 +190,7 @@ namespace rtps{
 			       + sizeof(SequenceNumber_t) + sizeof(uint32_t) + 4 //sizeof(std::array<uint32_t, 8>) // SequenceNumberSet
 			       + sizeof(Count_t);
 		}
-    } __attribute((packed));
+    };
 
 	template<typename Buffer>
 	void serializeMessage(Buffer& buffer, Header& header){

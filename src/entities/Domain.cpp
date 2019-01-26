@@ -5,6 +5,7 @@
 
 #include "rtps/entities/Domain.h"
 #include "rtps/utils/udpUtils.h"
+#include "rtps/utils/Log.h"
 
 #define DOMAIN_VERBOSE 0
 
@@ -34,7 +35,7 @@ void Domain::stop(){
 void Domain::receiveCallback(const PacketInfo& packet){
     if(packet.buffer.firstElement->next != nullptr){
 #if DOMAIN_VERBOSE
-        printf("Domain: Cannot handle multiple elements chained. You might want to increase PBUF_POOL_BUFSIZE\n");
+        Log::printLine("Domain: Cannot handle multiple elements chained. You might want to increase PBUF_POOL_BUFSIZE\n");
 #endif
     }
 
