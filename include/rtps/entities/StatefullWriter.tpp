@@ -112,7 +112,7 @@ void StatefullWriterT<NetworkDriver>::onNewAckNack(const SubmessageAckNack& msg)
         return;
     }
 
-    if(msg.count.value < proxy->ackNackCount.value){
+    if(msg.count.value <= proxy->ackNackCount.value){
 #if SFW_VERBOSE
         printf("StatefullWriter[%s]: Count too small. Dropping acknack.\n", &this->m_attributes.topicName[0]);
 #endif

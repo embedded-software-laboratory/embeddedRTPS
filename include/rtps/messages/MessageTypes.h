@@ -257,7 +257,9 @@ namespace rtps{
 		buffer.append(reinterpret_cast<uint8_t*>(&msg.readerSNState.base.high), sizeof(msg.readerSNState.base.high));
 		buffer.append(reinterpret_cast<uint8_t*>(&msg.readerSNState.base.low), sizeof(msg.readerSNState.base.low));
 		buffer.append(reinterpret_cast<uint8_t*>(&msg.readerSNState.numBits), sizeof(uint32_t));
-		buffer.append(reinterpret_cast<uint8_t*>(msg.readerSNState.bitMap.data()), 4);
+		if(msg.readerSNState.numBits != 0){
+			buffer.append(reinterpret_cast<uint8_t*>(msg.readerSNState.bitMap.data()), 4*((msg.readerSNState.numBits / 32) + 1));
+		}
 		buffer.append(reinterpret_cast<uint8_t*>(&msg.count.value), sizeof(msg.count.value));
 	}
 

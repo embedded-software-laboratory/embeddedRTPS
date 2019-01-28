@@ -25,13 +25,17 @@ namespace rtps{
         }
 
         // For now, we don't store any packets, so we just request all starting from the next expected
-        SequenceNumberSet getMissing(const SequenceNumber_t& /*firstAvail*/, const SequenceNumber_t& /*lastAvail*/){
+        SequenceNumberSet getMissing(const SequenceNumber_t& /*firstAvail*/, const SequenceNumber_t& lastAvail){
             SequenceNumberSet set;
-            set.numBits = 1;
-            set.base = expectedSN;
-            for(uint8_t bucket=0; bucket < set.bitMap.size(); ++bucket){
-                set.bitMap[bucket] = uint32_t{1} << 31;
+            if(lastAvail < expectedSN){
+				set.base = expectedSN;
+            	set.numBits = 0;
+            }else{
+            	set.numBits = 1;
+				set.base = expectedSN;
+				set.bitMap[0] = uint32_t{1} << 31;
             }
+
             return set;
         }
 

@@ -42,6 +42,7 @@ void rtps::deserializeMessage(const MessageProcessingInfo& info, SubmessageData&
     doCopyAndMoveOn(reinterpret_cast<uint8_t*>(&msg.writerSN.low), currentPos, sizeof(msg.writerSN.low));
 }
 
+
 void rtps::deserializeMessage(const MessageProcessingInfo& info, SubmessageHeartbeat& msg){
     deserializeMessage(info, msg.header);
     const uint8_t* currentPos = info.getPointerToPos() + SubmessageHeader::getRawSize();
@@ -68,6 +69,11 @@ void rtps::deserializeMessage(const MessageProcessingInfo& info, SubmessageAckNa
     doCopyAndMoveOn(reinterpret_cast<uint8_t*>(&msg.readerSNState.base.high), currentPos, sizeof(msg.readerSNState.base.high));
     doCopyAndMoveOn(reinterpret_cast<uint8_t*>(&msg.readerSNState.base.low), currentPos, sizeof(msg.readerSNState.base.low));
     doCopyAndMoveOn(reinterpret_cast<uint8_t*>(&msg.readerSNState.numBits), currentPos, sizeof(uint32_t));
-    doCopyAndMoveOn(reinterpret_cast<uint8_t*>(msg.readerSNState.bitMap.data()), currentPos, 4);
+    if(msg.readerSNState.numBits != 0){
+    	doCopyAndMoveOn(reinterpret_cast<uint8_t*>(msg.readerSNState.bitMap.data()), currentPos, 4*((msg.readerSNState.numBits / 32) + 1));
+    }
     doCopyAndMoveOn(reinterpret_cast<uint8_t*>(&msg.count.value), currentPos, sizeof(msg.count.value));
+    if(msg.count.value > 50){
+    	doCopyAndMoveOn(reinterpret_cast<uint8_t*>(&msg.count.value), currentPos, sizeof(msg.count.value));
+    }
 }
