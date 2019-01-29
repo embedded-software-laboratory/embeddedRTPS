@@ -1,141 +1,21 @@
-From 349b3c771e343e1021e6b7eb53acd22665988ff6 Mon Sep 17 00:00:00 2001
+From fa6daec9b42d809d30b4252a0ba47746545f4c9e Mon Sep 17 00:00:00 2001
 From: Andreas Wuestenberg <andreas.wuestenberg@rwth-aachen.de>
-Date: Tue, 29 Jan 2019 02:07:39 +0100
-Subject: [PATCH] Adjusted test for interaction with aurix.
+Date: Tue, 29 Jan 2019 02:19:51 +0100
+Subject: [PATCH] Adjusted latency test for interaction with aurix.
 
 ---
- CMakeLists.txt                                |   2 +-
- .../linux/autotools_generator.cmake.in        |  48 +--
- .../HelloWorldSubscriber.cpp                  |   2 +-
- .../C++/HelloWorldExample/HelloWorld_main.cpp |   1 +
- test/performance/CMakeLists.txt               |   3 +-
- test/performance/LatencyTestPublisher.cpp     | 168 +-------
- test/performance/LatencyTestPublisher.h       |  30 +-
- test/performance/LatencyTestSubscriber.cpp    | 368 ------------------
- test/performance/LatencyTestSubscriber.h      | 103 -----
- test/performance/LatencyTestTypes.cpp         |  43 +-
- test/performance/LatencyTestTypes.h           |  35 --
- test/performance/main_LatencyTest.cpp         |  28 +-
- 12 files changed, 50 insertions(+), 781 deletions(-)
+ test/performance/CMakeLists.txt            |   3 +-
+ test/performance/LatencyTestPublisher.cpp  | 168 +---------
+ test/performance/LatencyTestPublisher.h    |  30 +-
+ test/performance/LatencyTestSubscriber.cpp | 368 ---------------------
+ test/performance/LatencyTestSubscriber.h   | 103 ------
+ test/performance/LatencyTestTypes.cpp      |  43 +--
+ test/performance/LatencyTestTypes.h        |  35 --
+ test/performance/main_LatencyTest.cpp      |  28 +-
+ 8 files changed, 23 insertions(+), 755 deletions(-)
  delete mode 100644 test/performance/LatencyTestSubscriber.cpp
  delete mode 100644 test/performance/LatencyTestSubscriber.h
 
-diff --git a/CMakeLists.txt b/CMakeLists.txt
-index 36f249b9..e1bf2f7d 100644
---- a/CMakeLists.txt
-+++ b/CMakeLists.txt
-@@ -245,7 +245,7 @@ add_subdirectory(src/cpp)
- ###############################################################################
- # Testing options
- ###############################################################################
--option(PERFORMANCE_TESTS "Activate the building and execution of performance tests" OFF)
-+option(PERFORMANCE_TESTS "Activate the building and execution of performance tests" ON)
- option(EPROSIMA_BUILD_TESTS "Activate the building and execution unit tests and integral tests" OFF)
- 
- if(EPROSIMA_BUILD AND IS_TOP_LEVEL AND NOT EPROSIMA_INSTALLER AND NOT EPROSIMA_INSTALLER_MINION)
-diff --git a/cmake/packaging/linux/autotools_generator.cmake.in b/cmake/packaging/linux/autotools_generator.cmake.in
-index ee5477d2..eb1bc2c1 100644
---- a/cmake/packaging/linux/autotools_generator.cmake.in
-+++ b/cmake/packaging/linux/autotools_generator.cmake.in
-@@ -13,49 +13,49 @@
- # limitations under the License.
- 
- macro(generate_sources_for_autotools)
--    set(@PROJECT_NAME@_SOURCES_TMP @@PROJECT_NAME@_SOURCES@)
--    set(@PROJECT_NAME@_SOURCES_AUTOTOOLS "lib@PROJECT_NAME@_la_SOURCES = ")
-+    set(fastrtps_SOURCES_TMP log/Log.cpp;log/StdoutConsumer.cpp;utils/eClock.cpp;utils/IPFinder.cpp;utils/md5.cpp;utils/StringMatching.cpp;rtps/resources/ResourceEvent.cpp;rtps/resources/TimedEvent.cpp;rtps/resources/TimedEventImpl.cpp;rtps/resources/AsyncWriterThread.cpp;rtps/resources/AsyncInterestTree.cpp;rtps/Endpoint.cpp;rtps/writer/RTPSWriter.cpp;rtps/writer/StatefulWriter.cpp;rtps/writer/ReaderProxy.cpp;rtps/writer/StatelessWriter.cpp;rtps/writer/ReaderLocator.cpp;rtps/writer/timedevent/PeriodicHeartbeat.cpp;rtps/writer/timedevent/NackResponseDelay.cpp;rtps/writer/timedevent/NackSupressionDuration.cpp;rtps/history/CacheChangePool.cpp;rtps/history/History.cpp;rtps/history/WriterHistory.cpp;rtps/history/ReaderHistory.cpp;rtps/reader/timedevent/HeartbeatResponseDelay.cpp;rtps/reader/timedevent/WriterProxyLiveliness.cpp;rtps/reader/timedevent/InitialAckNack.cpp;rtps/reader/CompoundReaderListener.cpp;rtps/reader/WriterProxy.cpp;rtps/reader/StatefulReader.cpp;rtps/reader/StatelessReader.cpp;rtps/reader/RTPSReader.cpp;rtps/reader/FragmentedChangePitStop.cpp;rtps/messages/CDRMessagePool.cpp;rtps/messages/RTPSMessageCreator.cpp;rtps/messages/RTPSMessageGroup.cpp;rtps/messages/MessageReceiver.cpp;rtps/messages/submessages/AckNackMsg.hpp;rtps/messages/submessages/DataMsg.hpp;rtps/messages/submessages/GapMsg.hpp;rtps/messages/submessages/HeartbeatMsg.hpp;rtps/network/NetworkFactory.cpp;rtps/network/SenderResource.cpp;rtps/network/ReceiverResource.cpp;rtps/participant/RTPSParticipant.cpp;rtps/participant/RTPSParticipantImpl.cpp;rtps/RTPSDomain.cpp;Domain.cpp;participant/Participant.cpp;participant/ParticipantImpl.cpp;publisher/Publisher.cpp;publisher/PublisherImpl.cpp;publisher/PublisherHistory.cpp;subscriber/Subscriber.cpp;subscriber/SubscriberImpl.cpp;subscriber/SubscriberHistory.cpp;transport/UDPv4Transport.cpp;transport/UDPv6Transport.cpp;transport/test_UDPv4Transport.cpp;qos/ParameterList.cpp;qos/ParameterTypes.cpp;qos/QosList.cpp;qos/QosPolicies.cpp;qos/WriterQos.cpp;qos/ReaderQos.cpp;rtps/builtin/BuiltinProtocols.cpp;rtps/builtin/discovery/participant/PDPSimple.cpp;rtps/builtin/discovery/participant/PDPSimpleListener.cpp;rtps/builtin/discovery/participant/timedevent/RemoteParticipantLeaseDuration.cpp;rtps/builtin/discovery/participant/timedevent/ResendParticipantProxyDataPeriod.cpp;rtps/builtin/discovery/endpoint/EDP.cpp;rtps/builtin/discovery/endpoint/EDPSimple.cpp;rtps/builtin/discovery/endpoint/EDPSimpleListeners.cpp;rtps/builtin/discovery/endpoint/EDPStatic.cpp;rtps/builtin/liveliness/WLP.cpp;rtps/builtin/liveliness/WLPListener.cpp;rtps/builtin/liveliness/timedevent/WLivelinessPeriodicAssertion.cpp;rtps/builtin/data/ParticipantProxyData.cpp;rtps/builtin/data/WriterProxyData.cpp;rtps/builtin/data/ReaderProxyData.cpp;rtps/flowcontrol/ThroughputController.cpp;rtps/flowcontrol/ThroughputControllerDescriptor.cpp;rtps/flowcontrol/FlowController.cpp;rtps/exceptions/Exception.cpp;rtps/attributes/PropertyPolicy.cpp;rtps/common/Token.cpp;xmlparser/XMLParserCommon.cpp;xmlparser/XMLElementParser.cpp;xmlparser/XMLEndpointParser.cpp;xmlparser/XMLParser.cpp;xmlparser/XMLProfileManager.cpp;rtps/writer/PersistentWriter.cpp;rtps/writer/StatelessPersistentWriter.cpp;rtps/writer/StatefulPersistentWriter.cpp;rtps/reader/StatelessPersistentReader.cpp;rtps/reader/StatefulPersistentReader.cpp;rtps/persistence/PersistenceFactory.cpp;rtps/persistence/SQLite3PersistenceService.cpp;rtps/persistence/sqlite3.c;SECTION;SECURITY;rtps/security/exceptions/SecurityException.cpp;rtps/security/common/SharedSecretHandle.cpp;rtps/security/SecurityManager.cpp;rtps/security/SecurityPluginFactory.cpp;rtps/security/timedevent/HandshakeMessageTokenResent.cpp;security/OpenSSLInit.cpp;security/authentication/PKIDH.cpp;security/accesscontrol/Permissions.cpp;security/cryptography/AESGCMGMAC.cpp;security/cryptography/AESGCMGMAC_KeyExchange.cpp;security/cryptography/AESGCMGMAC_KeyFactory.cpp;security/cryptography/AESGCMGMAC_Transform.cpp;security/cryptography/AESGCMGMAC_Types.cpp;security/authentication/PKIIdentityHandle.cpp;security/authentication/PKIHandshakeHandle.cpp;security/accesscontrol/AccessPermissionsHandle.cpp;security/accesscontrol/CommonParser.cpp;security/accesscontrol/GovernanceParser.cpp;security/accesscontrol/PermissionsParser.cpp;ENDSECTION)
-+    set(fastrtps_SOURCES_AUTOTOOLS "libfastrtps_la_SOURCES = ")
-     set(section_ FALSE)
-     set(restart_ FALSE)
--    foreach(@PROJECT_NAME@_SOURCE ${@PROJECT_NAME@_SOURCES_TMP})
-+    foreach(fastrtps_SOURCE ${fastrtps_SOURCES_TMP})
-         if(section_)
-             set(section_ FALSE)
--            set(@PROJECT_NAME@_SOURCES_AUTOTOOLS "${@PROJECT_NAME@_SOURCES_AUTOTOOLS} \nif ${@PROJECT_NAME@_SOURCE}")
--            set(@PROJECT_NAME@_SOURCES_AUTOTOOLS "${@PROJECT_NAME@_SOURCES_AUTOTOOLS} \nlib@PROJECT_NAME@_la_SOURCES += ")
-+            set(fastrtps_SOURCES_AUTOTOOLS "${fastrtps_SOURCES_AUTOTOOLS} \nif ${fastrtps_SOURCE}")
-+            set(fastrtps_SOURCES_AUTOTOOLS "${fastrtps_SOURCES_AUTOTOOLS} \nlibfastrtps_la_SOURCES += ")
-         elseif(restart_)
-             set(restart_ FALSE)
--            set(@PROJECT_NAME@_SOURCES_AUTOTOOLS "${@PROJECT_NAME@_SOURCES_AUTOTOOLS} \nlib@PROJECT_NAME@_la_SOURCES += ")
--            set(@PROJECT_NAME@_SOURCES_AUTOTOOLS "${@PROJECT_NAME@_SOURCES_AUTOTOOLS} ${@PROJECT_NAME@_SOURCE}")
--        elseif("${@PROJECT_NAME@_SOURCE}" STREQUAL "SECTION")
-+            set(fastrtps_SOURCES_AUTOTOOLS "${fastrtps_SOURCES_AUTOTOOLS} \nlibfastrtps_la_SOURCES += ")
-+            set(fastrtps_SOURCES_AUTOTOOLS "${fastrtps_SOURCES_AUTOTOOLS} ${fastrtps_SOURCE}")
-+        elseif("${fastrtps_SOURCE}" STREQUAL "SECTION")
-             set(section_ TRUE)
-             set(restart_ FALSE)
--            set(@PROJECT_NAME@_SOURCES_AUTOTOOLS "${@PROJECT_NAME@_SOURCES_AUTOTOOLS} \n")
--        elseif("${@PROJECT_NAME@_SOURCE}" STREQUAL "ENDSECTION")
-+            set(fastrtps_SOURCES_AUTOTOOLS "${fastrtps_SOURCES_AUTOTOOLS} \n")
-+        elseif("${fastrtps_SOURCE}" STREQUAL "ENDSECTION")
-             set(restart_ TRUE)
--            set(@PROJECT_NAME@_SOURCES_AUTOTOOLS "${@PROJECT_NAME@_SOURCES_AUTOTOOLS} \nendif\n")
-+            set(fastrtps_SOURCES_AUTOTOOLS "${fastrtps_SOURCES_AUTOTOOLS} \nendif\n")
-         else()
--            set(@PROJECT_NAME@_SOURCES_AUTOTOOLS "${@PROJECT_NAME@_SOURCES_AUTOTOOLS} ${@PROJECT_NAME@_SOURCE}")
-+            set(fastrtps_SOURCES_AUTOTOOLS "${fastrtps_SOURCES_AUTOTOOLS} ${fastrtps_SOURCE}")
-         endif()
-     endforeach()
- endmacro()
- 
- macro(generate_public_headers_for_autotools)
--    set(@PROJECT_NAME@_PUBLIC_HEADERS_DIRECTORIES_TMP @@PROJECT_NAME@_PUBLIC_HEADERS_DIRECTORIES@)
--    set(@PROJECT_NAME@_PUBLIC_HEADERS_AUTOTOOLS "")
--    foreach(directory ${@PROJECT_NAME@_PUBLIC_HEADERS_DIRECTORIES_TMP})
--        file(GLOB_RECURSE @PROJECT_NAME@_PUBLIC_HEADERS_TMP RELATIVE ${directory} ${directory}/*.h)
--        foreach(@PROJECT_NAME@_PUBLIC_HEADER ${@PROJECT_NAME@_PUBLIC_HEADERS_TMP})
--            set(@PROJECT_NAME@_PUBLIC_HEADERS_AUTOTOOLS "${@PROJECT_NAME@_PUBLIC_HEADERS_AUTOTOOLS} ${@PROJECT_NAME@_PUBLIC_HEADER}")
-+    set(fastrtps_PUBLIC_HEADERS_DIRECTORIES_TMP /home/andreas/GIT/Fast-RTPS/include)
-+    set(fastrtps_PUBLIC_HEADERS_AUTOTOOLS "")
-+    foreach(directory ${fastrtps_PUBLIC_HEADERS_DIRECTORIES_TMP})
-+        file(GLOB_RECURSE fastrtps_PUBLIC_HEADERS_TMP RELATIVE ${directory} ${directory}/*.h)
-+        foreach(fastrtps_PUBLIC_HEADER ${fastrtps_PUBLIC_HEADERS_TMP})
-+            set(fastrtps_PUBLIC_HEADERS_AUTOTOOLS "${fastrtps_PUBLIC_HEADERS_AUTOTOOLS} ${fastrtps_PUBLIC_HEADER}")
-         endforeach()
--        file(GLOB_RECURSE @PROJECT_NAME@_PUBLIC_HEADERS_TMP RELATIVE ${directory} ${directory}/*.hpp)
--        foreach(@PROJECT_NAME@_PUBLIC_HEADER ${@PROJECT_NAME@_PUBLIC_HEADERS_TMP})
--            set(@PROJECT_NAME@_PUBLIC_HEADERS_AUTOTOOLS "${@PROJECT_NAME@_PUBLIC_HEADERS_AUTOTOOLS} ${@PROJECT_NAME@_PUBLIC_HEADER}")
-+        file(GLOB_RECURSE fastrtps_PUBLIC_HEADERS_TMP RELATIVE ${directory} ${directory}/*.hpp)
-+        foreach(fastrtps_PUBLIC_HEADER ${fastrtps_PUBLIC_HEADERS_TMP})
-+            set(fastrtps_PUBLIC_HEADERS_AUTOTOOLS "${fastrtps_PUBLIC_HEADERS_AUTOTOOLS} ${fastrtps_PUBLIC_HEADER}")
-         endforeach()
-     endforeach()
- 
--    set(@PROJECT_NAME@_PUBLIC_HEADERS_FILES_TMP @@PROJECT_NAME@_PUBLIC_HEADERS_FILES@)
--    foreach(file ${@PROJECT_NAME@_PUBLIC_HEADERS_FILES_TMP})
--        set(@PROJECT_NAME@_PUBLIC_HEADERS_AUTOTOOLS "${@PROJECT_NAME@_PUBLIC_HEADERS_AUTOTOOLS} ${file}")
-+    set(fastrtps_PUBLIC_HEADERS_FILES_TMP fastrtps/config.h)
-+    foreach(file ${fastrtps_PUBLIC_HEADERS_FILES_TMP})
-+        set(fastrtps_PUBLIC_HEADERS_AUTOTOOLS "${fastrtps_PUBLIC_HEADERS_AUTOTOOLS} ${file}")
-     endforeach()
- endmacro()
- 
-diff --git a/examples/C++/HelloWorldExample/HelloWorldSubscriber.cpp b/examples/C++/HelloWorldExample/HelloWorldSubscriber.cpp
-index fa138557..e94bbe54 100644
---- a/examples/C++/HelloWorldExample/HelloWorldSubscriber.cpp
-+++ b/examples/C++/HelloWorldExample/HelloWorldSubscriber.cpp
-@@ -60,7 +60,7 @@ bool HelloWorldSubscriber::init()
-     Rparam.topic.historyQos.depth = 30;
-     Rparam.topic.resourceLimitsQos.max_samples = 50;
-     Rparam.topic.resourceLimitsQos.allocated_samples = 20;
--    Rparam.qos.m_reliability.kind = RELIABLE_RELIABILITY_QOS;
-+    Rparam.qos.m_reliability.kind = BEST_EFFORT_RELIABILITY_QOS;
-     Rparam.qos.m_durability.kind = TRANSIENT_LOCAL_DURABILITY_QOS;
-     mp_subscriber = Domain::createSubscriber(mp_participant,Rparam,(SubscriberListener*)&m_listener);
- 
-diff --git a/examples/C++/HelloWorldExample/HelloWorld_main.cpp b/examples/C++/HelloWorldExample/HelloWorld_main.cpp
-index 31f12385..8d3fbf05 100644
---- a/examples/C++/HelloWorldExample/HelloWorld_main.cpp
-+++ b/examples/C++/HelloWorldExample/HelloWorld_main.cpp
-@@ -30,6 +30,7 @@ using namespace fastrtps;
- using namespace rtps;
- int main(int argc, char** argv)
- {
-+    Log::SetVerbosity(Log::Kind::Info);
-     std::cout << "Starting "<< std::endl;
-     int type = 1;
-     if(argc > 1)
 diff --git a/test/performance/CMakeLists.txt b/test/performance/CMakeLists.txt
 index d126d3fa..96730ef2 100644
 --- a/test/performance/CMakeLists.txt
