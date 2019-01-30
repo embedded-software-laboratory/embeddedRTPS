@@ -34,14 +34,19 @@ namespace rtps {
 
 
     template<typename T, uint16_t SIZE>
-    void ThreadSafeCircularBuffer<T, SIZE>::moveElementIntoBuffer(T &&elem) {
+    bool ThreadSafeCircularBuffer<T, SIZE>::moveElementIntoBuffer(T&& elem) {
         Lock lock(m_mutex);
-        m_buffer[m_head] = std::move(elem);
-        incrementHead();
+        if (!isFull()){
+            m_buffer[m_head] = std::move(elem);
+            incrementHead();
+            return true;
+        }else{
+            return false;
+        }
     }
 
     template<typename T, uint16_t SIZE>
-    bool ThreadSafeCircularBuffer<T, SIZE>::moveFirstInto(T &hull) {
+    bool ThreadSafeCircularBuffer<T, SIZE>::moveFirstInto(T& hull) {
         Lock lock(m_mutex);
         if (m_head != m_tail) {
             hull = std::move(m_buffer[m_tail]);
@@ -56,6 +61,13 @@ namespace rtps {
     void ThreadSafeCircularBuffer<T, SIZE>::clear() {
         Lock lock(m_mutex);
         m_head = m_tail;
+    }
+
+    template<typename T, uint16_t SIZE>
+    bool ThreadSafeCircularBuffer<T,SIZE>::isFull(){
+        auto it = m_head;
+        incrementIterator(it);
+        return it == m_tail;
     }
 
     template<typename T, uint16_t SIZE>

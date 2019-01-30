@@ -24,7 +24,7 @@ namespace rtps{
         bool start();
         void stop();
 
-        void receiveCallback(const PacketInfo& packet);
+        static void receiveJumppad(void* callee, const PacketInfo& packet);
 
         Participant* createParticipant();
         Writer* createWriter(Participant& part, const char* topicName, const char* typeName, bool reliable);
@@ -46,6 +46,7 @@ namespace rtps{
         std::array<StatefullWriter, Config::NUM_STATEFULL_WRITERS> m_statefullWriters;
         uint8_t m_numStatefullWriters = 0;
 
+        void receiveCallback(const PacketInfo& packet);
         GuidPrefix_t generateGuidPrefix(ParticipantId_t id) const;
         void addDefaultWriterAndReader(Participant& part);
         void registerPort(Participant& part);

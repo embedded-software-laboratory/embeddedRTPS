@@ -11,7 +11,7 @@
 
 using rtps::Domain;
 
-Domain::Domain() : m_threadPool(*this), m_transport(ThreadPool::readCallback, &m_threadPool){
+Domain::Domain() : m_threadPool(receiveJumppad, this), m_transport(ThreadPool::readCallback, &m_threadPool){
     //TODO move away from here
     m_transport.createUdpConnection(getUserMulticastPort());
     m_transport.createUdpConnection(getBuiltInMulticastPort());
@@ -30,6 +30,11 @@ bool Domain::start(){
 
 void Domain::stop(){
     m_threadPool.stopThreads();
+}
+
+void Domain::receiveJumppad(void* callee, const PacketInfo& packet){
+    auto domain = static_cast<Domain*>(callee);
+    domain->receiveCallback(packet);
 }
 
 void Domain::receiveCallback(const PacketInfo& packet){

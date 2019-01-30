@@ -17,13 +17,14 @@
 
 namespace rtps {
 
-    class Domain;
     class Writer;
+
 
     class ThreadPool {
     public:
+        typedef void(*receiveJumppad_fp)(void* callee, const PacketInfo& packet);
 
-        explicit ThreadPool(Domain& domain);
+        ThreadPool(receiveJumppad_fp receiveCallback, void* callee);
 
         ~ThreadPool();
 
@@ -41,16 +42,19 @@ namespace rtps {
         void addWorkload(Workload_t workload);
 
         static void readCallback(void* arg, udp_pcb* pcb, pbuf* p, const ip_addr_t* addr, Ip4Port_t port);
-
+        inline bool addNewPacket(PacketInfo&& packet){
+            return m_outputQueue.moveElementIntoBuffer(std::move(packet));
+        }
 
     private:
-        Domain& domain;
-        bool running = false;
-        std::array<sys_thread_t, Config::THREAD_POOL_NUM_WRITERS> writers;
-        std::array<sys_thread_t, Config::THREAD_POOL_NUM_READERS> readers;
+        receiveJumppad_fp m_receiveJumppad;
+        void* m_callee;
+        bool m_running = false;
+        std::array<sys_thread_t, Config::THREAD_POOL_NUM_WRITERS> m_writers;
+        std::array<sys_thread_t, Config::THREAD_POOL_NUM_READERS> m_readers;
 
-        ThreadSafeCircularBuffer<Workload_t, Config::THREAD_POOL_WORKLOAD_QUEUE_LENGTH> inputQueue;
-        ThreadSafeCircularBuffer<PacketInfo, Config::THREAD_POOL_WORKLOAD_QUEUE_LENGTH> outputQueue;
+        ThreadSafeCircularBuffer<Workload_t, Config::THREAD_POOL_WORKLOAD_QUEUE_LENGTH> m_inputQueue;
+        ThreadSafeCircularBuffer<PacketInfo, Config::THREAD_POOL_WORKLOAD_QUEUE_LENGTH> m_outputQueue;
 
         static void writerThreadFunction(void* arg);
         static void readerThreadFunction(void* arg);

@@ -23,7 +23,7 @@ namespace rtps {
 
         ~ThreadSafeCircularBuffer();
 
-        void moveElementIntoBuffer(T &&elem);
+        bool moveElementIntoBuffer(T &&elem);
 
         /**
          * Removes the first into the given hull. Also moves responsibility for resources.
@@ -41,6 +41,7 @@ namespace rtps {
         sys_mutex_t m_mutex;
         bool m_initialized = false;
 
+        inline bool isFull();
         inline void incrementIterator(uint16_t& iterator);
         inline void incrementTail();
         inline void incrementHead();

@@ -9,18 +9,14 @@
 
 #include "rtps/ThreadPool.h"
 #include "rtps/common/types.h"
+#include "rtps/communication/PacketInfo.h"
+#include "rtps/config.h"
 #include "rtps/rtps.h"
-#include "rtps/entities/Domain.h"
 #include "test/mocking/WriterMock.h"
 
 class ThreadPoolTest : public ::testing::Test{
 protected:
-    rtps::Domain domain; // TODO Cause of crash
-    rtps::ThreadPool pool{domain};
-    ip4_addr_t someIp4Addr = {1234567};
-    rtps::Ip4Port_t somepPort = 123;
-    udp_pcb someUdpPcb;
-
+    rtps::ThreadPool pool{nullptr, nullptr};
 
     void SetUp() override{
         rtps::init();
@@ -33,7 +29,7 @@ protected:
     }
 };
 
-TEST_F(ThreadPoolTest, DISABLED_addWorkload_executesCallbackWithinHalfSecond){
+TEST_F(ThreadPoolTest, addWorkload_executesCallbackWithinHalfSecond){
     WriterMock mock;
     std::mutex m;
     std::condition_variable cond_var;
@@ -53,4 +49,68 @@ TEST_F(ThreadPoolTest, DISABLED_addWorkload_executesCallbackWithinHalfSecond){
 
     std::unique_lock<std::mutex> lock(m);
     EXPECT_TRUE(cond_var.wait_for(lock, std::chrono::milliseconds(500), [&done] { return done; }));
+}
+
+
+class ThreadPool_WithReadCallback : public ::testing::Test{
+protected:
+    std::mutex mut;
+    rtps::ThreadPool pool;
+    std::condition_variable wasExecuted;
+    unsigned int count{0};
+
+    rtps::PacketInfo somePacket{};
+
+    ThreadPool_WithReadCallback() : pool{receiveJumppad, this}{
+    }
+
+    static void receiveJumppad(void* callee, const rtps::PacketInfo& packet){
+        auto me = static_cast<ThreadPool_WithReadCallback*>(callee);
+        me->receiveFunction(packet);
+    }
+
+    void receiveFunction(const rtps::PacketInfo& /*packet*/){
+        std::unique_lock<std::mutex> lock(mut);
+        count++;
+        wasExecuted.notify_all();
+    }
+
+    void waitForCountAndFailOnTimeout(unsigned int expectedCount, unsigned int maxNumDropped = 0, const std::chrono::milliseconds& time=std::chrono::milliseconds(100)){
+        std::unique_lock<std::mutex> lock(mut);
+        EXPECT_TRUE(wasExecuted.wait_for(lock, time, [&]{return expectedCount == count;}) ||
+                    count >= expectedCount - maxNumDropped);
+    }
+
+    void SetUp() override{
+        static_assert(rtps::Config::THREAD_POOL_NUM_READERS > 1, "We need at least 2 reader threads");
+        rtps::init();
+        bool success = pool.startThreads();
+        ASSERT_TRUE(success);
+    }
+
+    void TearDown() override{
+        pool.stopThreads();
+        sys_msleep(100);
+    }
+};
+
+TEST_F(ThreadPool_WithReadCallback, ProcessesOnePacket){
+    unsigned int numberOfPackets{1};
+
+    pool.addNewPacket(rtps::PacketInfo{});
+    waitForCountAndFailOnTimeout(numberOfPackets);
+}
+
+TEST_F(ThreadPool_WithReadCallback, ProcessesAlmostAllPackets){
+    unsigned int numberOfPackets{200};
+    unsigned int maxNumDroppedPackets{50};
+    unsigned int droppedPackets = 0;
+    for(unsigned int i{0}; i < numberOfPackets; i++){
+        if(!pool.addNewPacket(rtps::PacketInfo{})){
+            droppedPackets++;
+        }
+        usleep(50);
+    }
+    waitForCountAndFailOnTimeout(numberOfPackets, maxNumDroppedPackets);
+    EXPECT_EQ(count + droppedPackets, numberOfPackets);
 }

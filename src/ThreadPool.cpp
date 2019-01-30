@@ -6,7 +6,6 @@
 #include "rtps/ThreadPool.h"
 
 #include "lwip/tcpip.h"
-#include "rtps/entities/Domain.h"
 #include "rtps/entities/Writer.h"
 #include "rtps/utils/udpUtils.h"
 
@@ -20,30 +19,33 @@ using rtps::ThreadPool;
 #define THREAD_POOL_VERBOSE 0
 
 
-ThreadPool::ThreadPool(Domain& domain) : domain(domain){
+ThreadPool::ThreadPool(receiveJumppad_fp receiveCallback, void* callee)
+    : m_receiveJumppad(receiveCallback), m_callee(callee){
 
 }
 
 ThreadPool::~ThreadPool(){
-    stopThreads();
-    sys_msleep(500); // Doesn't matter for real application. The dtor should never be called.
+    if(m_running){
+        stopThreads();
+        sys_msleep(500); // Quick fix for tests. The dtor should never be called in real application.
+    }
 }
 
 bool ThreadPool::startThreads(){
-    if(running){
+    if(m_running){
         return true;
     }
-    if(!inputQueue.init() || !outputQueue.init()){
+    if(!m_inputQueue.init() || !m_outputQueue.init()){
         return false;
     }
 
-    running = true;
-    for(auto &thread : writers){
+    m_running = true;
+    for(auto &thread : m_writers){
         // TODO ID, err check, waitOnStop
         thread = sys_thread_new("WriterThread", writerThreadFunction, this, Config::THREAD_POOL_WRITER_STACKSIZE, Config::THREAD_POOL_WRITER_PRIO);
     }
 
-    for(auto &thread : readers){
+    for(auto &thread : m_readers){
         // TODO ID, err check, waitOnStop
         thread = sys_thread_new("ReaderThread", readerThreadFunction, this, Config::THREAD_POOL_READER_STACKSIZE, Config::THREAD_POOL_READER_PRIO);
     }
@@ -51,16 +53,16 @@ bool ThreadPool::startThreads(){
 }
 
 void ThreadPool::stopThreads() {
-    running = false;
+    m_running = false;
 }
 
 void ThreadPool::clearQueues(){
-    inputQueue.clear();
-    outputQueue.clear();
+    m_inputQueue.clear();
+    m_outputQueue.clear();
 }
 
 void ThreadPool::addWorkload(Workload_t workload){
-    inputQueue.moveElementIntoBuffer(std::move(workload));
+    m_inputQueue.moveElementIntoBuffer(std::move(workload));
 }
 
 void ThreadPool::writerThreadFunction(void* arg){
@@ -76,9 +78,9 @@ void ThreadPool::writerThreadFunction(void* arg){
 }
 
 void ThreadPool::doWriterWork(){
-    while(running){
+    while(m_running){
         Workload_t workload;
-        auto isWorkToDo = inputQueue.moveFirstInto(workload);
+        auto isWorkToDo = m_inputQueue.moveFirstInto(workload);
         if(!isWorkToDo){
             sys_msleep(1);
             continue;
@@ -96,9 +98,12 @@ void ThreadPool::readCallback(void* args, udp_pcb* target, pbuf* pbuf, const ip_
     packet.destPort = target->local_port;
     packet.srcPort = port;
     packet.buffer = PBufWrapper{pbuf};
-    pool.outputQueue.moveElementIntoBuffer(std::move(packet));
+    if(!pool.addNewPacket(std::move(packet))){
+#if THREAD_POOL_VERBOSE
+        printf("ThreadPool: dropped packet\n");
+#endif
+    }
 }
-
 
 void ThreadPool::readerThreadFunction(void* arg){
     auto pool = static_cast<ThreadPool*>(arg);
@@ -113,17 +118,18 @@ void ThreadPool::readerThreadFunction(void* arg){
 
 void ThreadPool::doReaderWork(){
 
-    while(running){
+    while(m_running){
         PacketInfo packet;
 #ifdef HIGHTEC_TOOLCHAIN
         ToggleLED(2); // TODO remove
 #endif
-        auto isWorkToDo = outputQueue.moveFirstInto(packet);
+        auto isWorkToDo = m_outputQueue.moveFirstInto(packet);
         if(!isWorkToDo) {
             //sys_msleep(1);
             continue;
         }
-        domain.receiveCallback(const_cast<const PacketInfo&>(packet));
+
+        m_receiveJumppad(m_callee, const_cast<const PacketInfo&>(packet));
     }
 }
 
