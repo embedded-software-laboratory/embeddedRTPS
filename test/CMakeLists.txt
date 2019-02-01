@@ -29,6 +29,9 @@ target_include_directories(runTests PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/mocking
 add_executable(runThreadPoolDemo ThreadPoolDemo.cpp)
 target_link_libraries(runThreadPoolDemo rtps lwip)
 
+add_executable(runTFTDemo TFTDemo.cpp)
+target_link_libraries(runTFTDemo rtps lwip)
+
 add_executable(lwipTests test_lwip.cpp)
 target_link_libraries(lwipTests rtps lwip gtest gtest_main gmock gmock_main)
 

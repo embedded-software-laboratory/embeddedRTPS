@@ -129,7 +129,7 @@ namespace rtps{
             subMsg.header.flags = FLAG_BIG_ENDIAN;
 #endif
             subMsg.header.flags |= FLAG_FINAL; // For now, we don't want any response
-            subMsg.header.submessageLength = SubmessageAckNack::getRawSize() - numBytesUntilEndOfLength;
+            subMsg.header.submessageLength = SubmessageAckNack::getRawSize(readerSNState) - numBytesUntilEndOfLength;
 
             subMsg.writerId = writerId;
             subMsg.readerId = readerId;

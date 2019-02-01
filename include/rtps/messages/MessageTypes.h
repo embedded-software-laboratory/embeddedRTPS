@@ -184,11 +184,15 @@ namespace rtps{
         EntityId_t writerId;
         SequenceNumberSet readerSNState;
         Count_t count;
-        static constexpr size_t getRawSize(){
+		static size_t getRawSize(const SequenceNumberSet& set){
+			size_t bitMapSize = 0;
+			if(set.numBits != 0){
+				bitMapSize = 4*((set.numBits/32) + 1);
+			}
 			return SubmessageHeader::getRawSize()
-			       + (2*3+2*1) // EntityID
-			       + sizeof(SequenceNumber_t) + sizeof(uint32_t) + 4 //sizeof(std::array<uint32_t, 8>) // SequenceNumberSet
-			       + sizeof(Count_t);
+				   + (2*3+2*1) // EntityID
+				   + sizeof(SequenceNumber_t) + sizeof(uint32_t) + bitMapSize // SequenceNumberSet
+				   + sizeof(Count_t);
 		}
     };
 
@@ -246,7 +250,7 @@ namespace rtps{
 
 	template<typename Buffer>
 	void serializeMessage(Buffer& buffer, SubmessageAckNack& msg){
-		buffer.reserve(SubmessageAckNack::getRawSize());
+		buffer.reserve(SubmessageAckNack::getRawSize(msg.readerSNState));
 
 		serializeMessage(buffer, msg.header);
 
