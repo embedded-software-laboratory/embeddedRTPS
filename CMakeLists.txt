@@ -19,5 +19,3 @@ add_library(rtps "")
 include(src/CMakeLists.txt)
 target_include_directories(rtps PUBLIC include)
 target_link_libraries(rtps PRIVATE lwip microcdr)
-
-add_subdirectory(test)
