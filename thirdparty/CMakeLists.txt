@@ -3,7 +3,6 @@ project(lwip)
 
 #set (CMAKE_EXPORT_COMPILE_COMMANDS ON)
 add_subdirectory(Micro-CDR)
-add_subdirectory(googletest)
 
 SET(LWIP_CONTRIB_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../../contrib")
 SET(LWIP_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../../lwip")
