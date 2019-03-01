@@ -48,17 +48,17 @@ bool StatefullWriterT<NetworkDriver>::addNewMatchedReader(const ReaderProxy& new
     printGuid(newProxy.remoteReaderGuid);
     printf("\n");
 #endif
-    for(uint32_t i=0; i < sizeof(m_proxies)/sizeof(m_proxies[0]); ++i){
-        static_assert(sizeof(i)*8 >= sizeof(m_proxySlotUsedBitMap), "StatefullWriter: Loop variable too small");
+    return m_proxies.add(newProxy);
+}
 
-        if((m_proxySlotUsedBitMap & (1 << i)) == 0){
-            m_proxies[i] = newProxy;
-            m_proxySlotUsedBitMap |= (1 << i);
-            return true;
-        }
-    }
+template <class NetworkDriver>
+void StatefullWriterT<NetworkDriver>::removeReader(const Guid& guid){
+    auto isElementToRemove=[&](const ReaderProxy& proxy){
+        return proxy.remoteReaderGuid == guid;
+    };
+    auto thunk=[](void* arg, const ReaderProxy& value){return (*static_cast<decltype(isElementToRemove)*>(arg))(value);};
 
-    return false;
+    m_proxies.remove(thunk, &isElementToRemove);
 }
 
 template <class NetworkDriver>
@@ -95,15 +95,15 @@ template <class NetworkDriver>
 void StatefullWriterT<NetworkDriver>::onNewAckNack(const SubmessageAckNack& msg){
 	//Lock lock{m_mutex};
     // Search for reader
-    ReaderProxy* proxy = nullptr;
-    for(uint8_t i=0; i < sizeof(m_proxies)/sizeof(m_proxies[0]); ++i){
-        if(((m_proxySlotUsedBitMap & (1 << i)) != 0) && m_proxies[i].remoteReaderGuid.entityId == msg.readerId){
-            proxy = &m_proxies[i];
+    ReaderProxy* reader = nullptr;
+    for(auto& proxy : m_proxies){
+        if(proxy.remoteReaderGuid.entityId == msg.readerId){
+            reader = &proxy;
             break;
         }
     }
 
-    if(proxy == nullptr){
+    if(reader == nullptr){
 #if SFW_VERBOSE
         printf("StatefullWriter[%s]: No proxy found with id: ", &this->m_attributes.topicName[0]);
         printEntityId(msg.readerId);
@@ -112,14 +112,14 @@ void StatefullWriterT<NetworkDriver>::onNewAckNack(const SubmessageAckNack& msg)
         return;
     }
 
-    if(msg.count.value <= proxy->ackNackCount.value){
+    if(msg.count.value <= reader->ackNackCount.value){
 #if SFW_VERBOSE
         printf("StatefullWriter[%s]: Count too small. Dropping acknack.\n", &this->m_attributes.topicName[0]);
 #endif
         return;
     }
 
-    proxy->ackNackCount = msg.count;
+    reader->ackNackCount = msg.count;
 
     // Send missing packets
     SequenceNumber_t nextSN = msg.readerSNState.base;
@@ -135,7 +135,7 @@ void StatefullWriterT<NetworkDriver>::onNewAckNack(const SubmessageAckNack& msg)
 #if SFW_VERBOSE
             printf("StatefullWriter[%s]: Send Packet on acknack.\n", this->m_attributes.topicName);
 #endif
-            sendData(*proxy, nextSN);
+            sendData(*reader, nextSN);
         }
     }
 }
@@ -181,45 +181,46 @@ void StatefullWriterT<NetworkDriver>::hbFunctionJumppad(void* thisPointer){
 
 template <class NetworkDriver>
 void StatefullWriterT<NetworkDriver>::sendHeartBeat() {
-    PacketInfo info;
-    info.srcPort = m_packetInfo.srcPort;
-
-    SequenceNumber_t firstSN;
-    SequenceNumber_t lastSN;
-    MessageFactory::addHeader(info.buffer, m_attributes.endpointGuid.prefix);
-    {
-        Lock lock(m_mutex);
-        firstSN = m_history.getSeqNumMin();
-        lastSN = m_history.getSeqNumMax();
-    }
-    if(firstSN == SEQUENCENUMBER_UNKNOWN || lastSN == SEQUENCENUMBER_UNKNOWN){
+    if(m_proxies.isEmpty()){
 #if SFW_VERBOSE
-        if(strlen(&this->m_attributes.typeName[0]) != 0){
-            printf("StatefullWriter[%s]: Skipping heartbeat. No data.\n", this->m_attributes.topicName);
-        }
-#endif
-        return;
-    }
-    // TODO adjust to multiple proxies
-    if((m_proxySlotUsedBitMap & 1) == 0){
-#if SFW_VERBOSE
-        if(strlen(&this->m_attributes.typeName[0]) != 0){
-            printf("StatefullWriter[%s]: Skipping heartbeat. No proxies.\n", this->m_attributes.topicName);
-        }
+        printf("StatefullWriter[%s]: Skipping heartbeat. No proxies.\n", this->m_attributes.topicName);
 #endif
         return;
     }
 
-    // TODO adjust to multiple proxies
-    MessageFactory::addHeartbeat(info.buffer, m_attributes.endpointGuid.entityId, m_proxies[0].remoteReaderGuid.entityId, firstSN, lastSN, m_hbCount);
+    for(auto& proxy : m_proxies) {
 
-    // Just usable for IPv4
-    const Locator& locator = getBuiltInMulticastLocator();
+        PacketInfo info;
+        info.srcPort = m_packetInfo.srcPort;
 
-    info.destAddr = m_proxies[0].remoteLocator.getIp4Address();
-    info.destPort = m_proxies[0].remoteLocator.port;
+        SequenceNumber_t firstSN;
+        SequenceNumber_t lastSN;
+        MessageFactory::addHeader(info.buffer, m_attributes.endpointGuid.prefix);
+        {
+            Lock lock(m_mutex);
+            firstSN = m_history.getSeqNumMin();
+            lastSN = m_history.getSeqNumMax();
+        }
+        if (firstSN == SEQUENCENUMBER_UNKNOWN || lastSN == SEQUENCENUMBER_UNKNOWN) {
+#if SFW_VERBOSE
+            if(strlen(&this->m_attributes.typeName[0]) != 0){
+                printf("StatefullWriter[%s]: Skipping heartbeat. No data.\n", this->m_attributes.topicName);
+            }
+#endif
+            return;
+        }
 
-    m_transport->sendFunction(info);
+        MessageFactory::addHeartbeat(info.buffer, m_attributes.endpointGuid.entityId,
+                                     proxy.remoteReaderGuid.entityId, firstSN, lastSN, m_hbCount);
+
+        // Just usable for IPv4
+        const Locator &locator = getBuiltInMulticastLocator();
+
+        info.destAddr = proxy.remoteLocator.getIp4Address();
+        info.destPort = proxy.remoteLocator.port;
+
+        m_transport->sendFunction(info);
+    }
     m_hbCount.value++;
 }
 

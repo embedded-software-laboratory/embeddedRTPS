@@ -8,6 +8,7 @@
 
 #include "rtps/entities/Writer.h"
 #include "rtps/entities/ReaderProxy.h"
+#include "rtps/storages/MemoryPool.h"
 
 namespace rtps{
 
@@ -17,6 +18,7 @@ namespace rtps{
         bool init(BuiltInTopicData attributes, TopicKind_t topicKind, ThreadPool* threadPool, UdpDriver& driver);
 
         bool addNewMatchedReader(const ReaderProxy& newProxy) override;
+        void removeReader(const Guid& guid) override;
         //! Executes required steps like sending packets. Intended to be called by worker threads
         void progress() override;
         const CacheChange* newChange(ChangeKind_t kind, const uint8_t* data, DataSize_t size) override;
@@ -37,10 +39,7 @@ namespace rtps{
         sys_thread_t m_heartbeatThread;
         Count_t m_hbCount{1};
 
-        uint32_t m_proxySlotUsedBitMap = 0;
-        static_assert(sizeof(m_proxySlotUsedBitMap)*8 >= Config::NUM_READER_PROXIES_PER_WRITER,
-                      "StatefullWriter: Bitmap too small");
-        ReaderProxy m_proxies[Config::NUM_READER_PROXIES_PER_WRITER];
+        MemoryPool<ReaderProxy, Config::NUM_READER_PROXIES_PER_WRITER> m_proxies;
 
         void sendData(const ReaderProxy &reader, const SequenceNumber_t &sn);
         static void hbFunctionJumppad(void* thisPointer);

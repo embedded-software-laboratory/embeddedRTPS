@@ -23,18 +23,14 @@ namespace rtps{
         void init(const BuiltInTopicData& attributes, NetworkDriver& driver);
         void newChange(ReaderCacheChange& cacheChange) override;
         void registerCallback(ddsReaderCallback_fp cb, void* callee) override;
-        bool addNewMatchedWriter(const WriterProxy& newProxy);
+        bool addNewMatchedWriter(const WriterProxy& newProxy) override;
         void removeWriter(const Guid& guid);
         bool onNewHeartbeat(const SubmessageHeartbeat& msg, const GuidPrefix_t& remotePrefix) override;
 
     private:
         PacketInfo m_packetInfo; // TODO intended for reuse but buffer not used as such
         NetworkDriver* m_transport;
-        //MemoryPool<WriterProxy, Config::NUM_WRITER_PROXIES_PER_READER> m_proxies;
-        uint32_t m_proxySlotUsedBitMap = 0;
-		static_assert(sizeof(m_proxySlotUsedBitMap)*8 >= Config::NUM_WRITER_PROXIES_PER_READER,
-					  "StatefullReader: Bitmap too small");
-		WriterProxy m_proxies[Config::NUM_WRITER_PROXIES_PER_READER];
+        MemoryPool<WriterProxy, Config::NUM_WRITER_PROXIES_PER_READER> m_proxies;
 
         ddsReaderCallback_fp m_callback = nullptr;
         void* m_callee = nullptr;

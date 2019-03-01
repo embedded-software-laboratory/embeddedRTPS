@@ -59,17 +59,7 @@ bool StatefullReaderT<NetworkDriver>::addNewMatchedWriter(const WriterProxy& new
     printGuid(newProxy.remoteWriterGuid);
     printf("\n");
 #endif
-    for(uint32_t i=0; i < sizeof(m_proxies)/sizeof(m_proxies[0]); ++i){
-		static_assert(sizeof(i)*8 >= sizeof(m_proxySlotUsedBitMap), "StatefullReader: Loop variable too small");
-
-		if((m_proxySlotUsedBitMap & (1 << i)) == 0){
-			m_proxies[i] = newProxy;
-			m_proxySlotUsedBitMap |= (1 << i);
-			return true;
-		}
-	}
-
-    return false;
+    return m_proxies.add(newProxy);
 }
 
 template <class NetworkDriver>
@@ -79,7 +69,7 @@ void StatefullReaderT<NetworkDriver>::removeWriter(const Guid& guid){
     };
     auto thunk=[](void* arg, const WriterProxy& value){return (*static_cast<decltype(isElementToRemove)*>(arg))(value);};
 
-    //m_proxies.remove(thunk, &isElementToRemove);
+    m_proxies.remove(thunk, &isElementToRemove);
 }
 
 template <class NetworkDriver>
@@ -88,13 +78,13 @@ bool StatefullReaderT<NetworkDriver>::onNewHeartbeat(const SubmessageHeartbeat& 
     PacketInfo info;
     info.srcPort = m_packetInfo.srcPort;
     WriterProxy* writer = nullptr;
-    // Search for reader
-	for(uint8_t i=0; i < sizeof(m_proxies)/sizeof(m_proxies[0]); ++i){
-		if(((m_proxySlotUsedBitMap & (1 << i)) != 0) && m_proxies[i].remoteWriterGuid.entityId == msg.writerId){
-			writer = &m_proxies[i];
-			break;
-		}
-	}
+    // Search for writer
+    for(WriterProxy& proxy : m_proxies){
+        if(proxy.remoteWriterGuid.entityId == msg.writerId){
+            writer = &proxy;
+            break;
+        }
+    }
 
     if(writer == nullptr){
 #if SFR_VERBOSE

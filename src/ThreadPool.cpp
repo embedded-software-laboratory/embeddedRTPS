@@ -54,6 +54,7 @@ bool ThreadPool::startThreads(){
 
 void ThreadPool::stopThreads() {
     m_running = false;
+    sys_msleep(500); // TODO make sure they have finished
 }
 
 void ThreadPool::clearQueues(){
