@@ -17,7 +17,5 @@ include_directories(include ${LWIP_DIR/src/include} ${microcdr_SOURCE_DIR}/inclu
 
 add_library(rtps "")
 include(src/CMakeLists.txt)
-target_include_directories(rtps PUBLIC include)
+target_include_directories(rtps PUBLIC include ${microcdr_SOURCE_DIR}/include)
 target_link_libraries(rtps PRIVATE lwip microcdr)
-
-add_subdirectory(test)
