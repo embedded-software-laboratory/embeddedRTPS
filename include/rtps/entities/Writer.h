@@ -18,6 +18,7 @@ namespace rtps{
     public:
         BuiltInTopicData m_attributes;
         virtual bool addNewMatchedReader(const ReaderProxy& newProxy) = 0;
+        virtual void removeReader(const Guid& guid) = 0;
 
         //! Executes required steps like sending packets. Intended to be called by worker threads
         virtual void progress() = 0;

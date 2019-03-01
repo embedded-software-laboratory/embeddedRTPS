@@ -41,19 +41,24 @@ bool StatelessWriterT<NetworkDriver>::init(BuiltInTopicData attributes, TopicKin
     return true;
 }
 
-template <typename NetworkDriver>
+template <class NetworkDriver>
 bool StatelessWriterT<NetworkDriver>::addNewMatchedReader(const ReaderProxy& newProxy){
 #if SLW_VERBOSE
-    printf("StatelessWriter[%s]: New reader added with id: ", &this->m_attributes.topicName[0]);
+    printf("StatefullWriter[%s]: New reader added with id: ", &this->m_attributes.topicName[0]);
     printGuid(newProxy.remoteReaderGuid);
     printf("\n");
 #endif
+    return m_proxies.add(newProxy);
+}
 
-    if(m_readerProxy.remoteReaderGuid.entityId != ENTITYID_UNKNOWN){
-        return false;
-    }
-    m_readerProxy = newProxy;
-    return true;
+template <class NetworkDriver>
+void StatelessWriterT<NetworkDriver>::removeReader(const Guid& guid){
+    auto isElementToRemove=[&](const ReaderProxy& proxy){
+        return proxy.remoteReaderGuid == guid;
+    };
+    auto thunk=[](void* arg, const ReaderProxy& value){return (*static_cast<decltype(isElementToRemove)*>(arg))(value);};
+
+    m_proxies.remove(thunk, &isElementToRemove);
 }
 
 template <typename NetworkDriver>
@@ -116,45 +121,46 @@ bool StatelessWriterT<NetworkDriver>::isIrrelevant(ChangeKind_t kind) const{
 
 template <typename NetworkDriver>
 void StatelessWriterT<NetworkDriver>::progress(){
-    if(m_readerProxy.remoteReaderGuid.entityId == ENTITYID_UNKNOWN){ // TODO UNKNOWN might be okay. Detect not-set locator in another way
-        return;
-    }
+    // TODO smarter packaging e.g. by creating MessageStruct and serialize after adjusting values
+    for(const auto& proxy : m_proxies){
 
 #if SLW_VERBOSE
-    printf("StatelessWriter[%s]: Progess.\n", this->m_attributes.topicName);
+        printf("StatelessWriter[%s]: Progess.\n", this->m_attributes.topicName);
 #endif
 
-    PacketInfo info;
-    info.srcPort = m_packetInfo.srcPort;
+        PacketInfo info;
+        info.srcPort = m_packetInfo.srcPort;
 
-    MessageFactory::addHeader(info.buffer, m_attributes.endpointGuid.prefix);
-    MessageFactory::addSubMessageTimeStamp(info.buffer);
+        MessageFactory::addHeader(info.buffer, m_attributes.endpointGuid.prefix);
+        MessageFactory::addSubMessageTimeStamp(info.buffer);
 
-    {
-        Lock lock(m_mutex);
-        const CacheChange* next = m_history.getChangeBySN(m_nextSequenceNumberToSend);
-        if(next == nullptr){
+        {
+            Lock lock(m_mutex);
+            const CacheChange* next = m_history.getChangeBySN(m_nextSequenceNumberToSend);
+            if(next == nullptr){
 #if SLW_VERBOSE
-            printf("StatelessWriter[%s]: Couldn't get a new CacheChange with SN (%i,%i)\n",
-                    &m_attributes.topicName[0], m_nextSequenceNumberToSend.high, m_nextSequenceNumberToSend.low);
+                printf("StatelessWriter[%s]: Couldn't get a new CacheChange with SN (%i,%i)\n",
+                        &m_attributes.topicName[0], m_nextSequenceNumberToSend.high, m_nextSequenceNumberToSend.low);
 #endif
-            return;
-        }else{
+                return;
+            }else{
 #if SLW_VERBOSE
-            printf("StatelessWriter[%s]: Sending change with SN (%i,%i)\n",
-                   &m_attributes.topicName[0], m_nextSequenceNumberToSend.high, m_nextSequenceNumberToSend.low);
+                printf("StatelessWriter[%s]: Sending change with SN (%i,%i)\n",
+                        &m_attributes.topicName[0], m_nextSequenceNumberToSend.high, m_nextSequenceNumberToSend.low);
 #endif
+            }
+            ++m_nextSequenceNumberToSend;
+            MessageFactory::addSubMessageData(info.buffer, next->data, false, next->sequenceNumber, m_attributes.endpointGuid.entityId,
+                                              proxy.remoteReaderGuid.entityId); // TODO
         }
-        ++m_nextSequenceNumberToSend;
-        MessageFactory::addSubMessageData(info.buffer, next->data, false, next->sequenceNumber, m_attributes.endpointGuid.entityId,
-                                          m_readerProxy.remoteReaderGuid.entityId); // TODO
+
+        // Just usable for IPv4
+        const Locator& locator = proxy.remoteLocator;
+
+        info.destAddr = locator.getIp4Address();
+        info.destPort = (Ip4Port_t) locator.port;
+
+        m_transport->sendFunction(info);
+
     }
-
-    // Just usable for IPv4
-    const Locator& locator = m_readerProxy.remoteLocator;
-
-    info.destAddr = locator.getIp4Address();
-    info.destPort = (Ip4Port_t) locator.port;
-
-    m_transport->sendFunction(info);
 }

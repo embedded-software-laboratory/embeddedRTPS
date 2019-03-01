@@ -87,6 +87,10 @@ namespace rtps{
             return m_numElements == SIZE;
         }
 
+        bool isEmpty(){
+            return m_numElements == 0;
+        }
+
         bool add(const TYPE& data){
             if(isFull()){
                 return false;

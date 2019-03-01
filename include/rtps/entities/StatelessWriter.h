@@ -10,6 +10,7 @@
 #include "rtps/common/types.h"
 #include "rtps/config.h"
 #include "rtps/entities/Writer.h"
+#include "rtps/storages/MemoryPool.h"
 
 namespace rtps {
 
@@ -22,6 +23,7 @@ namespace rtps {
         bool init(BuiltInTopicData attributes, TopicKind_t topicKind, ThreadPool* threadPool, NetworkDriver& driver);
 
         bool addNewMatchedReader(const ReaderProxy& newProxy) override;
+        void removeReader(const Guid& guid) override;
         void progress() override;
         const CacheChange* newChange(ChangeKind_t kind, const uint8_t* data, DataSize_t size) override;
         void unsentChangesReset() override;
@@ -40,7 +42,8 @@ namespace rtps {
         SequenceNumber_t m_lastUsedChangeSequenceNumber = {0, 0};
         SequenceNumber_t m_nextSequenceNumberToSend = {0, 1};
         HistoryCache m_history;
-        ReaderProxy m_readerProxy;
+
+        MemoryPool<ReaderProxy, Config::NUM_READER_PROXIES_PER_WRITER> m_proxies;
 
         bool isIrrelevant(ChangeKind_t kind) const;
 
