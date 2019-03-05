@@ -13,13 +13,13 @@
 #include <lwip/tcpip.h>
 #include <cmath>
 
-#ifdef HIGHTEC_TOOLCHAIN
-    #include "ethernetif.h"
+#ifdef unix
+    #include "netif/tapif.h"
 #elif defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
     #include "default_netif.h"
     #include "../pcapif.h"
 #else
-    #include "netif/tapif.h"
+    #include "ethernetif.h"
 #endif
 
 #define INIT_VERBOSE 0
@@ -47,12 +47,12 @@ static void init(void* arg){
     printf("Starting lwIP, local interface IP is %s\n", ip4addr_ntoa(&ipaddr));
 #endif
 
-#ifdef HIGHTEC_TOOLCHAIN
-    netif_add(&netif, &ipaddr, &netmask, &gw, nullptr, ethernetif_init, tcpip_input);
+#ifdef unix
+    netif_add(&netif, &ipaddr, &netmask, &gw, nullptr, tapif_init, tcpip_input);
 #elif defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
     netif_add(&netif, &ipaddr, &netmask, &gw, nullptr, pcapif_init, tcpip_input);
 #else
-    netif_add(&netif, &ipaddr, &netmask, &gw, nullptr, tapif_init, tcpip_input);
+    netif_add(&netif, &ipaddr, &netmask, &gw, nullptr, ethernetif_init, tcpip_input);
 #endif
 
     netif_set_default(&netif);
