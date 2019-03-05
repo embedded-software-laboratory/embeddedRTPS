@@ -3,5 +3,4 @@
 build
 cmake-build-debug
 cmake-build-release
-thirdParty/googletest
-thirdParty/Micro-CDR
+thirdparty/Micro-CDR/CMakeFiles
