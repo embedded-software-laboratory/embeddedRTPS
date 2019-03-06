@@ -6,7 +6,7 @@
 #ifndef RTPS_TYPES_H
 #define RTPS_TYPES_H
 
-#include <lwip/ip4_addr.h>
+#include "lwip/ip4_addr.h"
 
 #include <cstdint>
 #include <array>

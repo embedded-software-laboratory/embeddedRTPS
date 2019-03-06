@@ -7,10 +7,12 @@
 #define RTPS_RTPS_H
 
 #include "rtps/common/types.h"
-#include "rtps/ThreadPool.h"
 
 namespace rtps{
+
+#if defined(unix) || defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
     void init();
+#endif
     Time_t getCurrentTimeStamp();
 }
 

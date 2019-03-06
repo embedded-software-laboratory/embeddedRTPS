@@ -8,6 +8,7 @@
 
 #include <cstdint>
 #include <iterator>
+#include <cstring>
 
 namespace rtps{
 
