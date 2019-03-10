@@ -126,7 +126,7 @@ void ThreadPool::doReaderWork(){
 #endif
         auto isWorkToDo = m_outputQueue.moveFirstInto(packet);
         if(!isWorkToDo) {
-            //sys_msleep(1);
+            sys_msleep(1);
             continue;
         }
 
