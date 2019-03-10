@@ -5,6 +5,7 @@
 
 #include "rtps/entities/StatefullReader.h"
 #include "rtps/messages/MessageFactory.h"
+#include "rtps/utils/Lock.h"
 #include "lwip/tcpip.h"
 
 #define SFR_VERBOSE 0
