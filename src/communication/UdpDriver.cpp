@@ -72,12 +72,12 @@ bool UdpDriver::joinMultiCastGroup(ip4_addr_t addr) const {
         iret = igmp_joingroup(IP_ADDR_ANY, (&addr));
     }
 
-    if(iret != ERR_OK){;
+    if(iret != ERR_OK){
 #if UDP_DRIVER_VERBOSE
         printf("Failed to join IGMP multicast group %s\n", ipaddr_ntoa(&addr));
 #endif
         return false;
-    }else{;
+    }else{
 #if UDP_DRIVER_VERBOSE
         printf("Succesfully joined  IGMP multicast group %s\n", ipaddr_ntoa(&addr));
 #endif
