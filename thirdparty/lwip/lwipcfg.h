@@ -8,7 +8,7 @@
 #define PPP_PASSWORD  "pass"
 
 /** Define this to the index of the windows network adapter to use */
-#define PACKET_LIB_ADAPTER_NR         6
+#define PACKET_LIB_ADAPTER_NR         5
 /** Define this to the GUID of the windows network adapter to use
  * or NOT define this if you want PACKET_LIB_ADAPTER_NR to be used */
 /*#define PACKET_LIB_ADAPTER_GUID       "00000000-0000-0000-0000-000000000000"*/
