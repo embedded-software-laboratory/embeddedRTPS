@@ -67,23 +67,28 @@ void StatefullWriterT<NetworkDriver>::progress(){
 }
 
 template <class NetworkDriver>
-const rtps::CacheChange* StatefullWriterT<NetworkDriver>::newChange(ChangeKind_t kind, const uint8_t* data, DataSize_t size){
-    Lock lock{m_mutex};
-    if(m_history.isFull()){
+const rtps::CacheChange* StatefullWriterT<NetworkDriver>::newChange(ChangeKind_t kind, const uint8_t* data, DataSize_t size) {
+    if (isIrrelevant(kind)) {
         return nullptr;
     }
 
-    ++m_lastChangeSequenceNumber;
-    CacheChange change{};
-    change.kind = kind;
-    change.data.reserve(size);
-    change.data.append(data, size);
-    change.sequenceNumber = m_lastChangeSequenceNumber;
+    Lock lock{m_mutex};
 
+    // Right now we drop elements anyway because we cannot detect non-responding readers yet.
+    // if(history.isFull()){
+    //     return nullptr;
+    // }
 #if SFW_VERBOSE
     printf("StatefullWriter[%s]: Adding new data.\n", this->m_attributes.topicName);
 #endif
-    return m_history.addChange(std::move(change));
+    return m_history.addChange(data, size);
+}
+
+template <typename NetworkDriver>
+bool StatefullWriterT<NetworkDriver>::isIrrelevant(ChangeKind_t kind) const{
+    // Right now we only allow alive changes
+    //return kind == ChangeKind_t::INVALID || (m_topicKind == TopicKind_t::NO_KEY && kind != ChangeKind_t::ALIVE);
+    return kind != ChangeKind_t::ALIVE;
 }
 
 template <class NetworkDriver>

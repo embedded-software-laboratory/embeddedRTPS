@@ -8,7 +8,7 @@
 
 #include "rtps/ThreadPool.h"
 #include "rtps/storages/PBufWrapper.h"
-#include "rtps/storages/HistoryCache.h"
+#include "rtps/storages/CacheChange.h"
 #include "rtps/entities/ReaderProxy.h"
 #include "rtps/discovery/BuiltInTopicData.h"
 

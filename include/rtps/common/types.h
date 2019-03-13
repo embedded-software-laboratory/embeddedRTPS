@@ -123,6 +123,10 @@ namespace rtps{
             return high < other.high || (high == other.high && low < other.low);
         }
 
+        bool operator<=(const SequenceNumber_t& other) const{
+            return *this == other || *this < other;
+        }
+
         SequenceNumber_t& operator++(){
             ++low;
             if(low == 0){

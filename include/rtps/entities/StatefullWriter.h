@@ -9,6 +9,7 @@
 #include "rtps/entities/Writer.h"
 #include "rtps/entities/ReaderProxy.h"
 #include "rtps/storages/MemoryPool.h"
+#include "rtps/storages/SimpleHistoryCache.h"
 
 namespace rtps{
 
@@ -33,8 +34,7 @@ namespace rtps{
         NetworkDriver* m_transport;
 
         TopicKind_t m_topicKind = TopicKind_t::NO_KEY;
-        SequenceNumber_t m_lastChangeSequenceNumber = {0, 0};
-        HistoryCache m_history;
+        SimpleHistoryCache m_history;
         static const uint32_t m_heartbeatPeriodMs = 4000; // TODO
         sys_thread_t m_heartbeatThread;
         Count_t m_hbCount{1};
@@ -44,6 +44,7 @@ namespace rtps{
         void sendData(const ReaderProxy &reader, const SequenceNumber_t &sn);
         static void hbFunctionJumppad(void* thisPointer);
         void sendHeartBeat();
+        bool isIrrelevant(ChangeKind_t kind) const;
     };
 
     using StatefullWriter = StatefullWriterT<UdpDriver>;

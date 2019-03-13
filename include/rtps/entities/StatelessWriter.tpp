@@ -63,22 +63,15 @@ void StatelessWriterT<NetworkDriver>::removeReader(const Guid& guid){
 
 template <typename NetworkDriver>
 SequenceNumber_t StatelessWriterT<NetworkDriver>::getLastUsedSequenceNumber() const{
-    return m_lastUsedChangeSequenceNumber;
+    return m_history.getSeqNumMax();
 }
 
 template <typename NetworkDriver>
 const CacheChange* StatelessWriterT<NetworkDriver>::newChange(rtps::ChangeKind_t kind, const uint8_t* data, DataSize_t size) {
     if(isIrrelevant(kind)){
-        return nullptr; // TODO
+        return nullptr;
     }
     Lock lock(m_mutex);
-
-    ++m_lastUsedChangeSequenceNumber;
-    CacheChange change{};
-    change.kind = kind;
-    change.data.reserve(size);
-    change.data.append(data, size);
-    change.sequenceNumber = m_lastUsedChangeSequenceNumber;
 
     if(m_history.isFull()){
         SequenceNumber_t newMin = ++SequenceNumber_t(m_history.getSeqNumMin());
@@ -87,7 +80,7 @@ const CacheChange* StatelessWriterT<NetworkDriver>::newChange(rtps::ChangeKind_t
         }
     }
 
-    auto result = m_history.addChange(std::move(change));
+    auto result = m_history.addChange(data, size);
     if(mp_threadPool != nullptr){
         mp_threadPool->addWorkload(ThreadPool::Workload_t{this});
     }
@@ -116,7 +109,9 @@ void StatelessWriterT<NetworkDriver>::onNewAckNack(const SubmessageAckNack& /*ms
 
 template <typename NetworkDriver>
 bool StatelessWriterT<NetworkDriver>::isIrrelevant(ChangeKind_t kind) const{
-    return kind == ChangeKind_t::INVALID || (m_topicKind == TopicKind_t::NO_KEY && kind != ChangeKind_t::ALIVE);
+    // Right now we only allow alive changes
+    //return kind == ChangeKind_t::INVALID || (m_topicKind == TopicKind_t::NO_KEY && kind != ChangeKind_t::ALIVE);
+    return kind != ChangeKind_t::ALIVE;
 }
 
 template <typename NetworkDriver>

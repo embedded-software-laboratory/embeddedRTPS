@@ -15,6 +15,7 @@ target_sources(rtps
         "${CMAKE_CURRENT_LIST_DIR}/messages/MessageReceiver.cpp"
         "${CMAKE_CURRENT_LIST_DIR}/messages/MessageTypes.cpp"
         "${CMAKE_CURRENT_LIST_DIR}/storages/HistoryCache.cpp"
+        "${CMAKE_CURRENT_LIST_DIR}/storages/SimpleHistoryCache.cpp"
         "${CMAKE_CURRENT_LIST_DIR}/storages/PBufWrapper.cpp"
 )
 

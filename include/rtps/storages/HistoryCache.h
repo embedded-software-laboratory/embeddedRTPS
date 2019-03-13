@@ -9,19 +9,14 @@
 #include "rtps/common/types.h"
 #include "rtps/config.h"
 #include "rtps/storages/PBufWrapper.h"
+#include "rtps/storages/CacheChange.h"
 
 namespace rtps{
 
-    struct CacheChange{
-        ChangeKind_t kind = ChangeKind_t::INVALID;
-        SequenceNumber_t sequenceNumber = SEQUENCENUMBER_UNKNOWN;
-        PBufWrapper data{};
-
-        CacheChange() = default;
-        CacheChange(ChangeKind_t kind, SequenceNumber_t sequenceNumber)
-            : kind(kind), sequenceNumber(sequenceNumber){};
-    };
-
+    /**
+     * This class can be used when we need to invalidate data in between or the sequence numbers
+     * are not consecutive
+     */
     class HistoryCache{
     public:
         /**
@@ -42,6 +37,7 @@ namespace rtps{
         std::array<CacheChange, Config::HISTORY_SIZE + 1> m_buffer{};
         uint16_t m_head = 0;
         uint16_t m_tail = 0;
+        static_assert(sizeof(rtps::Config::HISTORY_SIZE) < sizeof(m_head), "Iterator is large enough for given size");
 
         inline void incrementHead();
         inline void incrementIterator(uint16_t& iterator) const;

@@ -11,6 +11,7 @@
 #include "rtps/config.h"
 #include "rtps/entities/Writer.h"
 #include "rtps/storages/MemoryPool.h"
+#include "rtps/storages/SimpleHistoryCache.h"
 
 namespace rtps {
 
@@ -39,9 +40,8 @@ namespace rtps {
         NetworkDriver* m_transport;
 
         TopicKind_t m_topicKind = TopicKind_t::NO_KEY;
-        SequenceNumber_t m_lastUsedChangeSequenceNumber = {0, 0};
         SequenceNumber_t m_nextSequenceNumberToSend = {0, 1};
-        HistoryCache m_history;
+        SimpleHistoryCache m_history;
 
         MemoryPool<ReaderProxy, Config::NUM_READER_PROXIES_PER_WRITER> m_proxies;
 
