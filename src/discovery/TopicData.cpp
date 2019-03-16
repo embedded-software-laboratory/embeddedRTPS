@@ -2,14 +2,19 @@
  *
  * Author: Andreas Wüstenberg (andreas.wuestenberg@rwth-aachen.de)
  */
-#include "rtps/discovery/BuiltInTopicData.h"
+#include "rtps/discovery/TopicData.h"
 #include "rtps/messages/MessageTypes.h"
 #include <cstring>
 
-using rtps::BuiltInTopicData;
+using rtps::TopicData;
 using rtps::SMElement::ParameterId;
 
-bool BuiltInTopicData::readFromUcdrBuffer(ucdrBuffer& buffer){
+
+bool TopicData::matchesTopicOf(const TopicData& other){
+	return strcmp(this->topicName, other.topicName) == 0 && strcmp(this->typeName, other.typeName) == 0;
+}
+
+bool TopicData::readFromUcdrBuffer(ucdrBuffer& buffer){
 
     while(ucdr_buffer_remaining(&buffer) >= 4){
         ParameterId pid;
@@ -59,7 +64,7 @@ bool BuiltInTopicData::readFromUcdrBuffer(ucdrBuffer& buffer){
     return ucdr_buffer_remaining(&buffer) == 0;
 }
 
-bool BuiltInTopicData::serializeIntoUcdrBuffer(ucdrBuffer& buffer) const{
+bool TopicData::serializeIntoUcdrBuffer(ucdrBuffer& buffer) const{
 	// TODO Check if buffer length is sufficient
 	const uint16_t guidSize = sizeof(GuidPrefix_t::id) + 4;
 

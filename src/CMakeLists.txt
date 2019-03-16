@@ -8,7 +8,7 @@ target_sources(rtps
         "${CMAKE_CURRENT_LIST_DIR}/discovery/SPDPAgent.cpp"
         "${CMAKE_CURRENT_LIST_DIR}/discovery/SEDPAgent.cpp"
         "${CMAKE_CURRENT_LIST_DIR}/discovery/ParticipantProxyData.cpp"
-        "${CMAKE_CURRENT_LIST_DIR}/discovery/BuiltInTopicData.cpp"
+        "${CMAKE_CURRENT_LIST_DIR}/discovery/TopicData.cpp"
         "${CMAKE_CURRENT_LIST_DIR}/entities/Domain.cpp"
         "${CMAKE_CURRENT_LIST_DIR}/entities/Participant.cpp"
         "${CMAKE_CURRENT_LIST_DIR}/entities/StatelessReader.cpp"

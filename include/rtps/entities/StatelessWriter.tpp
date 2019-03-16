@@ -24,7 +24,7 @@ using rtps::CacheChange;
 #endif
 
 template <typename NetworkDriver>
-bool StatelessWriterT<NetworkDriver>::init(BuiltInTopicData attributes, TopicKind_t topicKind, ThreadPool* threadPool, NetworkDriver& driver){
+bool StatelessWriterT<NetworkDriver>::init(TopicData attributes, TopicKind_t topicKind, ThreadPool* threadPool, NetworkDriver& driver){
     if (sys_mutex_new(&m_mutex) != ERR_OK) {
 #if SLW_VERBOSE
         Log::printLine("SFW:Failed to create mutex \n");

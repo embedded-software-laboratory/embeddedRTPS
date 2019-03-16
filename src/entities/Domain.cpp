@@ -12,7 +12,6 @@
 using rtps::Domain;
 
 Domain::Domain() : m_threadPool(receiveJumppad, this), m_transport(ThreadPool::readCallback, &m_threadPool){
-    //TODO move away from here
     m_transport.createUdpConnection(getUserMulticastPort());
     m_transport.createUdpConnection(getBuiltInMulticastPort());
     m_transport.joinMultiCastGroup(transformIP4ToU32(239, 255, 0, 1));
@@ -20,11 +19,11 @@ Domain::Domain() : m_threadPool(receiveJumppad, this), m_transport(ThreadPool::r
 
 bool Domain::start(){
     bool started = m_threadPool.startThreads();
-    if(!started){
 #if DOMAIN_VERBOSE
+    if(!started){
         printf("Domain: Failed starting threads\n");
-#endif
     }
+#endif
     return started;
 }
 
@@ -97,7 +96,7 @@ void Domain::addDefaultWriterAndReader(Participant& part) {
     StatelessWriter& spdpWriter = m_statelessWriters[m_numStatelessWriters++];
     StatelessReader& spdpReader = m_statelessReaders[m_numStatelessReaders++];
 
-    BuiltInTopicData spdpWriterAttributes;
+    TopicData spdpWriterAttributes;
     spdpWriterAttributes.topicName[0] = '\0';
     spdpWriterAttributes.typeName[0] = '\0';
     spdpWriterAttributes.reliabilityKind = ReliabilityKind_t::BEST_EFFORT;
@@ -116,7 +115,7 @@ void Domain::addDefaultWriterAndReader(Participant& part) {
     StatefullWriter& sedpSubWriter = m_statefullWriters[m_numStatefullWriters++];
 
     // Prepare attributes
-    BuiltInTopicData sedpAttributes;
+    TopicData sedpAttributes;
     sedpAttributes.topicName[0] = '\0';
     sedpAttributes.typeName[0] = '\0';
     sedpAttributes.reliabilityKind = ReliabilityKind_t::RELIABLE;
@@ -155,7 +154,7 @@ void Domain::registerPort(Participant& part){
 
 rtps::Writer* Domain::createWriter(Participant& part, const char* topicName, const char* typeName, bool reliable){
     // TODO Distinguish WithKey and NoKey (Also changes EntityKind)
-    BuiltInTopicData attributes;
+    TopicData attributes;
 
     if(strlen(topicName) > Config::MAX_TOPICNAME_LENGTH || strlen(typeName) > Config::MAX_TYPENAME_LENGTH){
         return nullptr;
@@ -199,7 +198,7 @@ rtps::Writer* Domain::createWriter(Participant& part, const char* topicName, con
 
 rtps::Reader* Domain::createReader(Participant& part, const char* topicName, const char* typeName, bool reliable){
     // TODO Distinguish WithKey and NoKey (Also changes EntityKind)
-    BuiltInTopicData attributes;
+    TopicData attributes;
 
     if(strlen(topicName) > Config::MAX_TOPICNAME_LENGTH || strlen(typeName) > Config::MAX_TYPENAME_LENGTH){
         return nullptr;

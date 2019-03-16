@@ -16,7 +16,7 @@ namespace rtps{
     template <class NetworkDriver>
     class StatefullWriterT final : public Writer{
     public:
-        bool init(BuiltInTopicData attributes, TopicKind_t topicKind, ThreadPool* threadPool, UdpDriver& driver);
+        bool init(TopicData attributes, TopicKind_t topicKind, ThreadPool* threadPool, UdpDriver& driver);
 
         bool addNewMatchedReader(const ReaderProxy& newProxy) override;
         void removeReader(const Guid& guid) override;

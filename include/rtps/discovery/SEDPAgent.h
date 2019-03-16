@@ -6,7 +6,7 @@
 #ifndef RTPS_SEDPAGENT_H
 #define RTPS_SEDPAGENT_H
 
-#include "rtps/discovery/BuiltInTopicData.h"
+#include "rtps/discovery/TopicData.h"
 #include "rtps/discovery/BuiltInEndpoints.h"
 
 namespace rtps{

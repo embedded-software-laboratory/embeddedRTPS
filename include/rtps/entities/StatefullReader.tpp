@@ -17,7 +17,7 @@
 using rtps::StatefullReaderT;
 
 template <class NetworkDriver>
-void StatefullReaderT<NetworkDriver>::init(const BuiltInTopicData& attributes, NetworkDriver& driver){
+void StatefullReaderT<NetworkDriver>::init(const TopicData& attributes, NetworkDriver& driver){
     m_attributes = attributes;
     m_transport = &driver;
     m_packetInfo.srcPort = attributes.unicastLocator.port;

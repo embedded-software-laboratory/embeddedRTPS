@@ -45,10 +45,10 @@ namespace rtps{
 
         //! (Probably) Thread safe if writers cannot be removed
         Writer* getWriter(EntityId_t id) const;
-        Writer* getWriter(const char* topic, const char* type) const;
+        Writer* getMatchingWriter(const TopicData& topicData) const;
         //! (Probably) Thread safe if readers cannot be removed
         Reader* getReader(EntityId_t id) const;
-        Reader* getReader(const char* topic, const char* type) const;
+        Reader* getMatchingReader(const TopicData& topicData) const;
 
         bool addNewRemoteParticipant(ParticipantProxyData& remotePart);
         const ParticipantProxyData* findRemoteParticipant(const GuidPrefix_t& prefix) const;

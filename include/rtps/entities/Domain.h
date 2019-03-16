@@ -24,8 +24,6 @@ namespace rtps{
         bool start();
         void stop();
 
-        static void receiveJumppad(void* callee, const PacketInfo& packet);
-
         Participant* createParticipant();
         Writer* createWriter(Participant& part, const char* topicName, const char* typeName, bool reliable);
         Reader* createReader(Participant& part, const char* topicName, const char* typeName, bool reliable);
@@ -50,6 +48,7 @@ namespace rtps{
         GuidPrefix_t generateGuidPrefix(ParticipantId_t id) const;
         void addDefaultWriterAndReader(Participant& part);
         void registerPort(Participant& part);
+        static void receiveJumppad(void* callee, const PacketInfo& packet);
     };
 }
 

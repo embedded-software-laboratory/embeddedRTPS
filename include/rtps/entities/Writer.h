@@ -10,13 +10,13 @@
 #include "rtps/storages/PBufWrapper.h"
 #include "rtps/storages/CacheChange.h"
 #include "rtps/entities/ReaderProxy.h"
-#include "rtps/discovery/BuiltInTopicData.h"
+#include "rtps/discovery/TopicData.h"
 
 namespace rtps{
 
     class Writer{
     public:
-        BuiltInTopicData m_attributes;
+        TopicData m_attributes;
         virtual bool addNewMatchedReader(const ReaderProxy& newProxy) = 0;
         virtual void removeReader(const Guid& guid) = 0;
 

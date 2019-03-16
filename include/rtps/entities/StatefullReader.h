@@ -20,7 +20,7 @@ namespace rtps{
     class StatefullReaderT : public Reader{
     public:
 
-        void init(const BuiltInTopicData& attributes, NetworkDriver& driver);
+        void init(const TopicData& attributes, NetworkDriver& driver);
         void newChange(ReaderCacheChange& cacheChange) override;
         void registerCallback(ddsReaderCallback_fp cb, void* callee) override;
         bool addNewMatchedWriter(const WriterProxy& newProxy) override;

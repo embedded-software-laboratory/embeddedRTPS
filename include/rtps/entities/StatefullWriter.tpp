@@ -17,7 +17,7 @@ using rtps::StatefullWriterT;
 #endif
 
 template <class NetworkDriver>
-bool StatefullWriterT<NetworkDriver>::init(BuiltInTopicData attributes, TopicKind_t topicKind, ThreadPool* threadPool, UdpDriver& driver){
+bool StatefullWriterT<NetworkDriver>::init(TopicData attributes, TopicKind_t topicKind, ThreadPool* threadPool, UdpDriver& driver){
     if (sys_mutex_new(&m_mutex) != ERR_OK) {
 #if SFW_VERBOSE
         printf("StatefullWriter: Failed to create mutex.\n");
@@ -217,9 +217,6 @@ void StatefullWriterT<NetworkDriver>::sendHeartBeat() {
 
         MessageFactory::addHeartbeat(info.buffer, m_attributes.endpointGuid.entityId,
                                      proxy.remoteReaderGuid.entityId, firstSN, lastSN, m_hbCount);
-
-        // Just usable for IPv4
-        const Locator &locator = getBuiltInMulticastLocator();
 
         info.destAddr = proxy.remoteLocator.getIp4Address();
         info.destPort = proxy.remoteLocator.port;

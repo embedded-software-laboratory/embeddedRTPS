@@ -9,7 +9,7 @@
 #include "rtps/common/types.h"
 #include "rtps/config.h"
 #include "rtps/messages/MessageTypes.h"
-#include "rtps/rtps.h"
+#include "rtps/utils/sysFunctions.h"
 
 #include <cstdint>
 #include <array>

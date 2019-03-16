@@ -10,7 +10,7 @@ using rtps::StatelessReader;
 #define SLR_VERBOSE 0
 
 
-void StatelessReader::init(const BuiltInTopicData& attributes){
+void StatelessReader::init(const TopicData& attributes){
     m_attributes = attributes;
 }
 

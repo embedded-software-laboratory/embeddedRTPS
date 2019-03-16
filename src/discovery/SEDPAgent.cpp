@@ -7,7 +7,7 @@
 #include "rtps/entities/Reader.h"
 #include "rtps/entities/Writer.h"
 #include "rtps/entities/Participant.h"
-#include "rtps/discovery/BuiltInTopicData.h"
+#include "rtps/discovery/TopicData.h"
 #include "rtps/messages/MessageTypes.h"
 #include "ucdr/microcdr.h"
 
@@ -55,9 +55,9 @@ void SEDPAgent::onNewPublisher(ReaderCacheChange& change){
     ucdrBuffer cdrBuffer;
     ucdr_init_buffer(&cdrBuffer, m_buffer, change.size);
 
-    BuiltInTopicData topicData;
+    TopicData topicData;
     if(topicData.readFromUcdrBuffer(cdrBuffer)){
-        Reader* reader = m_part->getReader(topicData.topicName, topicData.typeName);
+        Reader* reader = m_part->getMatchingReader(topicData);
         if(reader == nullptr){
 #if SEDP_VERBOSE
             printf("SEDPAgent: Couldn't find reader for new Publisher[%s, %s]\n", topicData.topicName, topicData.typeName);
@@ -93,9 +93,9 @@ void SEDPAgent::onNewSubscriber(ReaderCacheChange& change){
     ucdrBuffer cdrBuffer;
     ucdr_init_buffer(&cdrBuffer, m_buffer, change.size);
 
-    BuiltInTopicData topicData;
+    TopicData topicData;
     if(topicData.readFromUcdrBuffer(cdrBuffer)){
-        Writer* writer = m_part->getWriter(topicData.topicName, topicData.typeName);
+        Writer* writer = m_part->getMatchingWriter(topicData);
         if(writer == nullptr) {
 #if SEDP_VERBOSE
             printf("SEDPAgent: Couldn't find writer for new subscriber[%s, %s]\n", topicData.topicName, topicData.typeName);
