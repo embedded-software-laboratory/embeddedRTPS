@@ -47,6 +47,24 @@ std::array<uint8_t, 3> Participant::getNextUserEntityKey(){
     return result;
 }
 
+bool Participant::registerOnNewPublisherMatchedCallback(void (*callback)(void* arg), void* args){
+    if(!m_hasBuilInEndpoints){
+        return false;
+    }
+
+    m_sedpAgent.registerOnNewPublisherMatchedCallback(callback, args);
+    return true;
+}
+
+bool Participant::registerOnNewSubscriberMatchedCallback(void (*callback)(void* arg), void* args){
+    if(!m_hasBuilInEndpoints){
+        return false;
+    }
+
+    m_sedpAgent.registerOnNewSubscriberMatchedCallback(callback, args);
+    return true;
+}
+
 rtps::Writer* Participant::addWriter(Writer* pWriter){
     if(pWriter != nullptr && m_numWriters != m_writers.size()){
         m_writers[m_numWriters++] = pWriter;

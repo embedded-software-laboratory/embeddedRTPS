@@ -15,8 +15,7 @@
 
 using rtps::SEDPAgent;
 
-void SEDPAgent::init(Participant& part, BuiltInEndpoints endpoints){
-    m_part = &part;
+void SEDPAgent::init(Participant& part, const BuiltInEndpoints& endpoints){
     // TODO move
     if(sys_mutex_new(&m_mutex) != ERR_OK){
 #if SEDP_VERBOSE
@@ -25,10 +24,27 @@ void SEDPAgent::init(Participant& part, BuiltInEndpoints endpoints){
         return;
     }
 
+    m_part = &part;
     m_endpoints = endpoints;
-    endpoints.sedpPubReader->registerCallback(receiveCallbackPublisher, this);
-    endpoints.sedpSubReader->registerCallback(receiveCallbackSubscriber, this);
+    if(m_endpoints.sedpPubReader != nullptr){
+        m_endpoints.sedpPubReader->registerCallback(receiveCallbackPublisher, this);
+    }
+    if(m_endpoints.sedpSubReader != nullptr){
+        m_endpoints.sedpSubReader->registerCallback(receiveCallbackSubscriber, this);
+    }
 }
+
+
+void SEDPAgent::registerOnNewPublisherMatchedCallback(void (*callback)(void* arg), void* args){
+    mfp_onNewPublisherCallback = callback;
+    m_onNewPublisherArgs = args;
+}
+
+void SEDPAgent::registerOnNewSubscriberMatchedCallback(void (*callback)(void* arg), void* args){
+    mfp_onNewSubscriberCallback = callback;
+    m_onNewSubscriberArgs = args;
+}
+
 
 void SEDPAgent::receiveCallbackPublisher(void* callee, ReaderCacheChange& cacheChange){
     auto agent = static_cast<SEDPAgent*>(callee);
@@ -57,16 +73,21 @@ void SEDPAgent::onNewPublisher(ReaderCacheChange& change){
 
     TopicData topicData;
     if(topicData.readFromUcdrBuffer(cdrBuffer)){
-        Reader* reader = m_part->getMatchingReader(topicData);
-        if(reader == nullptr){
+        onNewPublisher(topicData);
+    }
+}
+
+void SEDPAgent::onNewPublisher(const TopicData& writerData) {
+    Reader* reader = m_part->getMatchingReader(writerData);
+    if(reader == nullptr){
 #if SEDP_VERBOSE
-            printf("SEDPAgent: Couldn't find reader for new Publisher[%s, %s]\n", topicData.topicName, topicData.typeName);
+        printf("SEDPAgent: Couldn't find reader for new Publisher[%s, %s]\n", topicData.topicName, topicData.typeName);
 #endif
-            return;
-        }
-        // TODO check policies
+        return;
+    }
+    // TODO check policies
 #if SEDP_VERBOSE
-        printf("Found a new ");
+    printf("Found a new ");
         if(topicData.reliabilityKind == ReliabilityKind_t::RELIABLE){
             printf("reliable ");
         }else{
@@ -74,7 +95,9 @@ void SEDPAgent::onNewPublisher(ReaderCacheChange& change){
         }
         printf("publisher\n");
 #endif
-        reader->addNewMatchedWriter(WriterProxy{topicData.endpointGuid, topicData.unicastLocator});
+    reader->addNewMatchedWriter(WriterProxy{writerData.endpointGuid, writerData.unicastLocator});
+    if(mfp_onNewPublisherCallback != nullptr) {
+        mfp_onNewPublisherCallback(m_onNewPublisherArgs);
     }
 }
 
@@ -95,17 +118,22 @@ void SEDPAgent::onNewSubscriber(ReaderCacheChange& change){
 
     TopicData topicData;
     if(topicData.readFromUcdrBuffer(cdrBuffer)){
-        Writer* writer = m_part->getMatchingWriter(topicData);
-        if(writer == nullptr) {
-#if SEDP_VERBOSE
-            printf("SEDPAgent: Couldn't find writer for new subscriber[%s, %s]\n", topicData.topicName, topicData.typeName);
-#endif
-            return;
-        }
+        onNewSubscriber(topicData);
+    }
+}
 
-        // TODO check policies
+void SEDPAgent::onNewSubscriber(const TopicData& readerData) {
+    Writer* writer = m_part->getMatchingWriter(readerData);
+    if(writer == nullptr) {
 #if SEDP_VERBOSE
-        printf("Found a new ");
+        printf("SEDPAgent: Couldn't find writer for new subscriber[%s, %s]\n", topicData.topicName, topicData.typeName);
+#endif
+        return;
+    }
+
+    // TODO check policies
+#if SEDP_VERBOSE
+    printf("Found a new ");
         if(topicData.reliabilityKind == ReliabilityKind_t::RELIABLE){
             printf("reliable ");
         }else{
@@ -113,11 +141,16 @@ void SEDPAgent::onNewSubscriber(ReaderCacheChange& change){
         }
         printf("Subscriber\n");
 #endif
-        writer->addNewMatchedReader(ReaderProxy{topicData.endpointGuid, topicData.unicastLocator});
+    writer->addNewMatchedReader(ReaderProxy{readerData.endpointGuid, readerData.unicastLocator});
+    if(mfp_onNewSubscriberCallback != nullptr){
+        mfp_onNewSubscriberCallback(m_onNewSubscriberArgs);
     }
 }
 
 void SEDPAgent::addWriter(Writer& writer){
+    if(m_endpoints.sedpPubWriter == nullptr){
+        return;
+    }
     EntityKind_t writerKind = writer.m_attributes.endpointGuid.entityId.entityKind;
     if(writerKind == EntityKind_t::BUILD_IN_WRITER_WITH_KEY || writerKind == EntityKind_t::BUILD_IN_WRITER_WITHOUT_KEY){
         return; // No need to announce builtin endpoints
@@ -138,6 +171,10 @@ void SEDPAgent::addWriter(Writer& writer){
 }
 
 void SEDPAgent::addReader(Reader& reader){
+    if(m_endpoints.sedpSubWriter == nullptr){
+        return;
+    }
+
     EntityKind_t readerKind = reader.m_attributes.endpointGuid.entityId.entityKind;
     if(readerKind == EntityKind_t::BUILD_IN_READER_WITH_KEY || readerKind == EntityKind_t::BUILD_IN_READER_WITHOUT_KEY){
         return; // No need to announce builtin endpoints

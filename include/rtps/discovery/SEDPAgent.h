@@ -18,15 +18,25 @@ namespace rtps{
 
     class SEDPAgent{
     public:
-        void init(Participant& part, BuiltInEndpoints endpoints);
+        void init(Participant& part, const BuiltInEndpoints& endpoints);
         void addWriter(Writer& writer);
         void addReader(Reader& reader);
+        void registerOnNewPublisherMatchedCallback(void (*callback)(void* arg), void* args);
+        void registerOnNewSubscriberMatchedCallback(void (*callback)(void* arg), void* args);
+
+    protected: // For testing purposes
+        void onNewPublisher(const TopicData& writerData);
+        void onNewSubscriber(const TopicData& writerData);
 
     private:
         Participant* m_part;
         sys_mutex_t m_mutex;
-        uint8_t m_buffer[300];
+        uint8_t m_buffer[300]; // TODO check size
         BuiltInEndpoints m_endpoints;
+        void (*mfp_onNewPublisherCallback)(void* arg) = nullptr;
+        void* m_onNewPublisherArgs = nullptr;
+        void (*mfp_onNewSubscriberCallback)(void* arg) = nullptr;
+        void* m_onNewSubscriberArgs = nullptr;
 
         static void receiveCallbackPublisher(void* callee, ReaderCacheChange& cacheChange);
         static void receiveCallbackSubscriber(void* callee, ReaderCacheChange& cacheChange);

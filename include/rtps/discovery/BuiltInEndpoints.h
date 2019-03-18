@@ -11,14 +11,16 @@
 #include "rtps/entities/StatefullReader.h"
 #include "rtps/entities/Writer.h"
 
+
 namespace rtps{
+
     struct BuiltInEndpoints{
-        StatelessWriter* spdpWriter;
-        StatelessReader* spdpReader;
-        Writer* sedpPubWriter;
-        StatefullReader* sedpPubReader;
-        Writer* sedpSubWriter;
-        StatefullReader* sedpSubReader;
+        Writer* spdpWriter = nullptr;
+        Reader* spdpReader = nullptr;
+        Writer* sedpPubWriter = nullptr;
+        Reader* sedpPubReader = nullptr;
+        Writer* sedpSubWriter = nullptr;
+        Reader* sedpSubReader = nullptr;
     };
 }
 

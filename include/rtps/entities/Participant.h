@@ -38,6 +38,10 @@ namespace rtps{
 
         std::array<uint8_t, 3> getNextUserEntityKey();
 
+        // Actually the only two function that should be used by the user
+        bool registerOnNewPublisherMatchedCallback(void (*callback)(void* arg), void* args);
+        bool registerOnNewSubscriberMatchedCallback(void (*callback)(void* arg), void* args);
+
         //! Not-thread-safe function to add a writer
         Writer* addWriter(Writer* writer);
         //! Not-thread-safe function to add a reader
