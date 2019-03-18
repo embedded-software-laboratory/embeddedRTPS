@@ -22,6 +22,16 @@ using rtps::ThreadPool;
 ThreadPool::ThreadPool(receiveJumppad_fp receiveCallback, void* callee)
     : m_receiveJumppad(receiveCallback), m_callee(callee){
 
+    if(!m_inputQueue.init() || !m_outputQueue.init()){
+        return;
+    }
+    err_t inputErr = sys_sem_new(&m_inputSem, 0);
+    err_t outputErr = sys_sem_new(&m_outputSem, 0);
+#if THREAD_POOL_VERBOSE
+    if(inputErr != ERR_OK || outputErr != ERR_OK){
+        printf("ThreadPool: Failed to create Semaphores.\n");
+    }
+#endif
 }
 
 ThreadPool::~ThreadPool(){
@@ -29,13 +39,20 @@ ThreadPool::~ThreadPool(){
         stopThreads();
         sys_msleep(500); // Quick fix for tests. The dtor should never be called in real application.
     }
+
+    if(sys_sem_valid(&m_inputSem)){
+        sys_sem_free(&m_inputSem);
+    }
+    if(sys_sem_valid(&m_outputSem)){
+        sys_sem_free(&m_outputSem);
+    }
 }
 
 bool ThreadPool::startThreads(){
     if(m_running){
         return true;
     }
-    if(!m_inputQueue.init() || !m_outputQueue.init()){
+    if(!sys_sem_valid(&m_inputSem) || !sys_sem_valid(&m_outputSem)){
         return false;
     }
 
@@ -64,6 +81,15 @@ void ThreadPool::clearQueues(){
 
 void ThreadPool::addWorkload(Workload_t workload){
     m_inputQueue.moveElementIntoBuffer(std::move(workload));
+    sys_sem_signal(&m_outputSem);
+}
+
+bool ThreadPool::addNewPacket(PacketInfo&& packet){
+    bool res = m_outputQueue.moveElementIntoBuffer(std::move(packet));
+    if(res){
+        sys_sem_signal(&m_inputSem);
+    }
+    return res;
 }
 
 void ThreadPool::writerThreadFunction(void* arg){
@@ -83,7 +109,7 @@ void ThreadPool::doWriterWork(){
         Workload_t workload;
         auto isWorkToDo = m_inputQueue.moveFirstInto(workload);
         if(!isWorkToDo){
-            sys_msleep(1);
+            sys_sem_wait(&m_outputSem);
             continue;
         }
 
@@ -126,7 +152,7 @@ void ThreadPool::doReaderWork(){
 #endif
         auto isWorkToDo = m_outputQueue.moveFirstInto(packet);
         if(!isWorkToDo) {
-            sys_msleep(1);
+            sys_sem_wait(&m_inputSem);
             continue;
         }
 

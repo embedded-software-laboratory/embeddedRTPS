@@ -147,32 +147,45 @@ void StatefullWriterT<NetworkDriver>::onNewAckNack(const SubmessageAckNack& msg)
 
 template <class NetworkDriver>
 void StatefullWriterT<NetworkDriver>::sendData(const ReaderProxy &reader, const SequenceNumber_t &sn){
-    PacketInfo info;
-    info.srcPort = m_packetInfo.srcPort;
-
-    MessageFactory::addHeader(info.buffer, m_attributes.endpointGuid.prefix);
-    MessageFactory::addSubMessageTimeStamp(info.buffer);
-
+    SequenceNumber_t max_sn;
     {
         Lock lock(m_mutex);
-        const CacheChange* next = m_history.getChangeBySN(sn);
-        if(next == nullptr){
-#if SFW_VERBOSE
-            printf("StatefullWriter[%s]: Couldn't get a CacheChange with SN (%i,%u)\n", &this->m_attributes.topicName[0], sn.high, sn.low);
-#endif
-            return;
-        }
-        MessageFactory::addSubMessageData(info.buffer, next->data, false, next->sequenceNumber, m_attributes.endpointGuid.entityId,
-                                          reader.remoteReaderGuid.entityId);
+        max_sn = m_history.getSeqNumMax();
     }
 
-    // Just usable for IPv4
-    const Locator& locator = reader.remoteLocator;
+    // send the missing one and all following
+    for(SequenceNumber_t s = sn; s < max_sn; ++s){
 
-    info.destAddr = locator.getIp4Address();
-    info.destPort = (Ip4Port_t) locator.port;
+        PacketInfo info;
+        info.srcPort = m_packetInfo.srcPort;
 
-    m_transport->sendFunction(info);
+        MessageFactory::addHeader(info.buffer, m_attributes.endpointGuid.prefix);
+        MessageFactory::addSubMessageTimeStamp(info.buffer);
+
+        // Just usable for IPv4
+        const Locator& locator = reader.remoteLocator;
+
+        info.destAddr = locator.getIp4Address();
+        info.destPort = (Ip4Port_t) locator.port;
+
+        {
+            Lock lock(m_mutex);
+            const CacheChange* next = m_history.getChangeBySN(sn);
+            if(next == nullptr){
+    #if SFW_VERBOSE
+                printf("StatefullWriter[%s]: Couldn't get a CacheChange with SN (%i,%u)\n", &this->m_attributes.topicName[0], sn.high, sn.low);
+    #endif
+                continue;
+            }
+            MessageFactory::addSubMessageData(info.buffer, next->data, false, next->sequenceNumber, m_attributes.endpointGuid.entityId,
+                                              reader.remoteReaderGuid.entityId);
+        }
+
+
+        m_transport->sendFunction(info);
+
+    }
+
 }
 
 template <class NetworkDriver>
