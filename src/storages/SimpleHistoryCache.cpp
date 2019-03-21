@@ -79,10 +79,9 @@ const rtps::CacheChange* SimpleHistoryCache::getChangeBySN(SequenceNumber_t sn) 
     uint16_t pos = m_tail + static_cast<uint16_t>(sn.low - minSN.low);
 
     // Diff is smaller than the size of the array -> max one overflow
-    if(pos > m_buffer.size()){
+    if(pos >= m_buffer.size()){
         pos -= m_buffer.size();
     }
-
     return &m_buffer[pos];
 }
 

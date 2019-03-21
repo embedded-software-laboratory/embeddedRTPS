@@ -16,8 +16,15 @@ using rtps::StatefullWriterT;
 #include "rtps/utils/printutils.h"
 #endif
 
+
 template <class NetworkDriver>
-bool StatefullWriterT<NetworkDriver>::init(TopicData attributes, TopicKind_t topicKind, ThreadPool* threadPool, UdpDriver& driver){
+StatefullWriterT<NetworkDriver>::~StatefullWriterT(){
+    m_running = false;
+    sys_msleep(10); // Required for tests/ Join currently not available
+}
+
+template <class NetworkDriver>
+bool StatefullWriterT<NetworkDriver>::init(TopicData attributes, TopicKind_t topicKind, ThreadPool* /*threadPool*/, NetworkDriver& driver){
     if (sys_mutex_new(&m_mutex) != ERR_OK) {
 #if SFW_VERBOSE
         printf("StatefullWriter: Failed to create mutex.\n");
@@ -154,7 +161,7 @@ void StatefullWriterT<NetworkDriver>::sendData(const ReaderProxy &reader, const 
     }
 
     // send the missing one and all following
-    for(SequenceNumber_t s = sn; s < max_sn; ++s){
+    for(SequenceNumber_t s = sn; s <= max_sn; ++s){
 
         PacketInfo info;
         info.srcPort = m_packetInfo.srcPort;
@@ -181,7 +188,6 @@ void StatefullWriterT<NetworkDriver>::sendData(const ReaderProxy &reader, const 
                                               reader.remoteReaderGuid.entityId);
         }
 
-
         m_transport->sendFunction(info);
 
     }
@@ -190,9 +196,14 @@ void StatefullWriterT<NetworkDriver>::sendData(const ReaderProxy &reader, const 
 
 template <class NetworkDriver>
 void StatefullWriterT<NetworkDriver>::hbFunctionJumppad(void* thisPointer){
-    auto writer = static_cast<StatefullWriter*>(thisPointer);
-    while(1){
-        writer->sendHeartBeat();
+    auto* writer = static_cast<StatefullWriterT<NetworkDriver>*>(thisPointer);
+    writer->sendHeartBeatLoop();
+}
+
+template <class NetworkDriver>
+void StatefullWriterT<NetworkDriver>::sendHeartBeatLoop(){
+    while(m_running){
+        sendHeartBeat();
         sys_msleep(m_heartbeatPeriodMs);
     }
 }

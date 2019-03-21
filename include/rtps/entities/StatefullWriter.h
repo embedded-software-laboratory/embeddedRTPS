@@ -16,7 +16,9 @@ namespace rtps{
     template <class NetworkDriver>
     class StatefullWriterT final : public Writer{
     public:
-        bool init(TopicData attributes, TopicKind_t topicKind, ThreadPool* threadPool, UdpDriver& driver);
+
+        ~StatefullWriterT();
+        bool init(TopicData attributes, TopicKind_t topicKind, ThreadPool* threadPool, NetworkDriver& driver);
 
         bool addNewMatchedReader(const ReaderProxy& newProxy) override;
         void removeReader(const Guid& guid) override;
@@ -39,10 +41,13 @@ namespace rtps{
         sys_thread_t m_heartbeatThread;
         Count_t m_hbCount{1};
 
+        bool m_running = true;
+
         MemoryPool<ReaderProxy, Config::NUM_READER_PROXIES_PER_WRITER> m_proxies;
 
         void sendData(const ReaderProxy &reader, const SequenceNumber_t &sn);
         static void hbFunctionJumppad(void* thisPointer);
+        void sendHeartBeatLoop();
         void sendHeartBeat();
         bool isIrrelevant(ChangeKind_t kind) const;
     };

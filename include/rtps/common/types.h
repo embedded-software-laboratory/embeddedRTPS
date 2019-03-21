@@ -144,6 +144,12 @@ namespace rtps{
 
     const uint32_t SNS_NUM_BITS = 32;
     struct SequenceNumberSet{
+
+        SequenceNumberSet() = default;
+        explicit SequenceNumberSet(const SequenceNumber_t& firstMissing) : base(firstMissing){
+
+        }
+
         SequenceNumber_t base = {0,0};
         // Cannot be static because of packed
         uint32_t numBits = SNS_NUM_BITS;

@@ -17,6 +17,7 @@ namespace rtps{
      * of arbitrary changes is not possible. However, this is in principle easy to add by changing
      * the ChangeKind and dropping it when passing it during deleting of other sequence numbers
      */
+
     class SimpleHistoryCache{
     public:
         SimpleHistoryCache() = default;
