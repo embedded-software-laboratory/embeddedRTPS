@@ -32,7 +32,6 @@ bool StatefullWriterT<NetworkDriver>::init(TopicData attributes, TopicKind_t top
         return false;
     }
 
-    mp_threadPool = threadPool;
     m_transport = &driver;
     m_attributes = attributes;
     m_topicKind = topicKind;
