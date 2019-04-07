@@ -2,14 +2,20 @@ import pandas as pd
 import numpy as np
 import math
 import os.path
+import sys
+import re
 
 '''
 TODOS:
 - Care about lost packets using STM Matched
 '''
+file_ending = 'Bytes.csv'
+file_matcher = re.compile(r"^\d+Bytes.csv$") # Names are like 1024Byte.csv
+
+MAX_NUM_SAMPLES = 10000
 
 
-def print_stats_for(path):
+def print_stats_for(path, num_bytes):
     # file = pd.read_csv("1024Byte.csv", skipinitialspace=True,
     #                                   usecols=['Time[s]', 'STM RRT', 'STM Matched', 'Aurix matched'])
     if not os.path.isfile(path):
@@ -31,6 +37,8 @@ def print_stats_for(path):
     durations = []
     # Squash two rows to calculate RTT
     for row in range(row_counter, len(data) - 1, 2):
+        if len(durations) >= MAX_NUM_SAMPLES:
+            break
         duration_in_sec = data.iloc[row+1][0] - data.iloc[row][0]
         duration_in_us = duration_in_sec*1000000
         durations.append(round(duration_in_us, 0))
@@ -44,19 +52,62 @@ def print_stats_for(path):
     q_90 = math.ceil(np.quantile(durations, .90))
     q_99 = math.ceil(np.quantile(durations, .99))
     q_99_9 = math.ceil(np.quantile(durations, .999))
-    print('%8u,%8.2f,%8.2f,%8.2f,%8.2f,%8.2f,%8.2f,%8.2f,%8.2f ' %
-          (samples, std_dev, mean_val, min_dur, q_50, q_90, q_99, q_99_9, max_dur), flush=True)
+    result = '%8u,%8u,%8.2f,%8.2f,%8.2f,%8.2f,%8.2f,%8.2f,%8.2f,%8.2f ' % (
+          num_bytes, samples, std_dev, mean_val, min_dur, q_50, q_90, q_99, q_99_9, max_dur)
+    print(result, flush=True)
+    return result
 
+def evaluate_file(path, filename, file_handle):
+	if not file_matcher.match(filename):
+		return
+	num_bytes = int(filename.split(file_ending, 1)[0])
+	result = print_stats_for(os.path.join(path, filename), num_bytes)
+	file_handle.write(result + '\n')
+    
+def get_natural_keys(filename):
+	splitted = filename.split(file_ending, 1)
+	return int(splitted[0]), file_ending
 
 def main():
-    tested_num_bytes = [16, 32, 64, 128, 256, 512, 1024]
-    print('   Bytes, Samples,   stdev,    mean,     min,     50%,     90%,     99%,  99.99%,     max')
+	args = sys.argv
+	if len(args) < 2:
+		print("Need at least one path.\n")
+		return
 
-    for num_bytes in tested_num_bytes:
-        print('%8u,' % num_bytes, end='')
-        print_stats_for(str(num_bytes) + 'Bytes.csv')
+	cwd = os.getcwd()
 
-    print("Done")
+	for path in args[1:]:
+		print("Processing: " + path)
+		header = '   Bytes, Samples,   stdev,    mean,     min,     50%,     90%,     99%,  99.99%,     max'
+		print(header)
+
+		if path.startswith('./'):
+			path = path.split('./', 1)[1]
+			path = os.path.join(cwd, path)
+
+		if os.path.isdir(path):
+			output_path = os.path.join(path, 'results')
+			files = os.listdir(path)
+		elif os.path.isfile(path):
+			path, filename = os.path.split(path)
+			output_path = os.path.join(path, 'results')
+			files = [filename]
+
+		file_handle = open(output_path, 'w+')
+		file_handle.write(header + '\n')
+        
+		files = [f for f in files if file_matcher.match(f)]
+        
+        # Sort with increasing size
+		files.sort(key=get_natural_keys)
+
+		for file in files:
+			evaluate_file(path, file, file_handle)
+
+		file_handle.close()
+        
+	print("Done")
+
 
 
 if __name__ == "__main__":
