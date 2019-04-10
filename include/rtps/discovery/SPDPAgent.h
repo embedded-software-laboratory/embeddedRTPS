@@ -37,8 +37,8 @@ namespace rtps{
 
         sys_mutex_t m_mutex;
         bool initialized = false;
-        static void receiveCallback(void* callee, ReaderCacheChange& cacheChange);
-        void handleSPDPPackage(ReaderCacheChange& cacheChange);
+        static void receiveCallback(void* callee, const ReaderCacheChange& cacheChange);
+        void handleSPDPPackage(const ReaderCacheChange& cacheChange);
         void configureEndianessAndOptions(ucdrBuffer& buffer);
         void processProxyData();
         void addProxiesForBuiltInEndpoints();

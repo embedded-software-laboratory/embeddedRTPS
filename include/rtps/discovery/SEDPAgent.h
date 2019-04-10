@@ -38,10 +38,10 @@ namespace rtps{
         void (*mfp_onNewSubscriberCallback)(void* arg) = nullptr;
         void* m_onNewSubscriberArgs = nullptr;
 
-        static void receiveCallbackPublisher(void* callee, ReaderCacheChange& cacheChange);
-        static void receiveCallbackSubscriber(void* callee, ReaderCacheChange& cacheChange);
-        void onNewPublisher(ReaderCacheChange &change);
-        void onNewSubscriber(ReaderCacheChange &change);
+        static void receiveCallbackPublisher(void* callee, const ReaderCacheChange& cacheChange);
+        static void receiveCallbackSubscriber(void* callee, const ReaderCacheChange& cacheChange);
+        void onNewPublisher(const ReaderCacheChange& change);
+        void onNewSubscriber(const ReaderCacheChange& change);
 
     };
 }

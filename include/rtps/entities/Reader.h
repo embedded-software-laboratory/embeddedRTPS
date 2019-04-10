@@ -30,7 +30,16 @@ namespace rtps{
         ReaderCacheChange(ChangeKind_t kind, Guid& writerGuid, SequenceNumber_t sn, const uint8_t* data, DataSize_t size)
             : data(data), kind(kind), size(size), writerGuid(writerGuid), sn(sn){};
 
-        bool copyInto(uint8_t* buffer, DataSize_t destSize){
+        ~ReaderCacheChange() = default; // No need to free data. It's not owned by this object
+        // Not allowed because this class doesn't own the ptr and the user isn't allowed to use it outside the
+        // Scope of the callback
+        ReaderCacheChange(const ReaderCacheChange& other) = delete;
+        ReaderCacheChange(ReaderCacheChange&& other) = delete;
+        ReaderCacheChange& operator=(const ReaderCacheChange &other) = delete;
+        ReaderCacheChange& operator=(ReaderCacheChange&& other) = delete;
+
+
+        bool copyInto(uint8_t* buffer, DataSize_t destSize) const{
             if(destSize < size){
                 return false;
             }else{
@@ -40,7 +49,7 @@ namespace rtps{
         }
     };
 
-    typedef void (*ddsReaderCallback_fp)(void* callee, ReaderCacheChange& cacheChange);
+    typedef void (*ddsReaderCallback_fp)(void* callee, const ReaderCacheChange& cacheChange);
 
     class Reader{
     public:

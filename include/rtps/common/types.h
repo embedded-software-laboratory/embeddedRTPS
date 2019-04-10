@@ -12,6 +12,7 @@
 #include <array>
 #include <initializer_list>
 
+
 // TODO subnamespaces
 namespace rtps{
 

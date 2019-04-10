@@ -69,12 +69,12 @@ void SPDPAgent::runBroadcast(void *args){
     }
 }
 
-void SPDPAgent::receiveCallback(void *callee, ReaderCacheChange& cacheChange) {
+void SPDPAgent::receiveCallback(void *callee, const ReaderCacheChange& cacheChange) {
     auto agent = static_cast<SPDPAgent*>(callee);
     agent->handleSPDPPackage(cacheChange);
 }
 
-void SPDPAgent::handleSPDPPackage(ReaderCacheChange& cacheChange){
+void SPDPAgent::handleSPDPPackage(const ReaderCacheChange& cacheChange){
     if(!initialized){
 #if SPDP_VERBOSE
         printf("SPDP: Callback called without initialization\n");

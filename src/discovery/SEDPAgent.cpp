@@ -46,17 +46,17 @@ void SEDPAgent::registerOnNewSubscriberMatchedCallback(void (*callback)(void* ar
 }
 
 
-void SEDPAgent::receiveCallbackPublisher(void* callee, ReaderCacheChange& cacheChange){
+void SEDPAgent::receiveCallbackPublisher(void* callee, const ReaderCacheChange& cacheChange){
     auto agent = static_cast<SEDPAgent*>(callee);
     agent->onNewPublisher(cacheChange);
 }
 
-void SEDPAgent::receiveCallbackSubscriber(void* callee, ReaderCacheChange& cacheChange){
+void SEDPAgent::receiveCallbackSubscriber(void* callee, const ReaderCacheChange& cacheChange){
     auto agent = static_cast<SEDPAgent*>(callee);
     agent->onNewSubscriber(cacheChange);
 }
 
-void SEDPAgent::onNewPublisher(ReaderCacheChange& change){
+void SEDPAgent::onNewPublisher(const ReaderCacheChange& change){
     //Lock lock{m_mutex};
 #if SEDP_VERBOSE
     printf("New publisher\n");
@@ -81,14 +81,14 @@ void SEDPAgent::onNewPublisher(const TopicData& writerData) {
     Reader* reader = m_part->getMatchingReader(writerData);
     if(reader == nullptr){
 #if SEDP_VERBOSE
-        printf("SEDPAgent: Couldn't find reader for new Publisher[%s, %s]\n", topicData.topicName, topicData.typeName);
+        printf("SEDPAgent: Couldn't find reader for new Publisher[%s, %s]\n", writerData.topicName, writerData.typeName);
 #endif
         return;
     }
     // TODO check policies
 #if SEDP_VERBOSE
     printf("Found a new ");
-        if(topicData.reliabilityKind == ReliabilityKind_t::RELIABLE){
+        if(writerData.reliabilityKind == ReliabilityKind_t::RELIABLE){
             printf("reliable ");
         }else{
             printf("best-effort ");
@@ -101,7 +101,7 @@ void SEDPAgent::onNewPublisher(const TopicData& writerData) {
     }
 }
 
-void SEDPAgent::onNewSubscriber(ReaderCacheChange& change){
+void SEDPAgent::onNewSubscriber(const ReaderCacheChange& change){
     //Lock lock{m_mutex};
 #if SEDP_VERBOSE
     printf("New subscriber\n");
@@ -126,7 +126,7 @@ void SEDPAgent::onNewSubscriber(const TopicData& readerData) {
     Writer* writer = m_part->getMatchingWriter(readerData);
     if(writer == nullptr) {
 #if SEDP_VERBOSE
-        printf("SEDPAgent: Couldn't find writer for new subscriber[%s, %s]\n", topicData.topicName, topicData.typeName);
+        printf("SEDPAgent: Couldn't find writer for new subscriber[%s, %s]\n", readerData.topicName, readerData.typeName);
 #endif
         return;
     }
@@ -134,7 +134,7 @@ void SEDPAgent::onNewSubscriber(const TopicData& readerData) {
     // TODO check policies
 #if SEDP_VERBOSE
     printf("Found a new ");
-        if(topicData.reliabilityKind == ReliabilityKind_t::RELIABLE){
+        if(readerData.reliabilityKind == ReliabilityKind_t::RELIABLE){
             printf("reliable ");
         }else{
             printf("best-effort ");
