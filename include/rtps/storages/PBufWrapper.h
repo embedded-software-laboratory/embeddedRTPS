@@ -6,13 +6,12 @@
 #ifndef RTPS_PBUFWRAPPER_H
 #define RTPS_PBUFWRAPPER_H
 
-#include "lwip/ip4_addr.h"
 #include "lwip/pbuf.h"
 #include "rtps/common/types.h"
 
 /**
- * This Wrapper handles the lifetime of a pbuf element. Allocates it
- * when constructed and frees is again when running out of scope.
+ * This Wrapper handles the lifetime of a pbuf element. It either allocates it
+ * when constructed or wraps an existing one. In both cases it is freed when the wrapper is destructed.
  */
 
 namespace rtps {
@@ -38,24 +37,20 @@ namespace rtps {
 
         bool isValid() const;
 
-        bool append(const uint8_t* const data, DataSize_t length);
+        bool append(const uint8_t* data, DataSize_t length);
 
-        /**
-         * Note that unused reserved memory is now part of the wrapper. New calls to append(uint8_t*[...]) will
-         * continue behind the appended wrapper
-         */
+
+        /// Note that unused reserved memory is now part of the wrapper. New calls to append(uint8_t*[...]) will
+        /// continue behind the appended wrapper
         void append(PBufWrapper&& other);
 
         bool reserve(DataSize_t length);
 
-        //! After calling this function, data is added starting from the beginning again. It does not revert reserve.
+        /// After calling this function, data is added starting from the beginning again. It does not revert reserve.
         void reset();
 
         DataSize_t spaceLeft() const;
-        DataSize_t getUsedSize() const;
-
-        pbuf* getLastElement() const;
-
+        DataSize_t spaceUsed() const;
 
     private:
 
@@ -64,11 +59,7 @@ namespace rtps {
 
         DataSize_t m_freeSpace = 0;
 
-        DataSize_t getCurrentOffset() const;
-
-        bool increaseSize(uint16_t length);
-
-        void adjustSizeUntil(const pbuf* const newElement);
+        bool increaseSizeBy(uint16_t length);
 
         void copySimpleMembersAndResetBuffer(const PBufWrapper& other);
     };

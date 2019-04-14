@@ -4,7 +4,6 @@
  */
 
 #include "rtps/storages/PBufWrapper.h"
-#include <cstring>
 
 using rtps::PBufWrapper;
 
@@ -16,18 +15,18 @@ PBufWrapper::PBufWrapper(pbuf* bufferToWrap) : firstElement(bufferToWrap){
 
 PBufWrapper::PBufWrapper(DataSize_t length)
     : firstElement(pbuf_alloc(m_layer, length, m_type)){
-    // TODO Can I move this to initializer list?
+
     if(isValid()){
         m_freeSpace = length;
     }
 }
 
-// TODO: Speed improvement possible
+// TODO: Uses copy assignment. Improvement possible
 PBufWrapper::PBufWrapper(const PBufWrapper& other) {
     *this = other;
 }
 
-// TODO: Speed improvement possible
+// TODO: Uses move assignment. Improvement possible
 PBufWrapper::PBufWrapper(PBufWrapper&& other) noexcept{
     *this = std::move(other);
 }
@@ -64,15 +63,14 @@ void PBufWrapper::copySimpleMembersAndResetBuffer(const PBufWrapper& other){
 PBufWrapper::~PBufWrapper(){
     if(firstElement != nullptr){
         pbuf_free(firstElement);
-        // Life ends here. No need to set to nullptr.
     }
 }
 
 PBufWrapper PBufWrapper::deepCopy() const{
     PBufWrapper clone;
     clone.copySimpleMembersAndResetBuffer(*this);
-    // Decided not to use clone because it prevents const
 
+    // Decided not to use pbuf_clone because it prevents const
     clone.firstElement = pbuf_alloc(m_layer, this->firstElement->tot_len, m_type);
     if(clone.firstElement != nullptr){
         if(pbuf_copy(clone.firstElement, this->firstElement) != ERR_OK){
@@ -94,7 +92,7 @@ rtps::DataSize_t PBufWrapper::spaceLeft() const{
     return m_freeSpace;
 }
 
-rtps::DataSize_t PBufWrapper::getUsedSize() const{
+rtps::DataSize_t PBufWrapper::spaceUsed() const{
     if(firstElement == nullptr){
         return 0;
     }
@@ -102,23 +100,18 @@ rtps::DataSize_t PBufWrapper::getUsedSize() const{
     return firstElement->tot_len - m_freeSpace;
 }
 
-rtps::DataSize_t PBufWrapper::getCurrentOffset() const{
-    if(firstElement == nullptr){
-        return 0;
-    }else{
-        return firstElement->tot_len - m_freeSpace;
-    }
-}
-
-bool PBufWrapper::append(const uint8_t *const data, DataSize_t length){
-    err_t err = pbuf_take_at(firstElement, data, length, getCurrentOffset());
-
-    if(err == ERR_OK){
-        m_freeSpace -= length;
-        return true;
-    }else{
+bool PBufWrapper::append(const uint8_t* data, DataSize_t length){
+    if(data == nullptr){
         return false;
     }
+
+    err_t err = pbuf_take_at(firstElement, data, length, spaceUsed());
+    if(err != ERR_OK){
+        return false;
+    }
+
+    m_freeSpace -= length;
+    return true;
 }
 
 void PBufWrapper::append(PBufWrapper&& other){
@@ -138,33 +131,13 @@ void PBufWrapper::append(PBufWrapper&& other){
 
 }
 
-pbuf* PBufWrapper::getLastElement() const{
-    if(this->firstElement == nullptr){
-        return nullptr;
-    }
-
-    pbuf* currentElement = this->firstElement;
-    while(currentElement->next != nullptr){
-        currentElement = currentElement->next;
-    }
-    return currentElement;
-}
-
-void PBufWrapper::adjustSizeUntil(const pbuf* const newElement){
-    pbuf* elementToResize = this->firstElement;
-    while(elementToResize != newElement){
-        elementToResize->tot_len += newElement->tot_len;
-        elementToResize = elementToResize->next;
-    }
-}
-
 bool PBufWrapper::reserve(DataSize_t length) {
     auto additionalAllocation = length - m_freeSpace;
     if(additionalAllocation <= 0){
         return true;
     }
 
-    return increaseSize(additionalAllocation);
+    return increaseSizeBy(additionalAllocation);
 }
 
 void PBufWrapper::reset(){
@@ -173,7 +146,7 @@ void PBufWrapper::reset(){
     }
 }
 
-bool PBufWrapper::increaseSize(uint16_t length){
+bool PBufWrapper::increaseSizeBy(uint16_t length){
     pbuf* allocation = pbuf_alloc(m_layer, length, m_type);
     if(allocation == nullptr){
         return false;

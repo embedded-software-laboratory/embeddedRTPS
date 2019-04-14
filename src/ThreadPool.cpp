@@ -117,7 +117,7 @@ void ThreadPool::doWriterWork(){
     }
 }
 
-void ThreadPool::readCallback(void* args, udp_pcb* target, pbuf* pbuf, const ip_addr_t* addr, Ip4Port_t port) {
+void ThreadPool::readCallback(void* args, udp_pcb* target, pbuf* pbuf, const ip_addr_t* /*addr*/, Ip4Port_t port) {
     auto& pool = *static_cast<ThreadPool*>(args);
 
     PacketInfo packet;

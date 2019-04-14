@@ -71,7 +71,7 @@ namespace rtps{
             msg.header.flags = FLAG_BIG_ENDIAN;
 #endif
 
-            msg.header.submessageLength = SubmessageData::getRawSize() + filledPayload.getUsedSize() - numBytesUntilEndOfLength;
+            msg.header.submessageLength = SubmessageData::getRawSize() + filledPayload.spaceUsed() - numBytesUntilEndOfLength;
 
             if(containsInlineQos){
                 msg.header.flags |= FLAG_INLINE_QOS;
