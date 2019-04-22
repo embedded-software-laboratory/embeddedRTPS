@@ -32,10 +32,11 @@ namespace rtps {
         void stopThreads();
 
         void clearQueues();
-        void addWorkload(Writer* workload);
+        bool addWorkload(Writer* workload);
+        bool addNewPacket(PacketInfo&& packet);
 
         static void readCallback(void* arg, udp_pcb* pcb, pbuf* p, const ip_addr_t* addr, Ip4Port_t port);
-        bool addNewPacket(PacketInfo&& packet);
+
 
     private:
         receiveJumppad_fp m_receiveJumppad;

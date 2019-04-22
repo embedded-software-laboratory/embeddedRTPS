@@ -78,9 +78,13 @@ void ThreadPool::clearQueues(){
     m_queueIncoming.clear();
 }
 
-void ThreadPool::addWorkload(Writer* workload){
-    m_queueOutgoing.moveElementIntoBuffer(std::move(workload));
-    sys_sem_signal(&m_writerNotificationSem);
+bool ThreadPool::addWorkload(Writer* workload){
+    bool res = m_queueOutgoing.moveElementIntoBuffer(std::move(workload));
+    if(res) {
+        sys_sem_signal(&m_writerNotificationSem);
+    }
+
+    return res;
 }
 
 bool ThreadPool::addNewPacket(PacketInfo&& packet){
