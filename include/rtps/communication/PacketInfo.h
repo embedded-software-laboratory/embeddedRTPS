@@ -12,13 +12,13 @@
 namespace rtps{
 
     struct PacketInfo{
-        Ip4Port_t srcPort;
+        Ip4Port_t srcPort; // TODO Do we need that?
         ip4_addr_t destAddr;
         Ip4Port_t destPort;
         PBufWrapper buffer;
 
         void copyTriviallyCopyable(const PacketInfo& other){
-            this->srcPort = other.srcPort; // TODO Do we need that?
+            this->srcPort = other.srcPort;
             this->destPort = other.destPort;
             this->destAddr = other.destAddr;
         }

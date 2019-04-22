@@ -10,9 +10,6 @@
 #include "rtps/utils/udpUtils.h"
 
 
-#ifdef HIGHTEC_TOOLCHAIN
-#include "led.h"
-#endif
 
 using rtps::ThreadPool;
 
@@ -25,8 +22,8 @@ ThreadPool::ThreadPool(receiveJumppad_fp receiveCallback, void* callee)
     if(!m_inputQueue.init() || !m_outputQueue.init()){
         return;
     }
-    err_t inputErr = sys_sem_new(&m_inputSem, 0);
-    err_t outputErr = sys_sem_new(&m_outputSem, 0);
+    err_t inputErr = sys_sem_new(&m_readerNotificationSem, 0);
+    err_t outputErr = sys_sem_new(&m_writerNotificationSem, 0);
 #if THREAD_POOL_VERBOSE
     if(inputErr != ERR_OK || outputErr != ERR_OK){
         printf("ThreadPool: Failed to create Semaphores.\n");
@@ -40,11 +37,11 @@ ThreadPool::~ThreadPool(){
         sys_msleep(500); // Quick fix for tests. The dtor should never be called in real application.
     }
 
-    if(sys_sem_valid(&m_inputSem)){
-        sys_sem_free(&m_inputSem);
+    if(sys_sem_valid(&m_readerNotificationSem)){
+        sys_sem_free(&m_readerNotificationSem);
     }
-    if(sys_sem_valid(&m_outputSem)){
-        sys_sem_free(&m_outputSem);
+    if(sys_sem_valid(&m_writerNotificationSem)){
+        sys_sem_free(&m_writerNotificationSem);
     }
 }
 
@@ -52,7 +49,7 @@ bool ThreadPool::startThreads(){
     if(m_running){
         return true;
     }
-    if(!sys_sem_valid(&m_inputSem) || !sys_sem_valid(&m_outputSem)){
+    if(!sys_sem_valid(&m_readerNotificationSem) || !sys_sem_valid(&m_writerNotificationSem)){
         return false;
     }
 
@@ -71,7 +68,9 @@ bool ThreadPool::startThreads(){
 
 void ThreadPool::stopThreads() {
     m_running = false;
-    sys_msleep(500); // TODO make sure they have finished
+    // TODO make sure they have finished. Seems sufficient to be sufficient for tests.
+    // No sufficient if threads shall actually be stopped during runtime.
+    sys_msleep(500);
 }
 
 void ThreadPool::clearQueues(){
@@ -81,13 +80,13 @@ void ThreadPool::clearQueues(){
 
 void ThreadPool::addWorkload(Workload_t workload){
     m_inputQueue.moveElementIntoBuffer(std::move(workload));
-    sys_sem_signal(&m_outputSem);
+    sys_sem_signal(&m_writerNotificationSem);
 }
 
 bool ThreadPool::addNewPacket(PacketInfo&& packet){
     bool res = m_outputQueue.moveElementIntoBuffer(std::move(packet));
     if(res){
-        sys_sem_signal(&m_inputSem);
+        sys_sem_signal(&m_readerNotificationSem);
     }
     return res;
 }
@@ -109,7 +108,7 @@ void ThreadPool::doWriterWork(){
         Workload_t workload;
         auto isWorkToDo = m_inputQueue.moveFirstInto(workload);
         if(!isWorkToDo){
-            sys_sem_wait(&m_outputSem);
+            sys_sem_wait(&m_writerNotificationSem);
             continue;
         }
 
@@ -147,12 +146,9 @@ void ThreadPool::doReaderWork(){
 
     while(m_running){
         PacketInfo packet;
-#ifdef HIGHTEC_TOOLCHAIN
-        ToggleLED(2); // TODO remove
-#endif
         auto isWorkToDo = m_outputQueue.moveFirstInto(packet);
         if(!isWorkToDo) {
-            sys_sem_wait(&m_inputSem);
+            sys_sem_wait(&m_readerNotificationSem);
             continue;
         }
 

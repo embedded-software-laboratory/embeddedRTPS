@@ -9,7 +9,6 @@
 #include "lwip/udp.h"
 #include "rtps/config.h"
 #include "UdpConnection.h"
-#include "LwipInterface.h"
 #include "rtps/common/types.h"
 #include "rtps/storages/PBufWrapper.h"
 #include "rtps/communication/PacketInfo.h"
@@ -27,7 +26,7 @@ namespace rtps {
 
         const rtps::UdpConnection* createUdpConnection(Ip4Port_t receivePort);
         bool joinMultiCastGroup(ip4_addr_t addr) const;
-        void sendFunction(PacketInfo& info);
+        void sendPacket(PacketInfo& info);
 
     private:
         std::array<UdpConnection, Config::MAX_NUM_UDP_CONNECTIONS> m_conns;

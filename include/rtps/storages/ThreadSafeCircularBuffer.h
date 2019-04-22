@@ -7,9 +7,9 @@
 #define RTPS_THREADSAFEQUEUE_H
 
 #include "lwip/sys.h"
-#include "rtps/utils/Lock.h"
 
 #include <array>
+#include <limits>
 
 namespace rtps {
 
@@ -23,21 +23,22 @@ namespace rtps {
 
         ~ThreadSafeCircularBuffer();
 
-        bool moveElementIntoBuffer(T &&elem);
+        bool moveElementIntoBuffer(T&& elem);
 
         /**
          * Removes the first into the given hull. Also moves responsibility for resources.
-         *
          * @return true if element was injected. False if no element was present.
          */
-        bool moveFirstInto(T &hull);
+        bool moveFirstInto(T& hull);
 
         void clear();
 
     private:
-        std::array<T, SIZE> m_buffer{};
+        std::array<T, SIZE + 1> m_buffer{};
         uint16_t m_head = 0;
         uint16_t m_tail = 0;
+        static_assert(SIZE + 1 < std::numeric_limits<decltype(m_head)>::max(), "Iterator is large enough for given size");
+
         sys_mutex_t m_mutex;
         bool m_initialized = false;
 

@@ -51,8 +51,8 @@ namespace rtps {
         std::array<sys_thread_t, Config::THREAD_POOL_NUM_WRITERS> m_writers;
         std::array<sys_thread_t, Config::THREAD_POOL_NUM_READERS> m_readers;
 
-        sys_sem_t m_inputSem;
-        sys_sem_t m_outputSem;
+        sys_sem_t m_readerNotificationSem;
+        sys_sem_t m_writerNotificationSem;
 
         ThreadSafeCircularBuffer<Workload_t, Config::THREAD_POOL_WORKLOAD_QUEUE_LENGTH> m_inputQueue;
         ThreadSafeCircularBuffer<PacketInfo, Config::THREAD_POOL_WORKLOAD_QUEUE_LENGTH> m_outputQueue;

@@ -12,7 +12,7 @@ namespace rtps{
 
     class Lock {
     public:
-        explicit Lock(sys_mutex_t &passedMutex) : m_mutex(passedMutex) {
+        explicit Lock(sys_mutex_t& passedMutex) : m_mutex(passedMutex) {
             sys_mutex_lock(&m_mutex);
         };
 
@@ -20,7 +20,7 @@ namespace rtps{
             sys_mutex_unlock(&m_mutex);
         };
     private:
-        sys_mutex_t &m_mutex;
+        sys_mutex_t& m_mutex;
     };
 }
 #endif //RTPS_LOCK_H

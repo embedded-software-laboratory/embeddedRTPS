@@ -12,7 +12,7 @@
 namespace rtps{
 
     /**
-     * Simple version of a hitory cache. It sets consecutive sequence numbers automatically which
+     * Simple version of a history cache. It sets consecutive sequence numbers automatically which
      * allows an easy and fast approach of dropping acknowledged changes. Furthermore, disposing
      * of arbitrary changes is not possible. However, this is in principle easy to add by changing
      * the ChangeKind and dropping it when passing it during deleting of other sequence numbers

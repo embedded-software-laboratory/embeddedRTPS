@@ -18,7 +18,7 @@ namespace rtps {
 
     struct PBufWrapper {
 
-        pbuf *firstElement = nullptr;
+        pbuf* firstElement = nullptr;
 
         PBufWrapper() = default;
         explicit PBufWrapper(pbuf* bufferToWrap);

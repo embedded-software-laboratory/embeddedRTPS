@@ -2,9 +2,11 @@
 #ifndef RTPS_THREADSAFECIRCULARBUFFER_TPP
 #define RTPS_THREADSAFECIRCULARBUFFER_TPP
 
+
+#include "rtps/utils/Lock.h"
+
 #define TSCB_VERBOSE 0
 namespace rtps {
-
 
     template<typename T, uint16_t SIZE>
     bool ThreadSafeCircularBuffer<T, SIZE>::init(){

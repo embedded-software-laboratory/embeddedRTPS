@@ -113,7 +113,7 @@ bool StatefullReaderT<NetworkDriver>::onNewHeartbeat(const SubmessageHeartbeat& 
 #if SFR_VERBOSE
     printf("StatefullReader[%s]: Sending acknack.\n", &this->m_attributes.topicName[0]);
 #endif
-    m_transport->sendFunction(info);
+    m_transport->sendPacket(info);
     return true;
 }
 

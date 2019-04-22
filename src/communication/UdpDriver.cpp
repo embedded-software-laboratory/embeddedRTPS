@@ -4,10 +4,7 @@
  */
 
 #include "rtps/communication/UdpDriver.h"
-#include "rtps/communication/PacketInfo.h"
 #include "rtps/communication/TcpipCoreLock.h"
-
-#include "rtps/storages/PBufWrapper.h"
 
 #include <lwip/igmp.h>
 #include <lwip/tcpip.h>
@@ -22,14 +19,6 @@ UdpDriver::UdpDriver(rtps::UdpDriver::udpRxFunc_fp callback, void *args)
 
 }
 
-
-/**
- *
- * @param addr IP4 address on which we are listening
- * @param port Port on which we are listening
- * @param callback Function that gets called when a packet is received on addr:port.
- * @return True if creation was finished without errors. False otherwise.
- */
 const rtps::UdpConnection* UdpDriver::createUdpConnection(Ip4Port_t receivePort) {
     for(uint8_t i=0; i < m_numConns; ++i){
         if(m_conns[i].port == receivePort){
@@ -48,7 +37,6 @@ const rtps::UdpConnection* UdpDriver::createUdpConnection(Ip4Port_t receivePort)
         err_t err = udp_bind(udp_conn.pcb, IP_ADDR_ANY, receivePort); //to receive multicast
 
         if(err != ERR_OK && err != ERR_USE){
-            // TODO printf("Failed to bind to port%u: error %u\n", receivePort, err);
             return nullptr;
         }
 
@@ -101,7 +89,7 @@ bool UdpDriver::sendPacket(const UdpConnection& conn, ip4_addr_t& destAddr, Ip4P
     return true;
 }
 
-void UdpDriver::sendFunction(PacketInfo& packet){
+void UdpDriver::sendPacket(PacketInfo &packet){
     auto p_conn = createUdpConnection(packet.srcPort);
     if(p_conn == nullptr){;
 #if UDP_DRIVER_VERBOSE

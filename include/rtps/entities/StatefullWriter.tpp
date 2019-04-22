@@ -187,7 +187,7 @@ void StatefullWriterT<NetworkDriver>::sendData(const ReaderProxy &reader, const 
                                               reader.remoteReaderGuid.entityId);
         }
 
-        m_transport->sendFunction(info);
+        m_transport->sendPacket(info);
 
     }
 
@@ -244,7 +244,7 @@ void StatefullWriterT<NetworkDriver>::sendHeartBeat() {
         info.destAddr = proxy.remoteLocator.getIp4Address();
         info.destPort = proxy.remoteLocator.port;
 
-        m_transport->sendFunction(info);
+        m_transport->sendPacket(info);
     }
     m_hbCount.value++;
 }

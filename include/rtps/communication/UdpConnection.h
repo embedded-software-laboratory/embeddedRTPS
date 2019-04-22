@@ -7,29 +7,28 @@
 #define RTPS_UDPCONNECTION_H
 
 #include "lwip/udp.h"
-#include "LwipInterface.h"
+#include "TcpipCoreLock.h"
 
 namespace rtps {
 
-    template<class UdpInterface = LwipInterface>
-    struct UdpConnectionT {
+    struct UdpConnection {
         udp_pcb *pcb = nullptr;
-        uint16_t port;
-        bool is_multicast = false;
+        uint16_t port = 0;
 
-        UdpConnectionT() = default;
+        UdpConnection() = default; // Required for static allocation
 
-        explicit UdpConnectionT(uint16_t port): port(port) {
-            pcb = UdpInterface::udpNew();
+        explicit UdpConnection(uint16_t port): port(port) {
+            TcpipCoreLock lock;
+            pcb =  udp_new();
         }
 
-        UdpConnectionT &operator=(UdpConnectionT &&other) noexcept{
+        UdpConnection& operator=(UdpConnection&& other) noexcept{
             port = other.port;
-            is_multicast = other.is_multicast;
 
             if (other.pcb != nullptr) {
                 if (pcb != nullptr) {
-                    UdpInterface::udpRemove(pcb);
+                    TcpipCoreLock lock;
+                    udp_remove(pcb);
                 }
                 pcb = other.pcb;
                 other.pcb = nullptr;
@@ -37,15 +36,14 @@ namespace rtps {
             return *this;
         }
 
-        ~UdpConnectionT() {
+        ~UdpConnection() {
             if (pcb != nullptr) {
-                UdpInterface::udpRemove(pcb);
+                TcpipCoreLock lock;
+                udp_remove(pcb);
                 pcb = nullptr;
             }
         }
 
     };
-
-    using UdpConnection = UdpConnectionT<>; // <> required before C17
 }
 #endif //RTPS_UDPCONNECTION_H

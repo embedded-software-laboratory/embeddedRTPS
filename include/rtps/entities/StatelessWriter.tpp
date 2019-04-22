@@ -155,7 +155,7 @@ void StatelessWriterT<NetworkDriver>::progress(){
         info.destAddr = locator.getIp4Address();
         info.destPort = (Ip4Port_t) locator.port;
 
-        m_transport->sendFunction(info);
+        m_transport->sendPacket(info);
 
     }
 }
