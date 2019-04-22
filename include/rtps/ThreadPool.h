@@ -28,18 +28,11 @@ namespace rtps {
 
         ~ThreadPool();
 
-        struct Workload_t{
-            Workload_t() : p_writer(nullptr){};
-            explicit Workload_t(Writer* writer) : p_writer(writer){};
-
-            Writer* p_writer;
-        };
-
         bool startThreads();
         void stopThreads();
 
         void clearQueues();
-        void addWorkload(Workload_t workload);
+        void addWorkload(Writer* workload);
 
         static void readCallback(void* arg, udp_pcb* pcb, pbuf* p, const ip_addr_t* addr, Ip4Port_t port);
         bool addNewPacket(PacketInfo&& packet);
@@ -54,8 +47,8 @@ namespace rtps {
         sys_sem_t m_readerNotificationSem;
         sys_sem_t m_writerNotificationSem;
 
-        ThreadSafeCircularBuffer<Workload_t, Config::THREAD_POOL_WORKLOAD_QUEUE_LENGTH> m_inputQueue;
-        ThreadSafeCircularBuffer<PacketInfo, Config::THREAD_POOL_WORKLOAD_QUEUE_LENGTH> m_outputQueue;
+        ThreadSafeCircularBuffer<Writer*, Config::THREAD_POOL_WORKLOAD_QUEUE_LENGTH> m_queueOutgoing;
+        ThreadSafeCircularBuffer<PacketInfo, Config::THREAD_POOL_WORKLOAD_QUEUE_LENGTH> m_queueIncoming;
 
         static void writerThreadFunction(void* arg);
         static void readerThreadFunction(void* arg);

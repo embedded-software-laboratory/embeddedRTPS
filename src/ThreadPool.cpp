@@ -19,7 +19,7 @@ using rtps::ThreadPool;
 ThreadPool::ThreadPool(receiveJumppad_fp receiveCallback, void* callee)
     : m_receiveJumppad(receiveCallback), m_callee(callee){
 
-    if(!m_inputQueue.init() || !m_outputQueue.init()){
+    if(!m_queueOutgoing.init() || !m_queueIncoming.init()){
         return;
     }
     err_t inputErr = sys_sem_new(&m_readerNotificationSem, 0);
@@ -34,7 +34,7 @@ ThreadPool::ThreadPool(receiveJumppad_fp receiveCallback, void* callee)
 ThreadPool::~ThreadPool(){
     if(m_running){
         stopThreads();
-        sys_msleep(500); // Quick fix for tests. The dtor should never be called in real application.
+        sys_msleep(500);
     }
 
     if(sys_sem_valid(&m_readerNotificationSem)){
@@ -74,17 +74,17 @@ void ThreadPool::stopThreads() {
 }
 
 void ThreadPool::clearQueues(){
-    m_inputQueue.clear();
-    m_outputQueue.clear();
+    m_queueOutgoing.clear();
+    m_queueIncoming.clear();
 }
 
-void ThreadPool::addWorkload(Workload_t workload){
-    m_inputQueue.moveElementIntoBuffer(std::move(workload));
+void ThreadPool::addWorkload(Writer* workload){
+    m_queueOutgoing.moveElementIntoBuffer(std::move(workload));
     sys_sem_signal(&m_writerNotificationSem);
 }
 
 bool ThreadPool::addNewPacket(PacketInfo&& packet){
-    bool res = m_outputQueue.moveElementIntoBuffer(std::move(packet));
+    bool res = m_queueIncoming.moveElementIntoBuffer(std::move(packet));
     if(res){
         sys_sem_signal(&m_readerNotificationSem);
     }
@@ -105,14 +105,14 @@ void ThreadPool::writerThreadFunction(void* arg){
 
 void ThreadPool::doWriterWork(){
     while(m_running){
-        Workload_t workload;
-        auto isWorkToDo = m_inputQueue.moveFirstInto(workload);
+        Writer* workload;
+        auto isWorkToDo = m_queueOutgoing.moveFirstInto(workload);
         if(!isWorkToDo){
             sys_sem_wait(&m_writerNotificationSem);
             continue;
         }
 
-        workload.p_writer->progress();
+        workload->progress();
     }
 }
 
@@ -146,7 +146,7 @@ void ThreadPool::doReaderWork(){
 
     while(m_running){
         PacketInfo packet;
-        auto isWorkToDo = m_outputQueue.moveFirstInto(packet);
+        auto isWorkToDo = m_queueIncoming.moveFirstInto(packet);
         if(!isWorkToDo) {
             sys_sem_wait(&m_readerNotificationSem);
             continue;

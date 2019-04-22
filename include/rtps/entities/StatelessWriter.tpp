@@ -82,7 +82,7 @@ const CacheChange* StatelessWriterT<NetworkDriver>::newChange(rtps::ChangeKind_t
 
     auto result = m_history.addChange(data, size);
     if(mp_threadPool != nullptr){
-        mp_threadPool->addWorkload(ThreadPool::Workload_t{this});
+        mp_threadPool->addWorkload(this);
     }
 
 #if SLW_VERBOSE
@@ -98,7 +98,7 @@ void StatelessWriterT<NetworkDriver>::unsentChangesReset() {
     m_nextSequenceNumberToSend = m_history.getSeqNumMin();
 
     if(mp_threadPool != nullptr){
-        mp_threadPool->addWorkload(ThreadPool::Workload_t{this});
+        mp_threadPool->addWorkload(this);
     }
 }
 
