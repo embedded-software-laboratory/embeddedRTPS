@@ -130,7 +130,6 @@ void StatefullWriterT<NetworkDriver>::progress(){
                         &m_attributes.topicName[0], m_nextSequenceNumberToSend.high, m_nextSequenceNumberToSend.low);
 #endif
             }
-            ++m_nextSequenceNumberToSend;
             MessageFactory::addSubMessageData(info.buffer, next->data, false, next->sequenceNumber, m_attributes.endpointGuid.entityId,
                                               proxy.remoteReaderGuid.entityId); // TODO
         }
@@ -144,6 +143,7 @@ void StatefullWriterT<NetworkDriver>::progress(){
         m_transport->sendPacket(info);
 
     }
+    ++m_nextSequenceNumberToSend;
 }
 
 template <typename NetworkDriver>
