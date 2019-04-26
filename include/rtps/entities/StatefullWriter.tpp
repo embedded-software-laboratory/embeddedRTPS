@@ -21,6 +21,9 @@ template <class NetworkDriver>
 StatefullWriterT<NetworkDriver>::~StatefullWriterT(){
     m_running = false;
     sys_msleep(10); // Required for tests/ Join currently not available
+    if(sys_mutex_valid(&m_mutex)){
+        sys_mutex_free(&m_mutex);
+    }
 }
 
 template <class NetworkDriver>
@@ -67,10 +70,6 @@ void StatefullWriterT<NetworkDriver>::removeReader(const Guid& guid){
     m_proxies.remove(thunk, &isElementToRemove);
 }
 
-template <class NetworkDriver>
-void StatefullWriterT<NetworkDriver>::progress(){
-
-}
 
 template <class NetworkDriver>
 const rtps::CacheChange* StatefullWriterT<NetworkDriver>::newChange(ChangeKind_t kind, const uint8_t* data, DataSize_t size) {
@@ -80,14 +79,71 @@ const rtps::CacheChange* StatefullWriterT<NetworkDriver>::newChange(ChangeKind_t
 
     Lock lock{m_mutex};
 
-    // Right now we drop elements anyway because we cannot detect non-responding readers yet.
-    // if(history.isFull()){
-    //     return nullptr;
-    // }
+
+    if(m_history.isFull()){
+        // Right now we drop elements anyway because we cannot detect non-responding readers yet.
+        // return nullptr;
+        SequenceNumber_t newMin = ++SequenceNumber_t(m_history.getSeqNumMin());
+        if(m_nextSequenceNumberToSend < newMin){
+            m_nextSequenceNumberToSend = newMin; // Make sure we have the correct sn to send
+        }
+    }
+
+    auto* result = m_history.addChange(data, size);
+    if(mp_threadPool != nullptr){
+        mp_threadPool->addWorkload(this);
+    }
+
 #if SFW_VERBOSE
     printf("StatefullWriter[%s]: Adding new data.\n", this->m_attributes.topicName);
 #endif
-    return m_history.addChange(data, size);
+    return result;
+}
+
+template <class NetworkDriver>
+void StatefullWriterT<NetworkDriver>::progress(){
+// TODO smarter packaging e.g. by creating MessageStruct and serialize after adjusting values
+    for(const auto& proxy : m_proxies){
+
+#if SLW_VERBOSE
+        printf("StatelessWriter[%s]: Progess.\n", this->m_attributes.topicName);
+#endif
+
+        PacketInfo info;
+        info.srcPort = m_packetInfo.srcPort;
+
+        MessageFactory::addHeader(info.buffer, m_attributes.endpointGuid.prefix);
+        MessageFactory::addSubMessageTimeStamp(info.buffer);
+
+        {
+            Lock lock(m_mutex);
+            const CacheChange* next = m_history.getChangeBySN(m_nextSequenceNumberToSend);
+            if(next == nullptr){
+#if SFW_VERBOSE
+                printf("StatefullWriter[%s]: Couldn't get a new CacheChange with SN (%i,%i)\n",
+                        &m_attributes.topicName[0], m_nextSequenceNumberToSend.high, m_nextSequenceNumberToSend.low);
+#endif
+                return;
+            }else{
+#if SFW_VERBOSE
+                printf("StatefullWriter[%s]: Sending change with SN (%i,%i)\n",
+                        &m_attributes.topicName[0], m_nextSequenceNumberToSend.high, m_nextSequenceNumberToSend.low);
+#endif
+            }
+            ++m_nextSequenceNumberToSend;
+            MessageFactory::addSubMessageData(info.buffer, next->data, false, next->sequenceNumber, m_attributes.endpointGuid.entityId,
+                                              proxy.remoteReaderGuid.entityId); // TODO
+        }
+
+        // Just usable for IPv4
+        const Locator& locator = proxy.remoteLocator;
+
+        info.destAddr = locator.getIp4Address();
+        info.destPort = (Ip4Port_t) locator.port;
+
+        m_transport->sendPacket(info);
+
+    }
 }
 
 template <typename NetworkDriver>
@@ -99,7 +155,13 @@ bool StatefullWriterT<NetworkDriver>::isIrrelevant(ChangeKind_t kind) const{
 
 template <class NetworkDriver>
 void StatefullWriterT<NetworkDriver>::unsentChangesReset(){
-    // Don't see a reason why this might be needed for a reliable writer
+    Lock lock(m_mutex);
+
+    m_nextSequenceNumberToSend = m_history.getSeqNumMin();
+
+    if(mp_threadPool != nullptr){
+        mp_threadPool->addWorkload(this);
+    }
 }
 
 template <class NetworkDriver>
@@ -152,7 +214,7 @@ void StatefullWriterT<NetworkDriver>::onNewAckNack(const SubmessageAckNack& msg)
 }
 
 template <class NetworkDriver>
-void StatefullWriterT<NetworkDriver>::sendData(const ReaderProxy &reader, const SequenceNumber_t &sn){
+void StatefullWriterT<NetworkDriver>::sendData(const ReaderProxy &reader, const SequenceNumber_t& firstMissingSn){
     SequenceNumber_t max_sn;
     {
         Lock lock(m_mutex);
@@ -160,7 +222,7 @@ void StatefullWriterT<NetworkDriver>::sendData(const ReaderProxy &reader, const 
     }
 
     // send the missing one and all following
-    for(SequenceNumber_t s = sn; s <= max_sn; ++s){
+    for(SequenceNumber_t sn = firstMissingSn; sn <= max_sn; ++sn){
 
         PacketInfo info;
         info.srcPort = m_packetInfo.srcPort;
@@ -203,7 +265,7 @@ template <class NetworkDriver>
 void StatefullWriterT<NetworkDriver>::sendHeartBeatLoop(){
     while(m_running){
         sendHeartBeat();
-        sys_msleep(m_heartbeatPeriodMs);
+        sys_msleep(Config::SF_WRITER_HB_PERIOD_MS);
     }
 }
 

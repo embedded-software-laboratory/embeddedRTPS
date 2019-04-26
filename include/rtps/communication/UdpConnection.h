@@ -25,14 +25,12 @@ namespace rtps {
         UdpConnection& operator=(UdpConnection&& other) noexcept{
             port = other.port;
 
-            if (other.pcb != nullptr) {
-                if (pcb != nullptr) {
-                    TcpipCoreLock lock;
-                    udp_remove(pcb);
-                }
-                pcb = other.pcb;
-                other.pcb = nullptr;
+            if (pcb != nullptr) {
+                TcpipCoreLock lock;
+                udp_remove(pcb);
             }
+            pcb = other.pcb;
+            other.pcb = nullptr;
             return *this;
         }
 

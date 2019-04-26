@@ -17,7 +17,7 @@ namespace rtps{
     class StatefullWriterT final : public Writer{
     public:
 
-        ~StatefullWriterT();
+        ~StatefullWriterT() override;
         bool init(TopicData attributes, TopicKind_t topicKind, ThreadPool* threadPool, NetworkDriver& driver);
 
         bool addNewMatchedReader(const ReaderProxy& newProxy) override;
@@ -36,8 +36,8 @@ namespace rtps{
         NetworkDriver* m_transport;
 
         TopicKind_t m_topicKind = TopicKind_t::NO_KEY;
+        SequenceNumber_t m_nextSequenceNumberToSend = {0, 1};
         SimpleHistoryCache m_history;
-        static const uint32_t m_heartbeatPeriodMs = 4000; // TODO
         sys_thread_t m_heartbeatThread;
         Count_t m_hbCount{1};
 

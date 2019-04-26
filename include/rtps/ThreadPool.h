@@ -22,7 +22,7 @@ namespace rtps {
 
     class ThreadPool {
     public:
-        typedef void(*receiveJumppad_fp)(void* callee, const PacketInfo& packet);
+        using receiveJumppad_fp = void(*)(void* callee, const PacketInfo& packet);
 
         ThreadPool(receiveJumppad_fp receiveCallback, void* callee);
 

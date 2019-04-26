@@ -20,7 +20,7 @@ namespace rtps {
     template <typename NetworkDriver>
     class StatelessWriterT : public Writer{
     public:
-
+        ~StatelessWriterT() override;
         bool init(TopicData attributes, TopicKind_t topicKind, ThreadPool* threadPool, NetworkDriver& driver);
 
         bool addNewMatchedReader(const ReaderProxy& newProxy) override;
@@ -29,8 +29,6 @@ namespace rtps {
         const CacheChange* newChange(ChangeKind_t kind, const uint8_t* data, DataSize_t size) override;
         void unsentChangesReset() override;
         void onNewAckNack(const SubmessageAckNack& msg) override;
-
-        SequenceNumber_t getLastUsedSequenceNumber() const;
 
     private:
         sys_mutex_t m_mutex;

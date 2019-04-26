@@ -23,6 +23,13 @@ using rtps::CacheChange;
 #include "rtps/utils/printutils.h"
 #endif
 
+template <class NetworkDriver>
+StatelessWriterT<NetworkDriver>::~StatelessWriterT(){
+    if(sys_mutex_valid(&m_mutex)){
+        sys_mutex_free(&m_mutex);
+    }
+}
+
 template <typename NetworkDriver>
 bool StatelessWriterT<NetworkDriver>::init(TopicData attributes, TopicKind_t topicKind, ThreadPool* threadPool, NetworkDriver& driver){
     if (sys_mutex_new(&m_mutex) != ERR_OK) {
@@ -62,11 +69,6 @@ void StatelessWriterT<NetworkDriver>::removeReader(const Guid& guid){
 }
 
 template <typename NetworkDriver>
-SequenceNumber_t StatelessWriterT<NetworkDriver>::getLastUsedSequenceNumber() const{
-    return m_history.getSeqNumMax();
-}
-
-template <typename NetworkDriver>
 const CacheChange* StatelessWriterT<NetworkDriver>::newChange(rtps::ChangeKind_t kind, const uint8_t* data, DataSize_t size) {
     if(isIrrelevant(kind)){
         return nullptr;
@@ -80,7 +82,7 @@ const CacheChange* StatelessWriterT<NetworkDriver>::newChange(rtps::ChangeKind_t
         }
     }
 
-    auto result = m_history.addChange(data, size);
+    auto* result = m_history.addChange(data, size);
     if(mp_threadPool != nullptr){
         mp_threadPool->addWorkload(this);
     }

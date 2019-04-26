@@ -134,7 +134,7 @@ namespace rtps{
         ProtocolVersion_t protocolVersion;
         VendorId_t vendorId;
         GuidPrefix_t guidPrefix;
-        static constexpr size_t getRawSize(){
+        static constexpr uint16_t getRawSize(){
         	return sizeof(std::array<uint8_t, 4>) + sizeof(ProtocolVersion_t) + sizeof(VendorId_t) + sizeof(GuidPrefix_t);
         }
     };
@@ -143,7 +143,7 @@ namespace rtps{
         SubmessageKind submessageId;
         uint8_t flags;
         uint16_t submessageLength;
-        static constexpr size_t getRawSize(){
+        static constexpr uint16_t getRawSize(){
 			return sizeof(SubmessageKind) + sizeof(uint8_t) + sizeof(uint16_t);
 		}
     };
@@ -155,7 +155,7 @@ namespace rtps{
         EntityId_t readerId;
         EntityId_t writerId;
         SequenceNumber_t writerSN;
-        static constexpr size_t getRawSize(){
+        static constexpr uint16_t getRawSize(){
 			return SubmessageHeader::getRawSize() +  sizeof(uint16_t) + sizeof(uint16_t)
 					+ (2*3+2*1) // EntityID
 					+ sizeof(SequenceNumber_t);
@@ -169,7 +169,7 @@ namespace rtps{
         SequenceNumber_t firstSN;
         SequenceNumber_t lastSN;
         Count_t count;
-        static constexpr size_t getRawSize(){
+        static constexpr uint16_t getRawSize(){
 			return SubmessageHeader::getRawSize()
 				   + (2*3+2*1) // EntityID
 				   + 2*sizeof(SequenceNumber_t)
@@ -184,8 +184,8 @@ namespace rtps{
         EntityId_t writerId;
         SequenceNumberSet readerSNState;
         Count_t count;
-		static size_t getRawSize(const SequenceNumberSet& set){
-			size_t bitMapSize = 0;
+		static uint16_t getRawSize(const SequenceNumberSet& set){
+            uint16_t bitMapSize = 0;
 			if(set.numBits != 0){
 				bitMapSize = 4*((set.numBits/32) + 1);
 			}
