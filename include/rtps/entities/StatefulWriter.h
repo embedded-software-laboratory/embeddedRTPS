@@ -3,8 +3,8 @@
  * Author: Andreas Wüstenberg (andreas.wuestenberg@rwth-aachen.de)
  */
 
-#ifndef RTPS_STATEFULLWRITER_H
-#define RTPS_STATEFULLWRITER_H
+#ifndef RTPS_STATEFULWRITER_H
+#define RTPS_STATEFULWRITER_H
 
 #include "rtps/entities/Writer.h"
 #include "rtps/entities/ReaderProxy.h"
@@ -14,10 +14,10 @@
 namespace rtps{
 
     template <class NetworkDriver>
-    class StatefullWriterT final : public Writer{
+    class StatefulWriterT final : public Writer{
     public:
 
-        ~StatefullWriterT() override;
+        ~StatefulWriterT() override;
         bool init(TopicData attributes, TopicKind_t topicKind, ThreadPool* threadPool, NetworkDriver& driver);
 
         bool addNewMatchedReader(const ReaderProxy& newProxy) override;
@@ -52,9 +52,9 @@ namespace rtps{
         bool isIrrelevant(ChangeKind_t kind) const;
     };
 
-    using StatefullWriter = StatefullWriterT<UdpDriver>;
+    using StatefulWriter = StatefulWriterT<UdpDriver>;
 }
 
-#include "StatefullWriter.tpp"
+#include "StatefulWriter.tpp"
 
-#endif //RTPS_STATEFULLWRITER_H
+#endif //RTPS_STATEFULWRITER_H

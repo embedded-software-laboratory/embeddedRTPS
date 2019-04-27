@@ -54,10 +54,11 @@ namespace rtps{
     class Reader{
     public:
         TopicData m_attributes;
-        virtual void newChange(ReaderCacheChange& cacheChange) = 0;
+        virtual void newChange(const ReaderCacheChange& cacheChange) = 0;
         virtual void registerCallback(ddsReaderCallback_fp cb, void* callee) = 0;
         virtual bool onNewHeartbeat(const SubmessageHeartbeat& msg, const GuidPrefix_t& remotePrefix) = 0;
         virtual bool addNewMatchedWriter(const WriterProxy& newProxy) = 0;
+        virtual void removeWriter(const Guid& guid) = 0;
     protected:
         virtual ~Reader() = default;
     };

@@ -3,7 +3,7 @@
  * Author: Andreas Wüstenberg (andreas.wuestenberg@rwth-aachen.de)
  */
 
-#include "rtps/entities/StatefullReader.h"
+#include "rtps/entities/StatefulReader.h"
 #include "rtps/messages/MessageFactory.h"
 #include "rtps/utils/Lock.h"
 #include "lwip/tcpip.h"
@@ -14,10 +14,17 @@
 #include "rtps/utils/printutils.h"
 #endif
 
-using rtps::StatefullReaderT;
+using rtps::StatefulReaderT;
 
 template <class NetworkDriver>
-void StatefullReaderT<NetworkDriver>::init(const TopicData& attributes, NetworkDriver& driver){
+StatefulReaderT<NetworkDriver>::~StatefulReaderT(){
+    if(sys_mutex_valid(&m_mutex)){
+        sys_mutex_free(&m_mutex);
+    }
+}
+
+template <class NetworkDriver>
+void StatefulReaderT<NetworkDriver>::init(const TopicData& attributes, NetworkDriver& driver){
     m_attributes = attributes;
     m_transport = &driver;
     m_packetInfo.srcPort = attributes.unicastLocator.port;
@@ -25,7 +32,7 @@ void StatefullReaderT<NetworkDriver>::init(const TopicData& attributes, NetworkD
 }
 
 template <class NetworkDriver>
-void StatefullReaderT<NetworkDriver>::newChange(ReaderCacheChange& cacheChange){
+void StatefulReaderT<NetworkDriver>::newChange(const ReaderCacheChange& cacheChange){
     if(m_callback == nullptr){
         return;
     }
@@ -42,21 +49,21 @@ void StatefullReaderT<NetworkDriver>::newChange(ReaderCacheChange& cacheChange){
 }
 
 template <class NetworkDriver>
-void StatefullReaderT<NetworkDriver>::registerCallback(ddsReaderCallback_fp cb, void* callee){
+void StatefulReaderT<NetworkDriver>::registerCallback(ddsReaderCallback_fp cb, void* callee){
     if(cb != nullptr){
         m_callback = cb;
         m_callee = callee; // It's okay if this is null
     }else{
 #if SLR_VERBOSE
-        printf("StatefullReader[%s]: Passed callback is nullptr\n", &m_attributes.topicName[0]);
+        printf("StatefulReader[%s]: Passed callback is nullptr\n", &m_attributes.topicName[0]);
 #endif
     }
 }
 
 template <class NetworkDriver>
-bool StatefullReaderT<NetworkDriver>::addNewMatchedWriter(const WriterProxy& newProxy){
+bool StatefulReaderT<NetworkDriver>::addNewMatchedWriter(const WriterProxy& newProxy){
 #if SFR_VERBOSE
-    printf("StatefullReader[%s]: New writer added with id: ", &this->m_attributes.topicName[0]);
+    printf("StatefulReader[%s]: New writer added with id: ", &this->m_attributes.topicName[0]);
     printGuid(newProxy.remoteWriterGuid);
     printf("\n");
 #endif
@@ -64,7 +71,7 @@ bool StatefullReaderT<NetworkDriver>::addNewMatchedWriter(const WriterProxy& new
 }
 
 template <class NetworkDriver>
-void StatefullReaderT<NetworkDriver>::removeWriter(const Guid& guid){
+void StatefulReaderT<NetworkDriver>::removeWriter(const Guid& guid){
     auto isElementToRemove=[&](const WriterProxy& proxy){
         return proxy.remoteWriterGuid == guid;
     };
@@ -74,7 +81,7 @@ void StatefullReaderT<NetworkDriver>::removeWriter(const Guid& guid){
 }
 
 template <class NetworkDriver>
-bool StatefullReaderT<NetworkDriver>::onNewHeartbeat(const SubmessageHeartbeat& msg, const GuidPrefix_t& /*remotePrefix*/){
+bool StatefulReaderT<NetworkDriver>::onNewHeartbeat(const SubmessageHeartbeat& msg, const GuidPrefix_t& /*remotePrefix*/){
     Lock lock(m_mutex);
     PacketInfo info;
     info.srcPort = m_packetInfo.srcPort;
@@ -89,7 +96,7 @@ bool StatefullReaderT<NetworkDriver>::onNewHeartbeat(const SubmessageHeartbeat& 
 
     if(writer == nullptr){
 #if SFR_VERBOSE
-      printf("StatefullReader[%s]: Ignore heartbeat. Couldn't find a matching writer with id: ", &this->m_attributes.topicName[0]);
+      printf("StatefulReader[%s]: Ignore heartbeat. Couldn't find a matching writer with id: ", &this->m_attributes.topicName[0]);
       printEntityId(msg.writerId);
       printf("\n");
 #endif
@@ -98,20 +105,20 @@ bool StatefullReaderT<NetworkDriver>::onNewHeartbeat(const SubmessageHeartbeat& 
 
     if(msg.count.value <= writer->hbCount.value){
 #if SFR_VERBOSE
-        printf("StatefullReader[%s]: Ignore heartbeat. Count too low.\n", &this->m_attributes.topicName[0]);
+        printf("StatefulReader[%s]: Ignore heartbeat. Count too low.\n", &this->m_attributes.topicName[0]);
 #endif
         return false;
     }
 
     writer->hbCount.value = msg.count.value;
-    info.destAddr = writer->locator.getIp4Address();
-    info.destPort = writer->locator.port;
+    info.destAddr = writer->remoteLocator.getIp4Address();
+    info.destPort = writer->remoteLocator.port;
     rtps::MessageFactory::addHeader(info.buffer, m_attributes.endpointGuid.prefix);
     rtps::MessageFactory::addAckNack(info.buffer, msg.writerId, msg.readerId, writer->getMissing(msg.firstSN,
-                                     msg.lastSN), writer->getNextCount());
+                                     msg.lastSN), writer->getNextAckNackCount());
 
 #if SFR_VERBOSE
-    printf("StatefullReader[%s]: Sending acknack.\n", &this->m_attributes.topicName[0]);
+    printf("StatefulReader[%s]: Sending acknack.\n", &this->m_attributes.topicName[0]);
 #endif
     m_transport->sendPacket(info);
     return true;

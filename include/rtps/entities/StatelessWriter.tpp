@@ -51,7 +51,7 @@ bool StatelessWriterT<NetworkDriver>::init(TopicData attributes, TopicKind_t top
 template <class NetworkDriver>
 bool StatelessWriterT<NetworkDriver>::addNewMatchedReader(const ReaderProxy& newProxy){
 #if SLW_VERBOSE
-    printf("StatefullWriter[%s]: New reader added with id: ", &this->m_attributes.topicName[0]);
+    printf("StatefulWriter[%s]: New reader added with id: ", &this->m_attributes.topicName[0]);
     printGuid(newProxy.remoteReaderGuid);
     printf("\n");
 #endif

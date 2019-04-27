@@ -8,7 +8,7 @@
 
 #include "rtps/entities/StatelessWriter.h"
 #include "rtps/entities/StatelessReader.h"
-#include "rtps/entities/StatefullReader.h"
+#include "rtps/entities/StatefulReader.h"
 #include "rtps/entities/Writer.h"
 
 

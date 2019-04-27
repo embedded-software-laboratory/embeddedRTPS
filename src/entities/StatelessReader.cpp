@@ -14,7 +14,7 @@ void StatelessReader::init(const TopicData& attributes){
     m_attributes = attributes;
 }
 
-void StatelessReader::newChange(ReaderCacheChange& cacheChange){
+void StatelessReader::newChange(const ReaderCacheChange& cacheChange){
     if(m_callback != nullptr){
         m_callback(m_callee, cacheChange);
     }
@@ -34,6 +34,10 @@ void StatelessReader::registerCallback(ddsReaderCallback_fp cb, void* callee){
 bool StatelessReader::addNewMatchedWriter(const WriterProxy& /*newProxy*/){
     // Nothing to do
     return true;
+}
+
+void StatelessReader::removeWriter(const Guid& /*guid*/){
+    // Nothing to do
 }
 
 bool StatelessReader::onNewHeartbeat(const SubmessageHeartbeat&, const GuidPrefix_t&){

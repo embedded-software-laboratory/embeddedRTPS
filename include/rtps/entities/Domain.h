@@ -8,8 +8,8 @@
 
 #include "rtps/config.h"
 #include "rtps/entities/Participant.h"
-#include "rtps/entities/StatefullReader.h"
-#include "rtps/entities/StatefullWriter.h"
+#include "rtps/entities/StatefulReader.h"
+#include "rtps/entities/StatefulWriter.h"
 #include "rtps/entities/StatelessReader.h"
 #include "rtps/entities/StatelessWriter.h"
 #include "rtps/storages/PBufWrapper.h"
@@ -39,10 +39,10 @@ namespace rtps{
         uint8_t m_numStatelessWriters = 0;
         std::array<StatelessReader, Config::NUM_STATELESS_READERS> m_statelessReaders;
         uint8_t m_numStatelessReaders = 0;
-        std::array<StatefullReader, Config::NUM_STATEFULL_READERS> m_statefullReaders;
-        uint8_t m_numStatefullReaders = 0;
-        std::array<StatefullWriter, Config::NUM_STATEFULL_WRITERS> m_statefullWriters;
-        uint8_t m_numStatefullWriters = 0;
+        std::array<StatefulReader, Config::NUM_STATEFUL_READERS> m_statefulReaders;
+        uint8_t m_numStatefulReaders = 0;
+        std::array<StatefulWriter, Config::NUM_STATEFUL_WRITERS> m_statefulWriters;
+        uint8_t m_numStatefulWriters = 0;
 
         void receiveCallback(const PacketInfo& packet);
         GuidPrefix_t generateGuidPrefix(ParticipantId_t id) const;

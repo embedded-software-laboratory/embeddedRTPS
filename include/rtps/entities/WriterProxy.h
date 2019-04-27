@@ -15,13 +15,13 @@ namespace rtps{
         SequenceNumber_t expectedSN;
         Count_t ackNackCount;
         Count_t hbCount;
-        Locator locator;
+        Locator remoteLocator;
 
-        WriterProxy(){};
+        WriterProxy() = default;
 
         WriterProxy(const Guid& guid, const Locator& loc)
             : remoteWriterGuid(guid), expectedSN(SequenceNumber_t{0,1}), ackNackCount{1},
-                hbCount{0}, locator(loc){
+                hbCount{0}, remoteLocator(loc){
         }
 
         // For now, we don't store any packets, so we just request all starting from the next expected
@@ -39,7 +39,7 @@ namespace rtps{
             return set;
         }
 
-        Count_t getNextCount(){
+        Count_t getNextAckNackCount(){
             const Count_t tmp = ackNackCount;
             ++ackNackCount.value;
             return tmp;

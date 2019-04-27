@@ -3,8 +3,8 @@
  * Author: Andreas Wüstenberg (andreas.wuestenberg@rwth-aachen.de)
  */
 
-#ifndef RTPS_STATEFULLREADER_H
-#define RTPS_STATEFULLREADER_H
+#ifndef RTPS_STATEFULREADER_H
+#define RTPS_STATEFULREADER_H
 
 #include "lwip/sys.h"
 #include "rtps/communication/UdpDriver.h"
@@ -16,15 +16,15 @@
 namespace rtps{
     struct SubmessageHeartbeat;
 
-    template <class NetworkDriver=UdpDriver>
-    class StatefullReaderT : public Reader{
+    template <class NetworkDriver>
+    class StatefulReaderT final: public Reader{
     public:
-
+        ~StatefulReaderT() override;
         void init(const TopicData& attributes, NetworkDriver& driver);
-        void newChange(ReaderCacheChange& cacheChange) override;
+        void newChange(const ReaderCacheChange& cacheChange) override;
         void registerCallback(ddsReaderCallback_fp cb, void* callee) override;
         bool addNewMatchedWriter(const WriterProxy& newProxy) override;
-        void removeWriter(const Guid& guid);
+        void removeWriter(const Guid& guid) override;
         bool onNewHeartbeat(const SubmessageHeartbeat& msg, const GuidPrefix_t& remotePrefix) override;
 
     private:
@@ -38,11 +38,11 @@ namespace rtps{
 
     };
 
-    using StatefullReader = StatefullReaderT<UdpDriver>;
+    using StatefulReader = StatefulReaderT<UdpDriver>;
 
 }
 
-#include "StatefullReader.tpp"
+#include "StatefulReader.tpp"
 
 
-#endif //RTPS_STATEFULLREADER_H
+#endif //RTPS_STATEFULREADER_H

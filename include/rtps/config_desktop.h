@@ -22,8 +22,8 @@ namespace rtps {
 		const uint8_t MAX_NUM_PARTICIPANTS = 2;
         const uint8_t NUM_STATELESS_WRITERS = MAX_NUM_PARTICIPANTS + 1; // Required + Additional
         const uint8_t NUM_STATELESS_READERS = MAX_NUM_PARTICIPANTS + 1; // Required + Additional
-        const uint8_t NUM_STATEFULL_READERS = 4; // 1-4 required per participant depending on what they do and to whom they match
-        const uint8_t NUM_STATEFULL_WRITERS = 4; // 1-4 required per participant depending on what they do and to whom they match
+        const uint8_t NUM_STATEFUL_READERS = 4; // 1-4 required per participant depending on what they do and to whom they match
+        const uint8_t NUM_STATEFUL_WRITERS = 4; // 1-4 required per participant depending on what they do and to whom they match
         const uint8_t NUM_WRITERS_PER_PARTICIPANT = 4;
         const uint8_t NUM_READERS_PER_PARTICIPANT = 4;
         const uint8_t NUM_WRITER_PROXIES_PER_READER = 3;
@@ -57,7 +57,7 @@ namespace rtps {
         constexpr int OVERALL_HEAP_SIZE = 	THREAD_POOL_NUM_WRITERS * THREAD_POOL_WRITER_STACKSIZE +
 											THREAD_POOL_NUM_READERS * THREAD_POOL_READER_STACKSIZE +
 											MAX_NUM_PARTICIPANTS * SPDP_WRITER_STACKSIZE +
-											NUM_STATEFULL_WRITERS * HEARTBEAT_STACKSIZE;
+											NUM_STATEFUL_WRITERS * HEARTBEAT_STACKSIZE;
     }
 }
 

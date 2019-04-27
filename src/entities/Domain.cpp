@@ -109,10 +109,10 @@ void Domain::addDefaultWriterAndReader(Participant& part) {
     spdpReader.m_attributes.endpointGuid = {part.m_guidPrefix, ENTITYID_SPDP_BUILTIN_PARTICIPANT_READER};
 
     // SEDP
-    StatefullReader& sedpPubReader = m_statefullReaders[m_numStatefullReaders++];
-    StatefullReader& sedpSubReader = m_statefullReaders[m_numStatefullReaders++];
-    StatefullWriter& sedpPubWriter = m_statefullWriters[m_numStatefullWriters++];
-    StatefullWriter& sedpSubWriter = m_statefullWriters[m_numStatefullWriters++];
+    StatefulReader& sedpPubReader = m_statefulReaders[m_numStatefulReaders++];
+    StatefulReader& sedpSubReader = m_statefulReaders[m_numStatefulReaders++];
+    StatefulWriter& sedpPubWriter = m_statefulWriters[m_numStatefulWriters++];
+    StatefulWriter& sedpSubWriter = m_statefulWriters[m_numStatefulWriters++];
 
     // Prepare attributes
     TopicData sedpAttributes;
@@ -169,13 +169,13 @@ rtps::Writer* Domain::createWriter(Participant& part, const char* topicName, con
     printf("Creating writer[%s, %s]\n", topicName, typeName);
 #endif
     if(reliable){
-        if(m_numStatefullWriters == m_statefullWriters.size()){
+        if(m_numStatefulWriters == m_statefulWriters.size()){
             return nullptr;
         }
 
         attributes.reliabilityKind = ReliabilityKind_t::RELIABLE;
 
-        StatefullWriter& writer = m_statefullWriters[m_numStatefullWriters];
+        StatefulWriter& writer = m_statefulWriters[m_numStatefulWriters];
         writer.init(attributes, TopicKind_t::NO_KEY, &m_threadPool, m_transport);
 
         part.addWriter(&writer);
@@ -214,13 +214,13 @@ rtps::Reader* Domain::createReader(Participant& part, const char* topicName, con
 #endif
 
     if(reliable){
-        if(m_numStatefullReaders == m_statefullReaders.size()){
+        if(m_numStatefulReaders == m_statefulReaders.size()){
             return nullptr;
         }
 
         attributes.reliabilityKind = ReliabilityKind_t::RELIABLE;
 
-        StatefullReader& reader = m_statefullReaders[m_numStatefullReaders];
+        StatefulReader& reader = m_statefulReaders[m_numStatefulReaders];
         reader.init(attributes, m_transport);
 
         part.addReader(&reader);

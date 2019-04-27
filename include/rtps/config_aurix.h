@@ -21,8 +21,8 @@ namespace rtps {
         const uint8_t DOMAIN_ID = 0; // 230 possible with UDP
         const uint8_t NUM_STATELESS_WRITERS = 2;
         const uint8_t NUM_STATELESS_READERS = 2;
-        const uint8_t NUM_STATEFULL_READERS = 2;
-        const uint8_t NUM_STATEFULL_WRITERS = 2;
+        const uint8_t NUM_STATEFUL_READERS = 2;
+        const uint8_t NUM_STATEFUL_WRITERS = 2;
         const uint8_t MAX_NUM_PARTICIPANTS = 1;
         const uint8_t NUM_WRITERS_PER_PARTICIPANT = 4;
         const uint8_t NUM_READERS_PER_PARTICIPANT = 4;
@@ -57,7 +57,7 @@ namespace rtps {
         constexpr int OVERALL_HEAP_SIZE = 	THREAD_POOL_NUM_WRITERS * THREAD_POOL_WRITER_STACKSIZE +
 											THREAD_POOL_NUM_READERS * THREAD_POOL_READER_STACKSIZE +
 											MAX_NUM_PARTICIPANTS * SPDP_WRITER_STACKSIZE +
-											NUM_STATEFULL_WRITERS * HEARTBEAT_STACKSIZE;
+											NUM_STATEFUL_WRITERS * HEARTBEAT_STACKSIZE;
     }
 }
 
