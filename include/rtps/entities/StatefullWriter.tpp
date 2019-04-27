@@ -102,46 +102,10 @@ const rtps::CacheChange* StatefullWriterT<NetworkDriver>::newChange(ChangeKind_t
 
 template <class NetworkDriver>
 void StatefullWriterT<NetworkDriver>::progress(){
-// TODO smarter packaging e.g. by creating MessageStruct and serialize after adjusting values
-    for(const auto& proxy : m_proxies){
-
-#if SLW_VERBOSE
-        printf("StatelessWriter[%s]: Progess.\n", this->m_attributes.topicName);
-#endif
-
-        PacketInfo info;
-        info.srcPort = m_packetInfo.srcPort;
-
-        MessageFactory::addHeader(info.buffer, m_attributes.endpointGuid.prefix);
-        MessageFactory::addSubMessageTimeStamp(info.buffer);
-
-        {
-            Lock lock(m_mutex);
-            const CacheChange* next = m_history.getChangeBySN(m_nextSequenceNumberToSend);
-            if(next == nullptr){
-#if SFW_VERBOSE
-                printf("StatefullWriter[%s]: Couldn't get a new CacheChange with SN (%i,%i)\n",
-                        &m_attributes.topicName[0], m_nextSequenceNumberToSend.high, m_nextSequenceNumberToSend.low);
-#endif
-                return;
-            }else{
-#if SFW_VERBOSE
-                printf("StatefullWriter[%s]: Sending change with SN (%i,%i)\n",
-                        &m_attributes.topicName[0], m_nextSequenceNumberToSend.high, m_nextSequenceNumberToSend.low);
-#endif
-            }
-            MessageFactory::addSubMessageData(info.buffer, next->data, false, next->sequenceNumber, m_attributes.endpointGuid.entityId,
-                                              proxy.remoteReaderGuid.entityId); // TODO
+    for(const auto& proxy : m_proxies) {
+        if(!sendData(proxy, m_nextSequenceNumberToSend)){
+            continue;
         }
-
-        // Just usable for IPv4
-        const Locator& locator = proxy.remoteLocator;
-
-        info.destAddr = locator.getIp4Address();
-        info.destPort = (Ip4Port_t) locator.port;
-
-        m_transport->sendPacket(info);
-
     }
     ++m_nextSequenceNumberToSend;
 }
@@ -211,48 +175,50 @@ void StatefullWriterT<NetworkDriver>::onNewAckNack(const SubmessageAckNack& msg)
             sendData(*reader, nextSN);
         }
     }
+    // Check for sequence numbers after defined range
+    SequenceNumber_t maxSN;
+    {
+        Lock lock(m_mutex);
+        maxSN = m_history.getSeqNumMax();
+    }
+    while(nextSN <= maxSN){
+        sendData(*reader, nextSN);
+        ++nextSN;
+    }
 }
 
 template <class NetworkDriver>
-void StatefullWriterT<NetworkDriver>::sendData(const ReaderProxy &reader, const SequenceNumber_t& firstMissingSn){
-    SequenceNumber_t max_sn;
+bool StatefullWriterT<NetworkDriver>::sendData(const ReaderProxy &reader, const SequenceNumber_t& snMissing){
+
+    // TODO smarter packaging e.g. by creating MessageStruct and serialize after adjusting values
+
+    PacketInfo info;
+    info.srcPort = m_packetInfo.srcPort;
+
+    MessageFactory::addHeader(info.buffer, m_attributes.endpointGuid.prefix);
+    MessageFactory::addSubMessageTimeStamp(info.buffer);
+
+    // Just usable for IPv4
+    const Locator& locator = reader.remoteLocator;
+
+    info.destAddr = locator.getIp4Address();
+    info.destPort = (Ip4Port_t) locator.port;
+
     {
         Lock lock(m_mutex);
-        max_sn = m_history.getSeqNumMax();
-    }
-
-    // send the missing one and all following
-    for(SequenceNumber_t sn = firstMissingSn; sn <= max_sn; ++sn){
-
-        PacketInfo info;
-        info.srcPort = m_packetInfo.srcPort;
-
-        MessageFactory::addHeader(info.buffer, m_attributes.endpointGuid.prefix);
-        MessageFactory::addSubMessageTimeStamp(info.buffer);
-
-        // Just usable for IPv4
-        const Locator& locator = reader.remoteLocator;
-
-        info.destAddr = locator.getIp4Address();
-        info.destPort = (Ip4Port_t) locator.port;
-
-        {
-            Lock lock(m_mutex);
-            const CacheChange* next = m_history.getChangeBySN(sn);
-            if(next == nullptr){
-    #if SFW_VERBOSE
-                printf("StatefullWriter[%s]: Couldn't get a CacheChange with SN (%i,%u)\n", &this->m_attributes.topicName[0], sn.high, sn.low);
-    #endif
-                continue;
-            }
-            MessageFactory::addSubMessageData(info.buffer, next->data, false, next->sequenceNumber, m_attributes.endpointGuid.entityId,
-                                              reader.remoteReaderGuid.entityId);
+        const CacheChange* next = m_history.getChangeBySN(snMissing);
+        if(next == nullptr){
+#if SFW_VERBOSE
+            printf("StatefullWriter[%s]: Couldn't get a CacheChange with SN (%i,%u)\n", &this->m_attributes.topicName[0], sn.high, sn.low);
+#endif
+            return false;
         }
-
-        m_transport->sendPacket(info);
-
+        MessageFactory::addSubMessageData(info.buffer, next->data, false, next->sequenceNumber, m_attributes.endpointGuid.entityId,
+                                          reader.remoteReaderGuid.entityId);
     }
 
+    m_transport->sendPacket(info);
+    return true;
 }
 
 template <class NetworkDriver>

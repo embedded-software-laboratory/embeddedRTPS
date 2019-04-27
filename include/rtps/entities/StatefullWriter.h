@@ -45,7 +45,7 @@ namespace rtps{
 
         MemoryPool<ReaderProxy, Config::NUM_READER_PROXIES_PER_WRITER> m_proxies;
 
-        void sendData(const ReaderProxy &reader, const SequenceNumber_t &sn);
+        bool sendData(const ReaderProxy &reader, const SequenceNumber_t &sn);
         static void hbFunctionJumppad(void* thisPointer);
         void sendHeartBeatLoop();
         void sendHeartBeat();
