@@ -22,6 +22,9 @@ namespace rtps{
     class ParticipantProxyData{
     public:
 
+        ParticipantProxyData() = default;
+        ParticipantProxyData(Guid guid);
+
         ProtocolVersion_t m_protocolVersion = PROTOCOLVERSION;
         Guid m_guid = Guid{GUIDPREFIX_UNKNOWN, ENTITYID_UNKNOWN};
         VendorId_t m_vendorId = VENDOR_UNKNOWN;

@@ -7,6 +7,10 @@
 
 using rtps::ParticipantProxyData;
 
+ParticipantProxyData::ParticipantProxyData(Guid guid) : m_guid(guid){
+
+}
+
 void ParticipantProxyData::reset(){
     m_guid = Guid{GUIDPREFIX_UNKNOWN, ENTITYID_UNKNOWN};
     m_manualLivelinessCount = Count_t{1};

@@ -136,6 +136,15 @@ namespace rtps{
             return false;
         }
 
+        const TYPE* find(bool(*jumppad)(void*, const TYPE& data), void* isCorrectElement){
+            for(auto it=begin(); it!=end();++it){
+                if(jumppad(isCorrectElement, *it)){
+                    return &(*it);
+                }
+            }
+            return nullptr;
+        }
+
         MemPoolIter begin(){
             MemPoolIter it(*this);
             if(!(m_bitMap[0] & 1)){

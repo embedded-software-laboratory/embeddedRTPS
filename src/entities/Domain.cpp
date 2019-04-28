@@ -147,7 +147,7 @@ void Domain::addDefaultWriterAndReader(Participant& part) {
     part.addBuiltInEndpoints(endpoints);
 }
 
-void Domain::registerPort(Participant& part){
+void Domain::registerPort(const Participant& part){
     m_transport.createUdpConnection(getUserUnicastPort(part.m_participantId));
     m_transport.createUdpConnection(getBuiltInUnicastPort(part.m_participantId));
 }

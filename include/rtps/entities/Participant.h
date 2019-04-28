@@ -54,8 +54,9 @@ namespace rtps{
         Reader* getReader(EntityId_t id) const;
         Reader* getMatchingReader(const TopicData& topicData) const;
 
-        bool addNewRemoteParticipant(ParticipantProxyData& remotePart);
-        const ParticipantProxyData* findRemoteParticipant(const GuidPrefix_t& prefix) const;
+        bool addNewRemoteParticipant(const ParticipantProxyData& remotePart);
+        bool removeRemoteParticipant(const GuidPrefix_t& prefix);
+        const ParticipantProxyData* findRemoteParticipant(const GuidPrefix_t& prefix);
 
         MessageReceiver* getMessageReceiver();
 
@@ -70,9 +71,8 @@ namespace rtps{
         uint8_t m_numWriters = 0;
         std::array<Reader*, Config::NUM_READERS_PER_PARTICIPANT> m_readers{};
         uint8_t m_numReaders = 0;
-        const bool m_pushMode = false; // No other mode supported atm
 
-        std::array<ParticipantProxyData, Config::SPDP_MAX_NUMBER_FOUND_PARTICIPANTS> m_foundParticipants;
+        MemoryPool<ParticipantProxyData, Config::SPDP_MAX_NUMBER_FOUND_PARTICIPANTS> m_remoteParticipants;
 
         SPDPAgent m_spdpAgent;
         SEDPAgent m_sedpAgent;

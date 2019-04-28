@@ -130,23 +130,26 @@ rtps::Reader* Participant::getMatchingReader(const TopicData& writerTopicData) c
     return nullptr;
 }
 
-bool Participant::addNewRemoteParticipant(ParticipantProxyData& remotePart){
-    for(auto& partProxy : m_foundParticipants) {
-        if (partProxy.m_guid.prefix.id == GUIDPREFIX_UNKNOWN.id) {
-            partProxy = remotePart;
-            return true;
-        }
-    }
-    return false;
+bool Participant::addNewRemoteParticipant(const ParticipantProxyData& remotePart){
+    return m_remoteParticipants.add(remotePart);
 }
 
-const rtps::ParticipantProxyData* Participant::findRemoteParticipant(const GuidPrefix_t& prefix) const{
-    for(auto& partProxy : m_foundParticipants){
-        if(partProxy.m_guid.prefix == prefix){
-            return &partProxy;
-        }
-    }
-    return nullptr;
+bool Participant::removeRemoteParticipant(const GuidPrefix_t& prefix){
+    auto isElementToRemove=[&](const ParticipantProxyData& proxy){
+        return proxy.m_guid.prefix == prefix;
+    };
+    auto thunk=[](void* arg, const ParticipantProxyData& value){return (*static_cast<decltype(isElementToRemove)*>(arg))(value);};
+
+    return m_remoteParticipants.remove(thunk, &isElementToRemove);
+}
+
+const rtps::ParticipantProxyData* Participant::findRemoteParticipant(const GuidPrefix_t& prefix){
+    auto isElementToFind=[&](const ParticipantProxyData& proxy){
+        return proxy.m_guid.prefix == prefix;
+    };
+    auto thunk=[](void* arg, const ParticipantProxyData& value){return (*static_cast<decltype(isElementToFind)*>(arg))(value);};
+
+    return m_remoteParticipants.find(thunk, &isElementToFind);
 }
 
 rtps::MessageReceiver* Participant::getMessageReceiver(){

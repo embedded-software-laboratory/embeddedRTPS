@@ -47,7 +47,7 @@ namespace rtps{
         void receiveCallback(const PacketInfo& packet);
         GuidPrefix_t generateGuidPrefix(ParticipantId_t id) const;
         void addDefaultWriterAndReader(Participant& part);
-        void registerPort(Participant& part);
+        void registerPort(const Participant& part);
         static void receiveJumppad(void* callee, const PacketInfo& packet);
     };
 }
