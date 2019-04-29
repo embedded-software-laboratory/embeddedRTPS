@@ -159,7 +159,6 @@ rtps::MessageReceiver* Participant::getMessageReceiver(){
 void Participant::addBuiltInEndpoints(BuiltInEndpoints& endpoints){
     m_hasBuilInEndpoints = true;
     m_spdpAgent.init(*this, endpoints);
-    m_spdpAgent.start();
     m_sedpAgent.init(*this, endpoints);
 
     // This needs to be done after initializing the agents
@@ -170,7 +169,7 @@ void Participant::addBuiltInEndpoints(BuiltInEndpoints& endpoints){
     addWriter(endpoints.sedpSubWriter);
     addReader(endpoints.sedpSubReader);
 
-    // TODO add all existing writers and readers in case there were added before the endpoints
+    m_spdpAgent.start();
 }
 
 void Participant::newMessage(const uint8_t* data, DataSize_t size){

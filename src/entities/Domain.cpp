@@ -79,16 +79,17 @@ rtps::Participant* Domain::createParticipant(){
 #if DOMAIN_VERBOSE
     printf("Domain: Creating new participant.\n");
 #endif
-    for(auto& entry : m_participants){
-        if(entry.m_participantId == PARTICIPANT_ID_INVALID){
-            entry.reuse(generateGuidPrefix(m_nextParticipantId), m_nextParticipantId);
-            addDefaultWriterAndReader(entry);
-            registerPort(entry);
-            ++m_nextParticipantId;
-            return &entry;
-        }
+    auto nextSlot = static_cast<uint8_t>(m_nextParticipantId - PARTICIPANT_START_ID);
+    if(m_participants.size() <= nextSlot){
+        return nullptr;
     }
-    return nullptr;
+
+    auto& entry = m_participants[nextSlot];
+    entry.reuse(generateGuidPrefix(m_nextParticipantId), m_nextParticipantId);
+    registerPort(entry);
+    addDefaultWriterAndReader(entry);
+    ++m_nextParticipantId;
+    return &entry;
 }
 
 void Domain::addDefaultWriterAndReader(Participant& part) {
@@ -153,6 +154,11 @@ void Domain::registerPort(const Participant& part){
 }
 
 rtps::Writer* Domain::createWriter(Participant& part, const char* topicName, const char* typeName, bool reliable){
+    if((reliable && m_statefulWriters.size() <= m_numStatefulWriters) ||
+       (!reliable && m_statelessWriters.size() <= m_numStatelessWriters)){
+        return nullptr;
+    }
+
     // TODO Distinguish WithKey and NoKey (Also changes EntityKind)
     TopicData attributes;
 
@@ -169,25 +175,17 @@ rtps::Writer* Domain::createWriter(Participant& part, const char* topicName, con
     printf("Creating writer[%s, %s]\n", topicName, typeName);
 #endif
     if(reliable){
-        if(m_numStatefulWriters == m_statefulWriters.size()){
-            return nullptr;
-        }
-
         attributes.reliabilityKind = ReliabilityKind_t::RELIABLE;
 
-        StatefulWriter& writer = m_statefulWriters[m_numStatefulWriters];
+        StatefulWriter& writer = m_statefulWriters[m_numStatefulWriters++];
         writer.init(attributes, TopicKind_t::NO_KEY, &m_threadPool, m_transport);
 
         part.addWriter(&writer);
         return &writer;
     }else{
-        if(m_numStatelessWriters == m_statelessWriters.size()){
-            return nullptr;
-        }
-
         attributes.reliabilityKind = ReliabilityKind_t::BEST_EFFORT;
 
-        StatelessWriter& writer = m_statelessWriters[m_numStatelessWriters];
+        StatelessWriter& writer = m_statelessWriters[m_numStatelessWriters++];
         writer.init(attributes, TopicKind_t::NO_KEY, &m_threadPool, m_transport);
 
         part.addWriter(&writer);
@@ -197,6 +195,11 @@ rtps::Writer* Domain::createWriter(Participant& part, const char* topicName, con
 
 
 rtps::Reader* Domain::createReader(Participant& part, const char* topicName, const char* typeName, bool reliable){
+    if((reliable && m_statefulReaders.size() <= m_numStatefulReaders) ||
+       (!reliable && m_statelessReaders.size() <= m_numStatelessReaders)){
+        return nullptr;
+    }
+
     // TODO Distinguish WithKey and NoKey (Also changes EntityKind)
     TopicData attributes;
 
@@ -220,7 +223,7 @@ rtps::Reader* Domain::createReader(Participant& part, const char* topicName, con
 
         attributes.reliabilityKind = ReliabilityKind_t::RELIABLE;
 
-        StatefulReader& reader = m_statefulReaders[m_numStatefulReaders];
+        StatefulReader& reader = m_statefulReaders[m_numStatefulReaders++];
         reader.init(attributes, m_transport);
 
         part.addReader(&reader);
@@ -232,7 +235,7 @@ rtps::Reader* Domain::createReader(Participant& part, const char* topicName, con
 
         attributes.reliabilityKind = ReliabilityKind_t::BEST_EFFORT;
 
-        StatelessReader& reader = m_statelessReaders[m_numStatelessReaders];
+        StatelessReader& reader = m_statelessReaders[m_numStatelessReaders++];
         reader.init(attributes);
 
         part.addReader(&reader);
