@@ -65,7 +65,7 @@ void SPDPAgent::runBroadcast(void *args){
     agent.m_buildInEndpoints.spdpWriter->newChange(ChangeKind_t::ALIVE, agent.m_microbuffer.init, size);
     while(agent.m_running){
         sys_msleep(Config::SPDP_RESEND_PERIOD_MS);
-        agent.m_buildInEndpoints.spdpWriter->unsentChangesReset();
+        agent.m_buildInEndpoints.spdpWriter->setAllChangesToUnsent();
     }
 }
 
@@ -129,7 +129,7 @@ void SPDPAgent::processProxyData(){
     }
 
     // New participant, help him join fast by broadcasting data again
-    m_buildInEndpoints.spdpWriter->unsentChangesReset();
+    m_buildInEndpoints.spdpWriter->setAllChangesToUnsent();
     if(mp_participant->addNewRemoteParticipant(m_proxyDataBuffer)) {
         addProxiesForBuiltInEndpoints();
 

@@ -94,7 +94,7 @@ const CacheChange* StatelessWriterT<NetworkDriver>::newChange(rtps::ChangeKind_t
 }
 
 template <typename NetworkDriver>
-void StatelessWriterT<NetworkDriver>::unsentChangesReset() {
+void StatelessWriterT<NetworkDriver>::setAllChangesToUnsent() {
     Lock lock(m_mutex);
 
     m_nextSequenceNumberToSend = m_history.getSeqNumMin();

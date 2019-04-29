@@ -87,12 +87,12 @@ rtps::Participant* Domain::createParticipant(){
     auto& entry = m_participants[nextSlot];
     entry.reuse(generateGuidPrefix(m_nextParticipantId), m_nextParticipantId);
     registerPort(entry);
-    addDefaultWriterAndReader(entry);
+    createBuiltinWritersAndReaders(entry);
     ++m_nextParticipantId;
     return &entry;
 }
 
-void Domain::addDefaultWriterAndReader(Participant& part) {
+void Domain::createBuiltinWritersAndReaders(Participant &part) {
     //SPDP
     StatelessWriter& spdpWriter = m_statelessWriters[m_numStatelessWriters++];
     StatelessReader& spdpReader = m_statelessReaders[m_numStatelessReaders++];

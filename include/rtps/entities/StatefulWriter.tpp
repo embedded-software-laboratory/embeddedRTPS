@@ -118,7 +118,7 @@ bool StatefulWriterT<NetworkDriver>::isIrrelevant(ChangeKind_t kind) const{
 }
 
 template <class NetworkDriver>
-void StatefulWriterT<NetworkDriver>::unsentChangesReset(){
+void StatefulWriterT<NetworkDriver>::setAllChangesToUnsent(){
     Lock lock(m_mutex);
 
     m_nextSequenceNumberToSend = m_history.getSeqNumMin();

@@ -25,7 +25,7 @@ namespace rtps{
         //! Executes required steps like sending packets. Intended to be called by worker threads
         void progress() override;
         const CacheChange* newChange(ChangeKind_t kind, const uint8_t* data, DataSize_t size) override;
-        void unsentChangesReset() override;
+        void setAllChangesToUnsent() override;
         void onNewAckNack(const SubmessageAckNack& msg) override;
 
     private:
