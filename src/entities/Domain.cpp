@@ -17,14 +17,14 @@ Domain::Domain() : m_threadPool(receiveJumppad, this), m_transport(ThreadPool::r
     m_transport.joinMultiCastGroup(transformIP4ToU32(239, 255, 0, 1));
 }
 
-bool Domain::start(){
-    bool started = m_threadPool.startThreads();
+bool Domain::completeInit(){
+    m_initComplete = m_threadPool.startThreads();
 #if DOMAIN_VERBOSE
     if(!started){
         printf("Domain: Failed starting threads\n");
     }
 #endif
-    return started;
+    return m_initComplete;
 }
 
 void Domain::stop(){
@@ -80,7 +80,7 @@ rtps::Participant* Domain::createParticipant(){
     printf("Domain: Creating new participant.\n");
 #endif
     auto nextSlot = static_cast<uint8_t>(m_nextParticipantId - PARTICIPANT_START_ID);
-    if(m_participants.size() <= nextSlot){
+    if(m_initComplete || m_participants.size() <= nextSlot){
         return nullptr;
     }
 
@@ -154,7 +154,8 @@ void Domain::registerPort(const Participant& part){
 }
 
 rtps::Writer* Domain::createWriter(Participant& part, const char* topicName, const char* typeName, bool reliable){
-    if((reliable && m_statefulWriters.size() <= m_numStatefulWriters) ||
+    if(m_initComplete ||
+       (reliable && m_statefulWriters.size() <= m_numStatefulWriters) ||
        (!reliable && m_statelessWriters.size() <= m_numStatelessWriters)){
         return nullptr;
     }
@@ -195,7 +196,8 @@ rtps::Writer* Domain::createWriter(Participant& part, const char* topicName, con
 
 
 rtps::Reader* Domain::createReader(Participant& part, const char* topicName, const char* typeName, bool reliable){
-    if((reliable && m_statefulReaders.size() <= m_numStatefulReaders) ||
+    if(m_initComplete ||
+       (reliable && m_statefulReaders.size() <= m_numStatefulReaders) ||
        (!reliable && m_statelessReaders.size() <= m_numStatelessReaders)){
         return nullptr;
     }

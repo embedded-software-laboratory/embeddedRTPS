@@ -68,9 +68,9 @@ bool ThreadPool::startThreads(){
 
 void ThreadPool::stopThreads() {
     m_running = false;
-    // TODO make sure they have finished. Seems sufficient to be sufficient for tests.
-    // No sufficient if threads shall actually be stopped during runtime.
-    sys_msleep(500);
+    // TODO make sure they have finished. Seems to be sufficient for tests.
+    // Not sufficient if threads shall actually be stopped during runtime.
+    sys_msleep(10);
 }
 
 void ThreadPool::clearQueues(){

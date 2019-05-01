@@ -146,13 +146,13 @@ void SPDPAgent::processProxyData(){
 void SPDPAgent::addProxiesForBuiltInEndpoints(){
     if (m_proxyDataBuffer.hasPublicationWriter()){
         const WriterProxy proxy{{m_proxyDataBuffer.m_guid.prefix, ENTITYID_SEDP_BUILTIN_PUBLICATIONS_WRITER},
-                                m_proxyDataBuffer.m_metatrafficMulticastLocatorList[0]};
+                                m_proxyDataBuffer.m_metatrafficUnicastLocatorList[0]};
         m_buildInEndpoints.sedpPubReader->addNewMatchedWriter(proxy);
     }
 
     if (m_proxyDataBuffer.hasSubscriptionWriter()){
         const WriterProxy proxy{{m_proxyDataBuffer.m_guid.prefix, ENTITYID_SEDP_BUILTIN_SUBSCRIPTIONS_WRITER},
-                                m_proxyDataBuffer.m_metatrafficMulticastLocatorList[0]};
+                                m_proxyDataBuffer.m_metatrafficUnicastLocatorList[0]};
         m_buildInEndpoints.sedpSubReader->addNewMatchedWriter(proxy);
     }
 

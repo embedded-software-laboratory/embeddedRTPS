@@ -21,7 +21,7 @@ namespace rtps{
 
         Domain();
 
-        bool start();
+        bool completeInit();
         void stop();
 
         Participant* createParticipant();
@@ -43,6 +43,8 @@ namespace rtps{
         uint8_t m_numStatefulReaders = 0;
         std::array<StatefulWriter, Config::NUM_STATEFUL_WRITERS> m_statefulWriters;
         uint8_t m_numStatefulWriters = 0;
+
+        bool m_initComplete = false;
 
         void receiveCallback(const PacketInfo& packet);
         GuidPrefix_t generateGuidPrefix(ParticipantId_t id) const;

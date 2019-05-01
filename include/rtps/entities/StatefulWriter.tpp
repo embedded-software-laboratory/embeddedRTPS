@@ -209,7 +209,8 @@ bool StatefulWriterT<NetworkDriver>::sendData(const ReaderProxy &reader, const S
         const CacheChange* next = m_history.getChangeBySN(snMissing);
         if(next == nullptr){
 #if SFW_VERBOSE
-            printf("StatefulWriter[%s]: Couldn't get a CacheChange with SN (%i,%u)\n", &this->m_attributes.topicName[0], sn.high, sn.low);
+            printf("StatefulWriter[%s]: Couldn't get a CacheChange with SN (%i,%u)\n", &this->m_attributes.topicName[0],
+                                                                                       snMissing.high, snMissing.low);
 #endif
             return false;
         }
