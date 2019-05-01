@@ -189,35 +189,48 @@ namespace rtps{
 			if(set.numBits != 0){
 				bitMapSize = 4*((set.numBits/32) + 1);
 			}
-			return SubmessageHeader::getRawSize()
-				   + (2*3+2*1) // EntityID
-				   + sizeof(SequenceNumber_t) + sizeof(uint32_t) + bitMapSize // SequenceNumberSet
-				   + sizeof(Count_t);
+			return getRawSizeWithoutSNSet()
+				   + sizeof(SequenceNumber_t) + sizeof(uint32_t) + bitMapSize; // SequenceNumberSet
 		}
+        static uint16_t getRawSizeWithoutSNSet(){
+            return SubmessageHeader::getRawSize()
+                   + (2*3+2*1) // EntityID
+                   + sizeof(Count_t);
+        }
+
     };
 
 	template<typename Buffer>
-	void serializeMessage(Buffer& buffer, Header& header){
-		buffer.reserve(Header::getRawSize());
+	bool serializeMessage(Buffer& buffer, Header& header){
+	    if(!buffer.reserve(Header::getRawSize())){
+	        return false;
+	    }
 
 		buffer.append(header.protocolName.data(), sizeof(std::array<uint8_t, 4>));
 		buffer.append(reinterpret_cast<uint8_t*>(&header.protocolVersion), sizeof(ProtocolVersion_t));
 		buffer.append(header.vendorId.vendorId.data(), sizeof(VendorId_t));
 		buffer.append(header.guidPrefix.id.data(), sizeof(GuidPrefix_t));
+		return true;
 	}
 
 	template<typename Buffer>
-	void serializeMessage(Buffer& buffer, SubmessageHeader& header){
+    bool serializeMessage(Buffer& buffer, SubmessageHeader& header){
+        if(!buffer.reserve(Header::getRawSize())){
+            return false;
+        }
 		buffer.reserve(SubmessageHeader::getRawSize());
 
 		buffer.append(reinterpret_cast<uint8_t*>(&header.submessageId), sizeof(SubmessageKind));
 		buffer.append(&header.flags, sizeof(uint8_t));
 		buffer.append(reinterpret_cast<uint8_t*>(&header.submessageLength), sizeof(uint16_t));
+        return true;
 	}
 
 	template<typename Buffer>
-	void serializeMessage(Buffer& buffer, SubmessageData& msg){
-		buffer.reserve(SubmessageData::getRawSize());
+    bool serializeMessage(Buffer& buffer, SubmessageData& msg){
+        if(!buffer.reserve(SubmessageData::getRawSize())){
+            return false;
+        }
 
 		serializeMessage(buffer, msg.header);
 
@@ -229,11 +242,14 @@ namespace rtps{
 		buffer.append(reinterpret_cast<uint8_t*>(&msg.writerId.entityKind), sizeof(EntityKind_t));
 		buffer.append(reinterpret_cast<uint8_t*>(&msg.writerSN.high), sizeof(msg.writerSN.high));
 		buffer.append(reinterpret_cast<uint8_t*>(&msg.writerSN.low), sizeof(msg.writerSN.low));
+        return true;
 	}
 
 	template<typename Buffer>
-	void serializeMessage(Buffer& buffer, SubmessageHeartbeat& msg){
-		buffer.reserve(SubmessageHeartbeat::getRawSize());
+    bool serializeMessage(Buffer& buffer, SubmessageHeartbeat& msg){
+        if(!buffer.reserve(SubmessageHeartbeat::getRawSize())){
+            return false;
+        }
 
 		serializeMessage(buffer, msg.header);
 
@@ -246,11 +262,14 @@ namespace rtps{
 		buffer.append(reinterpret_cast<uint8_t*>(&msg.lastSN.high), sizeof(msg.lastSN.high));
 		buffer.append(reinterpret_cast<uint8_t*>(&msg.lastSN.low), sizeof(msg.lastSN.low));
 		buffer.append(reinterpret_cast<uint8_t*>(&msg.count.value), sizeof(msg.count.value));
+        return true;
 	}
 
 	template<typename Buffer>
-	void serializeMessage(Buffer& buffer, SubmessageAckNack& msg){
-		buffer.reserve(SubmessageAckNack::getRawSize(msg.readerSNState));
+    bool serializeMessage(Buffer& buffer, SubmessageAckNack& msg){
+        if(!buffer.reserve(SubmessageAckNack::getRawSize(msg.readerSNState))){
+            return false;
+        }
 
 		serializeMessage(buffer, msg.header);
 
@@ -265,6 +284,7 @@ namespace rtps{
 			buffer.append(reinterpret_cast<uint8_t*>(msg.readerSNState.bitMap.data()), 4*((msg.readerSNState.numBits / 32) + 1));
 		}
 		buffer.append(reinterpret_cast<uint8_t*>(&msg.count.value), sizeof(msg.count.value));
+        return true;
 	}
 
 
@@ -277,7 +297,7 @@ namespace rtps{
         //! Offset to the next unprocessed byte
         DataSize_t nextPos = 0;
 
-        inline const uint8_t* getPointerToPos() const{
+        inline const uint8_t* getPointerToCurrentPos() const{
             return &data[nextPos];
         }
 
@@ -287,15 +307,15 @@ namespace rtps{
         }
     };
 
-	void deserializeMessage(const MessageProcessingInfo& info, Header& header);
+	bool deserializeMessage(const MessageProcessingInfo& info, Header& header);
 
-    void deserializeMessage(const MessageProcessingInfo& info, SubmessageHeader& header);
+    bool deserializeMessage(const MessageProcessingInfo& info, SubmessageHeader& header);
 
-    void deserializeMessage(const MessageProcessingInfo& info, SubmessageData& msg);
+    bool deserializeMessage(const MessageProcessingInfo& info, SubmessageData& msg);
 
-    void deserializeMessage(const MessageProcessingInfo& info, SubmessageHeartbeat& msg);
+    bool deserializeMessage(const MessageProcessingInfo& info, SubmessageHeartbeat& msg);
 
-    void deserializeMessage(const MessageProcessingInfo& info, SubmessageAckNack& msg);
+    bool deserializeMessage(const MessageProcessingInfo& info, SubmessageAckNack& msg);
 
 }
 

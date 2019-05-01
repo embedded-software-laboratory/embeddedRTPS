@@ -26,24 +26,24 @@ namespace rtps {
 
         explicit MessageReceiver(Participant* part);
 
-        void reset();
-
         bool processMessage(const uint8_t* data, DataSize_t size);
 
     private:
 
         Participant* mp_part;
 
+        void resetState();
+
         // TODO make msgInfo a member
         // This probably make processing faster, as no parameter needs to be passed around
         // However, we need to make sure data is set to nullptr after processMsg to make sure
         // we don't access it again afterwards.
         /**
-         * Check header for validity, modifys the state of the receiver and
+         * Check header for validity, modifies the state of the receiver and
          * adjusts the position of msgInfo accordingly
          */
         bool processHeader(MessageProcessingInfo& msgInfo);
-        bool processSubMessage(MessageProcessingInfo& msgInfo);
+        bool processSubmessage(MessageProcessingInfo &msgInfo, const SubmessageHeader& submsgHeader);
         bool processDataSubmessage(MessageProcessingInfo& msgInfo);
         bool processHeartbeatSubmessage(MessageProcessingInfo& msgInfo);
         bool processAckNackSubmessage(MessageProcessingInfo& msgInfo);

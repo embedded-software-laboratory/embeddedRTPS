@@ -23,7 +23,7 @@ MessageReceiver::MessageReceiver(Participant* part)
 
 }
 
-void MessageReceiver::reset(){
+void MessageReceiver::resetState(){
     sourceGuidPrefix = GUIDPREFIX_UNKNOWN;
     sourceVersion = PROTOCOLVERSION;
     sourceVendor = VENDOR_UNKNOWN;
@@ -31,15 +31,18 @@ void MessageReceiver::reset(){
 }
 
 bool MessageReceiver::processMessage(const uint8_t* data, DataSize_t size){
-
+    resetState();
     MessageProcessingInfo msgInfo(data, size);
 
     if(!processHeader(msgInfo)){
         return false;
     }
-
+    SubmessageHeader submsgHeader;
     while(msgInfo.nextPos < msgInfo.size){
-        processSubMessage(msgInfo);
+        if(!deserializeMessage(msgInfo, submsgHeader)){
+            return false;
+        }
+        processSubmessage(msgInfo, submsgHeader);
     }
 
     return true;
@@ -47,12 +50,10 @@ bool MessageReceiver::processMessage(const uint8_t* data, DataSize_t size){
 }
 
 bool MessageReceiver::processHeader(MessageProcessingInfo& msgInfo){
-    if(msgInfo.size < rtps::Header::getRawSize()){
+    Header header;
+    if(!deserializeMessage(msgInfo, header)){
         return false;
     }
-
-    Header header;
-    deserializeMessage(msgInfo, header);
 
     if(header.guidPrefix.id == mp_part->m_guidPrefix.id){
 #if RECV_VERBOSE
@@ -74,12 +75,9 @@ bool MessageReceiver::processHeader(MessageProcessingInfo& msgInfo){
     return true;
 }
 
-bool MessageReceiver::processSubMessage(MessageProcessingInfo& msgInfo){
+bool MessageReceiver::processSubmessage(MessageProcessingInfo& msgInfo, const SubmessageHeader& submsgHeader){
+    bool success = false;
 
-    SubmessageHeader submsgHeader;
-    deserializeMessage(msgInfo, submsgHeader);
-
-    bool success;
     switch(submsgHeader.submessageId){
         case SubmessageKind::ACKNACK:
 #if RECV_VERBOSE
@@ -115,35 +113,33 @@ bool MessageReceiver::processSubMessage(MessageProcessingInfo& msgInfo){
 #if RECV_VERBOSE
             printf("Submessage of type %u currently not supported. Skipping..\n", static_cast<uint8_t>(submsgHeader->submessageId));
 #endif
-            success = true;
+            success = false;
     }
     msgInfo.nextPos += submsgHeader.submessageLength + SubmessageHeader::getRawSize();
     return success;
 }
 
 bool MessageReceiver::processDataSubmessage(MessageProcessingInfo& msgInfo){
-    SubmessageData submsgData;
-    deserializeMessage(msgInfo, submsgData);
+    SubmessageData dataSubmsg;
+    if(!deserializeMessage(msgInfo, dataSubmsg)){
+        return false;
+    }
 
-    const uint8_t* serializedData = msgInfo.getPointerToPos() + SubmessageData::getRawSize();
+    const uint8_t* serializedData = msgInfo.getPointerToCurrentPos() + SubmessageData::getRawSize();
     const DataSize_t size = msgInfo.size - (msgInfo.nextPos + SubmessageData::getRawSize());
 
-    //if(submsgHeader->submessageLength > msgInfo.size - msgInfo.nextPos){
-    //    return false;
-    //}
-    // TODO We can do better than that
     //bool isLittleEndian = (submsgHeader->flags & SubMessageFlag::FLAG_ENDIANESS);
     //bool hasInlineQos = (submsgHeader->flags & SubMessageFlag::FLAG_INLINE_QOS);
 
-    Reader* reader = mp_part->getReader(submsgData.readerId);
+    Reader* reader = mp_part->getReader(dataSubmsg.readerId);
     if(reader != nullptr){
-        Guid writerGuid{sourceGuidPrefix, submsgData.writerId};
-        ReaderCacheChange change{ChangeKind_t::ALIVE, writerGuid, submsgData.writerSN, serializedData, size};
+        Guid writerGuid{sourceGuidPrefix, dataSubmsg.writerId};
+        ReaderCacheChange change{ChangeKind_t::ALIVE, writerGuid, dataSubmsg.writerSN, serializedData, size};
         reader->newChange(change);
     }else{
 #if RECV_VERBOSE
         printf("Couldn't find a reader with id: ");
-        printEntityId(submsgData->readerId);
+        printEntityId(dataSubmsg->readerId);
         printf("\n");
 #endif
     }
@@ -153,7 +149,9 @@ bool MessageReceiver::processDataSubmessage(MessageProcessingInfo& msgInfo){
 
 bool MessageReceiver::processHeartbeatSubmessage(MessageProcessingInfo& msgInfo){
     SubmessageHeartbeat submsgHB;
-    deserializeMessage(msgInfo, submsgHB);
+    if(!deserializeMessage(msgInfo, submsgHB)){
+        return false;
+    }
 
     Reader* reader = mp_part->getReader(submsgHB.readerId);
     if(reader != nullptr){
@@ -166,7 +164,9 @@ bool MessageReceiver::processHeartbeatSubmessage(MessageProcessingInfo& msgInfo)
 
 bool MessageReceiver::processAckNackSubmessage(MessageProcessingInfo& msgInfo){
     SubmessageAckNack submsgAckNack;
-    deserializeMessage(msgInfo, submsgAckNack);
+    if(!deserializeMessage(msgInfo, submsgAckNack)){
+        return false;
+    }
 
     Writer* writer = mp_part->getWriter(submsgAckNack.writerId);
     if(writer != nullptr){
