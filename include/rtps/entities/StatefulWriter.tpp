@@ -191,6 +191,7 @@ template <class NetworkDriver>
 bool StatefulWriterT<NetworkDriver>::sendData(const ReaderProxy &reader, const SequenceNumber_t& snMissing){
 
     // TODO smarter packaging e.g. by creating MessageStruct and serialize after adjusting values
+    // Reusing the pbuf is not possible. See https://www.nongnu.org/lwip/2_0_x/raw_api.html (Zero-Copy MACs)
 
     PacketInfo info;
     info.srcPort = m_packetInfo.srcPort;

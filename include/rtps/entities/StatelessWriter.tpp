@@ -119,6 +119,8 @@ bool StatelessWriterT<NetworkDriver>::isIrrelevant(ChangeKind_t kind) const{
 template <typename NetworkDriver>
 void StatelessWriterT<NetworkDriver>::progress(){
     // TODO smarter packaging e.g. by creating MessageStruct and serialize after adjusting values
+    // Reusing the pbuf is not possible. See https://www.nongnu.org/lwip/2_1_x/raw_api.html (Zero-Copy MACs)
+
     for(const auto& proxy : m_proxies){
 
 #if SLW_VERBOSE
