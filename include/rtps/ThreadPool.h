@@ -6,7 +6,7 @@
 #ifndef RTPS_THREADPOOL_H
 #define RTPS_THREADPOOL_H
 
-#include "config.h"
+#include "rtps/config.h"
 #include "lwip/sys.h"
 #include "rtps/communication/UdpDriver.h"
 #include "rtps/communication/PacketInfo.h"
