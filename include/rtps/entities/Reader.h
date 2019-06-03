@@ -47,6 +47,14 @@ namespace rtps{
                 return true;
             }
         }
+
+        const uint8_t* getData() const{
+        	return data;
+        }
+
+        const DataSize_t getDataSize() const{
+        	return size;
+        }
     };
 
     typedef void (*ddsReaderCallback_fp)(void* callee, const ReaderCacheChange& cacheChange);
