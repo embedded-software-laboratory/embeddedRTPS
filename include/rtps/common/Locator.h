@@ -8,6 +8,7 @@
 
 #include "ucdr/microcdr.h"
 #include "rtps/utils/udpUtils.h"
+#include "rtps/communication/UdpDriver.h"
 
 #include <array>
 
@@ -63,6 +64,11 @@ namespace rtps{
         ip4_addr_t getIp4Address() const{
             return transformIP4ToU32(address[12], address[13], address[14], address[15]);
         }
+
+        inline bool isSameSubnet() const{
+        	return UdpDriver::isSameSubnet(getIp4Address());
+        }
+
     } __attribute__((packed));
 
     inline Locator getBuiltInUnicastLocator(ParticipantId_t participantId) {

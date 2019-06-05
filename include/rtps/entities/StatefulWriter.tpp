@@ -7,6 +7,8 @@
 
 #include "rtps/messages/MessageFactory.h"
 #include <cstring>
+#include "TFT.h"
+#include <stdio.h>
 
 using rtps::StatefulWriterT;
 
@@ -129,12 +131,12 @@ void StatefulWriterT<NetworkDriver>::setAllChangesToUnsent(){
 }
 
 template <class NetworkDriver>
-void StatefulWriterT<NetworkDriver>::onNewAckNack(const SubmessageAckNack& msg){
+void StatefulWriterT<NetworkDriver>::onNewAckNack(const SubmessageAckNack& msg, const GuidPrefix_t& sourceGuidPrefix){
 	//Lock lock{m_mutex};
     // Search for reader
     ReaderProxy* reader = nullptr;
     for(auto& proxy : m_proxies){
-        if(proxy.remoteReaderGuid.entityId == msg.readerId){
+        if(proxy.remoteReaderGuid.prefix == sourceGuidPrefix && proxy.remoteReaderGuid.entityId == msg.readerId){
             reader = &proxy;
             break;
         }
@@ -148,6 +150,10 @@ void StatefulWriterT<NetworkDriver>::onNewAckNack(const SubmessageAckNack& msg){
 #endif
         return;
     }
+
+    char bfr[10];
+    snprintf(bfr, sizeof(bfr), "%u <= %u", msg.count.value, reader->ackNackCount.value);
+    TFT_PrintLine(1, bfr);
 
     if(msg.count.value <= reader->ackNackCount.value){
 #if SFW_VERBOSE

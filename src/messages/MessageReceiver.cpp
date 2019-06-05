@@ -170,7 +170,7 @@ bool MessageReceiver::processAckNackSubmessage(MessageProcessingInfo& msgInfo){
 
     Writer* writer = mp_part->getWriter(submsgAckNack.writerId);
     if(writer != nullptr){
-        writer->onNewAckNack(submsgAckNack);
+        writer->onNewAckNack(submsgAckNack, sourceGuidPrefix);
         return true;
     }else{
         return false;

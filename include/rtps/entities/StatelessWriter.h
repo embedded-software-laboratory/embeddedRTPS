@@ -28,7 +28,7 @@ namespace rtps {
         void progress() override;
         const CacheChange* newChange(ChangeKind_t kind, const uint8_t* data, DataSize_t size) override;
         void setAllChangesToUnsent() override;
-        void onNewAckNack(const SubmessageAckNack& msg) override;
+        void onNewAckNack(const SubmessageAckNack& msg, const GuidPrefix_t& sourceGuidPrefix) override;
 
     private:
         sys_mutex_t m_mutex;

@@ -57,6 +57,8 @@ namespace rtps{
         bool addNewRemoteParticipant(const ParticipantProxyData& remotePart);
         bool removeRemoteParticipant(const GuidPrefix_t& prefix);
         const ParticipantProxyData* findRemoteParticipant(const GuidPrefix_t& prefix);
+        uint32_t getRemoteParticipantCount();
+
 
         MessageReceiver* getMessageReceiver();
 

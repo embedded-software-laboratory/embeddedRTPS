@@ -12,7 +12,7 @@
 
 namespace rtps{
 
-    template <class TYPE, uint8_t SIZE>
+    template <class TYPE, uint32_t SIZE>
     class MemoryPool{
     public:
 
@@ -80,7 +80,7 @@ namespace rtps{
 
         typedef bool(*condition_fp)(TYPE);
 
-        uint8_t getSize(){
+        uint32_t getSize(){
             return SIZE;
         }
 

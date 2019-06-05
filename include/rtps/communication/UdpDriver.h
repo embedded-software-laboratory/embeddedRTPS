@@ -28,6 +28,8 @@ namespace rtps {
         bool joinMultiCastGroup(ip4_addr_t addr) const;
         void sendPacket(PacketInfo& info);
 
+        static bool isSameSubnet(ip4_addr_t addr);
+
     private:
         std::array<UdpConnection, Config::MAX_NUM_UDP_CONNECTIONS> m_conns;
         std::size_t m_numConns = 0;
