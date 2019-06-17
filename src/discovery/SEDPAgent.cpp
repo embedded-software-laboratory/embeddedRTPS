@@ -15,6 +15,21 @@
 
 using rtps::SEDPAgent;
 
+#if SEDP_VERBOSE
+uint32_t line_ = 0;
+char bf_[100];
+
+#include <asoa/driver/os.h>
+
+#define SEDP_LOG(...) if(true){ 						 \
+		size_t t = snprintf(bf_, sizeof(bf_), __VA_ARGS__); 		 \
+		ASOA_ASSERT(t < sizeof(bf_), "overflow");			 \
+		TFT_PrintLine(line_+3, bf_); 				 \
+		line_ = (line_+1)%30; 							 \
+		}
+
+#endif
+
 void SEDPAgent::init(Participant& part, const BuiltInEndpoints& endpoints){
     // TODO move
     if(sys_mutex_new(&m_mutex) != ERR_OK){
@@ -59,17 +74,17 @@ void SEDPAgent::receiveCallbackSubscriber(void* callee, const ReaderCacheChange&
 void SEDPAgent::onNewPublisher(const ReaderCacheChange& change){
     //Lock lock{m_mutex};
 #if SEDP_VERBOSE
-    printf("New publisher\n");
+    SEDP_LOG("New publisher\n");
 #endif
 
     if(!change.copyInto(m_buffer, sizeof(m_buffer)/sizeof(m_buffer[0]))){
 #if SEDP_VERBOSE
-        printf("SEDPAgent: Buffer too small.\n");
+    	SEDP_LOG("EDPAgent: Buffer too small.\n");
 #endif
         return;
     }
     ucdrBuffer cdrBuffer;
-    ucdr_init_buffer(&cdrBuffer, m_buffer, change.size);
+    ucdr_init_buffer(&cdrBuffer, m_buffer, sizeof(m_buffer));
 
     TopicData topicData;
     if(topicData.readFromUcdrBuffer(cdrBuffer)){
@@ -78,22 +93,29 @@ void SEDPAgent::onNewPublisher(const ReaderCacheChange& change){
 }
 
 void SEDPAgent::onNewPublisher(const TopicData& writerData) {
-    Reader* reader = m_part->getMatchingReader(writerData);
+	// TODO Is it okay to add Endpoint if the respective participant is unknown participant?
+	if(!m_part->findRemoteParticipant(writerData.endpointGuid.prefix)){
+		return;
+	}
+#if SEDP_VERBOSE
+    SEDP_LOG("PUB T/D %s/%s", writerData.topicName, writerData.typeName);
+#endif
+	Reader* reader = m_part->getMatchingReader(writerData);
     if(reader == nullptr){
 #if SEDP_VERBOSE
-        printf("SEDPAgent: Couldn't find reader for new Publisher[%s, %s]\n", writerData.topicName, writerData.typeName);
+        SEDP_LOG("SEDPAgent: Couldn't find reader for new Publisher[%s, %s]\n", writerData.topicName, writerData.typeName);
 #endif
         return;
     }
     // TODO check policies
 #if SEDP_VERBOSE
-    printf("Found a new ");
+    SEDP_LOG("Found a new ");
         if(writerData.reliabilityKind == ReliabilityKind_t::RELIABLE){
-            printf("reliable ");
+            SEDP_LOG("reliable ");
         }else{
-            printf("best-effort ");
+            SEDP_LOG("best-effort ");
         }
-        printf("publisher\n");
+        SEDP_LOG("publisher\n");
 #endif
     reader->addNewMatchedWriter(WriterProxy{writerData.endpointGuid, writerData.unicastLocator});
     if(mfp_onNewPublisherCallback != nullptr) {
@@ -102,19 +124,18 @@ void SEDPAgent::onNewPublisher(const TopicData& writerData) {
 }
 
 void SEDPAgent::onNewSubscriber(const ReaderCacheChange& change){
-    //Lock lock{m_mutex};
 #if SEDP_VERBOSE
-    printf("New subscriber\n");
+    SEDP_LOG("New subscriber\n");
 #endif
 
     if(!change.copyInto(m_buffer, sizeof(m_buffer)/sizeof(m_buffer[0]))){
 #if SEDP_VERBOSE
-        printf("SEDPAgent: Buffer too small.");
+        SEDP_LOG("SEDPAgent: Buffer too small.");
 #endif
         return;
     }
     ucdrBuffer cdrBuffer;
-    ucdr_init_buffer(&cdrBuffer, m_buffer, change.size);
+    ucdr_init_buffer(&cdrBuffer, m_buffer, sizeof(m_buffer));
 
     TopicData topicData;
     if(topicData.readFromUcdrBuffer(cdrBuffer)){
@@ -123,23 +144,30 @@ void SEDPAgent::onNewSubscriber(const ReaderCacheChange& change){
 }
 
 void SEDPAgent::onNewSubscriber(const TopicData& readerData) {
+    if(!m_part->findRemoteParticipant(readerData.endpointGuid.prefix)){
+		TFT_PrintLine(2, "unknown part");
+		return;
+	}
     Writer* writer = m_part->getMatchingWriter(readerData);
+#if SEDP_VERBOSE
+    SEDP_LOG("SUB T/D %s/%s", readerData.topicName, readerData.typeName);
+#endif
     if(writer == nullptr) {
 #if SEDP_VERBOSE
-        printf("SEDPAgent: Couldn't find writer for new subscriber[%s, %s]\n", readerData.topicName, readerData.typeName);
+        SEDP_LOG("SEDPAgent: Couldn't find writer for new subscriber[%s, %s]\n", readerData.topicName, readerData.typeName);
 #endif
         return;
     }
 
     // TODO check policies
 #if SEDP_VERBOSE
-    printf("Found a new ");
+    SEDP_LOG("Found a new ");
         if(readerData.reliabilityKind == ReliabilityKind_t::RELIABLE){
-            printf("reliable ");
+            SEDP_LOG("reliable ");
         }else{
-            printf("best-effort ");
+            SEDP_LOG("best-effort ");
         }
-        printf("Subscriber\n");
+        SEDP_LOG("Subscriber\n");
 #endif
     writer->addNewMatchedReader(ReaderProxy{readerData.endpointGuid, readerData.unicastLocator});
     if(mfp_onNewSubscriberCallback != nullptr){
@@ -166,7 +194,7 @@ void SEDPAgent::addWriter(Writer& writer){
     writer.m_attributes.serializeIntoUcdrBuffer(microbuffer);
     m_endpoints.sedpPubWriter->newChange(ChangeKind_t::ALIVE, m_buffer, ucdr_buffer_length(&microbuffer));
 #if SEDP_VERBOSE
-    printf("Added new change to sedpPubWriter.\n");
+    SEDP_LOG("Added new change to sedpPubWriter.\n");
 #endif
 }
 
@@ -191,6 +219,6 @@ void SEDPAgent::addReader(Reader& reader){
     m_endpoints.sedpSubWriter->newChange(ChangeKind_t::ALIVE, m_buffer, ucdr_buffer_length(&microbuffer));
 
 #if SEDP_VERBOSE
-    printf("Added new change to sedpSubWriter.\n");
+    SEDP_LOG("Added new change to sedpSubWriter.\n");
 #endif
 }

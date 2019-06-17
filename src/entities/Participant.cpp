@@ -153,7 +153,7 @@ const rtps::ParticipantProxyData* Participant::findRemoteParticipant(const GuidP
 }
 
 uint32_t Participant::getRemoteParticipantCount(){
-	return m_remoteParticipants.getSize();
+	return m_remoteParticipants.getNumElements();
 }
 
 rtps::MessageReceiver* Participant::getMessageReceiver(){

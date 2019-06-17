@@ -12,6 +12,17 @@
 
 using rtps::StatefulWriterT;
 
+/*
+static int line_cnt_ = 0;
+static char tft_buffer_[150];
+
+#define log(args...) if(true){ 							 \
+Lock lock{m_mutex}; 									 \
+snprintf(tft_buffer_, sizeof(tft_buffer_), args); 		 \
+TFT_PrintLine(line_cnt_, tft_buffer_); 					 \
+line_cnt_ = (line_cnt_+1)%5; 							 \
+}
+*/
 #define SFW_VERBOSE 0
 
 #if SFW_VERBOSE
@@ -32,7 +43,7 @@ template <class NetworkDriver>
 bool StatefulWriterT<NetworkDriver>::init(TopicData attributes, TopicKind_t topicKind, ThreadPool* /*threadPool*/, NetworkDriver& driver){
     if (sys_mutex_new(&m_mutex) != ERR_OK) {
 #if SFW_VERBOSE
-        printf("StatefulWriter: Failed to create mutex.\n");
+        log("StatefulWriter: Failed to create mutex.\n");
 #endif
         return false;
     }
@@ -55,9 +66,9 @@ bool StatefulWriterT<NetworkDriver>::init(TopicData attributes, TopicKind_t topi
 template <class NetworkDriver>
 bool StatefulWriterT<NetworkDriver>::addNewMatchedReader(const ReaderProxy& newProxy){
 #if SFW_VERBOSE
-    printf("StatefulWriter[%s]: New reader added with id: ", &this->m_attributes.topicName[0]);
+    log("StatefulWriter[%s]: New reader added with id: ", &this->m_attributes.topicName[0]);
     printGuid(newProxy.remoteReaderGuid);
-    printf("\n");
+    log("\n");
 #endif
     return m_proxies.add(newProxy);
 }
@@ -97,7 +108,7 @@ const rtps::CacheChange* StatefulWriterT<NetworkDriver>::newChange(ChangeKind_t 
     }
 
 #if SFW_VERBOSE
-    printf("StatefulWriter[%s]: Adding new data.\n", this->m_attributes.topicName);
+    log("StatefulWriter[%s]: Adding new data.\n", this->m_attributes.topicName);
 #endif
     return result;
 }
@@ -144,20 +155,30 @@ void StatefulWriterT<NetworkDriver>::onNewAckNack(const SubmessageAckNack& msg, 
 
     if(reader == nullptr){
 #if SFW_VERBOSE
-        printf("StatefulWriter[%s]: No proxy found with id: ", &this->m_attributes.topicName[0]);
+        log("StatefulWriter[%s]: No proxy found with id: ", &this->m_attributes.topicName[0]);
         printEntityId(msg.readerId);
-        printf(" Dropping acknack.\n");
+        log(" Dropping acknack.\n");
 #endif
         return;
     }
 
-    char bfr[10];
-    snprintf(bfr, sizeof(bfr), "%u <= %u", msg.count.value, reader->ackNackCount.value);
+    uint8_t hash = 0;
+    for(int i = 0; i < sourceGuidPrefix.id.size(); i++){
+    	hash += sourceGuidPrefix.id.at(i);
+    }
+
+    char bfr[20];
+    size_t size = snprintf(bfr, sizeof(bfr), "%u <= %u", msg.count.value, reader->ackNackCount.value);
+    if(!(size < sizeof(bfr))){
+    	TFT_PrintLine(0, "overflow");
+    	while(1);
+    }
     TFT_PrintLine(1, bfr);
+
 
     if(msg.count.value <= reader->ackNackCount.value){
 #if SFW_VERBOSE
-        printf("StatefulWriter[%s]: Count too small. Dropping acknack.\n", &this->m_attributes.topicName[0]);
+        log("StatefulWriter[%s]: Count too small. Dropping acknack.\n", &this->m_attributes.topicName[0]);
 #endif
         return;
     }
@@ -168,15 +189,15 @@ void StatefulWriterT<NetworkDriver>::onNewAckNack(const SubmessageAckNack& msg, 
     SequenceNumber_t nextSN = msg.readerSNState.base;
 #if SFW_VERBOSE
     if(nextSN.low == 0 && nextSN.high == 0){
-        printf("StatefulWriter[%s]: Received preemptive acknack. Ignored.\n", &this->m_attributes.topicName[0]);
+        log("StatefulWriter[%s]: Received preemptive acknack. Ignored.\n", &this->m_attributes.topicName[0]);
     }else{
-        printf("StatefulWriter[%s]: Received non-preemptive acknack.\n", &this->m_attributes.topicName[0]);
+        log("StatefulWriter[%s]: Received non-preemptive acknack.\n", &this->m_attributes.topicName[0]);
     }
 #endif
     for(uint32_t i=0; i < msg.readerSNState.numBits; ++i, ++nextSN){
         if(msg.readerSNState.isSet(i)){
 #if SFW_VERBOSE
-            printf("StatefulWriter[%s]: Send Packet on acknack.\n", this->m_attributes.topicName);
+            log("StatefulWriter[%s]: Send Packet on acknack.\n", this->m_attributes.topicName);
 #endif
             sendData(*reader, nextSN);
         }
@@ -216,7 +237,7 @@ bool StatefulWriterT<NetworkDriver>::sendData(const ReaderProxy &reader, const S
         const CacheChange* next = m_history.getChangeBySN(snMissing);
         if(next == nullptr){
 #if SFW_VERBOSE
-            printf("StatefulWriter[%s]: Couldn't get a CacheChange with SN (%i,%u)\n", &this->m_attributes.topicName[0],
+            log("StatefulWriter[%s]: Couldn't get a CacheChange with SN (%i,%u)\n", &this->m_attributes.topicName[0],
                                                                                        snMissing.high, snMissing.low);
 #endif
             return false;
@@ -247,7 +268,7 @@ template <class NetworkDriver>
 void StatefulWriterT<NetworkDriver>::sendHeartBeat() {
     if(m_proxies.isEmpty()){
 #if SFW_VERBOSE
-        printf("StatefulWriter[%s]: Skipping heartbeat. No proxies.\n", this->m_attributes.topicName);
+        log("StatefulWriter[%s]: Skipping heartbeat. No proxies.\n", this->m_attributes.topicName);
 #endif
         return;
     }
@@ -268,7 +289,7 @@ void StatefulWriterT<NetworkDriver>::sendHeartBeat() {
         if (firstSN == SEQUENCENUMBER_UNKNOWN || lastSN == SEQUENCENUMBER_UNKNOWN) {
 #if SFW_VERBOSE
             if(strlen(&this->m_attributes.typeName[0]) != 0){
-                printf("StatefulWriter[%s]: Skipping heartbeat. No data.\n", this->m_attributes.topicName);
+                log("StatefulWriter[%s]: Skipping heartbeat. No data.\n", this->m_attributes.topicName);
             }
 #endif
             return;

@@ -96,7 +96,7 @@ void SPDPAgent::handleSPDPPackage(const ReaderCacheChange& cacheChange){
     }
 
     ucdrBuffer buffer;
-    ucdr_init_buffer(&buffer, m_inputBuffer.data(), cacheChange.size);
+    ucdr_init_buffer(&buffer, m_inputBuffer.data(), m_inputBuffer.size());
 
     if(cacheChange.kind == ChangeKind_t::ALIVE){
         configureEndianessAndOptions(buffer);
@@ -134,7 +134,9 @@ void SPDPAgent::processProxyData(){
     }
 
     // New participant, help him join fast by broadcasting data again
-    if(mp_participant->getRemoteParticipantCount() == 1){}
+    //if(mp_participant->getRemoteParticipantCount() == 1){
+    //	return;
+    //}
 
 
     if(mp_participant->addNewRemoteParticipant(m_proxyDataBuffer)) {

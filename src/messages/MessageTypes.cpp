@@ -121,8 +121,5 @@ bool rtps::deserializeMessage(const MessageProcessingInfo& info, SubmessageAckNa
     	doCopyAndMoveOn(reinterpret_cast<uint8_t*>(msg.readerSNState.bitMap.data()), currentPos, 4*((msg.readerSNState.numBits / 32) + 1));
     }
     doCopyAndMoveOn(reinterpret_cast<uint8_t*>(&msg.count.value), currentPos, sizeof(msg.count.value));
-    if(msg.count.value > 50){
-    	doCopyAndMoveOn(reinterpret_cast<uint8_t*>(&msg.count.value), currentPos, sizeof(msg.count.value));
-    }
     return true;
 }
