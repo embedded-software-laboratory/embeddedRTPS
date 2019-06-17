@@ -89,10 +89,14 @@ void SPDPAgent::handleSPDPPackage(const ReaderCacheChange& cacheChange){
 #endif
         return;
     }
-    cacheChange.copyInto(m_inputBuffer.data(), m_inputBuffer.size());
+
+    // Something went wrong deserializing remote participant
+    if(!cacheChange.copyInto(m_inputBuffer.data(), m_inputBuffer.size())){
+    	return;
+    }
 
     ucdrBuffer buffer;
-    ucdr_init_buffer(&buffer, m_inputBuffer.data(), cacheChange.size);
+    ucdr_init_buffer(&buffer, m_inputBuffer.data(), m_inputBuffer.size());
 
     if(cacheChange.kind == ChangeKind_t::ALIVE){
         configureEndianessAndOptions(buffer);
@@ -125,14 +129,19 @@ void SPDPAgent::processProxyData(){
     }
 
     if(mp_participant->findRemoteParticipant(m_proxyDataBuffer.m_guid.prefix) != nullptr){
-        return; // Already in our list
+    	 m_buildInEndpoints.spdpWriter->setAllChangesToUnsent();
+    	return; // Already in our list
     }
 
     // New participant, help him join fast by broadcasting data again
-    m_buildInEndpoints.spdpWriter->setAllChangesToUnsent();
-    if(mp_participant->addNewRemoteParticipant(m_proxyDataBuffer)) {
-        addProxiesForBuiltInEndpoints();
+    //if(mp_participant->getRemoteParticipantCount() == 1){
+    //	return;
+    //}
 
+
+    if(mp_participant->addNewRemoteParticipant(m_proxyDataBuffer)) {
+    	addProxiesForBuiltInEndpoints();
+        m_buildInEndpoints.spdpWriter->setAllChangesToUnsent();
 #if SPDP_VERBOSE
         printf("Added new participant with guid: ");
         printGuidPrefix(m_proxyDataBuffer.m_guid.prefix);
@@ -143,30 +152,45 @@ void SPDPAgent::processProxyData(){
     }
 }
 
-void SPDPAgent::addProxiesForBuiltInEndpoints(){
+bool SPDPAgent::addProxiesForBuiltInEndpoints(){
+
+	Locator* locator = nullptr;
+
+	// Check if the remote participants has a locator in our subnet
+	for(unsigned int i = 0; i < m_proxyDataBuffer.m_metatrafficUnicastLocatorList.size(); i++){
+		Locator* l = &(m_proxyDataBuffer.m_metatrafficUnicastLocatorList[i]);
+		if(l->isValid() && l->isSameSubnet()){
+	        locator = l;
+	        break;
+		}
+	}
+
+	if(!locator){
+		return false;
+	}
+
+
     if (m_proxyDataBuffer.hasPublicationWriter()){
-        const WriterProxy proxy{{m_proxyDataBuffer.m_guid.prefix, ENTITYID_SEDP_BUILTIN_PUBLICATIONS_WRITER},
-                                m_proxyDataBuffer.m_metatrafficUnicastLocatorList[0]};
+        const WriterProxy proxy{{m_proxyDataBuffer.m_guid.prefix, ENTITYID_SEDP_BUILTIN_PUBLICATIONS_WRITER}, *locator};
         m_buildInEndpoints.sedpPubReader->addNewMatchedWriter(proxy);
     }
 
     if (m_proxyDataBuffer.hasSubscriptionWriter()){
-        const WriterProxy proxy{{m_proxyDataBuffer.m_guid.prefix, ENTITYID_SEDP_BUILTIN_SUBSCRIPTIONS_WRITER},
-                                m_proxyDataBuffer.m_metatrafficUnicastLocatorList[0]};
+        const WriterProxy proxy{{m_proxyDataBuffer.m_guid.prefix, ENTITYID_SEDP_BUILTIN_SUBSCRIPTIONS_WRITER}, *locator};
         m_buildInEndpoints.sedpSubReader->addNewMatchedWriter(proxy);
     }
 
     if(m_proxyDataBuffer.hasPublicationReader()){
-        const ReaderProxy proxy{{m_proxyDataBuffer.m_guid.prefix, ENTITYID_SEDP_BUILTIN_PUBLICATIONS_READER},
-                                m_proxyDataBuffer.m_metatrafficUnicastLocatorList[0]};
+        const ReaderProxy proxy{{m_proxyDataBuffer.m_guid.prefix, ENTITYID_SEDP_BUILTIN_PUBLICATIONS_READER}, *locator};
         m_buildInEndpoints.sedpPubWriter->addNewMatchedReader(proxy);
     }
 
     if(m_proxyDataBuffer.hasSubscriptionReader()){
-        const ReaderProxy proxy{{m_proxyDataBuffer.m_guid.prefix, ENTITYID_SEDP_BUILTIN_SUBSCRIPTIONS_READER},
-                                m_proxyDataBuffer.m_metatrafficUnicastLocatorList[0]};
+        const ReaderProxy proxy{{m_proxyDataBuffer.m_guid.prefix, ENTITYID_SEDP_BUILTIN_SUBSCRIPTIONS_READER}, *locator};
         m_buildInEndpoints.sedpSubWriter->addNewMatchedReader(proxy);
     }
+
+    return true;
 }
 
 

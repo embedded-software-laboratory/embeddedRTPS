@@ -52,6 +52,10 @@ const rtps::UdpConnection* UdpDriver::createUdpConnection(Ip4Port_t receivePort)
     return &m_conns[m_numConns-1];
 }
 
+bool UdpDriver::isSameSubnet(ip4_addr_t addr) {
+	return (ip4_addr_netcmp(&addr, &(netif_default->ip_addr), &(netif_default->netmask)) != 0);
+}
+
 bool UdpDriver::joinMultiCastGroup(ip4_addr_t addr) const {
     err_t iret;
 

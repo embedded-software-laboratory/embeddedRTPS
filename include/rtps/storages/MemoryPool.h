@@ -12,7 +12,7 @@
 
 namespace rtps{
 
-    template <class TYPE, uint8_t SIZE>
+    template <class TYPE, uint32_t SIZE>
     class MemoryPool{
     public:
 
@@ -80,7 +80,7 @@ namespace rtps{
 
         typedef bool(*condition_fp)(TYPE);
 
-        uint8_t getSize(){
+        uint32_t getSize(){
             return SIZE;
         }
 
@@ -92,11 +92,14 @@ namespace rtps{
             return m_numElements == 0;
         }
 
+        uint32_t getNumElements(){
+        	return m_numElements;
+        }
+
         bool add(const TYPE& data){
             if(isFull()){
                 return false;
             }
-            ++m_numElements;
             for(uint8_t bucket=0; bucket < sizeof(m_bitMap); ++bucket){
                 if(bucket != 0xFF){
                     uint8_t byte = m_bitMap[bucket];
@@ -104,6 +107,7 @@ namespace rtps{
                         if(!(byte & 1)){
                             m_bitMap[bucket] |= 1 << bit;
                             m_data[bucket*8+bit] = data;
+                            ++m_numElements;
                             return true;
                         }
                         byte = byte>>1;
@@ -130,6 +134,7 @@ namespace rtps{
                     const uint8_t bucket = it.m_bit/uint8_t{8};
                     const uint8_t pos = it.m_bit & uint8_t{7}; // 7 sets all bits above and including the one for 8 to 0
                     m_bitMap[bucket] &= ~(static_cast<uint8_t>(1) << pos);
+                    --m_numElements;
                     return true;
                 }
             }
@@ -161,7 +166,7 @@ namespace rtps{
 
     private:
         uint8_t m_bitMap[SIZE/8 + 1]{};
-        uint8_t m_numElements = 0;
+        uint32_t m_numElements = 0;
         TYPE m_data[SIZE];
     };
 

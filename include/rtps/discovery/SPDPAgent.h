@@ -41,7 +41,7 @@ namespace rtps{
         void handleSPDPPackage(const ReaderCacheChange& cacheChange);
         void configureEndianessAndOptions(ucdrBuffer& buffer);
         void processProxyData();
-        void addProxiesForBuiltInEndpoints();
+        bool addProxiesForBuiltInEndpoints();
 
         void addInlineQos();
         void addParticipantParameters();

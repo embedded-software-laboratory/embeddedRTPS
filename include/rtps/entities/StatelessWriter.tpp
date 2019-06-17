@@ -105,7 +105,7 @@ void StatelessWriterT<NetworkDriver>::setAllChangesToUnsent() {
 }
 
 template <typename NetworkDriver>
-void StatelessWriterT<NetworkDriver>::onNewAckNack(const SubmessageAckNack& /*msg*/){
+void StatelessWriterT<NetworkDriver>::onNewAckNack(const SubmessageAckNack& /*msg*/, const GuidPrefix_t& sourceGuidPrefix){
     // Too lazy to respond
 }
 

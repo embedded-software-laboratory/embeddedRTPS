@@ -81,18 +81,20 @@ void StatefulReaderT<NetworkDriver>::removeWriter(const Guid& guid){
 }
 
 template <class NetworkDriver>
-bool StatefulReaderT<NetworkDriver>::onNewHeartbeat(const SubmessageHeartbeat& msg, const GuidPrefix_t& /*remotePrefix*/){
+bool StatefulReaderT<NetworkDriver>::onNewHeartbeat(const SubmessageHeartbeat& msg, const GuidPrefix_t& sourceGuidPrefix){
     Lock lock(m_mutex);
     PacketInfo info;
     info.srcPort = m_packetInfo.srcPort;
     WriterProxy* writer = nullptr;
     // Search for writer
     for(WriterProxy& proxy : m_proxies){
-        if(proxy.remoteWriterGuid.entityId == msg.writerId){
+        if(proxy.remoteWriterGuid.prefix == sourceGuidPrefix && proxy.remoteWriterGuid.entityId == msg.writerId){
             writer = &proxy;
             break;
         }
     }
+
+
 
     if(writer == nullptr){
 #if SFR_VERBOSE
