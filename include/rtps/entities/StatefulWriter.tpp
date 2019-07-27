@@ -7,7 +7,6 @@
 
 #include "rtps/messages/MessageFactory.h"
 #include <cstring>
-#include "TFT.h"
 #include <stdio.h>
 
 using rtps::StatefulWriterT;
@@ -34,9 +33,9 @@ template <class NetworkDriver>
 StatefulWriterT<NetworkDriver>::~StatefulWriterT(){
     m_running = false;
     sys_msleep(10); // Required for tests/ Join currently not available
-    if(sys_mutex_valid(&m_mutex)){
+    //if(sys_mutex_valid(&m_mutex)){
         sys_mutex_free(&m_mutex);
-    }
+    //}
 }
 
 template <class NetworkDriver>
@@ -170,10 +169,8 @@ void StatefulWriterT<NetworkDriver>::onNewAckNack(const SubmessageAckNack& msg, 
     char bfr[20];
     size_t size = snprintf(bfr, sizeof(bfr), "%u <= %u", msg.count.value, reader->ackNackCount.value);
     if(!(size < sizeof(bfr))){
-    	TFT_PrintLine(0, "overflow");
     	while(1);
     }
-    TFT_PrintLine(1, bfr);
 
 
     if(msg.count.value <= reader->ackNackCount.value){

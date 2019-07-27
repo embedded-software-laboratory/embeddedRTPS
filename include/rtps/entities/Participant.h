@@ -44,8 +44,13 @@ namespace rtps{
 
         //! Not-thread-safe function to add a writer
         Writer* addWriter(Writer* writer);
+        bool isWritersFull();
+
         //! Not-thread-safe function to add a reader
         Reader* addReader(Reader* reader);
+        bool isReadersFull();
+
+
 
         //! (Probably) Thread safe if writers cannot be removed
         Writer* getWriter(EntityId_t id) const;
@@ -58,8 +63,6 @@ namespace rtps{
         bool removeRemoteParticipant(const GuidPrefix_t& prefix);
         const ParticipantProxyData* findRemoteParticipant(const GuidPrefix_t& prefix);
         uint32_t getRemoteParticipantCount();
-
-
         MessageReceiver* getMessageReceiver();
 
         void addBuiltInEndpoints(BuiltInEndpoints& endpoints);

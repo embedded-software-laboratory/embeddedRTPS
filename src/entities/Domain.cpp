@@ -154,9 +154,9 @@ void Domain::registerPort(const Participant& part){
 }
 
 rtps::Writer* Domain::createWriter(Participant& part, const char* topicName, const char* typeName, bool reliable){
-    if(m_initComplete ||
-       (reliable && m_statefulWriters.size() <= m_numStatefulWriters) ||
-       (!reliable && m_statelessWriters.size() <= m_numStatelessWriters)){
+    if((reliable && m_statefulWriters.size() <= m_numStatefulWriters) ||
+       (!reliable && m_statelessWriters.size() <= m_numStatelessWriters) ||
+	    part.isWritersFull()){
         return nullptr;
     }
 
@@ -196,9 +196,9 @@ rtps::Writer* Domain::createWriter(Participant& part, const char* topicName, con
 
 
 rtps::Reader* Domain::createReader(Participant& part, const char* topicName, const char* typeName, bool reliable){
-    if(m_initComplete ||
-       (reliable && m_statefulReaders.size() <= m_numStatefulReaders) ||
-       (!reliable && m_statelessReaders.size() <= m_numStatelessReaders)){
+	if((reliable && m_statefulReaders.size() <= m_numStatefulReaders) ||
+       (!reliable && m_statelessReaders.size() <= m_numStatelessReaders) ||
+	    part.isReadersFull()){
         return nullptr;
     }
 
@@ -228,7 +228,9 @@ rtps::Reader* Domain::createReader(Participant& part, const char* topicName, con
         StatefulReader& reader = m_statefulReaders[m_numStatefulReaders++];
         reader.init(attributes, m_transport);
 
-        part.addReader(&reader);
+        if(!part.addReader(&reader)){
+        	return nullptr;
+        }
         return &reader;
     }else{
         if(m_numStatelessReaders == m_statelessReaders.size()){
@@ -240,7 +242,9 @@ rtps::Reader* Domain::createReader(Participant& part, const char* topicName, con
         StatelessReader& reader = m_statelessReaders[m_numStatelessReaders++];
         reader.init(attributes);
 
-        part.addReader(&reader);
+        if(!part.addReader(&reader)){
+        	return nullptr;
+        }
         return &reader;
     }
 }

@@ -72,7 +72,7 @@ void SEDPAgent::receiveCallbackSubscriber(void* callee, const ReaderCacheChange&
 }
 
 void SEDPAgent::onNewPublisher(const ReaderCacheChange& change){
-    //Lock lock{m_mutex};
+    Lock lock{m_mutex};
 #if SEDP_VERBOSE
     SEDP_LOG("New publisher\n");
 #endif
@@ -124,6 +124,7 @@ void SEDPAgent::onNewPublisher(const TopicData& writerData) {
 }
 
 void SEDPAgent::onNewSubscriber(const ReaderCacheChange& change){
+	Lock lock{m_mutex};
 #if SEDP_VERBOSE
     SEDP_LOG("New subscriber\n");
 #endif
@@ -145,7 +146,6 @@ void SEDPAgent::onNewSubscriber(const ReaderCacheChange& change){
 
 void SEDPAgent::onNewSubscriber(const TopicData& readerData) {
     if(!m_part->findRemoteParticipant(readerData.endpointGuid.prefix)){
-		TFT_PrintLine(2, "unknown part");
 		return;
 	}
     Writer* writer = m_part->getMatchingWriter(readerData);

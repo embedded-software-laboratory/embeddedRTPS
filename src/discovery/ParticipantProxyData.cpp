@@ -15,7 +15,7 @@ void ParticipantProxyData::reset(){
     m_guid = Guid{GUIDPREFIX_UNKNOWN, ENTITYID_UNKNOWN};
     m_manualLivelinessCount = Count_t{1};
     m_expectsInlineQos = false;
-    for(int i=0; i < 10; ++i){
+    for(int i = 0; i < Config::SPDP_MAX_NUM_LOCATORS; ++i){
         m_metatrafficUnicastLocatorList[i].setInvalid();
         m_metatrafficMulticastLocatorList[i].setInvalid();
         m_defaultUnicastLocatorList[i].setInvalid();

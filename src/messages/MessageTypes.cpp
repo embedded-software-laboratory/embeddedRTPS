@@ -6,8 +6,6 @@
 #include "rtps/messages/MessageTypes.h"
 #include <cstring>
 
-#include "TFT.h"
-
 #include <stdio.h>
 using namespace rtps;
 

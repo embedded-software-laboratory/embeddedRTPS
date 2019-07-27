@@ -77,6 +77,10 @@ rtps::Writer* Participant::addWriter(Writer* pWriter){
     }
 }
 
+bool Participant::isWritersFull(){
+	return m_numWriters == m_writers.size();
+}
+
 rtps::Reader* Participant::addReader(Reader* pReader){
     if(pReader != nullptr && m_numReaders != m_readers.size()){
         m_readers[m_numReaders++] = pReader;
@@ -87,6 +91,10 @@ rtps::Reader* Participant::addReader(Reader* pReader){
     }else{
         return nullptr;
     }
+}
+
+bool Participant::isReadersFull(){
+	return m_numReaders == m_readers.size();
 }
 
 
