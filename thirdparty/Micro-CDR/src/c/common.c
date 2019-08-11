@@ -42,21 +42,21 @@ bool ucdr_check_buffer(ucdrBuffer* mb, const uint32_t bytes)
 // -------------------------------------------------------------------
 //                       PUBLIC IMPLEMENTATION
 // -------------------------------------------------------------------
-void ucdr_init_buffer(ucdrBuffer* mb, uint8_t* data, const uint32_t size)
+void ucdr_init_buffer(ucdrBuffer* mb, const uint8_t* data, const uint32_t size)
 {
     ucdr_init_buffer_offset(mb, data, size, 0U);
 }
 
-void ucdr_init_buffer_offset(ucdrBuffer* mb, uint8_t* data, const uint32_t size, uint32_t offset)
+void ucdr_init_buffer_offset(ucdrBuffer* mb, const uint8_t* data, const uint32_t size, uint32_t offset)
 {
     ucdr_init_buffer_offset_endian(mb, data, size, offset, UCDR_MACHINE_ENDIANNESS);
 }
 
-void ucdr_init_buffer_offset_endian(ucdrBuffer* mb, uint8_t* data, const uint32_t size, uint32_t offset, ucdrEndianness endianness)
+void ucdr_init_buffer_offset_endian(ucdrBuffer* mb, const uint8_t* data, const uint32_t size, uint32_t offset, ucdrEndianness endianness)
 {
     mb->init = data;
     mb->final = mb->init + size;
-    mb->iterator = mb->init + offset;
+    mb->iterator = (uint8_t*)mb->init + offset;
     mb->last_data_size = 0U;
     mb->endianness = endianness;
     mb->error = false;
@@ -75,7 +75,7 @@ void ucdr_reset_buffer(ucdrBuffer* mb)
 
 void ucdr_reset_buffer_offset(ucdrBuffer* mb, const uint32_t offset)
 {
-    mb->iterator = mb->init + offset;
+    mb->iterator = (uint8_t*) mb->init + offset;
     mb->last_data_size = 0U;
     mb->error = false;
 }
@@ -86,7 +86,7 @@ void ucdr_align_to(ucdrBuffer* mb, const uint32_t size)
     mb->iterator += offset;
     if(mb->iterator > mb->final)
     {
-        mb->iterator = mb->final;
+        mb->iterator = (uint8_t*)mb->final;
     }
 
     mb->last_data_size = size;
