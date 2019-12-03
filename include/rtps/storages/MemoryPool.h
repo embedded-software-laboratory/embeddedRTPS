@@ -1,7 +1,22 @@
 /*
- *
- * Author: Andreas Wüstenberg (andreas.wuestenberg@rwth-aachen.de)
- */
+The MIT License
+Copyright (c) 2019 Lehrstuhl Informatik 11 - RWTH Aachen University
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE
+*/
 
 #ifndef RTPS_MEMORYPOOL_H
 #define RTPS_MEMORYPOOL_H
@@ -12,7 +27,7 @@
 
 namespace rtps{
 
-    template <class TYPE, uint8_t SIZE>
+    template <class TYPE, uint32_t SIZE>
     class MemoryPool{
     public:
 
@@ -80,7 +95,7 @@ namespace rtps{
 
         typedef bool(*condition_fp)(TYPE);
 
-        uint8_t getSize(){
+        uint32_t getSize(){
             return SIZE;
         }
 
@@ -92,11 +107,14 @@ namespace rtps{
             return m_numElements == 0;
         }
 
+        uint32_t getNumElements(){
+        	return m_numElements;
+        }
+
         bool add(const TYPE& data){
             if(isFull()){
                 return false;
             }
-            ++m_numElements;
             for(uint8_t bucket=0; bucket < sizeof(m_bitMap); ++bucket){
                 if(bucket != 0xFF){
                     uint8_t byte = m_bitMap[bucket];
@@ -104,6 +122,7 @@ namespace rtps{
                         if(!(byte & 1)){
                             m_bitMap[bucket] |= 1 << bit;
                             m_data[bucket*8+bit] = data;
+                            ++m_numElements;
                             return true;
                         }
                         byte = byte>>1;
@@ -130,6 +149,7 @@ namespace rtps{
                     const uint8_t bucket = it.m_bit/uint8_t{8};
                     const uint8_t pos = it.m_bit & uint8_t{7}; // 7 sets all bits above and including the one for 8 to 0
                     m_bitMap[bucket] &= ~(static_cast<uint8_t>(1) << pos);
+                    --m_numElements;
                     return true;
                 }
             }
@@ -161,7 +181,7 @@ namespace rtps{
 
     private:
         uint8_t m_bitMap[SIZE/8 + 1]{};
-        uint8_t m_numElements = 0;
+        uint32_t m_numElements = 0;
         TYPE m_data[SIZE];
     };
 

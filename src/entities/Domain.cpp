@@ -1,7 +1,22 @@
 /*
- *
- * Author: Andreas Wüstenberg (andreas.wuestenberg@rwth-aachen.de)
- */
+The MIT License
+Copyright (c) 2019 Lehrstuhl Informatik 11 - RWTH Aachen University
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE
+*/
 
 #include "rtps/entities/Domain.h"
 #include "rtps/utils/udpUtils.h"
@@ -154,9 +169,9 @@ void Domain::registerPort(const Participant& part){
 }
 
 rtps::Writer* Domain::createWriter(Participant& part, const char* topicName, const char* typeName, bool reliable){
-    if(m_initComplete ||
-       (reliable && m_statefulWriters.size() <= m_numStatefulWriters) ||
-       (!reliable && m_statelessWriters.size() <= m_numStatelessWriters)){
+    if((reliable && m_statefulWriters.size() <= m_numStatefulWriters) ||
+       (!reliable && m_statelessWriters.size() <= m_numStatelessWriters) ||
+	    part.isWritersFull()){
         return nullptr;
     }
 
@@ -196,9 +211,9 @@ rtps::Writer* Domain::createWriter(Participant& part, const char* topicName, con
 
 
 rtps::Reader* Domain::createReader(Participant& part, const char* topicName, const char* typeName, bool reliable){
-    if(m_initComplete ||
-       (reliable && m_statefulReaders.size() <= m_numStatefulReaders) ||
-       (!reliable && m_statelessReaders.size() <= m_numStatelessReaders)){
+	if((reliable && m_statefulReaders.size() <= m_numStatefulReaders) ||
+       (!reliable && m_statelessReaders.size() <= m_numStatelessReaders) ||
+	    part.isReadersFull()){
         return nullptr;
     }
 
@@ -228,7 +243,9 @@ rtps::Reader* Domain::createReader(Participant& part, const char* topicName, con
         StatefulReader& reader = m_statefulReaders[m_numStatefulReaders++];
         reader.init(attributes, m_transport);
 
-        part.addReader(&reader);
+        if(!part.addReader(&reader)){
+        	return nullptr;
+        }
         return &reader;
     }else{
         if(m_numStatelessReaders == m_statelessReaders.size()){
@@ -240,7 +257,9 @@ rtps::Reader* Domain::createReader(Participant& part, const char* topicName, con
         StatelessReader& reader = m_statelessReaders[m_numStatelessReaders++];
         reader.init(attributes);
 
-        part.addReader(&reader);
+        if(!part.addReader(&reader)){
+        	return nullptr;
+        }
         return &reader;
     }
 }

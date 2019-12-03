@@ -34,8 +34,8 @@ typedef enum ucdrEndianness {
 
 typedef struct ucdrBuffer
 {
-    uint8_t *init;
-    uint8_t *final;
+    const uint8_t *init;
+    const uint8_t *final;
     uint8_t *iterator;
 
     ucdrEndianness endianness;
@@ -50,10 +50,11 @@ UCDRDLLAPI extern const ucdrEndianness UCDR_MACHINE_ENDIANNESS;
 // ------------------------------------------------
 //              Main library functions
 // ------------------------------------------------
-UCDRDLLAPI void ucdr_init_buffer               (ucdrBuffer* mb, uint8_t* data, const uint32_t size);
-UCDRDLLAPI void ucdr_init_buffer_offset        (ucdrBuffer* mb, uint8_t* data, const uint32_t size, uint32_t offset);
-UCDRDLLAPI void ucdr_init_buffer_offset_endian (ucdrBuffer* mb, uint8_t* data, const uint32_t size, uint32_t offset, ucdrEndianness endianness);
+UCDRDLLAPI void ucdr_init_buffer               (ucdrBuffer* mb, const uint8_t* data, const uint32_t size);
+UCDRDLLAPI void ucdr_init_buffer_offset        (ucdrBuffer* mb, const uint8_t* data, const uint32_t size, uint32_t offset);
+UCDRDLLAPI void ucdr_init_buffer_offset_endian (ucdrBuffer* mb, const uint8_t* data, const uint32_t size, uint32_t offset, ucdrEndianness endianness);
 UCDRDLLAPI void ucdr_copy_buffer               (ucdrBuffer* mb_dest, const ucdrBuffer* mb_source);
+bool ucdr_check_buffer(ucdrBuffer* mb, const uint32_t bytes);
 
 UCDRDLLAPI void ucdr_reset_buffer        (ucdrBuffer* mb);
 UCDRDLLAPI void ucdr_reset_buffer_offset (ucdrBuffer* mb, const uint32_t offset);
