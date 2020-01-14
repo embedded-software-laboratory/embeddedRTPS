@@ -32,7 +32,7 @@ Due to license issues, we can only make source code available for the STM32.
 
 The following repository provides code examples for running embeddedRTPS on the STM32F767ZI
 
-- [STM32F767ZI](https://www.google.com)
+- [STM32F767ZI](https://github.com/embedded-software-laboratory/embeddedRTPS-STM32)
 
 ### Third Party Libraries
 
