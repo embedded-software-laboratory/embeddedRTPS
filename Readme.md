@@ -41,6 +41,17 @@ embeddedRTPS makes use of the following third party libraries:
 - FreeRTOS
 - [eProsima Micro-CDR](https://github.com/eProsima/Micro-CDR)
 
+### Performance
+
+Round-trip-times (RTT) for different setups are depicted in the Figure below. Various statistics are reported for varrying packet sizes.
+
+**Table 1** 2x Infineon Aurix TC277 running embeddedRTPS. 
+
+**Table 2** STM32F7 running embeddedRTPS connected to an Intel NUC running eProsima FastRTPS.
+
+![embeddedRTPSPerformanceFigure](https://raw.githubusercontent.com/embedded-software-laboratory/embeddedRTPS/master/media/performance_rtt.png  "Round-Trip-Times for Various Setups")
+
+
 ### Acknowledgment
 embeddedRTPS has been developed at **[i11 - Embedded Software, RWTH Aachen University](www.embedded.rwth-aachen.de)** in the context of the **[UNICARagil](www.unicaragil.de)** project.
 
