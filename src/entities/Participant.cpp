@@ -24,185 +24,187 @@ Author: i11 - Embedded Software, RWTH Aachen University
 
 #include "rtps/entities/Participant.h"
 
-#include "rtps/entities/Writer.h"
 #include "rtps/entities/Reader.h"
+#include "rtps/entities/Writer.h"
 #include "rtps/messages/MessageReceiver.h"
 
 using rtps::Participant;
 
-Participant::Participant() : m_guidPrefix(GUIDPREFIX_UNKNOWN), m_participantId(PARTICIPANT_ID_INVALID),
-                             m_receiver(this){
+Participant::Participant()
+    : m_guidPrefix(GUIDPREFIX_UNKNOWN), m_participantId(PARTICIPANT_ID_INVALID),
+      m_receiver(this) {}
+Participant::Participant(const GuidPrefix_t &guidPrefix,
+                         ParticipantId_t participantId)
+    : m_guidPrefix(guidPrefix), m_participantId(participantId),
+      m_receiver(this) {}
 
-}
-Participant::Participant(const GuidPrefix_t& guidPrefix, ParticipantId_t participantId)
-        : m_guidPrefix(guidPrefix), m_participantId(participantId),
-          m_receiver(this){
+Participant::~Participant() { m_spdpAgent.stop(); }
 
-}
-
-Participant::~Participant() {
-    m_spdpAgent.stop();
-}
-
-void Participant::reuse(const GuidPrefix_t& guidPrefix, ParticipantId_t participantId){
-    m_guidPrefix = guidPrefix;
-    m_participantId = participantId;
+void Participant::reuse(const GuidPrefix_t &guidPrefix,
+                        ParticipantId_t participantId) {
+  m_guidPrefix = guidPrefix;
+  m_participantId = participantId;
 }
 
-bool Participant::isValid(){
-    return m_participantId != PARTICIPANT_ID_INVALID;
+bool Participant::isValid() {
+  return m_participantId != PARTICIPANT_ID_INVALID;
 }
 
-std::array<uint8_t, 3> Participant::getNextUserEntityKey(){
-    const auto result = m_nextUserEntityId;
+std::array<uint8_t, 3> Participant::getNextUserEntityKey() {
+  const auto result = m_nextUserEntityId;
 
-    ++m_nextUserEntityId[2];
-    if(m_nextUserEntityId[2] == 0){
-        ++m_nextUserEntityId[1];
-        if(m_nextUserEntityId[1] == 0){
-            ++m_nextUserEntityId[0];
-        }
+  ++m_nextUserEntityId[2];
+  if (m_nextUserEntityId[2] == 0) {
+    ++m_nextUserEntityId[1];
+    if (m_nextUserEntityId[1] == 0) {
+      ++m_nextUserEntityId[0];
     }
-    return result;
+  }
+  return result;
 }
 
-bool Participant::registerOnNewPublisherMatchedCallback(void (*callback)(void* arg), void* args){
-    if(!m_hasBuilInEndpoints){
-        return false;
+bool Participant::registerOnNewPublisherMatchedCallback(
+    void (*callback)(void *arg), void *args) {
+  if (!m_hasBuilInEndpoints) {
+    return false;
+  }
+
+  m_sedpAgent.registerOnNewPublisherMatchedCallback(callback, args);
+  return true;
+}
+
+bool Participant::registerOnNewSubscriberMatchedCallback(
+    void (*callback)(void *arg), void *args) {
+  if (!m_hasBuilInEndpoints) {
+    return false;
+  }
+
+  m_sedpAgent.registerOnNewSubscriberMatchedCallback(callback, args);
+  return true;
+}
+
+rtps::Writer *Participant::addWriter(Writer *pWriter) {
+  if (pWriter != nullptr && m_numWriters != m_writers.size()) {
+    m_writers[m_numWriters++] = pWriter;
+    if (m_hasBuilInEndpoints) {
+      m_sedpAgent.addWriter(*pWriter);
     }
-
-    m_sedpAgent.registerOnNewPublisherMatchedCallback(callback, args);
-    return true;
-}
-
-bool Participant::registerOnNewSubscriberMatchedCallback(void (*callback)(void* arg), void* args){
-    if(!m_hasBuilInEndpoints){
-        return false;
-    }
-
-    m_sedpAgent.registerOnNewSubscriberMatchedCallback(callback, args);
-    return true;
-}
-
-rtps::Writer* Participant::addWriter(Writer* pWriter){
-    if(pWriter != nullptr && m_numWriters != m_writers.size()){
-        m_writers[m_numWriters++] = pWriter;
-        if(m_hasBuilInEndpoints){
-            m_sedpAgent.addWriter(*pWriter);
-        }
-        return pWriter;
-    }else{
-        return nullptr;
-    }
-}
-
-bool Participant::isWritersFull(){
-	return m_numWriters == m_writers.size();
-}
-
-rtps::Reader* Participant::addReader(Reader* pReader){
-    if(pReader != nullptr && m_numReaders != m_readers.size()){
-        m_readers[m_numReaders++] = pReader;
-        if(m_hasBuilInEndpoints){
-            m_sedpAgent.addReader(*pReader);
-        }
-        return pReader;
-    }else{
-        return nullptr;
-    }
-}
-
-bool Participant::isReadersFull(){
-	return m_numReaders == m_readers.size();
-}
-
-
-rtps::Writer* Participant::getWriter(EntityId_t id) const{
-    for(uint8_t i=0; i < m_numWriters; ++i){
-        if(m_writers[i]->m_attributes.endpointGuid.entityId == id){
-            return m_writers[i];
-        }
-    }
+    return pWriter;
+  } else {
     return nullptr;
+  }
 }
 
-rtps::Reader* Participant::getReader(EntityId_t id) const{
-    for(uint8_t i=0; i < m_numReaders; ++i){
-        if(m_readers[i]->m_attributes.endpointGuid.entityId == id){
-            return m_readers[i];
-        }
+bool Participant::isWritersFull() { return m_numWriters == m_writers.size(); }
+
+rtps::Reader *Participant::addReader(Reader *pReader) {
+  if (pReader != nullptr && m_numReaders != m_readers.size()) {
+    m_readers[m_numReaders++] = pReader;
+    if (m_hasBuilInEndpoints) {
+      m_sedpAgent.addReader(*pReader);
     }
+    return pReader;
+  } else {
     return nullptr;
+  }
 }
 
-rtps::Writer* Participant::getMatchingWriter(const TopicData& readerTopicData) const{
-    for(uint8_t i=0; i < m_numWriters; ++i){
-        if(m_writers[i]->m_attributes.matchesTopicOf(readerTopicData) &&
-                (readerTopicData.reliabilityKind == ReliabilityKind_t::BEST_EFFORT ||
-                 m_writers[i]->m_attributes.reliabilityKind == ReliabilityKind_t::RELIABLE)){
-            return m_writers[i];
-        }
+bool Participant::isReadersFull() { return m_numReaders == m_readers.size(); }
+
+rtps::Writer *Participant::getWriter(EntityId_t id) const {
+  for (uint8_t i = 0; i < m_numWriters; ++i) {
+    if (m_writers[i]->m_attributes.endpointGuid.entityId == id) {
+      return m_writers[i];
     }
-    return nullptr;
+  }
+  return nullptr;
 }
 
-rtps::Reader* Participant::getMatchingReader(const TopicData& writerTopicData) const{
-    for(uint8_t i=0; i < m_numReaders; ++i){
-        if(m_readers[i]->m_attributes.matchesTopicOf(writerTopicData) &&
-                (writerTopicData.reliabilityKind == ReliabilityKind_t::RELIABLE ||
-                 m_readers[i]->m_attributes.reliabilityKind == ReliabilityKind_t::BEST_EFFORT)){
-            return m_readers[i];
-        }
+rtps::Reader *Participant::getReader(EntityId_t id) const {
+  for (uint8_t i = 0; i < m_numReaders; ++i) {
+    if (m_readers[i]->m_attributes.endpointGuid.entityId == id) {
+      return m_readers[i];
     }
-    return nullptr;
+  }
+  return nullptr;
 }
 
-bool Participant::addNewRemoteParticipant(const ParticipantProxyData& remotePart){
-    return m_remoteParticipants.add(remotePart);
+rtps::Writer *
+Participant::getMatchingWriter(const TopicData &readerTopicData) const {
+  for (uint8_t i = 0; i < m_numWriters; ++i) {
+    if (m_writers[i]->m_attributes.matchesTopicOf(readerTopicData) &&
+        (readerTopicData.reliabilityKind == ReliabilityKind_t::BEST_EFFORT ||
+         m_writers[i]->m_attributes.reliabilityKind ==
+             ReliabilityKind_t::RELIABLE)) {
+      return m_writers[i];
+    }
+  }
+  return nullptr;
 }
 
-bool Participant::removeRemoteParticipant(const GuidPrefix_t& prefix){
-    auto isElementToRemove=[&](const ParticipantProxyData& proxy){
-        return proxy.m_guid.prefix == prefix;
-    };
-    auto thunk=[](void* arg, const ParticipantProxyData& value){return (*static_cast<decltype(isElementToRemove)*>(arg))(value);};
-
-    return m_remoteParticipants.remove(thunk, &isElementToRemove);
+rtps::Reader *
+Participant::getMatchingReader(const TopicData &writerTopicData) const {
+  for (uint8_t i = 0; i < m_numReaders; ++i) {
+    if (m_readers[i]->m_attributes.matchesTopicOf(writerTopicData) &&
+        (writerTopicData.reliabilityKind == ReliabilityKind_t::RELIABLE ||
+         m_readers[i]->m_attributes.reliabilityKind ==
+             ReliabilityKind_t::BEST_EFFORT)) {
+      return m_readers[i];
+    }
+  }
+  return nullptr;
 }
 
-const rtps::ParticipantProxyData* Participant::findRemoteParticipant(const GuidPrefix_t& prefix){
-    auto isElementToFind=[&](const ParticipantProxyData& proxy){
-        return proxy.m_guid.prefix == prefix;
-    };
-    auto thunk=[](void* arg, const ParticipantProxyData& value){return (*static_cast<decltype(isElementToFind)*>(arg))(value);};
-
-    return m_remoteParticipants.find(thunk, &isElementToFind);
+bool Participant::addNewRemoteParticipant(
+    const ParticipantProxyData &remotePart) {
+  return m_remoteParticipants.add(remotePart);
 }
 
-uint32_t Participant::getRemoteParticipantCount(){
-	return m_remoteParticipants.getNumElements();
+bool Participant::removeRemoteParticipant(const GuidPrefix_t &prefix) {
+  auto isElementToRemove = [&](const ParticipantProxyData &proxy) {
+    return proxy.m_guid.prefix == prefix;
+  };
+  auto thunk = [](void *arg, const ParticipantProxyData &value) {
+    return (*static_cast<decltype(isElementToRemove) *>(arg))(value);
+  };
+
+  return m_remoteParticipants.remove(thunk, &isElementToRemove);
 }
 
-rtps::MessageReceiver* Participant::getMessageReceiver(){
-    return &m_receiver;
+const rtps::ParticipantProxyData *
+Participant::findRemoteParticipant(const GuidPrefix_t &prefix) {
+  auto isElementToFind = [&](const ParticipantProxyData &proxy) {
+    return proxy.m_guid.prefix == prefix;
+  };
+  auto thunk = [](void *arg, const ParticipantProxyData &value) {
+    return (*static_cast<decltype(isElementToFind) *>(arg))(value);
+  };
+
+  return m_remoteParticipants.find(thunk, &isElementToFind);
 }
 
-void Participant::addBuiltInEndpoints(BuiltInEndpoints& endpoints){
-    m_hasBuilInEndpoints = true;
-    m_spdpAgent.init(*this, endpoints);
-    m_sedpAgent.init(*this, endpoints);
-
-    // This needs to be done after initializing the agents
-    addWriter(endpoints.spdpWriter);
-    addReader(endpoints.spdpReader);
-    addWriter(endpoints.sedpPubWriter);
-    addReader(endpoints.sedpPubReader);
-    addWriter(endpoints.sedpSubWriter);
-    addReader(endpoints.sedpSubReader);
-
-    m_spdpAgent.start();
+uint32_t Participant::getRemoteParticipantCount() {
+  return m_remoteParticipants.getNumElements();
 }
 
-void Participant::newMessage(const uint8_t* data, DataSize_t size){
-    m_receiver.processMessage(data, size);
+rtps::MessageReceiver *Participant::getMessageReceiver() { return &m_receiver; }
+
+void Participant::addBuiltInEndpoints(BuiltInEndpoints &endpoints) {
+  m_hasBuilInEndpoints = true;
+  m_spdpAgent.init(*this, endpoints);
+  m_sedpAgent.init(*this, endpoints);
+
+  // This needs to be done after initializing the agents
+  addWriter(endpoints.spdpWriter);
+  addReader(endpoints.spdpReader);
+  addWriter(endpoints.sedpPubWriter);
+  addReader(endpoints.sedpPubReader);
+  addWriter(endpoints.sedpSubWriter);
+  addReader(endpoints.sedpSubReader);
+
+  m_spdpAgent.start();
+}
+
+void Participant::newMessage(const uint8_t *data, DataSize_t size) {
+  m_receiver.processMessage(data, size);
 }

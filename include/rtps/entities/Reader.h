@@ -32,63 +32,65 @@ Author: i11 - Embedded Software, RWTH Aachen University
 #include "rtps/storages/PBufWrapper.h"
 #include <cstring>
 
-namespace rtps{
+namespace rtps {
 
-    struct SubmessageHeartbeat;
+struct SubmessageHeartbeat;
 
-    class ReaderCacheChange{
-    private:
-        const uint8_t* data;
+class ReaderCacheChange {
+private:
+  const uint8_t *data;
 
-    public:
-        const ChangeKind_t kind;
-        const DataSize_t size;
-        const Guid writerGuid;
-        const SequenceNumber_t sn;
+public:
+  const ChangeKind_t kind;
+  const DataSize_t size;
+  const Guid writerGuid;
+  const SequenceNumber_t sn;
 
-        ReaderCacheChange(ChangeKind_t kind, Guid& writerGuid, SequenceNumber_t sn, const uint8_t* data, DataSize_t size)
-            : data(data), kind(kind), size(size), writerGuid(writerGuid), sn(sn){};
+  ReaderCacheChange(ChangeKind_t kind, Guid &writerGuid, SequenceNumber_t sn,
+                    const uint8_t *data, DataSize_t size)
+      : data(data), kind(kind), size(size), writerGuid(writerGuid), sn(sn){};
 
-        ~ReaderCacheChange() = default; // No need to free data. It's not owned by this object
-        // Not allowed because this class doesn't own the ptr and the user isn't allowed to use it outside the
-        // Scope of the callback
-        ReaderCacheChange(const ReaderCacheChange& other) = delete;
-        ReaderCacheChange(ReaderCacheChange&& other) = delete;
-        ReaderCacheChange& operator=(const ReaderCacheChange &other) = delete;
-        ReaderCacheChange& operator=(ReaderCacheChange&& other) = delete;
+  ~ReaderCacheChange() =
+      default; // No need to free data. It's not owned by this object
+  // Not allowed because this class doesn't own the ptr and the user isn't
+  // allowed to use it outside the Scope of the callback
+  ReaderCacheChange(const ReaderCacheChange &other) = delete;
+  ReaderCacheChange(ReaderCacheChange &&other) = delete;
+  ReaderCacheChange &operator=(const ReaderCacheChange &other) = delete;
+  ReaderCacheChange &operator=(ReaderCacheChange &&other) = delete;
 
+  bool copyInto(uint8_t *buffer, DataSize_t destSize) const {
+    if (destSize < size) {
+      return false;
+    } else {
+      memcpy(buffer, data, size);
+      return true;
+    }
+  }
 
-        bool copyInto(uint8_t* buffer, DataSize_t destSize) const{
-            if(destSize < size){
-                return false;
-            }else{
-                memcpy(buffer, data, size);
-                return true;
-            }
-        }
+  const uint8_t *getData() const { return data; }
 
-        const uint8_t* getData() const{
-        	return data;
-        }
+  const DataSize_t getDataSize() const { return size; }
+};
 
-        const DataSize_t getDataSize() const{
-        	return size;
-        }
-    };
+typedef void (*ddsReaderCallback_fp)(void *callee,
+                                     const ReaderCacheChange &cacheChange);
 
-    typedef void (*ddsReaderCallback_fp)(void* callee, const ReaderCacheChange& cacheChange);
+class Reader {
+public:
+  TopicData m_attributes;
+  virtual void newChange(const ReaderCacheChange &cacheChange) = 0;
+  virtual void registerCallback(ddsReaderCallback_fp cb, void *callee) = 0;
+  virtual bool onNewHeartbeat(const SubmessageHeartbeat &msg,
+                              const GuidPrefix_t &remotePrefix) = 0;
+  virtual bool addNewMatchedWriter(const WriterProxy &newProxy) = 0;
+  virtual void removeWriter(const Guid &guid) = 0;
+  bool isInitialized() { return m_is_initialized_; }
 
-    class Reader{
-    public:
-        TopicData m_attributes;
-        virtual void newChange(const ReaderCacheChange& cacheChange) = 0;
-        virtual void registerCallback(ddsReaderCallback_fp cb, void* callee) = 0;
-        virtual bool onNewHeartbeat(const SubmessageHeartbeat& msg, const GuidPrefix_t& remotePrefix) = 0;
-        virtual bool addNewMatchedWriter(const WriterProxy& newProxy) = 0;
-        virtual void removeWriter(const Guid& guid) = 0;
-    protected:
-        virtual ~Reader() = default;
-    };
-}
+protected:
+  bool m_is_initialized_ = false;
+  virtual ~Reader() = default;
+};
+} // namespace rtps
 
-#endif //RTPS_READER_H
+#endif // RTPS_READER_H
