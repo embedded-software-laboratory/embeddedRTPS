@@ -34,42 +34,43 @@ Author: i11 - Embedded Software, RWTH Aachen University
 
 namespace rtps {
 
-    struct PBufWrapper;
+struct PBufWrapper;
 
-    template <typename NetworkDriver>
-    class StatelessWriterT : public Writer{
-    public:
-        ~StatelessWriterT() override;
-        bool init(TopicData attributes, TopicKind_t topicKind, ThreadPool* threadPool, NetworkDriver& driver);
+template <typename NetworkDriver> class StatelessWriterT : public Writer {
+public:
+  ~StatelessWriterT() override;
+  bool init(TopicData attributes, TopicKind_t topicKind, ThreadPool *threadPool,
+            NetworkDriver &driver);
 
-        bool addNewMatchedReader(const ReaderProxy& newProxy) override;
-        void removeReader(const Guid& guid) override;
-        void progress() override;
-        const CacheChange* newChange(ChangeKind_t kind, const uint8_t* data, DataSize_t size) override;
-        void setAllChangesToUnsent() override;
-        void onNewAckNack(const SubmessageAckNack& msg, const GuidPrefix_t& sourceGuidPrefix) override;
+  bool addNewMatchedReader(const ReaderProxy &newProxy) override;
+  void removeReader(const Guid &guid) override;
+  void progress() override;
+  const CacheChange *newChange(ChangeKind_t kind, const uint8_t *data,
+                               DataSize_t size) override;
+  void setAllChangesToUnsent() override;
+  void onNewAckNack(const SubmessageAckNack &msg,
+                    const GuidPrefix_t &sourceGuidPrefix) override;
 
-    private:
-        sys_mutex_t m_mutex;
-        ThreadPool* mp_threadPool = nullptr;
+private:
+  sys_mutex_t m_mutex;
+  ThreadPool *mp_threadPool = nullptr;
 
-        PacketInfo m_packetInfo;
-        NetworkDriver* m_transport;
+  PacketInfo m_packetInfo;
+  NetworkDriver *m_transport;
 
-        TopicKind_t m_topicKind = TopicKind_t::NO_KEY;
-        SequenceNumber_t m_nextSequenceNumberToSend = {0, 1};
-        SimpleHistoryCache m_history;
+  TopicKind_t m_topicKind = TopicKind_t::NO_KEY;
+  SequenceNumber_t m_nextSequenceNumberToSend = {0, 1};
+  SimpleHistoryCache m_history;
 
-        MemoryPool<ReaderProxy, Config::NUM_READER_PROXIES_PER_WRITER> m_proxies;
+  MemoryPool<ReaderProxy, Config::NUM_READER_PROXIES_PER_WRITER> m_proxies;
 
-        bool isIrrelevant(ChangeKind_t kind) const;
+  bool isIrrelevant(ChangeKind_t kind) const;
+};
 
-    };
+using StatelessWriter = StatelessWriterT<UdpDriver>;
 
-    using StatelessWriter = StatelessWriterT<UdpDriver>;
-
-}
+} // namespace rtps
 
 #include "StatelessWriter.tpp"
 
-#endif //RTPS_RTPSWRITER_H
+#endif // RTPS_RTPSWRITER_H

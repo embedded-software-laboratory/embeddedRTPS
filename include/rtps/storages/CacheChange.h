@@ -28,16 +28,16 @@ Author: i11 - Embedded Software, RWTH Aachen University
 #include "rtps/common/types.h"
 #include "rtps/storages/PBufWrapper.h"
 
-namespace rtps{
-    struct CacheChange{
-        ChangeKind_t kind = ChangeKind_t::INVALID;
-        SequenceNumber_t sequenceNumber = SEQUENCENUMBER_UNKNOWN;
-        PBufWrapper data{};
+namespace rtps {
+struct CacheChange {
+  ChangeKind_t kind = ChangeKind_t::INVALID;
+  SequenceNumber_t sequenceNumber = SEQUENCENUMBER_UNKNOWN;
+  PBufWrapper data{};
 
-        CacheChange() = default;
-        CacheChange(ChangeKind_t kind, SequenceNumber_t sequenceNumber)
-                : kind(kind), sequenceNumber(sequenceNumber){};
-    };
-}
+  CacheChange() = default;
+  CacheChange(ChangeKind_t kind, SequenceNumber_t sequenceNumber)
+      : kind(kind), sequenceNumber(sequenceNumber){};
+};
+} // namespace rtps
 
-#endif //PROJECT_CACHECHANGE_H
+#endif // PROJECT_CACHECHANGE_H

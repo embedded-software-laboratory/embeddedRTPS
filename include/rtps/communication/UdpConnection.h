@@ -25,42 +25,41 @@ Author: i11 - Embedded Software, RWTH Aachen University
 #ifndef RTPS_UDPCONNECTION_H
 #define RTPS_UDPCONNECTION_H
 
-#include "lwip/udp.h"
 #include "TcpipCoreLock.h"
+#include "lwip/udp.h"
 
 namespace rtps {
 
-    struct UdpConnection {
-        udp_pcb *pcb = nullptr;
-        uint16_t port = 0;
+struct UdpConnection {
+  udp_pcb *pcb = nullptr;
+  uint16_t port = 0;
 
-        UdpConnection() = default; // Required for static allocation
+  UdpConnection() = default; // Required for static allocation
 
-        explicit UdpConnection(uint16_t port): port(port) {
-            TcpipCoreLock lock;
-            pcb =  udp_new();
-        }
+  explicit UdpConnection(uint16_t port) : port(port) {
+    TcpipCoreLock lock;
+    pcb = udp_new();
+  }
 
-        UdpConnection& operator=(UdpConnection&& other) noexcept{
-            port = other.port;
+  UdpConnection &operator=(UdpConnection &&other) noexcept {
+    port = other.port;
 
-            if (pcb != nullptr) {
-                TcpipCoreLock lock;
-                udp_remove(pcb);
-            }
-            pcb = other.pcb;
-            other.pcb = nullptr;
-            return *this;
-        }
+    if (pcb != nullptr) {
+      TcpipCoreLock lock;
+      udp_remove(pcb);
+    }
+    pcb = other.pcb;
+    other.pcb = nullptr;
+    return *this;
+  }
 
-        ~UdpConnection() {
-            if (pcb != nullptr) {
-                TcpipCoreLock lock;
-                udp_remove(pcb);
-                pcb = nullptr;
-            }
-        }
-
-    };
-}
-#endif //RTPS_UDPCONNECTION_H
+  ~UdpConnection() {
+    if (pcb != nullptr) {
+      TcpipCoreLock lock;
+      udp_remove(pcb);
+      pcb = nullptr;
+    }
+  }
+};
+} // namespace rtps
+#endif // RTPS_UDPCONNECTION_H

@@ -28,35 +28,35 @@ Author: i11 - Embedded Software, RWTH Aachen University
 #include "rtps/common/types.h"
 #include "rtps/storages/PBufWrapper.h"
 
-namespace rtps{
+namespace rtps {
 
-    struct PacketInfo{
-        Ip4Port_t srcPort; // TODO Do we need that?
-        ip4_addr_t destAddr;
-        Ip4Port_t destPort;
-        PBufWrapper buffer;
+struct PacketInfo {
+  Ip4Port_t srcPort; // TODO Do we need that?
+  ip4_addr_t destAddr;
+  Ip4Port_t destPort;
+  PBufWrapper buffer;
 
-        void copyTriviallyCopyable(const PacketInfo& other){
-            this->srcPort = other.srcPort;
-            this->destPort = other.destPort;
-            this->destAddr = other.destAddr;
-        }
+  void copyTriviallyCopyable(const PacketInfo &other) {
+    this->srcPort = other.srcPort;
+    this->destPort = other.destPort;
+    this->destAddr = other.destAddr;
+  }
 
-        PacketInfo() = default;
-        ~PacketInfo() = default;
+  PacketInfo() = default;
+  ~PacketInfo() = default;
 
-        PacketInfo& operator=(const PacketInfo& other){
-            copyTriviallyCopyable(other);
-            this->buffer = other.buffer;
-            return *this;
-        }
+  PacketInfo &operator=(const PacketInfo &other) {
+    copyTriviallyCopyable(other);
+    this->buffer = other.buffer;
+    return *this;
+  }
 
-        PacketInfo& operator=(PacketInfo&& other) noexcept{
-            copyTriviallyCopyable(other);
-            this->buffer = std::move(other.buffer);
-            return *this;
-        }
-    };
-}
+  PacketInfo &operator=(PacketInfo &&other) noexcept {
+    copyTriviallyCopyable(other);
+    this->buffer = std::move(other.buffer);
+    return *this;
+  }
+};
+} // namespace rtps
 
-#endif //RTPS_PACKETINFO_H
+#endif // RTPS_PACKETINFO_H
