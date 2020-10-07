@@ -31,6 +31,7 @@ using rtps::StatelessReader;
 
 void StatelessReader::init(const TopicData& attributes){
     m_attributes = attributes;
+    m_is_initialized_ = true;
 }
 
 void StatelessReader::newChange(const ReaderCacheChange& cacheChange){

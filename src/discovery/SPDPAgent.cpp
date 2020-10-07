@@ -188,6 +188,10 @@ bool SPDPAgent::addProxiesForBuiltInEndpoints(){
 		return false;
 	}
 
+	ip4_addr_t ip4addr = locator->getIp4Address();
+	const char* addr = ip4addr_ntoa(&ip4addr);
+	printf("Adding IPv4 Locator %s", addr);
+
 
     if (m_proxyDataBuffer.hasPublicationWriter()){
         const WriterProxy proxy{{m_proxyDataBuffer.m_guid.prefix, ENTITYID_SEDP_BUILTIN_PUBLICATIONS_WRITER}, *locator};

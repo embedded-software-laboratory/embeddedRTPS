@@ -172,7 +172,95 @@ void Domain::registerPort(const Participant& part){
     m_transport.createUdpConnection(getBuiltInUnicastPort(part.m_participantId));
 }
 
+rtps::Reader* Domain::readerExists(Participant& part, const char* topicName, const char* typeName, bool reliable){
+	if(reliable){
+		for(unsigned int i = 0; i < m_numStatefulReaders; i++){
+			if(m_statefulReaders[i].isInitialized()){
+				if(strncmp(m_statefulReaders[i].m_attributes.topicName, topicName, Config::MAX_TYPENAME_LENGTH) != 0){
+					continue;
+				}
+
+				if(strncmp(m_statefulReaders[i].m_attributes.typeName, typeName, Config::MAX_TYPENAME_LENGTH) != 0){
+					continue;
+				}
+
+#if DOMAIN_VERBOSE
+				printf("StatefulReader exists already [%s, %s]\n", topicName, typeName);
+#endif
+
+				return &m_statefulReaders[i];
+			}
+		}
+	}else{
+		for(unsigned int i = 0; i < m_numStatelessReaders; i++){
+			if(m_statelessReaders[i].isInitialized()){
+				if(strncmp(m_statelessReaders[i].m_attributes.topicName, topicName, Config::MAX_TYPENAME_LENGTH) != 0){
+					continue;
+				}
+
+				if(strncmp(m_statelessReaders[i].m_attributes.typeName, typeName, Config::MAX_TYPENAME_LENGTH) != 0){
+					continue;
+				}
+
+#if DOMAIN_VERBOSE
+				printf("StatelessReader exists [%s, %s]\n", topicName, typeName);
+#endif
+				return &m_statelessReaders[i];
+			}
+		}
+	}
+
+	return nullptr;
+}
+
+
+rtps::Writer* Domain::writerExists(Participant& part, const char* topicName, const char* typeName, bool reliable){
+	if(reliable){
+		for(unsigned int i = 0; i < m_numStatefulWriters; i++){
+			if(m_statefulWriters[i].isInitialized()){
+				if(strncmp(m_statefulWriters[i].m_attributes.topicName, topicName, Config::MAX_TYPENAME_LENGTH) != 0){
+					continue;
+				}
+
+				if(strncmp(m_statefulWriters[i].m_attributes.typeName, typeName, Config::MAX_TYPENAME_LENGTH) != 0){
+					continue;
+				}
+
+#if DOMAIN_VERBOSE
+				printf("StatefulWriter exists [%s, %s]\n", topicName, typeName);
+#endif
+
+				return &m_statefulWriters[i];
+			}
+		}
+	}else{
+		for(unsigned int i = 0; i < m_numStatelessWriters; i++){
+			if(m_statelessWriters[i].isInitialized()){
+				if(strncmp(m_statelessWriters[i].m_attributes.topicName, topicName, Config::MAX_TYPENAME_LENGTH) != 0){
+					continue;
+				}
+
+				if(strncmp(m_statelessWriters[i].m_attributes.typeName, typeName, Config::MAX_TYPENAME_LENGTH) != 0){
+					continue;
+				}
+
+#if DOMAIN_VERBOSE
+				printf("StatelessWriter exists [%s, %s]\n", topicName, typeName);
+#endif
+				return &m_statelessWriters[i];
+			}
+		}
+	}
+
+	return nullptr;
+}
+
 rtps::Writer* Domain::createWriter(Participant& part, const char* topicName, const char* typeName, bool reliable){
+#if DOMAIN_VERBOSE
+    printf("Creating writer[%s, %s]\n", topicName, typeName);
+#endif
+
+	// Check if there is enough capacity for more writers
     if((reliable && m_statefulWriters.size() <= m_numStatefulWriters) ||
        (!reliable && m_statelessWriters.size() <= m_numStatelessWriters) ||
 	    part.isWritersFull()){
@@ -215,10 +303,13 @@ rtps::Writer* Domain::createWriter(Participant& part, const char* topicName, con
 
 
 rtps::Reader* Domain::createReader(Participant& part, const char* topicName, const char* typeName, bool reliable){
-	if((reliable && m_statefulReaders.size() <= m_numStatefulReaders) ||
-       (!reliable && m_statelessReaders.size() <= m_numStatelessReaders) ||
-	    part.isReadersFull()){
-        return nullptr;
+#if DOMAIN_VERBOSE
+    printf("Creating reader[%s, %s]\n", topicName, typeName);
+#endif
+    if((reliable && m_statefulReaders.size() <= m_numStatefulReaders) ||
+    (!reliable && m_statelessReaders.size() <= m_numStatelessReaders) ||
+    part.isReadersFull()){
+    	return nullptr;
     }
 
     // TODO Distinguish WithKey and NoKey (Also changes EntityKind)

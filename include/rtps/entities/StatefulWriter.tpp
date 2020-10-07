@@ -78,6 +78,7 @@ bool StatefulWriterT<NetworkDriver>::init(TopicData attributes, TopicKind_t topi
     	 m_heartbeatThread = sys_thread_new("HBThread", hbFunctionJumppad, this, Config::HEARTBEAT_STACKSIZE, Config::THREAD_POOL_WRITER_PRIO);
     }
 
+    m_is_initialized_ = true;
     return true;
 }
 

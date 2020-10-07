@@ -86,7 +86,11 @@ namespace rtps{
         virtual bool onNewHeartbeat(const SubmessageHeartbeat& msg, const GuidPrefix_t& remotePrefix) = 0;
         virtual bool addNewMatchedWriter(const WriterProxy& newProxy) = 0;
         virtual void removeWriter(const Guid& guid) = 0;
+        bool isInitialized(){
+        	return m_is_initialized_;
+        }
     protected:
+        bool m_is_initialized_ = false;
         virtual ~Reader() = default;
     };
 }

@@ -45,7 +45,12 @@ namespace rtps{
         virtual void setAllChangesToUnsent() = 0;
         virtual void onNewAckNack(const SubmessageAckNack& msg, const GuidPrefix_t& sourceGuidPrefix) = 0;
 
+        bool isInitialized(){
+        	return m_is_initialized_;
+        }
+
     protected:
+        bool m_is_initialized_ = false;
         virtual ~Writer() = default;
     };
 }

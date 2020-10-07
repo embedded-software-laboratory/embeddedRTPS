@@ -48,6 +48,7 @@ void StatefulReaderT<NetworkDriver>::init(const TopicData& attributes, NetworkDr
     m_transport = &driver;
     m_packetInfo.srcPort = attributes.unicastLocator.port;
     sys_mutex_new(&m_mutex);
+    m_is_initialized_ = true;
 }
 
 template <class NetworkDriver>

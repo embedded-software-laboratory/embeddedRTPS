@@ -64,6 +64,7 @@ bool StatelessWriterT<NetworkDriver>::init(TopicData attributes, TopicKind_t top
     mp_threadPool = threadPool;
     m_transport = &driver;
 
+    m_is_initialized_ = true;
     return true;
 }
 

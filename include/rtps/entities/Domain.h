@@ -47,6 +47,9 @@ namespace rtps{
         Writer* createWriter(Participant& part, const char* topicName, const char* typeName, bool reliable);
         Reader* createReader(Participant& part, const char* topicName, const char* typeName, bool reliable);
 
+        Writer* writerExists(Participant& part, const char* topicName, const char* typeName, bool reliable);
+        Reader* readerExists(Participant& part, const char* topicName, const char* typeName, bool reliable);
+
     private:
         ThreadPool m_threadPool;
         UdpDriver m_transport;
@@ -55,8 +58,8 @@ namespace rtps{
         ParticipantId_t m_nextParticipantId = PARTICIPANT_START_ID;
 
         std::array<StatelessWriter, Config::NUM_STATELESS_WRITERS> m_statelessWriters;
-        uint8_t m_numStatelessWriters = 0;
         std::array<StatelessReader, Config::NUM_STATELESS_READERS> m_statelessReaders;
+        uint8_t m_numStatelessWriters = 0;
         uint8_t m_numStatelessReaders = 0;
         std::array<StatefulReader, Config::NUM_STATEFUL_READERS> m_statefulReaders;
         uint8_t m_numStatefulReaders = 0;
