@@ -144,7 +144,7 @@ void SPDPAgent::processProxyData(){
     }
 
     if(mp_participant->findRemoteParticipant(m_proxyDataBuffer.m_guid.prefix) != nullptr){
-    	 m_buildInEndpoints.spdpWriter->setAllChangesToUnsent();
+    	//m_buildInEndpoints.spdpWriter->setAllChangesToUnsent();
     	return; // Already in our list
     }
 
