@@ -133,6 +133,10 @@ bool TopicData::serializeIntoUcdrBuffer(ucdrBuffer& buffer) const{
 	ucdr_serialize_uint32_t(&buffer, 0); // unidentified additional value
 	ucdr_serialize_uint32_t(&buffer, 0); // unidentified additional value
 
+	ucdr_serialize_uint16_t(&buffer, ParameterId::PID_DURABILITY);
+	ucdr_serialize_uint16_t(&buffer, sizeof(DurabilityKind_t));
+	ucdr_serialize_uint32_t(&buffer, static_cast<uint32_t>(durabilityKind));
+
 
 	ucdr_serialize_uint16_t(&buffer, ParameterId::PID_SENTINEL);
 	ucdr_serialize_uint16_t(&buffer, 0);

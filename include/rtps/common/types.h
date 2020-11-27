@@ -74,6 +74,10 @@ namespace rtps{
         RELIABLE    = 2 // Specification says 3 but eprosima sends 2
     };
 
+    enum class DurabilityKind_t : uint32_t{
+        TRANSIENT_LOCAL = 1
+    };
+
     struct GuidPrefix_t{
         std::array<uint8_t, 12> id;
 

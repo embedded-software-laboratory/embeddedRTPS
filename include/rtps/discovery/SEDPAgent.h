@@ -46,7 +46,7 @@ namespace rtps{
     private:
         Participant* m_part;
         sys_mutex_t m_mutex;
-        uint8_t m_buffer[300]; // TODO check size
+        uint8_t m_buffer[600]; // TODO check size
         BuiltInEndpoints m_endpoints;
         void (*mfp_onNewPublisherCallback)(void* arg) = nullptr;
         void* m_onNewPublisherArgs = nullptr;
