@@ -75,7 +75,10 @@ namespace rtps{
     };
 
     enum class DurabilityKind_t : uint32_t{
-        TRANSIENT_LOCAL = 1
+        VOLATILE        = 0,
+        TRANSIENT_LOCAL = 1,
+        TRANSIENT       = 2,
+        PERSISTENT      = 3
     };
 
     struct GuidPrefix_t{

@@ -37,14 +37,13 @@ namespace rtps{
         char typeName[Config::MAX_TYPENAME_LENGTH];
         char topicName[Config::MAX_TOPICNAME_LENGTH];
         ReliabilityKind_t reliabilityKind;
-        DurabilityKind_t durabilityKind;
         Locator unicastLocator;
+        DurabilityKind_t durabilityKind;
 
         TopicData() = default;
         TopicData(Guid guid, ReliabilityKind_t reliability, Locator loc)
             : endpointGuid(guid), typeName{'\0'}, topicName{'\0'},
-              reliabilityKind(reliability), durabilityKind(rtps::DurabilityKind_t::TRANSIENT_LOCAL), unicastLocator(loc){}
-
+              reliabilityKind(reliability), durabilityKind(DurabilityKind_t::TRANSIENT_LOCAL), unicastLocator(loc){}
 
         bool matchesTopicOf(const TopicData& other);
 

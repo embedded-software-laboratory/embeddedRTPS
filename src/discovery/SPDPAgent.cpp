@@ -32,7 +32,7 @@ using rtps::SMElement::ParameterId;
 using rtps::SMElement::BuildInEndpointSet;
 
 
-#define SPDP_VERBOSE 0
+#define SPDP_VERBOSE 1
 
 #if SPDP_VERBOSE
 #include "rtps/utils/printutils.h"
