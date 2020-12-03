@@ -29,13 +29,14 @@ THE SOFTWARE
 	#include "lwip/ip4_addr.h"
 	#include "lwip/netif.h"
 	#include <lwip/tcpip.h>
+	#include "lwipcfg.h" //needed in unix also, moved out of WIN32 only
 
 	#ifdef unix
 		#include "netif/tapif.h"
 	#elif defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
 		#include "default_netif.h"
 		#include "../pcapif.h"
-		#include "lwipcfg.h"
+//		#include "lwipcfg.h"
 	#else
 		#include "ethernetif.h"
 	#endif

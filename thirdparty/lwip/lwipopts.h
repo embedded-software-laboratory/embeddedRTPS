@@ -162,7 +162,7 @@ a lot of data that needs to be copied, this should be set high. */
 #define PBUF_POOL_SIZE          120
 
 /* PBUF_POOL_BUFSIZE: the size of each pbuf in the pbuf pool. */
-#define PBUF_POOL_BUFSIZE       512
+#define PBUF_POOL_BUFSIZE       1024 //increased to be able to process bigger message sizes, before: 256
 
 /** SYS_LIGHTWEIGHT_PROT
  * define SYS_LIGHTWEIGHT_PROT in lwipopts.h if you want inter-task protection

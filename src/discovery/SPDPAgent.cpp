@@ -32,7 +32,7 @@ using rtps::SMElement::ParameterId;
 using rtps::SMElement::BuildInEndpointSet;
 
 
-#define SPDP_VERBOSE 0
+#define SPDP_VERBOSE 1
 
 #if SPDP_VERBOSE
 #include "rtps/utils/printutils.h"
@@ -144,7 +144,7 @@ void SPDPAgent::processProxyData(){
     }
 
     if(mp_participant->findRemoteParticipant(m_proxyDataBuffer.m_guid.prefix) != nullptr){
-    	 m_buildInEndpoints.spdpWriter->setAllChangesToUnsent();
+    	//m_buildInEndpoints.spdpWriter->setAllChangesToUnsent();
     	return; // Already in our list
     }
 

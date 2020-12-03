@@ -26,7 +26,7 @@ THE SOFTWARE
 #include "rtps/messages/MessageTypes.h"
 #include "ucdr/microcdr.h"
 
-#define SEDP_VERBOSE 0
+#define SEDP_VERBOSE 1
 
 using rtps::SEDPAgent;
 
@@ -34,16 +34,17 @@ using rtps::SEDPAgent;
 uint32_t line_ = 0;
 char bf_[100];
 
-#include <asoa/driver/os.h>
+//#include <asoa/driver/os.h>
 
-#define SEDP_LOG(...) if(true){ 						 \
+/*#define SEDP_LOG(...) if(true){ 						 \
 		size_t t = snprintf(bf_, sizeof(bf_), __VA_ARGS__); 		 \
-		ASOA_ASSERT(t < sizeof(bf_), "overflow");			 \
+		ASOA_ASSERT(t < sizeof(bf_), "overflow");			 
 		TFT_PrintLine(line_+3, bf_); 				 \
 		line_ = (line_+1)%30; 							 \
-		}
-
+		} */
 #endif
+
+#define SEDP_LOG(...) printf(__VA_ARGS__)
 
 void SEDPAgent::init(Participant& part, const BuiltInEndpoints& endpoints){
     // TODO move
@@ -165,7 +166,7 @@ void SEDPAgent::onNewSubscriber(const TopicData& readerData) {
 	}
     Writer* writer = m_part->getMatchingWriter(readerData);
 #if SEDP_VERBOSE
-    SEDP_LOG("SUB T/D %s/%s", readerData.topicName, readerData.typeName);
+    SEDP_LOG("SUB T/D %s/%s \n", readerData.topicName, readerData.typeName);
 #endif
     if(writer == nullptr) {
 #if SEDP_VERBOSE

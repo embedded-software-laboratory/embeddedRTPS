@@ -35,9 +35,9 @@ Domain::Domain() : m_threadPool(receiveJumppad, this), m_transport(ThreadPool::r
 bool Domain::completeInit(){
     m_initComplete = m_threadPool.startThreads();
 #if DOMAIN_VERBOSE
-    if(!started){
-        printf("Domain: Failed starting threads\n");
-    }
+    //if(!started){
+    //    printf("Domain: Failed starting threads\n");
+    //}
 #endif
     return m_initComplete;
 }
@@ -116,6 +116,7 @@ void Domain::createBuiltinWritersAndReaders(Participant &part) {
     spdpWriterAttributes.topicName[0] = '\0';
     spdpWriterAttributes.typeName[0] = '\0';
     spdpWriterAttributes.reliabilityKind = ReliabilityKind_t::BEST_EFFORT;
+    spdpWriterAttributes.durabilityKind = DurabilityKind_t::TRANSIENT_LOCAL;
     spdpWriterAttributes.endpointGuid.prefix = part.m_guidPrefix;
     spdpWriterAttributes.endpointGuid.entityId = ENTITYID_SPDP_BUILTIN_PARTICIPANT_WRITER;
     spdpWriterAttributes.unicastLocator = getBuiltInMulticastLocator();
@@ -135,6 +136,7 @@ void Domain::createBuiltinWritersAndReaders(Participant &part) {
     sedpAttributes.topicName[0] = '\0';
     sedpAttributes.typeName[0] = '\0';
     sedpAttributes.reliabilityKind = ReliabilityKind_t::RELIABLE;
+    sedpAttributes.durabilityKind = DurabilityKind_t::TRANSIENT_LOCAL;
     sedpAttributes.endpointGuid.prefix = part.m_guidPrefix;
     sedpAttributes.unicastLocator = getBuiltInUnicastLocator(part.m_participantId);
 
@@ -186,6 +188,7 @@ rtps::Writer* Domain::createWriter(Participant& part, const char* topicName, con
     attributes.endpointGuid.prefix = part.m_guidPrefix;
     attributes.endpointGuid.entityId = {part.getNextUserEntityKey(), EntityKind_t::USER_DEFINED_WRITER_WITHOUT_KEY};
     attributes.unicastLocator = getUserUnicastLocator(part.m_participantId);
+    attributes.durabilityKind = DurabilityKind_t::TRANSIENT_LOCAL;
 
 #if DOMAIN_VERBOSE
     printf("Creating writer[%s, %s]\n", topicName, typeName);
@@ -228,6 +231,7 @@ rtps::Reader* Domain::createReader(Participant& part, const char* topicName, con
     attributes.endpointGuid.prefix = part.m_guidPrefix;
     attributes.endpointGuid.entityId = {part.getNextUserEntityKey(), EntityKind_t::USER_DEFINED_READER_WITHOUT_KEY};
     attributes.unicastLocator = getUserUnicastLocator(part.m_participantId);
+    attributes.durabilityKind = DurabilityKind_t::TRANSIENT_LOCAL;
 
 #if DOMAIN_VERBOSE
     printf("Creating reader[%s, %s]\n", topicName, typeName);
