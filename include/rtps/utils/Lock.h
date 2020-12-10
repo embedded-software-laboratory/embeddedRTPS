@@ -16,6 +16,10 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE
+
+This file is part of embeddedRTPS.
+
+Author: i11 - Embedded Software, RWTH Aachen University
 */
 
 #ifndef RTPS_LOCK_H
@@ -23,19 +27,18 @@ THE SOFTWARE
 
 #include "lwip/sys.h"
 
-namespace rtps{
+namespace rtps {
 
-    class Lock {
-    public:
-        explicit Lock(sys_mutex_t& passedMutex) : m_mutex(passedMutex) {
-            sys_mutex_lock(&m_mutex);
-        };
+class Lock {
+public:
+  explicit Lock(sys_mutex_t &passedMutex) : m_mutex(passedMutex) {
+    sys_mutex_lock(&m_mutex);
+  };
 
-        ~Lock() {
-            sys_mutex_unlock(&m_mutex);
-        };
-    private:
-        sys_mutex_t& m_mutex;
-    };
-}
-#endif //RTPS_LOCK_H
+  ~Lock() { sys_mutex_unlock(&m_mutex); };
+
+private:
+  sys_mutex_t &m_mutex;
+};
+} // namespace rtps
+#endif // RTPS_LOCK_H

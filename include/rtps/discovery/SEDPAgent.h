@@ -16,49 +16,56 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE
+
+This file is part of embeddedRTPS.
+
+Author: i11 - Embedded Software, RWTH Aachen University
 */
 
 #ifndef RTPS_SEDPAGENT_H
 #define RTPS_SEDPAGENT_H
 
-#include "rtps/discovery/TopicData.h"
 #include "rtps/discovery/BuiltInEndpoints.h"
+#include "rtps/discovery/TopicData.h"
 
-namespace rtps{
+namespace rtps {
 
-    class Participant;
-    class ReaderCacheChange;
-    class Writer;
-    class Reader;
+class Participant;
+class ReaderCacheChange;
+class Writer;
+class Reader;
 
-    class SEDPAgent{
-    public:
-        void init(Participant& part, const BuiltInEndpoints& endpoints);
-        void addWriter(Writer& writer);
-        void addReader(Reader& reader);
-        void registerOnNewPublisherMatchedCallback(void (*callback)(void* arg), void* args);
-        void registerOnNewSubscriberMatchedCallback(void (*callback)(void* arg), void* args);
+class SEDPAgent {
+public:
+  void init(Participant &part, const BuiltInEndpoints &endpoints);
+  void addWriter(Writer &writer);
+  void addReader(Reader &reader);
+  void registerOnNewPublisherMatchedCallback(void (*callback)(void *arg),
+                                             void *args);
+  void registerOnNewSubscriberMatchedCallback(void (*callback)(void *arg),
+                                              void *args);
 
-    protected: // For testing purposes
-        void onNewPublisher(const TopicData& writerData);
-        void onNewSubscriber(const TopicData& writerData);
+protected: // For testing purposes
+  void onNewPublisher(const TopicData &writerData);
+  void onNewSubscriber(const TopicData &writerData);
 
-    private:
-        Participant* m_part;
-        sys_mutex_t m_mutex;
-        uint8_t m_buffer[600]; // TODO check size
-        BuiltInEndpoints m_endpoints;
-        void (*mfp_onNewPublisherCallback)(void* arg) = nullptr;
-        void* m_onNewPublisherArgs = nullptr;
-        void (*mfp_onNewSubscriberCallback)(void* arg) = nullptr;
-        void* m_onNewSubscriberArgs = nullptr;
+private:
+  Participant *m_part;
+  sys_mutex_t m_mutex;
+  uint8_t m_buffer[600]; // TODO check size, currently changed from 300 to 600 (FastDDS gives too much options)
+  BuiltInEndpoints m_endpoints;
+  void (*mfp_onNewPublisherCallback)(void *arg) = nullptr;
+  void *m_onNewPublisherArgs = nullptr;
+  void (*mfp_onNewSubscriberCallback)(void *arg) = nullptr;
+  void *m_onNewSubscriberArgs = nullptr;
 
-        static void receiveCallbackPublisher(void* callee, const ReaderCacheChange& cacheChange);
-        static void receiveCallbackSubscriber(void* callee, const ReaderCacheChange& cacheChange);
-        void onNewPublisher(const ReaderCacheChange& change);
-        void onNewSubscriber(const ReaderCacheChange& change);
+  static void receiveCallbackPublisher(void *callee,
+                                       const ReaderCacheChange &cacheChange);
+  static void receiveCallbackSubscriber(void *callee,
+                                        const ReaderCacheChange &cacheChange);
+  void onNewPublisher(const ReaderCacheChange &change);
+  void onNewSubscriber(const ReaderCacheChange &change);
+};
+} // namespace rtps
 
-    };
-}
-
-#endif //RTPS_SEDPAGENT_H
+#endif // RTPS_SEDPAGENT_H

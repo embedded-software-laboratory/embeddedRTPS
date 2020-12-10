@@ -16,6 +16,10 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE
+
+This file is part of embeddedRTPS.
+
+Author: i11 - Embedded Software, RWTH Aachen University
 */
 
 #ifndef RTPS_STATEFULREADER_H
@@ -28,36 +32,35 @@ THE SOFTWARE
 #include "rtps/entities/WriterProxy.h"
 #include "rtps/storages/MemoryPool.h"
 
-namespace rtps{
-    struct SubmessageHeartbeat;
+namespace rtps {
+struct SubmessageHeartbeat;
 
-    template <class NetworkDriver>
-    class StatefulReaderT final: public Reader{
-    public:
-        ~StatefulReaderT() override;
-        void init(const TopicData& attributes, NetworkDriver& driver);
-        void newChange(const ReaderCacheChange& cacheChange) override;
-        void registerCallback(ddsReaderCallback_fp cb, void* callee) override;
-        bool addNewMatchedWriter(const WriterProxy& newProxy) override;
-        void removeWriter(const Guid& guid) override;
-        bool onNewHeartbeat(const SubmessageHeartbeat& msg, const GuidPrefix_t& remotePrefix) override;
+template <class NetworkDriver> class StatefulReaderT final : public Reader {
+public:
+  ~StatefulReaderT() override;
+  void init(const TopicData &attributes, NetworkDriver &driver);
+  void newChange(const ReaderCacheChange &cacheChange) override;
+  void registerCallback(ddsReaderCallback_fp cb, void *callee) override;
+  bool addNewMatchedWriter(const WriterProxy &newProxy) override;
+  void removeWriter(const Guid &guid) override;
+  bool onNewHeartbeat(const SubmessageHeartbeat &msg,
+                      const GuidPrefix_t &remotePrefix) override;
 
-    private:
-        PacketInfo m_packetInfo; // TODO intended for reuse but buffer not used as such
-        NetworkDriver* m_transport;
-        MemoryPool<WriterProxy, Config::NUM_WRITER_PROXIES_PER_READER> m_proxies;
+private:
+  PacketInfo
+      m_packetInfo; // TODO intended for reuse but buffer not used as such
+  NetworkDriver *m_transport;
+  MemoryPool<WriterProxy, Config::NUM_WRITER_PROXIES_PER_READER> m_proxies;
 
-        ddsReaderCallback_fp m_callback = nullptr;
-        void* m_callee = nullptr;
-        sys_mutex_t m_mutex;
+  ddsReaderCallback_fp m_callback = nullptr;
+  void *m_callee = nullptr;
+  sys_mutex_t m_mutex;
+};
 
-    };
+using StatefulReader = StatefulReaderT<UdpDriver>;
 
-    using StatefulReader = StatefulReaderT<UdpDriver>;
-
-}
+} // namespace rtps
 
 #include "StatefulReader.tpp"
 
-
-#endif //RTPS_STATEFULREADER_H
+#endif // RTPS_STATEFULREADER_H

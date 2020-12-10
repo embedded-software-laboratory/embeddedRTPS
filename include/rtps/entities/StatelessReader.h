@@ -16,6 +16,10 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE
+
+This file is part of embeddedRTPS.
+
+Author: i11 - Embedded Software, RWTH Aachen University
 */
 
 #ifndef RTPS_STATELESSREADER_H
@@ -24,20 +28,22 @@ THE SOFTWARE
 #include "rtps/entities/Reader.h"
 #include "rtps/storages/HistoryCache.h"
 
-namespace rtps{
-    class StatelessReader final: public Reader{
-    public:
-        void init(const TopicData& attributes);
-        void newChange(const ReaderCacheChange& cacheChange) override;
-        void registerCallback(ddsReaderCallback_fp cb, void* callee) override;
-        bool onNewHeartbeat(const SubmessageHeartbeat& msg, const GuidPrefix_t& remotePrefix) override;
-        bool addNewMatchedWriter(const WriterProxy& newProxy) override;
-        void removeWriter(const Guid& guid) override;
-    private:
-        ddsReaderCallback_fp m_callback = nullptr;
-        void* m_callee = nullptr;
-    };
+namespace rtps {
+class StatelessReader final : public Reader {
+public:
+  void init(const TopicData &attributes);
+  void newChange(const ReaderCacheChange &cacheChange) override;
+  void registerCallback(ddsReaderCallback_fp cb, void *callee) override;
+  bool onNewHeartbeat(const SubmessageHeartbeat &msg,
+                      const GuidPrefix_t &remotePrefix) override;
+  bool addNewMatchedWriter(const WriterProxy &newProxy) override;
+  void removeWriter(const Guid &guid) override;
 
-}
+private:
+  ddsReaderCallback_fp m_callback = nullptr;
+  void *m_callee = nullptr;
+};
 
-#endif //RTPS_STATELESSREADER_H
+} // namespace rtps
+
+#endif // RTPS_STATELESSREADER_H

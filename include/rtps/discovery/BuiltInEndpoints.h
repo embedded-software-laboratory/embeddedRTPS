@@ -16,27 +16,30 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE
+
+This file is part of embeddedRTPS.
+
+Author: i11 - Embedded Software, RWTH Aachen University
 */
 
 #ifndef RTPS_BUILTINENDPOINTS_H
 #define RTPS_BUILTINENDPOINTS_H
 
-#include "rtps/entities/StatelessWriter.h"
-#include "rtps/entities/StatelessReader.h"
 #include "rtps/entities/StatefulReader.h"
+#include "rtps/entities/StatelessReader.h"
+#include "rtps/entities/StatelessWriter.h"
 #include "rtps/entities/Writer.h"
 
+namespace rtps {
 
-namespace rtps{
+struct BuiltInEndpoints {
+  Writer *spdpWriter = nullptr;
+  Reader *spdpReader = nullptr;
+  Writer *sedpPubWriter = nullptr;
+  Reader *sedpPubReader = nullptr;
+  Writer *sedpSubWriter = nullptr;
+  Reader *sedpSubReader = nullptr;
+};
+} // namespace rtps
 
-    struct BuiltInEndpoints{
-        Writer* spdpWriter = nullptr;
-        Reader* spdpReader = nullptr;
-        Writer* sedpPubWriter = nullptr;
-        Reader* sedpPubReader = nullptr;
-        Writer* sedpSubWriter = nullptr;
-        Reader* sedpSubReader = nullptr;
-    };
-}
-
-#endif //RTPS_BUILTINENDPOINTS_H
+#endif // RTPS_BUILTINENDPOINTS_H

@@ -16,6 +16,10 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE
+
+This file is part of embeddedRTPS.
+
+Author: i11 - Embedded Software, RWTH Aachen University
 */
 
 #ifndef RTPS_THREADSAFEQUEUE_H
@@ -28,43 +32,42 @@ THE SOFTWARE
 
 namespace rtps {
 
-    template<typename T, uint16_t SIZE>
-    class ThreadSafeCircularBuffer {
+template <typename T, uint16_t SIZE> class ThreadSafeCircularBuffer {
 
+public:
+  bool init();
 
-    public:
+  ~ThreadSafeCircularBuffer();
 
-        bool init();
+  bool moveElementIntoBuffer(T &&elem);
 
-        ~ThreadSafeCircularBuffer();
+  /**
+   * Removes the first into the given hull. Also moves responsibility for
+   * resources.
+   * @return true if element was injected. False if no element was present.
+   */
+  bool moveFirstInto(T &hull);
 
-        bool moveElementIntoBuffer(T&& elem);
+  void clear();
 
-        /**
-         * Removes the first into the given hull. Also moves responsibility for resources.
-         * @return true if element was injected. False if no element was present.
-         */
-        bool moveFirstInto(T& hull);
+private:
+  std::array<T, SIZE + 1> m_buffer{};
+  uint16_t m_head = 0;
+  uint16_t m_tail = 0;
+  static_assert(SIZE + 1 < std::numeric_limits<decltype(m_head)>::max(),
+                "Iterator is large enough for given size");
 
-        void clear();
+  sys_mutex_t m_mutex;
+  bool m_initialized = false;
 
-    private:
-        std::array<T, SIZE + 1> m_buffer{};
-        uint16_t m_head = 0;
-        uint16_t m_tail = 0;
-        static_assert(SIZE + 1 < std::numeric_limits<decltype(m_head)>::max(), "Iterator is large enough for given size");
+  inline bool isFull();
+  inline void incrementIterator(uint16_t &iterator);
+  inline void incrementTail();
+  inline void incrementHead();
+};
 
-        sys_mutex_t m_mutex;
-        bool m_initialized = false;
-
-        inline bool isFull();
-        inline void incrementIterator(uint16_t& iterator);
-        inline void incrementTail();
-        inline void incrementHead();
-    };
-
-}
+} // namespace rtps
 
 #include "ThreadSafeCircularBuffer.tpp"
 
-#endif //RTPS_THREADSAFEQUEUE_H
+#endif // RTPS_THREADSAFEQUEUE_H

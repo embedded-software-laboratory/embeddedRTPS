@@ -16,6 +16,10 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE
+
+This file is part of embeddedRTPS.
+
+Author: i11 - Embedded Software, RWTH Aachen University
 */
 
 #ifndef RTPS_TCPIPCORELOCK_H
@@ -23,16 +27,12 @@ THE SOFTWARE
 
 #include <lwip/tcpip.h>
 
-namespace rtps{
-        class TcpipCoreLock{
-            public:
-            TcpipCoreLock(){
-                LOCK_TCPIP_CORE();
-            }
-            ~TcpipCoreLock(){
-                UNLOCK_TCPIP_CORE();
-            }
-        };
-}
+namespace rtps {
+class TcpipCoreLock {
+public:
+  TcpipCoreLock() { LOCK_TCPIP_CORE(); }
+  ~TcpipCoreLock() { UNLOCK_TCPIP_CORE(); }
+};
+} // namespace rtps
 
-#endif //RTPS_TCPIPCORELOCK_H
+#endif // RTPS_TCPIPCORELOCK_H

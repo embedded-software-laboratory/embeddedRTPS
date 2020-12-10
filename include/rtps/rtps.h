@@ -16,6 +16,10 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE
+
+This file is part of embeddedRTPS.
+
+Author: i11 - Embedded Software, RWTH Aachen University
 */
 
 #ifndef RTPS_RTPS_H
@@ -23,12 +27,13 @@ THE SOFTWARE
 
 #include "rtps/entities/Domain.h"
 
-namespace rtps{
+namespace rtps {
 
-#if defined(unix) || defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
-    void init();
+#if defined(unix) || defined(WIN32) || defined(_WIN32) ||                      \
+    defined(__WIN32) && !defined(__CYGWIN__)
+void init();
 #endif
 
-}
+} // namespace rtps
 
-#endif //RTPS_RTPS_H
+#endif // RTPS_RTPS_H

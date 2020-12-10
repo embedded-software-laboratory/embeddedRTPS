@@ -16,15 +16,19 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE
+
+This file is part of embeddedRTPS.
+
+Author: i11 - Embedded Software, RWTH Aachen University
 */
 
 #ifndef RTPS_DISCOVEREDWRITERDATA_H
 #define RTPS_DISCOVEREDWRITERDATA_H
 
-#include <array>
-#include "rtps/config.h"
 #include "rtps/common/Locator.h"
+#include "rtps/config.h"
 #include "ucdr/microcdr.h"
+#include <array>
 
 namespace rtps{
 
@@ -37,8 +41,9 @@ namespace rtps{
         char typeName[Config::MAX_TYPENAME_LENGTH];
         char topicName[Config::MAX_TOPICNAME_LENGTH];
         ReliabilityKind_t reliabilityKind;
-        Locator unicastLocator;
         DurabilityKind_t durabilityKind;
+        Locator unicastLocator;
+        
 
         TopicData() = default;
         TopicData(Guid guid, ReliabilityKind_t reliability, Locator loc)
@@ -52,33 +57,4 @@ namespace rtps{
     };
 }
 
-#endif //RTPS_DISCOVEREDWRITERDATA_H
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+#endif // RTPS_DISCOVEREDWRITERDATA_H

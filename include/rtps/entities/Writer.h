@@ -16,34 +16,44 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE
+
+This file is part of embeddedRTPS.
+
+Author: i11 - Embedded Software, RWTH Aachen University
 */
 
 #ifndef RTPS_WRITER_H
 #define RTPS_WRITER_H
 
 #include "rtps/ThreadPool.h"
-#include "rtps/storages/PBufWrapper.h"
-#include "rtps/storages/CacheChange.h"
-#include "rtps/entities/ReaderProxy.h"
 #include "rtps/discovery/TopicData.h"
+#include "rtps/entities/ReaderProxy.h"
+#include "rtps/storages/CacheChange.h"
+#include "rtps/storages/PBufWrapper.h"
 
-namespace rtps{
+namespace rtps {
 
-    class Writer{
-    public:
-        TopicData m_attributes;
-        virtual bool addNewMatchedReader(const ReaderProxy& newProxy) = 0;
-        virtual void removeReader(const Guid& guid) = 0;
+class Writer {
+public:
+  TopicData m_attributes;
+  virtual bool addNewMatchedReader(const ReaderProxy &newProxy) = 0;
+  virtual void removeReader(const Guid &guid) = 0;
 
-        //! Executes required steps like sending packets. Intended to be called by worker threads
-        virtual void progress() = 0;
-        virtual const CacheChange* newChange(ChangeKind_t kind, const uint8_t* data, DataSize_t size) = 0;
-        virtual void setAllChangesToUnsent() = 0;
-        virtual void onNewAckNack(const SubmessageAckNack& msg, const GuidPrefix_t& sourceGuidPrefix) = 0;
+  //! Executes required steps like sending packets. Intended to be called by
+  //! worker threads
+  virtual void progress() = 0;
+  virtual const CacheChange *newChange(ChangeKind_t kind, const uint8_t *data,
+                                       DataSize_t size) = 0;
+  virtual void setAllChangesToUnsent() = 0;
+  virtual void onNewAckNack(const SubmessageAckNack &msg,
+                            const GuidPrefix_t &sourceGuidPrefix) = 0;
 
-    protected:
-        virtual ~Writer() = default;
-    };
-}
+  bool isInitialized() { return m_is_initialized_; }
 
-#endif //RTPS_WRITER_H
+protected:
+  bool m_is_initialized_ = false;
+  virtual ~Writer() = default;
+};
+} // namespace rtps
+
+#endif // RTPS_WRITER_H

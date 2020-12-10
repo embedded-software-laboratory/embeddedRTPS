@@ -16,6 +16,10 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE
+
+This file is part of embeddedRTPS.
+
+Author: i11 - Embedded Software, RWTH Aachen University
 */
 
 #ifndef RTPS_READERPROXY_H
@@ -24,19 +28,18 @@ THE SOFTWARE
 #include "rtps/common/types.h"
 #include "rtps/discovery/ParticipantProxyData.h"
 
-namespace rtps{
-    struct ReaderProxy{
-        Guid remoteReaderGuid;
-        Locator remoteLocator;
-        SequenceNumberSet ackNackSet;
-        Count_t ackNackCount;
+namespace rtps {
+struct ReaderProxy {
+  Guid remoteReaderGuid;
+  Locator remoteLocator;
+  SequenceNumberSet ackNackSet;
+  Count_t ackNackCount;
 
-        ReaderProxy() : remoteReaderGuid({GUIDPREFIX_UNKNOWN, ENTITYID_UNKNOWN}){};
-        ReaderProxy(const Guid& guid, const Locator& loc)
-            : remoteReaderGuid(guid), remoteLocator(loc),
-              ackNackSet(), ackNackCount{0}{};
+  ReaderProxy() : remoteReaderGuid({GUIDPREFIX_UNKNOWN, ENTITYID_UNKNOWN}){};
+  ReaderProxy(const Guid &guid, const Locator &loc)
+      : remoteReaderGuid(guid), remoteLocator(loc),
+        ackNackSet(), ackNackCount{0} {};
+};
+} // namespace rtps
 
-    };
-}
-
-#endif //RTPS_READERPROXY_H
+#endif // RTPS_READERPROXY_H
