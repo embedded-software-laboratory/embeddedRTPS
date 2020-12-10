@@ -33,6 +33,7 @@ Author: i11 - Embedded Software, RWTH Aachen University
 #include "rtps/entities/StatelessReader.h"
 #include "rtps/entities/StatelessWriter.h"
 #include "rtps/storages/PBufWrapper.h"
+#include "rtps/common/Locator.h"
 
 namespace rtps {
 class Domain {
@@ -46,7 +47,7 @@ public:
   Writer *createWriter(Participant &part, const char *topicName,
                        const char *typeName, bool reliable);
   Reader *createReader(Participant &part, const char *topicName,
-                       const char *typeName, bool reliable);
+                       const char *typeName, bool reliable, Locator multicastLocator = Locator());
 
   Writer *writerExists(Participant &part, const char *topicName,
                        const char *typeName, bool reliable);

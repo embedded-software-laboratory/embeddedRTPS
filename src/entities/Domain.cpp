@@ -324,7 +324,7 @@ rtps::Writer *Domain::createWriter(Participant &part, const char *topicName,
 }
 
 rtps::Reader *Domain::createReader(Participant &part, const char *topicName,
-                                   const char *typeName, bool reliable) {
+                                   const char *typeName, bool reliable, Locator mcastLocator) {
 #if DOMAIN_VERBOSE
   printf("Creating reader[%s, %s]\n", topicName, typeName);
 #endif
@@ -348,6 +348,14 @@ rtps::Reader *Domain::createReader(Participant &part, const char *topicName,
       part.getNextUserEntityKey(),
       EntityKind_t::USER_DEFINED_READER_WITHOUT_KEY};
   attributes.unicastLocator = getUserUnicastLocator(part.m_participantId);
+  if(mcastLocator.kind == LocatorKind_t::LOCATOR_KIND_UDPv4) {
+    attributes.multicastLocator = mcastLocator;
+    m_transport.joinMultiCastGroup(attributes.multicastLocator.getIp4Address());
+  } else if(mcastLocator.kind == LocatorKind_t::LOCATOR_KIND_UDPv6) {
+#if DOMAIN_VERBOSE
+  printf("IPv6 Multicast not supported!");
+#endif
+  }
   attributes.durabilityKind = DurabilityKind_t::TRANSIENT_LOCAL;
 
 #if DOMAIN_VERBOSE
