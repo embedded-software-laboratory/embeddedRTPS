@@ -45,7 +45,11 @@ namespace rtps{
         Locator unicastLocator;
         
 
-        TopicData() = default;
+        TopicData()
+            : endpointGuid(GUID_UNKNOWN), typeName{'\0'}, topicName{'\0'},
+              reliabilityKind(ReliabilityKind_t::BEST_EFFORT), durabilityKind(DurabilityKind_t::TRANSIENT_LOCAL), 
+              unicastLocator(rtps::Locator::createUDPv4Locator(192,168,0,42, rtps::getUserUnicastPort(0))){};
+              
         TopicData(Guid guid, ReliabilityKind_t reliability, Locator loc)
             : endpointGuid(guid), typeName{'\0'}, topicName{'\0'},
               reliabilityKind(reliability), durabilityKind(DurabilityKind_t::TRANSIENT_LOCAL), unicastLocator(loc){}

@@ -247,6 +247,7 @@ const EntityId_t ENTITYID_P2P_BUILTIN_PARTICIPANT_MESSAGE_READER = {
     {00, 02, 00}, EntityKind_t::BUILD_IN_READER_WITH_KEY};
 
 const GuidPrefix_t GUIDPREFIX_UNKNOWN{};
+const Guid GUID_UNKNOWN{};
 
 const ParticipantId_t PARTICIPANT_ID_INVALID = -1;
 
