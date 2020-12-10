@@ -16,19 +16,15 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE
-<<<<<<< HEAD
 
 This file is part of embeddedRTPS.
 
 Author: i11 - Embedded Software, RWTH Aachen University
-=======
->>>>>>> fix/github-changes
 */
 
 #ifndef PROJECT_SYSFUNCTIONS_H
 #define PROJECT_SYSFUNCTIONS_H
 
-<<<<<<< HEAD
 #include "lwip/sys.h"
 #include "rtps/common/types.h"
 
@@ -44,21 +40,3 @@ inline Time_t getCurrentTimeStamp() {
 } // namespace rtps
 
 #endif // PROJECT_SYSFUNCTIONS_H
-=======
-#include "rtps/common/types.h"
-#include "lwip/sys.h"
-
-namespace rtps{
-    inline Time_t getCurrentTimeStamp(){
-        Time_t now;
-        // TODO FIX
-        uint32_t nowMs = sys_now();
-        now.seconds = (int32_t) nowMs / 1000;
-        now.fraction = ((nowMs % 1000)/1000);
-        return now;
-    }
-}
-
-
-#endif //PROJECT_SYSFUNCTIONS_H
->>>>>>> fix/github-changes

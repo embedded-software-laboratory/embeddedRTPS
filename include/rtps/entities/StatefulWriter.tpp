@@ -308,7 +308,6 @@ void StatefulWriterT<NetworkDriver>::sendHeartBeatLoop() {
 
 template <class NetworkDriver>
 void StatefulWriterT<NetworkDriver>::sendHeartBeat() {
-<<<<<<< HEAD
   if (m_proxies.isEmpty()) {
 #if SFW_VERBOSE
     log("StatefulWriter[%s]: Skipping heartbeat. No proxies.\n",
@@ -350,46 +349,6 @@ void StatefulWriterT<NetworkDriver>::sendHeartBeat() {
     m_transport->sendPacket(info);
   }
   m_hbCount.value++;
-=======
-    if(m_proxies.isEmpty()){
-#if SFW_VERBOSE
-        log("StatefulWriter[%s]: Skipping heartbeat. No proxies.\n", this->m_attributes.topicName);
-#endif
-        return;
-    }
-
-    for(auto& proxy : m_proxies) {
-
-        PacketInfo info;
-        info.srcPort = m_packetInfo.srcPort;
-
-        SequenceNumber_t firstSN;
-        SequenceNumber_t lastSN;
-        MessageFactory::addHeader(info.buffer, m_attributes.endpointGuid.prefix);
-        {
-            Lock lock(m_mutex);
-            firstSN = m_history.getSeqNumMin();
-            lastSN = m_history.getSeqNumMax();
-        }
-        if (firstSN == SEQUENCENUMBER_UNKNOWN || lastSN == SEQUENCENUMBER_UNKNOWN) {
-#if SFW_VERBOSE
-            if(strlen(&this->m_attributes.typeName[0]) != 0){
-                log("StatefulWriter[%s]: Skipping heartbeat. No data.\n", this->m_attributes.topicName);
-            }
-#endif
-            return;
-        }
-
-        MessageFactory::addHeartbeat(info.buffer, m_attributes.endpointGuid.entityId,
-                                     proxy.remoteReaderGuid.entityId, firstSN, lastSN, m_hbCount);
-
-        info.destAddr = proxy.remoteLocator.getIp4Address();
-        info.destPort = proxy.remoteLocator.port;
-
-        m_transport->sendPacket(info);
-    }
-    m_hbCount.value++;
->>>>>>> fix/github-changes
 }
 
 #undef SFW_VERBOSE

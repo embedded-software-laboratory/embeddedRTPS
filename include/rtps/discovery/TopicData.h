@@ -41,8 +41,9 @@ namespace rtps{
         char typeName[Config::MAX_TYPENAME_LENGTH];
         char topicName[Config::MAX_TOPICNAME_LENGTH];
         ReliabilityKind_t reliabilityKind;
-        Locator unicastLocator;
         DurabilityKind_t durabilityKind;
+        Locator unicastLocator;
+        
 
         TopicData() = default;
         TopicData(Guid guid, ReliabilityKind_t reliability, Locator loc)
