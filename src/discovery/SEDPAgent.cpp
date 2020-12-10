@@ -38,21 +38,21 @@ using rtps::SEDPAgent;
 uint32_t line_ = 0;
 char bf_[100];
 
-#include <asoa/driver/os.h>
+//#include <asoa/driver/os.h>
 
-#define SEDP_LOG(...)                                                          \
-  if (true) {                                                                  \
-    size_t t = snprintf(bf_, sizeof(bf_), __VA_ARGS__);                        \
-    ASOA_ASSERT(t < sizeof(bf_), "overflow");                                  \
-    TFT_PrintLine(line_ + 3, bf_);                                             \
-    line_ = (line_ + 1) % 30;                                                  \
-  }
-
+/*#define SEDP_LOG(...) if(true){ 						 \
+		size_t t = snprintf(bf_, sizeof(bf_), __VA_ARGS__); 		 \
+		ASOA_ASSERT(t < sizeof(bf_), "overflow");			 
+		TFT_PrintLine(line_+3, bf_); 				 \
+		line_ = (line_+1)%30; 							 \
+		} */
 #endif
 
-void SEDPAgent::init(Participant &part, const BuiltInEndpoints &endpoints) {
-  // TODO move
-  if (sys_mutex_new(&m_mutex) != ERR_OK) {
+#define SEDP_LOG(...) printf(__VA_ARGS__)
+
+void SEDPAgent::init(Participant& part, const BuiltInEndpoints& endpoints){
+    // TODO move
+    if(sys_mutex_new(&m_mutex) != ERR_OK){
 #if SEDP_VERBOSE
     printf("SEDPAgent failed to create mutex\n");
 #endif

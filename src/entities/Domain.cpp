@@ -41,9 +41,9 @@ Domain::Domain()
 bool Domain::completeInit() {
   m_initComplete = m_threadPool.startThreads();
 #if DOMAIN_VERBOSE
-  if (!started) {
-    printf("Domain: Failed starting threads\n");
-  }
+  //if(!started){
+  //    printf("Domain: Failed starting threads\n");
+  //}
 #endif
   return m_initComplete;
 }
@@ -118,60 +118,50 @@ rtps::Participant *Domain::createParticipant() {
 }
 
 void Domain::createBuiltinWritersAndReaders(Participant &part) {
-  // SPDP
-  StatelessWriter &spdpWriter = m_statelessWriters[m_numStatelessWriters++];
-  StatelessReader &spdpReader = m_statelessReaders[m_numStatelessReaders++];
+  //SPDP
+  StatelessWriter& spdpWriter = m_statelessWriters[m_numStatelessWriters++];
+  StatelessReader& spdpReader = m_statelessReaders[m_numStatelessReaders++];
 
   TopicData spdpWriterAttributes;
   spdpWriterAttributes.topicName[0] = '\0';
   spdpWriterAttributes.typeName[0] = '\0';
   spdpWriterAttributes.reliabilityKind = ReliabilityKind_t::BEST_EFFORT;
+  spdpWriterAttributes.durabilityKind = DurabilityKind_t::TRANSIENT_LOCAL;
   spdpWriterAttributes.endpointGuid.prefix = part.m_guidPrefix;
-  spdpWriterAttributes.endpointGuid.entityId =
-      ENTITYID_SPDP_BUILTIN_PARTICIPANT_WRITER;
+  spdpWriterAttributes.endpointGuid.entityId = ENTITYID_SPDP_BUILTIN_PARTICIPANT_WRITER;
   spdpWriterAttributes.unicastLocator = getBuiltInMulticastLocator();
 
-  spdpWriter.init(spdpWriterAttributes, TopicKind_t::WITH_KEY, &m_threadPool,
-                  m_transport);
-  spdpWriter.addNewMatchedReader(
-      ReaderProxy{{part.m_guidPrefix, ENTITYID_SPDP_BUILTIN_PARTICIPANT_READER},
-                  getBuiltInMulticastLocator()});
-  spdpReader.m_attributes.endpointGuid = {
-      part.m_guidPrefix, ENTITYID_SPDP_BUILTIN_PARTICIPANT_READER};
+  spdpWriter.init(spdpWriterAttributes, TopicKind_t::WITH_KEY, &m_threadPool, m_transport);
+  spdpWriter.addNewMatchedReader(ReaderProxy{{part.m_guidPrefix, ENTITYID_SPDP_BUILTIN_PARTICIPANT_READER}, getBuiltInMulticastLocator()});
+  spdpReader.m_attributes.endpointGuid = {part.m_guidPrefix, ENTITYID_SPDP_BUILTIN_PARTICIPANT_READER};
 
   // SEDP
-  StatefulReader &sedpPubReader = m_statefulReaders[m_numStatefulReaders++];
-  StatefulReader &sedpSubReader = m_statefulReaders[m_numStatefulReaders++];
-  StatefulWriter &sedpPubWriter = m_statefulWriters[m_numStatefulWriters++];
-  StatefulWriter &sedpSubWriter = m_statefulWriters[m_numStatefulWriters++];
+  StatefulReader& sedpPubReader = m_statefulReaders[m_numStatefulReaders++];
+  StatefulReader& sedpSubReader = m_statefulReaders[m_numStatefulReaders++];
+  StatefulWriter& sedpPubWriter = m_statefulWriters[m_numStatefulWriters++];
+  StatefulWriter& sedpSubWriter = m_statefulWriters[m_numStatefulWriters++];
 
   // Prepare attributes
   TopicData sedpAttributes;
   sedpAttributes.topicName[0] = '\0';
   sedpAttributes.typeName[0] = '\0';
   sedpAttributes.reliabilityKind = ReliabilityKind_t::RELIABLE;
+  sedpAttributes.durabilityKind = DurabilityKind_t::TRANSIENT_LOCAL;
   sedpAttributes.endpointGuid.prefix = part.m_guidPrefix;
-  sedpAttributes.unicastLocator =
-      getBuiltInUnicastLocator(part.m_participantId);
+  sedpAttributes.unicastLocator = getBuiltInUnicastLocator(part.m_participantId);
 
   // READER
-  sedpAttributes.endpointGuid.entityId =
-      ENTITYID_SEDP_BUILTIN_PUBLICATIONS_READER;
+  sedpAttributes.endpointGuid.entityId = ENTITYID_SEDP_BUILTIN_PUBLICATIONS_READER;
   sedpPubReader.init(sedpAttributes, m_transport);
-  sedpAttributes.endpointGuid.entityId =
-      ENTITYID_SEDP_BUILTIN_SUBSCRIPTIONS_READER;
+  sedpAttributes.endpointGuid.entityId = ENTITYID_SEDP_BUILTIN_SUBSCRIPTIONS_READER;
   sedpSubReader.init(sedpAttributes, m_transport);
 
   // WRITER
-  sedpAttributes.endpointGuid.entityId =
-      ENTITYID_SEDP_BUILTIN_PUBLICATIONS_WRITER;
-  sedpPubWriter.init(sedpAttributes, TopicKind_t::NO_KEY, &m_threadPool,
-                     m_transport);
+  sedpAttributes.endpointGuid.entityId = ENTITYID_SEDP_BUILTIN_PUBLICATIONS_WRITER;
+  sedpPubWriter.init(sedpAttributes, TopicKind_t::NO_KEY, &m_threadPool, m_transport);
 
-  sedpAttributes.endpointGuid.entityId =
-      ENTITYID_SEDP_BUILTIN_SUBSCRIPTIONS_WRITER;
-  sedpSubWriter.init(sedpAttributes, TopicKind_t::NO_KEY, &m_threadPool,
-                     m_transport);
+  sedpAttributes.endpointGuid.entityId = ENTITYID_SEDP_BUILTIN_SUBSCRIPTIONS_WRITER;
+  sedpSubWriter.init(sedpAttributes, TopicKind_t::NO_KEY, &m_threadPool, m_transport);
 
   // COLLECT
   BuiltInEndpoints endpoints{};
@@ -309,6 +299,7 @@ rtps::Writer *Domain::createWriter(Participant &part, const char *topicName,
       part.getNextUserEntityKey(),
       EntityKind_t::USER_DEFINED_WRITER_WITHOUT_KEY};
   attributes.unicastLocator = getUserUnicastLocator(part.m_participantId);
+  attributes.durabilityKind = DurabilityKind_t::TRANSIENT_LOCAL;
 
 #if DOMAIN_VERBOSE
   printf("Creating writer[%s, %s]\n", topicName, typeName);
@@ -357,6 +348,7 @@ rtps::Reader *Domain::createReader(Participant &part, const char *topicName,
       part.getNextUserEntityKey(),
       EntityKind_t::USER_DEFINED_READER_WITHOUT_KEY};
   attributes.unicastLocator = getUserUnicastLocator(part.m_participantId);
+  attributes.durabilityKind = DurabilityKind_t::TRANSIENT_LOCAL;
 
 #if DOMAIN_VERBOSE
   printf("Creating reader[%s, %s]\n", topicName, typeName);

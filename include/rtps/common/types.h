@@ -77,6 +77,13 @@ enum class ReliabilityKind_t : uint32_t {
   RELIABLE = 2 // Specification says 3 but eprosima sends 2
 };
 
+enum class DurabilityKind_t : uint32_t{
+  VOLATILE = 0,
+  TRANSIENT_LOCAL = 1,
+  TRANSIENT = 2,
+  PERSISTENT = 3
+};
+
 struct GuidPrefix_t {
   std::array<uint8_t, 12> id;
 

@@ -35,6 +35,7 @@ Author: i11 - Embedded Software, RWTH Aachen University
 #include "lwip/ip4_addr.h"
 #include "lwip/netif.h"
 #include <lwip/tcpip.h>
+#include "lwipcfg.h"
 
 #ifdef unix
 #include "netif/tapif.h"
@@ -42,7 +43,6 @@ Author: i11 - Embedded Software, RWTH Aachen University
     defined(__WIN32) && !defined(__CYGWIN__)
 #include "../pcapif.h"
 #include "default_netif.h"
-#include "lwipcfg.h"
 #else
 #include "ethernetif.h"
 #endif
