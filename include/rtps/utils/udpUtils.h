@@ -61,13 +61,15 @@ constexpr Ip4Port_t getUserMulticastPort() {
   return PB + DG * Config::DOMAIN_ID + D2;
 }
 
-constexpr bool isUserPort(Ip4Port_t port) { return (port & 1) == 1; }
+constexpr bool isUserPort(Ip4Port_t port) { return (port & 1) == 1; } // really useful? There may be other user ports than just odd ones?
 
 inline bool isMultiCastPort(Ip4Port_t port) {
   const auto idWithoutBase = port - PB - DG * Config::DOMAIN_ID;
-  return idWithoutBase == D0 || idWithoutBase == D2;
+  return idWithoutBase == D0 || (idWithoutBase >= D2 && idWithoutBase < D3); //There are several UserMulticastPorts!
 }
 
+
+// TODO: check if Participant really exists, otherwise memory failure!
 inline ParticipantId_t getParticipantIdFromUnicastPort(Ip4Port_t port,
                                                        bool isUserPort) {
   // if(isMultiCastPort(port)){ // TODO remove?
