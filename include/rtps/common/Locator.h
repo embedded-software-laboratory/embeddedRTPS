@@ -87,6 +87,10 @@ struct Locator {
                              address[15]);
   }
 
+  inline uint32_t getLocatorPort() {
+    return static_cast<Ip4Port_t>(port);
+  }
+
   inline bool isSameSubnet() const {
     return UdpDriver::isSameSubnet(getIp4Address());
   }

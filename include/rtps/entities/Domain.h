@@ -76,6 +76,7 @@ private:
   GuidPrefix_t generateGuidPrefix(ParticipantId_t id) const;
   void createBuiltinWritersAndReaders(Participant &part);
   void registerPort(const Participant &part);
+  void registerMulticastPort(Locator mcastLocator);
   static void receiveJumppad(void *callee, const PacketInfo &packet);
 };
 } // namespace rtps

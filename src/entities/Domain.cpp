@@ -180,6 +180,12 @@ void Domain::registerPort(const Participant &part) {
   m_transport.createUdpConnection(getBuiltInUnicastPort(part.m_participantId));
 }
 
+void Domain::registerMulticastPort(Locator mcastLocator) {
+  if(mcastLocator.kind == LocatorKind_t::LOCATOR_KIND_UDPv4) {
+    m_transport.createUdpConnection(mcastLocator.getLocatorPort());
+  }
+}
+
 rtps::Reader *Domain::readerExists(Participant &part, const char *topicName,
                                    const char *typeName, bool reliable) {
   if (reliable) {
@@ -351,6 +357,7 @@ rtps::Reader *Domain::createReader(Participant &part, const char *topicName,
   if(mcastLocator.kind == LocatorKind_t::LOCATOR_KIND_UDPv4) {
     attributes.multicastLocator = mcastLocator;
     m_transport.joinMultiCastGroup(attributes.multicastLocator.getIp4Address());
+    registerMulticastPort(attributes.multicastLocator);
   } else if(mcastLocator.kind == LocatorKind_t::LOCATOR_KIND_UDPv6) {
 #if DOMAIN_VERBOSE
   printf("IPv6 Multicast not supported!");
