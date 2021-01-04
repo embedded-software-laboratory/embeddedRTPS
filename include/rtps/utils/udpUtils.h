@@ -68,8 +68,16 @@ inline bool isMultiCastPort(Ip4Port_t port) {
   return idWithoutBase == D0 || (idWithoutBase >= D2 && idWithoutBase < D3); //There are several UserMulticastPorts!
 }
 
+inline bool isMetaMultiCastPort(Ip4Port_t port) {
+  const auto idWithoutBase = port - PB - DG * Config::DOMAIN_ID;
+  return idWithoutBase == D0;
+}
 
-// TODO: check if Participant really exists, otherwise memory failure!
+inline bool isUserMultiCastPort(Ip4Port_t port) {
+  const auto idWithoutBase = port - PB - DG * Config::DOMAIN_ID;
+  return (idWithoutBase >= D2 && idWithoutBase < D1);
+}
+
 inline ParticipantId_t getParticipantIdFromUnicastPort(Ip4Port_t port,
                                                        bool isUserPort) {
   // if(isMultiCastPort(port)){ // TODO remove?

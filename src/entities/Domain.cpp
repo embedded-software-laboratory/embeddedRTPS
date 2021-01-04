@@ -26,7 +26,7 @@ Author: i11 - Embedded Software, RWTH Aachen University
 #include "rtps/utils/Log.h"
 #include "rtps/utils/udpUtils.h"
 
-#define DOMAIN_VERBOSE 0
+#define DOMAIN_VERBOSE 1
 
 using rtps::Domain;
 
@@ -63,7 +63,7 @@ void Domain::receiveCallback(const PacketInfo &packet) {
 #endif
   }
 
-  if (isMultiCastPort(packet.destPort)) {
+  if (isMetaMultiCastPort(packet.destPort)) {
     // Pass to all
 #if DOMAIN_VERBOSE
     printf("Domain: Multicast to port %u\n", packet.destPort);
@@ -73,21 +73,37 @@ void Domain::receiveCallback(const PacketInfo &packet) {
           static_cast<uint8_t *>(packet.buffer.firstElement->payload),
           packet.buffer.firstElement->len);
     }
+    //First Check if UserTraffic Multicast
+  } else if(isUserMultiCastPort(packet.destPort)){
+    //Pass to Participant with assigned Multicast Adress (Port ist everytime the same)
+#if DOMAIN_VERBOSE
+    printf("Domain: Got user multicast message on port %u\n", packet.destPort);
+#endif
+    for (auto i = 0; i < m_nextParticipantId - PARTICIPANT_START_ID; ++i){
+      if(m_participants[i].hasReaderWithMulticastLocator(packet.destAddr)){
+#if DOMAIN_VERBOSE
+        printf("Domain: Forward Multicast only to Participant: %u\n", i);
+#endif
+        m_participants[i].newMessage(
+          static_cast<uint8_t *>(packet.buffer.firstElement->payload),
+        packet.buffer.firstElement->len);
+      }
+    }
   } else {
-    // Pass to addressed one only
+    // Pass to addressed one only (Unicast, by Port)
     ParticipantId_t id = getParticipantIdFromUnicastPort(
         packet.destPort, isUserPort(packet.destPort));
-    if (id != PARTICIPANT_ID_INVALID) {
+    if (id != PARTICIPANT_ID_INVALID) { 
 #if DOMAIN_VERBOSE
       printf("Domain: Got unicast message on port %u\n", packet.destPort);
 #endif
-      if (id < m_nextParticipantId) {
+      if (id < m_nextParticipantId && id >= PARTICIPANT_START_ID) { // added extra check to avoid segfault (id below START_ID)
         m_participants[id - PARTICIPANT_START_ID].newMessage(
             static_cast<uint8_t *>(packet.buffer.firstElement->payload),
             packet.buffer.firstElement->len);
       } else {
 #if DOMAIN_VERBOSE
-        printf("Domain: Participant id too high.\n");
+        printf("Domain: Participant id too high or unplausible.\n");
 #endif
       }
     } else {
