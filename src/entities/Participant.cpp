@@ -183,6 +183,15 @@ Participant::findRemoteParticipant(const GuidPrefix_t &prefix) {
   return m_remoteParticipants.find(thunk, &isElementToFind);
 }
 
+bool Participant::hasReaderWithMulticastLocator(ip4_addr_t address) {
+  for (uint8_t i = 0; i < m_numReaders; i++) {
+    if(m_readers[i]->m_attributes.multicastLocator.isSameAddress(&address)){
+      return true;
+    }
+  }
+  return false;
+}
+
 uint32_t Participant::getRemoteParticipantCount() {
   return m_remoteParticipants.getNumElements();
 }

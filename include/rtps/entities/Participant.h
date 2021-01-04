@@ -86,6 +86,8 @@ public:
   uint32_t getRemoteParticipantCount();
   MessageReceiver *getMessageReceiver();
 
+  bool hasReaderWithMulticastLocator(ip4_addr_t address);
+
   void addBuiltInEndpoints(BuiltInEndpoints &endpoints);
   void newMessage(const uint8_t *data, DataSize_t size);
 
