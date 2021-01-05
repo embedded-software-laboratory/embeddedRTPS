@@ -92,12 +92,16 @@ bool TopicData::serializeIntoUcdrBuffer(ucdrBuffer &buffer) const {
   // TODO Check if buffer length is sufficient
   const uint16_t guidSize = sizeof(GuidPrefix_t::id) + 4;
 
-#if SUPPRESS_UNICAST == 0
+#if SUPPRESS_UNICAST
+  if(multicastLocator.kind != LocatorKind_t::LOCATOR_KIND_UDPv4) {
+#endif
   ucdr_serialize_uint16_t(&buffer, ParameterId::PID_UNICAST_LOCATOR);
   ucdr_serialize_uint16_t(&buffer, sizeof(Locator));
   ucdr_serialize_array_uint8_t(
       &buffer, reinterpret_cast<const uint8_t *>(&unicastLocator),
       sizeof(Locator));
+#if SUPPRESS_UNICAST
+  }
 #endif
 
   if(multicastLocator.kind == LocatorKind_t::LOCATOR_KIND_UDPv4) {

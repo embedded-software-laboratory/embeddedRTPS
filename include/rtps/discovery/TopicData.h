@@ -25,7 +25,7 @@ Author: i11 - Embedded Software, RWTH Aachen University
 #ifndef RTPS_DISCOVEREDWRITERDATA_H
 #define RTPS_DISCOVEREDWRITERDATA_H
 
-#define SUPPRESS_UNICAST 1
+#define SUPPRESS_UNICAST 0
 
 #include "rtps/common/Locator.h"
 #include "rtps/config.h"
