@@ -47,7 +47,7 @@ public:
   Writer *createWriter(Participant &part, const char *topicName,
                        const char *typeName, bool reliable);
   Reader *createReader(Participant &part, const char *topicName,
-                       const char *typeName, bool reliable, Locator multicastLocator = Locator());
+                       const char *typeName, bool reliable, ip4_addr_t mcastaddress = {0});
 
   Writer *writerExists(Participant &part, const char *topicName,
                        const char *typeName, bool reliable);

@@ -78,6 +78,10 @@ inline bool isUserMultiCastPort(Ip4Port_t port) {
   return (idWithoutBase >= D2 && idWithoutBase < D1);
 }
 
+inline bool isZeroAddress(ip4_addr_t address) {
+  return address.addr == 0;
+}
+
 inline ParticipantId_t getParticipantIdFromUnicastPort(Ip4Port_t port,
                                                        bool isUserPort) {
   // if(isMultiCastPort(port)){ // TODO remove?

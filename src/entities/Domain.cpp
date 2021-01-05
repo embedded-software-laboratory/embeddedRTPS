@@ -26,7 +26,7 @@ Author: i11 - Embedded Software, RWTH Aachen University
 #include "rtps/utils/Log.h"
 #include "rtps/utils/udpUtils.h"
 
-#define DOMAIN_VERBOSE 1
+#define DOMAIN_VERBOSE 0
 
 using rtps::Domain;
 
@@ -346,7 +346,7 @@ rtps::Writer *Domain::createWriter(Participant &part, const char *topicName,
 }
 
 rtps::Reader *Domain::createReader(Participant &part, const char *topicName,
-                                   const char *typeName, bool reliable, Locator mcastLocator) {
+                                   const char *typeName, bool reliable, ip4_addr_t mcastaddress) {
 #if DOMAIN_VERBOSE
   printf("Creating reader[%s, %s]\n", topicName, typeName);
 #endif
@@ -370,14 +370,20 @@ rtps::Reader *Domain::createReader(Participant &part, const char *topicName,
       part.getNextUserEntityKey(),
       EntityKind_t::USER_DEFINED_READER_WITHOUT_KEY};
   attributes.unicastLocator = getUserUnicastLocator(part.m_participantId);
-  if(mcastLocator.kind == LocatorKind_t::LOCATOR_KIND_UDPv4) {
-    attributes.multicastLocator = mcastLocator;
-    m_transport.joinMultiCastGroup(attributes.multicastLocator.getIp4Address());
-    registerMulticastPort(attributes.multicastLocator);
-  } else if(mcastLocator.kind == LocatorKind_t::LOCATOR_KIND_UDPv6) {
+  if(!isZeroAddress(mcastaddress)) {
+    if(ip4_addr_ismulticast(&mcastaddress)) {
+      attributes.multicastLocator = rtps::Locator::createUDPv4Locator(ip4_addr1(&mcastaddress), 
+        ip4_addr2(&mcastaddress),ip4_addr3(&mcastaddress),ip4_addr4(&mcastaddress), getUserMulticastPort());
+      m_transport.joinMultiCastGroup(attributes.multicastLocator.getIp4Address());
+      registerMulticastPort(attributes.multicastLocator);
 #if DOMAIN_VERBOSE
-  printf("IPv6 Multicast not supported!");
+      printf("Multicast enabled!\n");
 #endif
+    } else {
+#if DOMAIN_VERBOSE
+    printf("This is not a Multicastaddress!\n");
+#endif
+    }
   }
   attributes.durabilityKind = DurabilityKind_t::TRANSIENT_LOCAL;
 
