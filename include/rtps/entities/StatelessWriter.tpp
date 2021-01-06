@@ -80,11 +80,43 @@ bool StatelessWriterT<NetworkDriver>::addNewMatchedReader(
   printGuid(newProxy.remoteReaderGuid);
   printf("\n");
 #endif
-  if (m_proxies.add(newProxy)) {
-    collectSendLocators(newProxy);
-    return true;
+  bool success = m_proxies.add(newProxy);
+  manageSendOptions();
+  return success;
+}
+
+template <class NetworkDriver>
+void StatelessWriterT<NetworkDriver>::manageSendOptions() {
+  printf("Search for Multicast Partners!");
+  for (auto &proxy : m_proxies) {
+    if (proxy.remoteMulticastLocator.kind == LocatorKind_t::LOCATOR_KIND_INVALID) {
+      proxy.suppressUnicast = false;
+      proxy.useMulticast = false;
+    } else {
+      bool found = false;
+      for (auto &avproxy : m_proxies) {
+        if (avproxy.remoteMulticastLocator.kind == LocatorKind_t::LOCATOR_KIND_UDPv4 && 
+            avproxy.remoteMulticastLocator.getIp4Address().addr == 
+            proxy.remoteMulticastLocator.getIp4Address().addr &&
+            avproxy.remoteLocator.getIp4Address().addr !=
+            proxy.remoteLocator.getIp4Address().addr){
+          if (avproxy.suppressUnicast == false) {
+            avproxy.useMulticast = false;
+            avproxy.suppressUnicast = true;
+            proxy.useMulticast = true;
+            proxy.suppressUnicast = true;
+            printf("Found Multicast Partner!");
+          }
+          found = true;
+        }
+      }
+      if (!found) {
+        proxy.useMulticast = false;
+        proxy.suppressUnicast = false;
+      }
+    }
+    
   }
-  return false;
 }
 
 template <class NetworkDriver>
@@ -163,66 +195,64 @@ void StatelessWriterT<NetworkDriver>::progress() {
 #if SLW_VERBOSE
     printf("StatelessWriter[%s]: Progess.\n", this->m_attributes.topicName);
 #endif
+    // Do nothing, if someone else sends for me... (Multicast)
+    if(proxy.useMulticast || proxy.suppressUnicast == false) {
+      PacketInfo info;
+      info.srcPort = m_packetInfo.srcPort;
 
-    PacketInfo info;
-    info.srcPort = m_packetInfo.srcPort;
+      MessageFactory::addHeader(info.buffer, m_attributes.endpointGuid.prefix);
+      MessageFactory::addSubMessageTimeStamp(info.buffer);
 
-    MessageFactory::addHeader(info.buffer, m_attributes.endpointGuid.prefix);
-    MessageFactory::addSubMessageTimeStamp(info.buffer);
-
-    {
-      Lock lock(m_mutex);
-      const CacheChange *next =
-          m_history.getChangeBySN(m_nextSequenceNumberToSend);
-      if (next == nullptr) {
+      {
+        Lock lock(m_mutex);
+        const CacheChange *next =
+            m_history.getChangeBySN(m_nextSequenceNumberToSend);
+        if (next == nullptr) {
 #if SLW_VERBOSE
-        printf("StatelessWriter[%s]: Couldn't get a new CacheChange with SN "
-               "(%i,%i)\n",
-               &m_attributes.topicName[0], m_nextSequenceNumberToSend.high,
-               m_nextSequenceNumberToSend.low);
+          printf("StatelessWriter[%s]: Couldn't get a new CacheChange with SN "
+                "(%i,%i)\n",
+                &m_attributes.topicName[0], m_nextSequenceNumberToSend.high,
+                m_nextSequenceNumberToSend.low);
 #endif
-        return;
-      } else {
+          return;
+        } else {
 #if SLW_VERBOSE
-        printf("StatelessWriter[%s]: Sending change with SN (%i,%i)\n",
-               &m_attributes.topicName[0], m_nextSequenceNumberToSend.high,
-               m_nextSequenceNumberToSend.low);
+          printf("StatelessWriter[%s]: Sending change with SN (%i,%i)\n",
+                &m_attributes.topicName[0], m_nextSequenceNumberToSend.high,
+                m_nextSequenceNumberToSend.low);
 #endif
+        }
+
+        // Set EntityId to UNKNOWN if using multicast, because there might be different ones...
+        // TODO: mybe enhance by using UNKNOWN only if ids are really different
+        EntityId_t reid;
+        if(proxy.useMulticast) {
+          reid = ENTITYID_UNKNOWN;
+        } else {
+          reid = proxy.remoteReaderGuid.entityId;
+        }
+        MessageFactory::addSubMessageData(
+            info.buffer, next->data, false, next->sequenceNumber,
+            m_attributes.endpointGuid.entityId,
+            reid); // TODO
       }
-      MessageFactory::addSubMessageData(
-          info.buffer, next->data, false, next->sequenceNumber,
-          m_attributes.endpointGuid.entityId,
-          proxy.remoteReaderGuid.entityId); // TODO
+
+      // Just usable for IPv4
+      // Decide which locator to be used unicast/multicast
+
+      if(proxy.useMulticast) {
+        const Locator &locator = proxy.remoteMulticastLocator;
+        info.destAddr = locator.getIp4Address();
+        info.destPort = (Ip4Port_t)locator.port;
+      } else {
+        const Locator &locator = proxy.remoteLocator;
+        info.destAddr = locator.getIp4Address();
+        info.destPort = (Ip4Port_t)locator.port;
+      }
+
+      m_transport->sendPacket(info);
     }
-
-    // Just usable for IPv4
-    const Locator &locator = proxy.remoteLocator;
-
-    info.destAddr = locator.getIp4Address();
-    info.destPort = (Ip4Port_t)locator.port;
-
-    m_transport->sendPacket(info);
   }
 
   ++m_nextSequenceNumberToSend;
-}
-
-template <typename NetworkDriver>
-void StatelessWriterT<NetworkDriver>::collectSendLocators(ReaderProxy rproxy) {
-  if (rproxy.useMulticast) {
-    auto isElementToFind = [&](const SendElement &ele) {
-      ip4_addr_t proxip = rproxy.remoteMulticastLocator.getIp4Address();
-      ip4_addr_t elip = ele.target.getIp4Address();
-      return ip4_addr_cmp(&elip, &proxip) && ele.entityId.operator==(rproxy.remoteReaderGuid.entityId);
-    };
-    auto thunk = [](void *arg, const SendElement &value) {
-      return (*static_cast<decltype(isElementToFind) *>(arg))(value);
-    };
-    const SendElement *result = m_sendlist.find(thunk, &isElementToFind);
-    if (result == nullptr) {
-      //TODO: decide if multicast or unicast locator, remove unneeded unicast locators. Maybe completely different?
-    }
-  } else {
-    m_sendlist.add(SendElement{rproxy.remoteReaderGuid.entityId, rproxy.remoteLocator});
-  }
 }

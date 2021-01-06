@@ -198,7 +198,7 @@ void SEDPAgent::onNewSubscriber(const TopicData &readerData) {
 #endif
   if(readerData.multicastLocator.kind == rtps::LocatorKind_t::LOCATOR_KIND_UDPv4) {
     writer->addNewMatchedReader(
-      ReaderProxy{readerData.endpointGuid, readerData.unicastLocator, readerData.multicastLocator});
+      ReaderProxy{readerData.endpointGuid, readerData.unicastLocator, readerData.multicastLocator});  
   } else {
     writer->addNewMatchedReader(
       ReaderProxy{readerData.endpointGuid, readerData.unicastLocator});
