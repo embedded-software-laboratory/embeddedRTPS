@@ -101,7 +101,47 @@ bool StatefulWriterT<NetworkDriver>::addNewMatchedReader(
   printGuid(newProxy.remoteReaderGuid);
   log("\n");
 #endif
-  return m_proxies.add(newProxy);
+  bool success = m_proxies.add(newProxy);
+  manageSendOptions();
+  return success;
+}
+
+template <class NetworkDriver>
+void StatefulWriterT<NetworkDriver>::manageSendOptions() {
+#if SFW_VERBOSE
+  printf("Search for Multicast Partners!\n");
+#endif
+  for (auto &proxy : m_proxies) {
+    if (proxy.remoteMulticastLocator.kind == LocatorKind_t::LOCATOR_KIND_INVALID) {
+      proxy.suppressUnicast = false;
+      proxy.useMulticast = false;
+    } else {
+      bool found = false;
+      for (auto &avproxy : m_proxies) {
+        if (avproxy.remoteMulticastLocator.kind == LocatorKind_t::LOCATOR_KIND_UDPv4 && 
+            avproxy.remoteMulticastLocator.getIp4Address().addr == 
+            proxy.remoteMulticastLocator.getIp4Address().addr &&
+            avproxy.remoteLocator.getIp4Address().addr !=
+            proxy.remoteLocator.getIp4Address().addr){
+          if (avproxy.suppressUnicast == false) {
+            avproxy.useMulticast = false;
+            avproxy.suppressUnicast = true;
+            proxy.useMulticast = true;
+            proxy.suppressUnicast = true;
+#if SFW_VERBOSE
+            printf("Found Multicast Partner!\n");
+#endif
+          }
+          found = true;
+        }
+      }
+      if (!found) {
+        proxy.useMulticast = false;
+        proxy.suppressUnicast = false;
+      }
+    }
+    
+  }
 }
 
 template <class NetworkDriver>
@@ -148,7 +188,7 @@ const rtps::CacheChange *StatefulWriterT<NetworkDriver>::newChange(
 
 template <class NetworkDriver> void StatefulWriterT<NetworkDriver>::progress() {
   for (const auto &proxy : m_proxies) {
-    if (!sendData(proxy, m_nextSequenceNumberToSend)) {
+    if (!sendDataWRMulticast(proxy, m_nextSequenceNumberToSend)) {
       continue;
     }
   }
@@ -289,6 +329,60 @@ bool StatefulWriterT<NetworkDriver>::sendData(
   }
 
   m_transport->sendPacket(info);
+  return true;
+}
+
+template <class NetworkDriver>
+bool StatefulWriterT<NetworkDriver>::sendDataWRMulticast(
+    const ReaderProxy &reader, const SequenceNumber_t &snMissing) {
+
+  // TODO smarter packaging e.g. by creating MessageStruct and serialize after
+  // adjusting values Reusing the pbuf is not possible. See
+  // https://www.nongnu.org/lwip/2_0_x/raw_api.html (Zero-Copy MACs)
+  if(reader.useMulticast || reader.suppressUnicast == false) {
+    PacketInfo info;
+    info.srcPort = m_packetInfo.srcPort;
+
+    MessageFactory::addHeader(info.buffer, m_attributes.endpointGuid.prefix);
+    MessageFactory::addSubMessageTimeStamp(info.buffer);
+
+    // Just usable for IPv4
+    // Deceide whether multicast or not
+    if(reader.useMulticast) {
+      const Locator &locator = reader.remoteMulticastLocator;
+      info.destAddr = locator.getIp4Address();
+      info.destPort = (Ip4Port_t)locator.port;
+    } else {
+      const Locator &locator = reader.remoteLocator;
+      info.destAddr = locator.getIp4Address();
+      info.destPort = (Ip4Port_t)locator.port;
+    }
+
+    {
+      Lock lock(m_mutex);
+      const CacheChange *next = m_history.getChangeBySN(snMissing);
+      if (next == nullptr) {
+  #if SFW_VERBOSE
+        log("StatefulWriter[%s]: Couldn't get a CacheChange with SN (%i,%u)\n",
+            &this->m_attributes.topicName[0], snMissing.high, snMissing.low);
+  #endif
+        return false;
+      }
+
+      EntityId_t reid;
+      if(reader.useMulticast) {
+        reid = ENTITYID_UNKNOWN;
+      } else {
+        reid = reader.remoteReaderGuid.entityId;
+      }
+
+      MessageFactory::addSubMessageData(
+          info.buffer, next->data, false, next->sequenceNumber,
+          m_attributes.endpointGuid.entityId, reid);
+    }
+
+    m_transport->sendPacket(info);
+  }
   return true;
 }
 

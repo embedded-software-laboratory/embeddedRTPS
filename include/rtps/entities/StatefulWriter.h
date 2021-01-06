@@ -67,10 +67,12 @@ private:
   MemoryPool<ReaderProxy, Config::NUM_READER_PROXIES_PER_WRITER> m_proxies;
 
   bool sendData(const ReaderProxy &reader, const SequenceNumber_t &sn);
+  bool sendDataWRMulticast(const ReaderProxy &reader, const SequenceNumber_t &sn);
   static void hbFunctionJumppad(void *thisPointer);
   void sendHeartBeatLoop();
   void sendHeartBeat();
   bool isIrrelevant(ChangeKind_t kind) const;
+  void manageSendOptions();
 };
 
 using StatefulWriter = StatefulWriterT<UdpDriver>;
