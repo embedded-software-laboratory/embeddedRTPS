@@ -196,8 +196,14 @@ void SEDPAgent::onNewSubscriber(const TopicData &readerData) {
   }
   SEDP_LOG("Subscriber\n");
 #endif
-  writer->addNewMatchedReader(
+  if(readerData.multicastLocator.kind == rtps::LocatorKind_t::LOCATOR_KIND_UDPv4) {
+    writer->addNewMatchedReader(
+      ReaderProxy{readerData.endpointGuid, readerData.unicastLocator, readerData.multicastLocator});
+  } else {
+    writer->addNewMatchedReader(
       ReaderProxy{readerData.endpointGuid, readerData.unicastLocator});
+  }
+  
   if (mfp_onNewSubscriberCallback != nullptr) {
     mfp_onNewSubscriberCallback(m_onNewSubscriberArgs);
   }

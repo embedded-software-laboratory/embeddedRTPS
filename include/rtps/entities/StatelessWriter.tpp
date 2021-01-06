@@ -80,7 +80,11 @@ bool StatelessWriterT<NetworkDriver>::addNewMatchedReader(
   printGuid(newProxy.remoteReaderGuid);
   printf("\n");
 #endif
-  return m_proxies.add(newProxy);
+  if (m_proxies.add(newProxy)) {
+    collectSendLocators(newProxy);
+    return true;
+  }
+  return false;
 }
 
 template <class NetworkDriver>
@@ -201,4 +205,24 @@ void StatelessWriterT<NetworkDriver>::progress() {
   }
 
   ++m_nextSequenceNumberToSend;
+}
+
+template <typename NetworkDriver>
+void StatelessWriterT<NetworkDriver>::collectSendLocators(ReaderProxy rproxy) {
+  if (rproxy.useMulticast) {
+    auto isElementToFind = [&](const SendElement &ele) {
+      ip4_addr_t proxip = rproxy.remoteMulticastLocator.getIp4Address();
+      ip4_addr_t elip = ele.target.getIp4Address();
+      return ip4_addr_cmp(&elip, &proxip) && ele.entityId.operator==(rproxy.remoteReaderGuid.entityId);
+    };
+    auto thunk = [](void *arg, const SendElement &value) {
+      return (*static_cast<decltype(isElementToFind) *>(arg))(value);
+    };
+    const SendElement *result = m_sendlist.find(thunk, &isElementToFind);
+    if (result == nullptr) {
+      //TODO: decide if multicast or unicast locator, remove unneeded unicast locators. Maybe completely different?
+    }
+  } else {
+    m_sendlist.add(SendElement{rproxy.remoteReaderGuid.entityId, rproxy.remoteLocator});
+  }
 }

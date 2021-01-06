@@ -51,6 +51,8 @@ public:
   void onNewAckNack(const SubmessageAckNack &msg,
                     const GuidPrefix_t &sourceGuidPrefix) override;
 
+  void collectSendLocators(ReaderProxy rproxy);
+
 private:
   sys_mutex_t m_mutex;
   ThreadPool *mp_threadPool = nullptr;
@@ -63,6 +65,7 @@ private:
   SimpleHistoryCache m_history;
 
   MemoryPool<ReaderProxy, Config::NUM_READER_PROXIES_PER_WRITER> m_proxies;
+  MemoryPool<SendElement, Config::NUM_READER_PROXIES_PER_WRITER> m_sendlist;
 
   bool isIrrelevant(ChangeKind_t kind) const;
 };
