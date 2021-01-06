@@ -87,7 +87,9 @@ bool StatelessWriterT<NetworkDriver>::addNewMatchedReader(
 
 template <class NetworkDriver>
 void StatelessWriterT<NetworkDriver>::manageSendOptions() {
-  printf("Search for Multicast Partners!");
+#if SLW_VERBOSE
+  printf("Search for Multicast Partners!\n");
+#endif
   for (auto &proxy : m_proxies) {
     if (proxy.remoteMulticastLocator.kind == LocatorKind_t::LOCATOR_KIND_INVALID) {
       proxy.suppressUnicast = false;
@@ -105,7 +107,9 @@ void StatelessWriterT<NetworkDriver>::manageSendOptions() {
             avproxy.suppressUnicast = true;
             proxy.useMulticast = true;
             proxy.suppressUnicast = true;
-            printf("Found Multicast Partner!");
+#if SLW_VERBOSE
+            printf("Found Multicast Partner!\n");
+#endif
           }
           found = true;
         }
