@@ -30,6 +30,7 @@ Author: i11 - Embedded Software, RWTH Aachen University
 #include "rtps/discovery/TopicData.h"
 #include "rtps/entities/WriterProxy.h"
 #include "rtps/storages/PBufWrapper.h"
+#include "rtps/storages/MemoryPool.h"
 #include <cstring>
 
 namespace rtps {
@@ -86,10 +87,21 @@ public:
   virtual bool addNewMatchedWriter(const WriterProxy &newProxy) = 0;
   virtual void removeWriter(const Guid &guid) = 0;
   bool isInitialized() { return m_is_initialized_; }
+  
+  bool knowWriterId(const Guid &guid) {
+    for (const auto &proxy : m_proxies) {
+      if (proxy.remoteWriterGuid.operator==(guid)) {
+        return true;
+      }
+    }
+    return false;
+  }
 
 protected:
   bool m_is_initialized_ = false;
   virtual ~Reader() = default;
+  MemoryPool<WriterProxy, Config::NUM_WRITER_PROXIES_PER_READER> m_proxies;
+
 };
 } // namespace rtps
 

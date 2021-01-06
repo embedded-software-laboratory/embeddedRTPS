@@ -78,6 +78,7 @@ public:
   Writer *getMatchingWriter(const TopicData &topicData) const;
   //! (Probably) Thread safe if readers cannot be removed
   Reader *getReader(EntityId_t id) const;
+  Reader *getReaderByWriterId(const Guid &guid) const;
   Reader *getMatchingReader(const TopicData &topicData) const;
 
   bool addNewRemoteParticipant(const ParticipantProxyData &remotePart);
