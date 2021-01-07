@@ -59,7 +59,7 @@ StatefulWriterT<NetworkDriver>::~StatefulWriterT() {
 template <class NetworkDriver>
 bool StatefulWriterT<NetworkDriver>::init(TopicData attributes,
                                           TopicKind_t topicKind,
-                                          ThreadPool * /*threadPool*/,
+                                          ThreadPool *threadPool,
                                           NetworkDriver &driver) {
   if (sys_mutex_new(&m_mutex) != ERR_OK) {
 #if SFW_VERBOSE
@@ -72,6 +72,7 @@ bool StatefulWriterT<NetworkDriver>::init(TopicData attributes,
   m_attributes = attributes;
   m_topicKind = topicKind;
   m_packetInfo.srcPort = attributes.unicastLocator.port;
+  mp_threadPool = threadPool;
   if (m_attributes.endpointGuid.entityId ==
       ENTITYID_SEDP_BUILTIN_PUBLICATIONS_WRITER) {
     m_heartbeatThread = sys_thread_new("HBThreadPub", hbFunctionJumppad, this,
@@ -144,6 +145,7 @@ void StatefulWriterT<NetworkDriver>::manageSendOptions() {
   }
 }
 
+// TODO: manage Multicast Options again...
 template <class NetworkDriver>
 void StatefulWriterT<NetworkDriver>::removeReader(const Guid &guid) {
   auto isElementToRemove = [&](const ReaderProxy &proxy) {
@@ -187,6 +189,7 @@ const rtps::CacheChange *StatefulWriterT<NetworkDriver>::newChange(
 }
 
 template <class NetworkDriver> void StatefulWriterT<NetworkDriver>::progress() {
+
   for (const auto &proxy : m_proxies) {
     if (!sendDataWRMulticast(proxy, m_nextSequenceNumberToSend)) {
       continue;
@@ -336,9 +339,6 @@ template <class NetworkDriver>
 bool StatefulWriterT<NetworkDriver>::sendDataWRMulticast(
     const ReaderProxy &reader, const SequenceNumber_t &snMissing) {
 
-  // TODO smarter packaging e.g. by creating MessageStruct and serialize after
-  // adjusting values Reusing the pbuf is not possible. See
-  // https://www.nongnu.org/lwip/2_0_x/raw_api.html (Zero-Copy MACs)
   if(reader.useMulticast || reader.suppressUnicast == false) {
     PacketInfo info;
     info.srcPort = m_packetInfo.srcPort;
@@ -346,7 +346,6 @@ bool StatefulWriterT<NetworkDriver>::sendDataWRMulticast(
     MessageFactory::addHeader(info.buffer, m_attributes.endpointGuid.prefix);
     MessageFactory::addSubMessageTimeStamp(info.buffer);
 
-    // Just usable for IPv4
     // Deceide whether multicast or not
     if(reader.useMulticast) {
       const Locator &locator = reader.remoteMulticastLocator;
