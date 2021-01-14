@@ -36,7 +36,7 @@ template <class NetworkDriver> class StatefulWriterT final : public Writer {
 public:
   ~StatefulWriterT() override;
   bool init(TopicData attributes, TopicKind_t topicKind, ThreadPool *threadPool,
-            NetworkDriver &driver);
+            NetworkDriver &driver, bool enfUnicast = false);
 
   bool addNewMatchedReader(const ReaderProxy &newProxy) override;
   void removeReader(const Guid &guid) override;
@@ -55,6 +55,7 @@ private:
 
   PacketInfo m_packetInfo;
   NetworkDriver *m_transport;
+  bool m_enforceUnicast;
 
   TopicKind_t m_topicKind = TopicKind_t::NO_KEY;
   SequenceNumber_t m_nextSequenceNumberToSend = {0, 1};

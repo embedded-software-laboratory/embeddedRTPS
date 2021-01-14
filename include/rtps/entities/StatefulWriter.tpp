@@ -60,7 +60,8 @@ template <class NetworkDriver>
 bool StatefulWriterT<NetworkDriver>::init(TopicData attributes,
                                           TopicKind_t topicKind,
                                           ThreadPool *threadPool,
-                                          NetworkDriver &driver) {
+                                          NetworkDriver &driver,
+                                          bool enfUnicast) {
   if (sys_mutex_new(&m_mutex) != ERR_OK) {
 #if SFW_VERBOSE
     log("StatefulWriter: Failed to create mutex.\n");
@@ -72,6 +73,7 @@ bool StatefulWriterT<NetworkDriver>::init(TopicData attributes,
   m_attributes = attributes;
   m_topicKind = topicKind;
   m_packetInfo.srcPort = attributes.unicastLocator.port;
+  m_enforceUnicast = enfUnicast;
   mp_threadPool = threadPool;
   if (m_attributes.endpointGuid.entityId ==
       ENTITYID_SEDP_BUILTIN_PUBLICATIONS_WRITER) {
@@ -103,7 +105,9 @@ bool StatefulWriterT<NetworkDriver>::addNewMatchedReader(
   log("\n");
 #endif
   bool success = m_proxies.add(newProxy);
-  manageSendOptions();
+  if (!m_enforceUnicast) {
+    manageSendOptions();
+  }
   return success;
 }
 
@@ -191,7 +195,13 @@ const rtps::CacheChange *StatefulWriterT<NetworkDriver>::newChange(
 template <class NetworkDriver> void StatefulWriterT<NetworkDriver>::progress() {
 
   for (const auto &proxy : m_proxies) {
-    if (!sendDataWRMulticast(proxy, m_nextSequenceNumberToSend)) {
+    bool success;
+    if(!m_enforceUnicast) {
+      success = sendDataWRMulticast(proxy, m_nextSequenceNumberToSend);
+    } else {
+      success = sendData(proxy, m_nextSequenceNumberToSend);
+    }
+    if (!success) {
       continue;
     }
   }

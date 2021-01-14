@@ -53,7 +53,8 @@ template <typename NetworkDriver>
 bool StatelessWriterT<NetworkDriver>::init(TopicData attributes,
                                            TopicKind_t topicKind,
                                            ThreadPool *threadPool,
-                                           NetworkDriver &driver) {
+                                           NetworkDriver &driver,
+                                           bool enfUnicast) {
   if (sys_mutex_new(&m_mutex) != ERR_OK) {
 #if SLW_VERBOSE
     Log::printLine("SFW:Failed to create mutex \n");
@@ -66,6 +67,7 @@ bool StatelessWriterT<NetworkDriver>::init(TopicData attributes,
   m_topicKind = topicKind;
   mp_threadPool = threadPool;
   m_transport = &driver;
+  m_enforceUnicast = enfUnicast;
 
   m_is_initialized_ = true;
   return true;
@@ -81,7 +83,9 @@ bool StatelessWriterT<NetworkDriver>::addNewMatchedReader(
   printf("\n");
 #endif
   bool success = m_proxies.add(newProxy);
-  manageSendOptions();
+  if(!m_enforceUnicast) {
+    manageSendOptions();
+  }
   return success;
 }
 
@@ -200,7 +204,7 @@ void StatelessWriterT<NetworkDriver>::progress() {
     printf("StatelessWriter[%s]: Progess.\n", this->m_attributes.topicName);
 #endif
     // Do nothing, if someone else sends for me... (Multicast)
-    if(proxy.useMulticast || proxy.suppressUnicast == false) {
+    if(proxy.useMulticast || !proxy.suppressUnicast || m_enforceUnicast) {
       PacketInfo info;
       info.srcPort = m_packetInfo.srcPort;
 
@@ -230,7 +234,7 @@ void StatelessWriterT<NetworkDriver>::progress() {
         // Set EntityId to UNKNOWN if using multicast, because there might be different ones...
         // TODO: mybe enhance by using UNKNOWN only if ids are really different
         EntityId_t reid;
-        if(proxy.useMulticast) {
+        if(proxy.useMulticast && !m_enforceUnicast) {
           reid = ENTITYID_UNKNOWN;
         } else {
           reid = proxy.remoteReaderGuid.entityId;
@@ -244,7 +248,7 @@ void StatelessWriterT<NetworkDriver>::progress() {
       // Just usable for IPv4
       // Decide which locator to be used unicast/multicast
 
-      if(proxy.useMulticast) {
+      if(proxy.useMulticast && !m_enforceUnicast) {
         const Locator &locator = proxy.remoteMulticastLocator;
         info.destAddr = locator.getIp4Address();
         info.destPort = (Ip4Port_t)locator.port;
