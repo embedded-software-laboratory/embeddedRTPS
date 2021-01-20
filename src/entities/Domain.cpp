@@ -347,12 +347,12 @@ rtps::Writer *Domain::createWriter(Participant &part, const char *topicName,
 
 rtps::Reader *Domain::createReader(Participant &part, const char *topicName,
                                    const char *typeName, bool reliable, ip4_addr_t mcastaddress) {
-#if DOMAIN_VERBOSE
-  printf("Creating reader[%s, %s]\n", topicName, typeName);
-#endif
   if ((reliable && m_statefulReaders.size() <= m_numStatefulReaders) ||
       (!reliable && m_statelessReaders.size() <= m_numStatelessReaders) ||
       part.isReadersFull()) {
+#if DOMAIN_VERBOSE
+      printf("No Reader created. Max Number of Readers reached.\n");
+#endif
     return nullptr;
   }
 
