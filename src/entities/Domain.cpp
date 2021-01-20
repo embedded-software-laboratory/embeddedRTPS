@@ -295,7 +295,7 @@ rtps::Writer *Domain::writerExists(Participant &part, const char *topicName,
 }
 
 rtps::Writer *Domain::createWriter(Participant &part, const char *topicName,
-                                   const char *typeName, bool reliable) {
+                                   const char *typeName, bool reliable, bool enforceUnicast) {
 #if DOMAIN_VERBOSE
   printf("Creating writer[%s, %s]\n", topicName, typeName);
 #endif
@@ -330,7 +330,7 @@ rtps::Writer *Domain::createWriter(Participant &part, const char *topicName,
     attributes.reliabilityKind = ReliabilityKind_t::RELIABLE;
 
     StatefulWriter &writer = m_statefulWriters[m_numStatefulWriters++];
-    writer.init(attributes, TopicKind_t::NO_KEY, &m_threadPool, m_transport);
+    writer.init(attributes, TopicKind_t::NO_KEY, &m_threadPool, m_transport, enforceUnicast);
 
     part.addWriter(&writer);
     return &writer;
@@ -338,7 +338,7 @@ rtps::Writer *Domain::createWriter(Participant &part, const char *topicName,
     attributes.reliabilityKind = ReliabilityKind_t::BEST_EFFORT;
 
     StatelessWriter &writer = m_statelessWriters[m_numStatelessWriters++];
-    writer.init(attributes, TopicKind_t::NO_KEY, &m_threadPool, m_transport);
+    writer.init(attributes, TopicKind_t::NO_KEY, &m_threadPool, m_transport, enforceUnicast);
 
     part.addWriter(&writer);
     return &writer;

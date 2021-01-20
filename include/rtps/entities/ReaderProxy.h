@@ -32,14 +32,21 @@ namespace rtps {
 struct ReaderProxy {
   Guid remoteReaderGuid;
   Locator remoteLocator;
+  Locator remoteMulticastLocator;
+  bool useMulticast;
+  bool suppressUnicast;
   SequenceNumberSet ackNackSet;
   Count_t ackNackCount;
 
   ReaderProxy() : remoteReaderGuid({GUIDPREFIX_UNKNOWN, ENTITYID_UNKNOWN}){};
   ReaderProxy(const Guid &guid, const Locator &loc)
-      : remoteReaderGuid(guid), remoteLocator(loc),
+      : remoteReaderGuid(guid), remoteLocator(loc), useMulticast(false), suppressUnicast(false),
         ackNackSet(), ackNackCount{0} {};
+  ReaderProxy(const Guid &guid, const Locator &loc, const Locator &mcastloc)
+      : remoteReaderGuid(guid), remoteLocator(loc), remoteMulticastLocator(mcastloc), useMulticast(false),
+        suppressUnicast(false), ackNackSet(), ackNackCount{0} {};
 };
+
 } // namespace rtps
 
 #endif // RTPS_READERPROXY_H

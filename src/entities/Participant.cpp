@@ -129,6 +129,15 @@ rtps::Reader *Participant::getReader(EntityId_t id) const {
   return nullptr;
 }
 
+rtps::Reader *Participant::getReaderByWriterId(const Guid &guid) const {
+  for (uint8_t i = 0; i < m_numReaders; ++i) {
+    if (m_readers[i]->knowWriterId(guid)) {
+      return m_readers[i];
+    }
+  }
+  return nullptr;
+}
+
 rtps::Writer *
 Participant::getMatchingWriter(const TopicData &readerTopicData) const {
   for (uint8_t i = 0; i < m_numWriters; ++i) {

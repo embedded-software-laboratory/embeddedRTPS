@@ -45,7 +45,7 @@ public:
 
   Participant *createParticipant();
   Writer *createWriter(Participant &part, const char *topicName,
-                       const char *typeName, bool reliable);
+                       const char *typeName, bool reliable, bool enforceUnicast = false);
   Reader *createReader(Participant &part, const char *topicName,
                        const char *typeName, bool reliable, ip4_addr_t mcastaddress = {0});
 

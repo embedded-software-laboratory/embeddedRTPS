@@ -40,7 +40,7 @@ template <typename NetworkDriver> class StatelessWriterT : public Writer {
 public:
   ~StatelessWriterT() override;
   bool init(TopicData attributes, TopicKind_t topicKind, ThreadPool *threadPool,
-            NetworkDriver &driver);
+            NetworkDriver &driver, bool enfUnicast = false);
 
   bool addNewMatchedReader(const ReaderProxy &newProxy) override;
   void removeReader(const Guid &guid) override;
@@ -57,6 +57,7 @@ private:
 
   PacketInfo m_packetInfo;
   NetworkDriver *m_transport;
+  bool m_enforceUnicast;
 
   TopicKind_t m_topicKind = TopicKind_t::NO_KEY;
   SequenceNumber_t m_nextSequenceNumberToSend = {0, 1};
@@ -65,6 +66,8 @@ private:
   MemoryPool<ReaderProxy, Config::NUM_READER_PROXIES_PER_WRITER> m_proxies;
 
   bool isIrrelevant(ChangeKind_t kind) const;
+
+  void manageSendOptions();
 };
 
 using StatelessWriter = StatelessWriterT<UdpDriver>;

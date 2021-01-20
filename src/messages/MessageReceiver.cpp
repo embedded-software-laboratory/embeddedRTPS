@@ -151,8 +151,12 @@ bool MessageReceiver::processDataSubmessage(MessageProcessingInfo &msgInfo) {
   // bool isLittleEndian = (submsgHeader->flags &
   // SubMessageFlag::FLAG_ENDIANESS); bool hasInlineQos = (submsgHeader->flags &
   // SubMessageFlag::FLAG_INLINE_QOS);
-
-  Reader *reader = mp_part->getReader(dataSubmsg.readerId);
+  Reader *reader;
+  if (dataSubmsg.readerId == ENTITYID_UNKNOWN) {
+    reader = mp_part->getReaderByWriterId(Guid{sourceGuidPrefix, dataSubmsg.writerId});
+  } else {
+    reader = mp_part->getReader(dataSubmsg.readerId);
+  }
   if (reader != nullptr) {
     Guid writerGuid{sourceGuidPrefix, dataSubmsg.writerId};
     ReaderCacheChange change{ChangeKind_t::ALIVE, writerGuid,

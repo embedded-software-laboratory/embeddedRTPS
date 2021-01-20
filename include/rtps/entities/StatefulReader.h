@@ -50,7 +50,7 @@ private:
   PacketInfo
       m_packetInfo; // TODO intended for reuse but buffer not used as such
   NetworkDriver *m_transport;
-  MemoryPool<WriterProxy, Config::NUM_WRITER_PROXIES_PER_READER> m_proxies;
+  
 
   ddsReaderCallback_fp m_callback = nullptr;
   void *m_callee = nullptr;

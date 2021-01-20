@@ -76,6 +76,9 @@ bool TopicData::readFromUcdrBuffer(ucdrBuffer &buffer) {
     case ParameterId::PID_UNICAST_LOCATOR:
       unicastLocator.readFromUcdrBuffer(buffer);
       break;
+    case ParameterId::PID_MULTICAST_LOCATOR:
+      multicastLocator.readFromUcdrBuffer(buffer);
+      break;
     default:
       buffer.iterator += length;
       buffer.last_data_size = 1;

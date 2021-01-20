@@ -51,9 +51,8 @@ void StatelessReader::registerCallback(ddsReaderCallback_fp cb, void *callee) {
   }
 }
 
-bool StatelessReader::addNewMatchedWriter(const WriterProxy & /*newProxy*/) {
-  // Nothing to do
-  return true;
+bool StatelessReader::addNewMatchedWriter(const WriterProxy &newProxy) {
+  return m_proxies.add(newProxy);
 }
 
 void StatelessReader::removeWriter(const Guid & /*guid*/) {
