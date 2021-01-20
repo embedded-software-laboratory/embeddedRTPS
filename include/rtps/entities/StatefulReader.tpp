@@ -37,18 +37,23 @@ using rtps::StatefulReaderT;
 
 template <class NetworkDriver>
 StatefulReaderT<NetworkDriver>::~StatefulReaderT() {
-  if(sys_mutex_valid(&m_mutex)){
-    sys_mutex_free(&m_mutex);
-  }
+//  if(sys_mutex_valid(&m_mutex)){ // Getting invalid pointer error, ther seems sth strange
+//    sys_mutex_free(&m_mutex);
+//  }
 }
 
 template <class NetworkDriver>
 void StatefulReaderT<NetworkDriver>::init(const TopicData &attributes,
                                           NetworkDriver &driver) {
+    if (sys_mutex_new(&m_mutex) != ERR_OK) {
+#if SFR_VERBOSE
+    printf("StatefulReader: Failed to create mutex.\n");
+#endif
+    return;
+  }
   m_attributes = attributes;
   m_transport = &driver;
   m_packetInfo.srcPort = attributes.unicastLocator.port;
-  sys_mutex_new(&m_mutex);
   m_is_initialized_ = true;
 }
 
@@ -77,7 +82,7 @@ void StatefulReaderT<NetworkDriver>::registerCallback(ddsReaderCallback_fp cb,
     m_callback = cb;
     m_callee = callee; // It's okay if this is null
   } else {
-#if SLR_VERBOSE
+#if SFR_VERBOSE
     printf("StatefulReader[%s]: Passed callback is nullptr\n",
            &m_attributes.topicName[0]);
 #endif
