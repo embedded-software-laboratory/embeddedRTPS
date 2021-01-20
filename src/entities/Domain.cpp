@@ -296,14 +296,14 @@ rtps::Writer *Domain::writerExists(Participant &part, const char *topicName,
 
 rtps::Writer *Domain::createWriter(Participant &part, const char *topicName,
                                    const char *typeName, bool reliable, bool enforceUnicast) {
-#if DOMAIN_VERBOSE
-  printf("Creating writer[%s, %s]\n", topicName, typeName);
-#endif
 
   // Check if there is enough capacity for more writers
   if ((reliable && m_statefulWriters.size() <= m_numStatefulWriters) ||
       (!reliable && m_statelessWriters.size() <= m_numStatelessWriters) ||
       part.isWritersFull()) {
+#if DOMAIN_VERBOSE
+      printf("No Writer created. Max Number of Writers reached.\n");
+#endif
     return nullptr;
   }
 
