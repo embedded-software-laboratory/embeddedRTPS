@@ -136,6 +136,12 @@ void StatefulWriterT<NetworkDriver>::manageSendOptions() {
 #if SFW_VERBOSE
             printf("Found Multicast Partner!\n");
 #endif
+            if (avproxy.remoteReaderGuid.entityId != proxy.remoteReaderGuid.entityId) {
+              proxy.unknown_eid = true;
+#if SFW_VERBOSE
+              printf("Found different EntityIds, using UNKNOWN_ENTITYID\n");
+#endif
+            }
           }
           found = true;
         }
@@ -149,6 +155,16 @@ void StatefulWriterT<NetworkDriver>::manageSendOptions() {
   }
 }
 
+template <class NetworkDriver>
+void StatefulWriterT<NetworkDriver>::resetSendOptions() {
+  for (auto &proxy : m_proxies) {
+    proxy.suppressUnicast = false;
+    proxy.useMulticast = false;
+    proxy.unknown_eid = false;
+  }
+  manageSendOptions();
+}
+
 // TODO: manage Multicast Options again...
 template <class NetworkDriver>
 void StatefulWriterT<NetworkDriver>::removeReader(const Guid &guid) {
@@ -160,6 +176,7 @@ void StatefulWriterT<NetworkDriver>::removeReader(const Guid &guid) {
   };
 
   m_proxies.remove(thunk, &isElementToRemove);
+  resetSendOptions();
 }
 
 template <class NetworkDriver>

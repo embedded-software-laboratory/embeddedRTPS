@@ -74,6 +74,7 @@ private:
   void sendHeartBeat();
   bool isIrrelevant(ChangeKind_t kind) const;
   void manageSendOptions();
+  void resetSendOptions();
 };
 
 using StatefulWriter = StatefulWriterT<UdpDriver>;
