@@ -50,7 +50,7 @@ line_cnt_ = (line_cnt_+1)%5; \
 template <class NetworkDriver>
 StatefulWriterT<NetworkDriver>::~StatefulWriterT() {
   m_running = false;
-  sys_msleep(10); // Required for tests/ Join currently not available
+  sys_msleep(20); // Required for tests/ Join currently not available / increased becaus Segfault in Tests
   if(sys_mutex_valid(&m_mutex)){
     sys_mutex_free(&m_mutex);
   }
@@ -465,7 +465,6 @@ void StatefulWriterT<NetworkDriver>::sendHeartBeat() {
 
     info.destAddr = proxy.remoteLocator.getIp4Address();
     info.destPort = proxy.remoteLocator.port;
-
     m_transport->sendPacket(info);
   }
   m_hbCount.value++;
