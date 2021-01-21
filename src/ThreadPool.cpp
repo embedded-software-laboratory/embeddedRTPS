@@ -89,6 +89,16 @@ bool ThreadPool::startThreads() {
 
 void ThreadPool::stopThreads() {
   m_running = false;
+  // This should call all the semaphores for each thread once, so they don't stuck
+  // before ended.
+  for(auto &thread : m_writers) {
+    sys_sem_signal(&m_writerNotificationSem);
+    sys_msleep(10);
+  }
+  for(auto &thread : m_readers) {
+    sys_sem_signal(&m_readerNotificationSem);
+    sys_msleep(10);
+  }
   // TODO make sure they have finished. Seems to be sufficient for tests.
   // Not sufficient if threads shall actually be stopped during runtime.
   sys_msleep(10);

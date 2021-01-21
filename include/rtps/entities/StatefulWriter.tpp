@@ -51,9 +51,9 @@ template <class NetworkDriver>
 StatefulWriterT<NetworkDriver>::~StatefulWriterT() {
   m_running = false;
   sys_msleep(10); // Required for tests/ Join currently not available
-                  // if(sys_mutex_valid(&m_mutex)){
-  sys_mutex_free(&m_mutex);
-  //}
+  if(sys_mutex_valid(&m_mutex)){
+    sys_mutex_free(&m_mutex);
+  }
 }
 
 template <class NetworkDriver>

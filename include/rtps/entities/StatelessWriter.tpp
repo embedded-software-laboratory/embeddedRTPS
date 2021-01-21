@@ -44,9 +44,9 @@ using rtps::StatelessWriterT;
 
 template <class NetworkDriver>
 StatelessWriterT<NetworkDriver>::~StatelessWriterT() {
-  // if(sys_mutex_valid(&m_mutex)){
-  sys_mutex_free(&m_mutex);
-  //}
+  if(sys_mutex_valid(&m_mutex)){
+    sys_mutex_free(&m_mutex);
+  }
 }
 
 template <typename NetworkDriver>
