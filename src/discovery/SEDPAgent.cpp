@@ -30,11 +30,12 @@ Author: i11 - Embedded Software, RWTH Aachen University
 #include "rtps/messages/MessageTypes.h"
 #include "ucdr/microcdr.h"
 
-#define SEDP_VERBOSE 0
+#define SEDP_VERBOSE 1
 
 using rtps::SEDPAgent;
 
 #if SEDP_VERBOSE
+#ifndef STM32_PRINTF_SERIAL
 uint32_t line_ = 0;
 char bf_[100];
 
@@ -47,6 +48,9 @@ char bf_[100];
 		line_ = (line_+1)%30; 							 \
 		}
 
+#else
+#define SEDP_LOG(...) printf(__VA_ARGS__)
+#endif
 #endif
 
 void SEDPAgent::init(Participant& part, const BuiltInEndpoints& endpoints){
