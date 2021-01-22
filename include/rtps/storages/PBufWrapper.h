@@ -30,54 +30,54 @@ Author: i11 - Embedded Software, RWTH Aachen University
 
 namespace rtps {
 
-    struct PBufWrapper {
+struct PBufWrapper {
 
-        pbuf* firstElement = nullptr;
+  pbuf *firstElement = nullptr;
 
-        PBufWrapper() = default;
-        explicit PBufWrapper(pbuf* bufferToWrap);
-        explicit PBufWrapper(DataSize_t length);
+  PBufWrapper() = default;
+  explicit PBufWrapper(pbuf *bufferToWrap);
+  explicit PBufWrapper(DataSize_t length);
 
-        // Shallow Copy. No copying of the underlying pbuf. Just another reference like a shared pointer.
-        PBufWrapper(const PBufWrapper& other);
-        PBufWrapper& operator=(const PBufWrapper& other);
+  // Shallow Copy. No copying of the underlying pbuf. Just another reference
+  // like a shared pointer.
+  PBufWrapper(const PBufWrapper &other);
+  PBufWrapper &operator=(const PBufWrapper &other);
 
-        PBufWrapper(PBufWrapper&& other) noexcept;
-        PBufWrapper& operator=(PBufWrapper&& other) noexcept;
+  PBufWrapper(PBufWrapper &&other) noexcept;
+  PBufWrapper &operator=(PBufWrapper &&other) noexcept;
 
-        ~PBufWrapper();
+  ~PBufWrapper();
 
-        PBufWrapper deepCopy() const;
+  PBufWrapper deepCopy() const;
 
-        bool isValid() const;
+  bool isValid() const;
 
-        bool append(const uint8_t* data, DataSize_t length);
+  bool append(const uint8_t *data, DataSize_t length);
 
+  /// Note that unused reserved memory is now part of the wrapper. New calls to
+  /// append(uint8_t*[...]) will continue behind the appended wrapper
+  void append(PBufWrapper &&other);
 
-        /// Note that unused reserved memory is now part of the wrapper. New calls to append(uint8_t*[...]) will
-        /// continue behind the appended wrapper
-        void append(PBufWrapper&& other);
+  bool reserve(DataSize_t length);
 
-        bool reserve(DataSize_t length);
+  /// After calling this function, data is added starting from the beginning
+  /// again. It does not revert reserve.
+  void reset();
 
-        /// After calling this function, data is added starting from the beginning again. It does not revert reserve.
-        void reset();
+  DataSize_t spaceLeft() const;
+  DataSize_t spaceUsed() const;
 
-        DataSize_t spaceLeft() const;
-        DataSize_t spaceUsed() const;
+private:
+  constexpr static pbuf_layer m_layer = PBUF_TRANSPORT;
+  constexpr static pbuf_type m_type = PBUF_POOL;
 
-    private:
+  DataSize_t m_freeSpace = 0;
 
-        constexpr static pbuf_layer m_layer = PBUF_TRANSPORT;
-        constexpr static pbuf_type m_type = PBUF_POOL;
+  bool increaseSizeBy(uint16_t length);
 
-        DataSize_t m_freeSpace = 0;
+  void copySimpleMembersAndResetBuffer(const PBufWrapper &other);
+};
 
-        bool increaseSizeBy(uint16_t length);
+} // namespace rtps
 
-        void copySimpleMembersAndResetBuffer(const PBufWrapper& other);
-    };
-
-}
-
-#endif //RTPS_PBUFWRAPPER_H
+#endif // RTPS_PBUFWRAPPER_H

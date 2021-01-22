@@ -28,19 +28,18 @@ Author: i11 - Embedded Software, RWTH Aachen University
 #include "rtps/common/types.h"
 #include "rtps/discovery/ParticipantProxyData.h"
 
-namespace rtps{
-    struct ReaderProxy{
-        Guid remoteReaderGuid;
-        Locator remoteLocator;
-        SequenceNumberSet ackNackSet;
-        Count_t ackNackCount;
+namespace rtps {
+struct ReaderProxy {
+  Guid remoteReaderGuid;
+  Locator remoteLocator;
+  SequenceNumberSet ackNackSet;
+  Count_t ackNackCount;
 
-        ReaderProxy() : remoteReaderGuid({GUIDPREFIX_UNKNOWN, ENTITYID_UNKNOWN}){};
-        ReaderProxy(const Guid& guid, const Locator& loc)
-            : remoteReaderGuid(guid), remoteLocator(loc),
-              ackNackSet(), ackNackCount{0}{};
+  ReaderProxy() : remoteReaderGuid({GUIDPREFIX_UNKNOWN, ENTITYID_UNKNOWN}){};
+  ReaderProxy(const Guid &guid, const Locator &loc)
+      : remoteReaderGuid(guid), remoteLocator(loc),
+        ackNackSet(), ackNackCount{0} {};
+};
+} // namespace rtps
 
-    };
-}
-
-#endif //RTPS_READERPROXY_H
+#endif // RTPS_READERPROXY_H

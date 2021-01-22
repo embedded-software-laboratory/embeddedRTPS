@@ -25,4 +25,4 @@ Author: i11 - Embedded Software, RWTH Aachen University
 #ifndef RTPS_CONSTANTS_H
 #define RTPS_CONSTANTS_H
 
-#endif //RTPS_CONSTANTS_H
+#endif // RTPS_CONSTANTS_H
