@@ -30,7 +30,7 @@ Author: i11 - Embedded Software, RWTH Aachen University
 #include "rtps/messages/MessageTypes.h"
 #include "ucdr/microcdr.h"
 
-#define SEDP_VERBOSE 1
+#define SEDP_VERBOSE 0
 
 using rtps::SEDPAgent;
 
@@ -121,7 +121,7 @@ void SEDPAgent::onNewPublisher(const TopicData& writerData) {
 		return;
 	}
 #if SEDP_VERBOSE
-    SEDP_LOG("PUB T/D %s/%s", writerData.topicName, writerData.typeName);
+    SEDP_LOG("PUB T/D %s/%s\n", writerData.topicName, writerData.typeName);
 #endif
 	Reader* reader = m_part->getMatchingReader(writerData);
     if(reader == nullptr){
@@ -173,7 +173,7 @@ void SEDPAgent::onNewSubscriber(const TopicData& readerData) {
 	}
     Writer* writer = m_part->getMatchingWriter(readerData);
 #if SEDP_VERBOSE
-    SEDP_LOG("SUB T/D %s/%s", readerData.topicName, readerData.typeName);
+    SEDP_LOG("SUB T/D %s/%s\n", readerData.topicName, readerData.typeName);
 #endif
     if(writer == nullptr) {
 #if SEDP_VERBOSE
