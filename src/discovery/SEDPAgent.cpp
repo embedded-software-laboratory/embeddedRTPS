@@ -35,6 +35,7 @@ Author: i11 - Embedded Software, RWTH Aachen University
 using rtps::SEDPAgent;
 
 #if SEDP_VERBOSE
+#ifndef STM32_PRINTF_SERIAL
 uint32_t line_ = 0;
 char bf_[100];
 
@@ -48,6 +49,9 @@ char bf_[100];
     line_ = (line_ + 1) % 30;                                                  \
   }
 
+#else
+#define SEDP_LOG(...) printf(__VA_ARGS__)
+#endif
 #endif
 
 void SEDPAgent::init(Participant &part, const BuiltInEndpoints &endpoints) {
@@ -122,7 +126,7 @@ void SEDPAgent::onNewPublisher(const TopicData &writerData) {
     return;
   }
 #if SEDP_VERBOSE
-  SEDP_LOG("PUB T/D %s/%s", writerData.topicName, writerData.typeName);
+  SEDP_LOG("PUB T/D %s/%s\n", writerData.topicName, writerData.typeName);
 #endif
   Reader *reader = m_part->getMatchingReader(writerData);
   if (reader == nullptr) {
@@ -176,7 +180,7 @@ void SEDPAgent::onNewSubscriber(const TopicData &readerData) {
   }
   Writer *writer = m_part->getMatchingWriter(readerData);
 #if SEDP_VERBOSE
-  SEDP_LOG("SUB T/D %s/%s", readerData.topicName, readerData.typeName);
+  SEDP_LOG("SUB T/D %s/%s\n", readerData.topicName, readerData.typeName);
 #endif
   if (writer == nullptr) {
 #if SEDP_VERBOSE

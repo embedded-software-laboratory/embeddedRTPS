@@ -128,7 +128,7 @@ bool MessageReceiver::processSubmessage(MessageProcessingInfo &msgInfo,
   default:
 #if RECV_VERBOSE
     printf("Submessage of type %u currently not supported. Skipping..\n",
-           static_cast<uint8_t>(submsgHeader->submessageId));
+           static_cast<uint8_t>(submsgHeader.submessageId));
 #endif
     success = false;
   }
@@ -161,7 +161,7 @@ bool MessageReceiver::processDataSubmessage(MessageProcessingInfo &msgInfo) {
   } else {
 #if RECV_VERBOSE
     printf("Couldn't find a reader with id: ");
-    printEntityId(dataSubmsg->readerId);
+    printEntityId(dataSubmsg.readerId);
     printf("\n");
 #endif
   }
