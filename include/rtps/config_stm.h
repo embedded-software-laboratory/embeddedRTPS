@@ -31,6 +31,11 @@ namespace rtps {
 
 #define IS_LITTLE_ENDIAN 1
 
+/*
+ * Enabling this macro can output printf() to the serial terminal (via USART3).
+ * Note that linking printf() may increase the file size.
+ */
+//#define STM32_PRINTF_SERIAL
 
     namespace Config {
         const VendorId_t VENDOR_ID = {13, 37};
