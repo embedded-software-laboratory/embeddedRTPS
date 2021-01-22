@@ -39,7 +39,7 @@ Domain::Domain() : m_threadPool(receiveJumppad, this), m_transport(ThreadPool::r
 bool Domain::completeInit(){
     m_initComplete = m_threadPool.startThreads();
 #if DOMAIN_VERBOSE
-    if(!started){
+    if(!m_initComplete){
         printf("Domain: Failed starting threads\n");
     }
 #endif
