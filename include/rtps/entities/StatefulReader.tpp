@@ -73,7 +73,7 @@ void StatefulReaderT<NetworkDriver>::registerCallback(ddsReaderCallback_fp cb, v
         m_callback = cb;
         m_callee = callee; // It's okay if this is null
     }else{
-#if SLR_VERBOSE
+#if SFR_VERBOSE
         printf("StatefulReader[%s]: Passed callback is nullptr\n", &m_attributes.topicName[0]);
 #endif
     }
