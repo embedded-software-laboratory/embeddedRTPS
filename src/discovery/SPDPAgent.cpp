@@ -35,7 +35,7 @@ using rtps::SPDPAgent;
 using rtps::SMElement::BuildInEndpointSet;
 using rtps::SMElement::ParameterId;
 
-#define SPDP_VERBOSE 1
+#define SPDP_VERBOSE 0
 
 #if SPDP_VERBOSE
 #include "rtps/utils/printutils.h"
@@ -193,7 +193,9 @@ bool SPDPAgent::addProxiesForBuiltInEndpoints() {
 
   ip4_addr_t ip4addr = locator->getIp4Address();
   const char *addr = ip4addr_ntoa(&ip4addr);
-  printf("Adding IPv4 Locator %s", addr);
+  #if SPDP_VERBOSE
+  printf("Adding IPv4 Locator %s\n", addr);
+  #endif
 
   if (m_proxyDataBuffer.hasPublicationWriter()) {
     const WriterProxy proxy{{m_proxyDataBuffer.m_guid.prefix,
