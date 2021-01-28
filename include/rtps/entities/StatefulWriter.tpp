@@ -50,10 +50,10 @@ line_cnt_ = (line_cnt_+1)%5; \
 template <class NetworkDriver>
 StatefulWriterT<NetworkDriver>::~StatefulWriterT() {
   m_running = false;
-  sys_msleep(60); // Required for tests/ Join currently not available / increased becaus Segfault in Tests
-  if(sys_mutex_valid(&m_mutex)){
-    sys_mutex_free(&m_mutex);
-  }
+//  sys_msleep(10); // Required for tests/ Join currently not available / increased because Segfault in Tests
+//  if(sys_mutex_valid(&m_mutex)){
+//    sys_mutex_free(&m_mutex);
+//  }
 }
 
 template <class NetworkDriver>
