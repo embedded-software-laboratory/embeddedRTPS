@@ -50,10 +50,10 @@ line_cnt_ = (line_cnt_+1)%5; \
 template <class NetworkDriver>
 StatefulWriterT<NetworkDriver>::~StatefulWriterT() {
   m_running = false;
-  sys_msleep(10); // Required for tests/ Join currently not available
-  if(sys_mutex_valid(&m_mutex)){
-    sys_mutex_free(&m_mutex);
-  }
+//  sys_msleep(10); // Required for tests/ Join currently not available / increased because Segfault in Tests
+//  if(sys_mutex_valid(&m_mutex)){
+//    sys_mutex_free(&m_mutex);
+//  }
 }
 
 template <class NetworkDriver>
@@ -136,6 +136,12 @@ void StatefulWriterT<NetworkDriver>::manageSendOptions() {
 #if SFW_VERBOSE
             printf("Found Multicast Partner!\n");
 #endif
+            if (avproxy.remoteReaderGuid.entityId != proxy.remoteReaderGuid.entityId) {
+              proxy.unknown_eid = true;
+#if SFW_VERBOSE
+              printf("Found different EntityIds, using UNKNOWN_ENTITYID\n");
+#endif
+            }
           }
           found = true;
         }
@@ -149,6 +155,16 @@ void StatefulWriterT<NetworkDriver>::manageSendOptions() {
   }
 }
 
+template <class NetworkDriver>
+void StatefulWriterT<NetworkDriver>::resetSendOptions() {
+  for (auto &proxy : m_proxies) {
+    proxy.suppressUnicast = false;
+    proxy.useMulticast = false;
+    proxy.unknown_eid = false;
+  }
+  manageSendOptions();
+}
+
 // TODO: manage Multicast Options again...
 template <class NetworkDriver>
 void StatefulWriterT<NetworkDriver>::removeReader(const Guid &guid) {
@@ -160,6 +176,7 @@ void StatefulWriterT<NetworkDriver>::removeReader(const Guid &guid) {
   };
 
   m_proxies.remove(thunk, &isElementToRemove);
+  resetSendOptions();
 }
 
 template <class NetworkDriver>
@@ -448,7 +465,6 @@ void StatefulWriterT<NetworkDriver>::sendHeartBeat() {
 
     info.destAddr = proxy.remoteLocator.getIp4Address();
     info.destPort = proxy.remoteLocator.port;
-
     m_transport->sendPacket(info);
   }
   m_hbCount.value++;

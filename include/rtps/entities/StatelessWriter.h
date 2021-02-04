@@ -68,6 +68,7 @@ private:
   bool isIrrelevant(ChangeKind_t kind) const;
 
   void manageSendOptions();
+  void resetSendOptions();
 };
 
 using StatelessWriter = StatelessWriterT<UdpDriver>;

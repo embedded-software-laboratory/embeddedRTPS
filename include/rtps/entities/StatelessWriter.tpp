@@ -114,6 +114,12 @@ void StatelessWriterT<NetworkDriver>::manageSendOptions() {
 #if SLW_VERBOSE
             printf("Found Multicast Partner!\n");
 #endif
+            if (avproxy.remoteReaderGuid.entityId != proxy.remoteReaderGuid.entityId) {
+              proxy.unknown_eid = true;
+#if SLW_VERBOSE
+              printf("Found different EntityIds, using UNKNOWN_ENTITYID\n");
+#endif
+            }
           }
           found = true;
         }
@@ -128,6 +134,16 @@ void StatelessWriterT<NetworkDriver>::manageSendOptions() {
 }
 
 template <class NetworkDriver>
+void StatelessWriterT<NetworkDriver>::resetSendOptions() {
+  for (auto &proxy : m_proxies) {
+    proxy.suppressUnicast = false;
+    proxy.useMulticast = false;
+    proxy.unknown_eid = false;
+  }
+  manageSendOptions();
+}
+
+template <class NetworkDriver>
 void StatelessWriterT<NetworkDriver>::removeReader(const Guid &guid) {
   auto isElementToRemove = [&](const ReaderProxy &proxy) {
     return proxy.remoteReaderGuid == guid;
@@ -137,6 +153,7 @@ void StatelessWriterT<NetworkDriver>::removeReader(const Guid &guid) {
   };
 
   m_proxies.remove(thunk, &isElementToRemove);
+  resetSendOptions();
 }
 
 template <typename NetworkDriver>
@@ -234,7 +251,7 @@ void StatelessWriterT<NetworkDriver>::progress() {
         // Set EntityId to UNKNOWN if using multicast, because there might be different ones...
         // TODO: mybe enhance by using UNKNOWN only if ids are really different
         EntityId_t reid;
-        if(proxy.useMulticast && !m_enforceUnicast) {
+        if(proxy.useMulticast && !m_enforceUnicast && proxy.unknown_eid) {
           reid = ENTITYID_UNKNOWN;
         } else {
           reid = proxy.remoteReaderGuid.entityId;

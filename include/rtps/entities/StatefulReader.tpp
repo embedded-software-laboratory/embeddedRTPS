@@ -37,7 +37,7 @@ using rtps::StatefulReaderT;
 
 template <class NetworkDriver>
 StatefulReaderT<NetworkDriver>::~StatefulReaderT() {
-//  if(sys_mutex_valid(&m_mutex)){ // Getting invalid pointer error, ther seems sth strange
+//  if(sys_mutex_valid(&m_mutex)){ // Getting invalid pointer error, there seems sth strange
 //    sys_mutex_free(&m_mutex);
 //  }
 }
