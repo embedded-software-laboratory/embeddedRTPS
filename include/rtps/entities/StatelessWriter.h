@@ -44,6 +44,7 @@ public:
 
   bool addNewMatchedReader(const ReaderProxy &newProxy) override;
   void removeReader(const Guid &guid) override;
+  void removeReaderOfParticipant(const GuidPrefix_t &guidPrefix) override;
   void progress() override;
   const CacheChange *newChange(ChangeKind_t kind, const uint8_t *data,
                                DataSize_t size) override;
@@ -62,8 +63,6 @@ private:
   TopicKind_t m_topicKind = TopicKind_t::NO_KEY;
   SequenceNumber_t m_nextSequenceNumberToSend = {0, 1};
   SimpleHistoryCache m_history;
-
-  MemoryPool<ReaderProxy, Config::NUM_READER_PROXIES_PER_WRITER> m_proxies;
 
   bool isIrrelevant(ChangeKind_t kind) const;
 

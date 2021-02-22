@@ -43,6 +43,7 @@ public:
   void registerCallback(ddsReaderCallback_fp cb, void *callee) override;
   bool addNewMatchedWriter(const WriterProxy &newProxy) override;
   void removeWriter(const Guid &guid) override;
+  void removeWriterOfParticipant(const GuidPrefix_t &guidPrefix) override;
   bool onNewHeartbeat(const SubmessageHeartbeat &msg,
                       const GuidPrefix_t &remotePrefix) override;
 

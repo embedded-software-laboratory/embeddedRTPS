@@ -40,6 +40,7 @@ public:
 
   bool addNewMatchedReader(const ReaderProxy &newProxy) override;
   void removeReader(const Guid &guid) override;
+  void removeReaderOfParticipant(const GuidPrefix_t &guidPrefix) override;
   //! Executes required steps like sending packets. Intended to be called by
   //! worker threads
   void progress() override;
@@ -65,7 +66,6 @@ private:
 
   bool m_running = true;
 
-  MemoryPool<ReaderProxy, Config::NUM_READER_PROXIES_PER_WRITER> m_proxies;
 
   bool sendData(const ReaderProxy &reader, const SequenceNumber_t &sn);
   bool sendDataWRMulticast(const ReaderProxy &reader, const SequenceNumber_t &sn);

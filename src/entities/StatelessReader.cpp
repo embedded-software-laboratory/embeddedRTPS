@@ -55,8 +55,26 @@ bool StatelessReader::addNewMatchedWriter(const WriterProxy &newProxy) {
   return m_proxies.add(newProxy);
 }
 
-void StatelessReader::removeWriter(const Guid & /*guid*/) {
-  // Nothing to do
+void StatelessReader::removeWriter(const Guid & guid) {
+  auto isElementToRemove = [&](const WriterProxy &proxy) {
+    return proxy.remoteWriterGuid == guid;
+  };
+  auto thunk = [](void *arg, const WriterProxy &value) {
+    return (*static_cast<decltype(isElementToRemove) *>(arg))(value);
+  };
+
+  m_proxies.remove(thunk, &isElementToRemove);
+}
+
+void StatelessReader::removeWriterOfParticipant(const GuidPrefix_t &guidPrefix) {
+  auto isElementToRemove = [&](const WriterProxy &proxy) {
+    return proxy.remoteWriterGuid.prefix == guidPrefix;
+  };
+  auto thunk = [](void *arg, const WriterProxy &value) {
+    return (*static_cast<decltype(isElementToRemove) *>(arg))(value);
+  };
+
+  m_proxies.remove(thunk, &isElementToRemove);
 }
 
 bool StatelessReader::onNewHeartbeat(const SubmessageHeartbeat &,
