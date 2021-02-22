@@ -183,6 +183,7 @@ bool MessageReceiver::processHeartbeatSubmessage(
   Reader *reader = mp_part->getReader(submsgHB.readerId);
   if (reader != nullptr) {
     reader->onNewHeartbeat(submsgHB, sourceGuidPrefix);
+    mp_part->addHeartbeat(sourceGuidPrefix);
     return true;
   } else {
     return false;

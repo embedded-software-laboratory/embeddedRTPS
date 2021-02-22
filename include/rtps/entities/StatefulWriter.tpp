@@ -180,6 +180,19 @@ void StatefulWriterT<NetworkDriver>::removeReader(const Guid &guid) {
 }
 
 template <class NetworkDriver>
+void StatefulWriterT<NetworkDriver>::removeReaderOfParticipant(const GuidPrefix_t &guidPrefix) {
+  auto isElementToRemove = [&](const ReaderProxy &proxy) {
+    return proxy.remoteReaderGuid.prefix == guidPrefix;
+  };
+  auto thunk = [](void *arg, const ReaderProxy &value) {
+    return (*static_cast<decltype(isElementToRemove) *>(arg))(value);
+  };
+
+  m_proxies.remove(thunk, &isElementToRemove);
+  resetSendOptions();
+}
+
+template <class NetworkDriver>
 const rtps::CacheChange *StatefulWriterT<NetworkDriver>::newChange(
     ChangeKind_t kind, const uint8_t *data, DataSize_t size) {
   if (isIrrelevant(kind)) {

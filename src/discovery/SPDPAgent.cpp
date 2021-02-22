@@ -84,6 +84,13 @@ void SPDPAgent::runBroadcast(void *args) {
   while (agent.m_running) {
     sys_msleep(Config::SPDP_RESEND_PERIOD_MS);
     agent.m_buildInEndpoints.spdpWriter->setAllChangesToUnsent();
+    if(agent.m_cycleHB == Config::SPDP_CYCLECOUNT_HEARTBEAT) {
+      agent.m_cycleHB = 0;
+      agent.mp_participant->checkAndResetHeartbeats();
+    } else {
+      agent.m_cycleHB++;
+    }
+    
   }
 }
 

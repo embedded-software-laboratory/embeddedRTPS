@@ -83,9 +83,12 @@ public:
 
   bool addNewRemoteParticipant(const ParticipantProxyData &remotePart);
   bool removeRemoteParticipant(const GuidPrefix_t &prefix);
+  void removeAllEntitiesOfParticipant(const GuidPrefix_t &prefix);
   const ParticipantProxyData *findRemoteParticipant(const GuidPrefix_t &prefix);
   uint32_t getRemoteParticipantCount();
   MessageReceiver *getMessageReceiver();
+  void addHeartbeat(GuidPrefix_t sourceGuidPrefix);
+  bool checkAndResetHeartbeats();
 
   bool hasReaderWithMulticastLocator(ip4_addr_t address);
 

@@ -114,6 +114,18 @@ void StatefulReaderT<NetworkDriver>::removeWriter(const Guid &guid) {
 }
 
 template <class NetworkDriver>
+void StatefulReaderT<NetworkDriver>::removeWriterOfParticipant(const GuidPrefix_t &guidPrefix) {
+  auto isElementToRemove = [&](const WriterProxy &proxy) {
+    return proxy.remoteWriterGuid.prefix == guidPrefix;
+  };
+  auto thunk = [](void *arg, const WriterProxy &value) {
+    return (*static_cast<decltype(isElementToRemove) *>(arg))(value);
+  };
+
+  m_proxies.remove(thunk, &isElementToRemove);
+}
+
+template <class NetworkDriver>
 bool StatefulReaderT<NetworkDriver>::onNewHeartbeat(
     const SubmessageHeartbeat &msg, const GuidPrefix_t &sourceGuidPrefix) {
   Lock lock(m_mutex);

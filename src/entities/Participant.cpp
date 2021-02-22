@@ -176,8 +176,17 @@ bool Participant::removeRemoteParticipant(const GuidPrefix_t &prefix) {
   auto thunk = [](void *arg, const ParticipantProxyData &value) {
     return (*static_cast<decltype(isElementToRemove) *>(arg))(value);
   };
-
+  removeAllEntitiesOfParticipant(prefix);
   return m_remoteParticipants.remove(thunk, &isElementToRemove);
+}
+
+void Participant::removeAllEntitiesOfParticipant(const GuidPrefix_t &prefix) {
+  for(auto &proxyW : m_writers) {
+    proxyW->removeReaderOfParticipant(prefix);
+  }
+  for(auto &proxyR :  m_readers) {
+    proxyR->removeWriterOfParticipant(prefix);
+  }
 }
 
 const rtps::ParticipantProxyData *
@@ -206,6 +215,29 @@ uint32_t Participant::getRemoteParticipantCount() {
 }
 
 rtps::MessageReceiver *Participant::getMessageReceiver() { return &m_receiver; }
+
+void Participant::addHeartbeat(GuidPrefix_t sourceGuidPrefix) {
+  for(auto &remote : m_remoteParticipants){
+    if(remote.m_guid.prefix == sourceGuidPrefix) {
+      remote.setReceivedHeartbeat(true);
+      break;
+    }
+  }
+}
+
+bool Participant::checkAndResetHeartbeats() {
+  for(auto &remote : m_remoteParticipants) {
+    if(remote.getReceivedHeartbeat()) {
+      remote.setReceivedHeartbeat(false);
+    } else {
+      bool success = removeRemoteParticipant(remote.m_guid.prefix);
+      if(!success) {
+        return false;
+      }
+    }
+  }
+  return true;
+}
 
 void Participant::addBuiltInEndpoints(BuiltInEndpoints &endpoints) {
   m_hasBuilInEndpoints = true;
