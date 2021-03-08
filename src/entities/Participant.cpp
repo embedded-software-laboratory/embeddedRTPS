@@ -181,12 +181,17 @@ bool Participant::removeRemoteParticipant(const GuidPrefix_t &prefix) {
 }
 
 void Participant::removeAllEntitiesOfParticipant(const GuidPrefix_t &prefix) {
-  for(auto &proxyW : m_writers) {
-    proxyW->removeReaderOfParticipant(prefix);
+  if(m_numWriters != 0) {
+    for(auto &proxyW : m_writers) {
+      proxyW->removeReaderOfParticipant(prefix);
+    }
   }
-  for(auto &proxyR :  m_readers) {
-    proxyR->removeWriterOfParticipant(prefix);
+  if(m_numReaders != 0) {
+    for(auto &proxyR :  m_readers) {
+      proxyR->removeWriterOfParticipant(prefix);
+    }
   }
+  
 }
 
 const rtps::ParticipantProxyData *
