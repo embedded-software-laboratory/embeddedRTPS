@@ -59,6 +59,7 @@ const uint16_t SPDP_WRITER_STACKSIZE = 550;    // byte
 
 const uint16_t SF_WRITER_HB_PERIOD_MS = 4000;
 const uint16_t SPDP_RESEND_PERIOD_MS = 10000;
+const uint8_t SPDP_CYCLECOUNT_HEARTBEAT = 2; //In every x round, check for missing heartbeats
 const uint8_t SPDP_WRITER_PRIO = 3;
 const uint8_t SPDP_MAX_NUMBER_FOUND_PARTICIPANTS = 5;
 const uint8_t SPDP_MAX_NUM_LOCATORS = 5;
