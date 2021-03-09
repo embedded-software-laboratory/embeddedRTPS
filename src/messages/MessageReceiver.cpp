@@ -105,7 +105,7 @@ bool MessageReceiver::processSubmessage(MessageProcessingInfo &msgInfo,
 #if RECV_VERBOSE
     printf("Processing Data submessage\n");
 #endif
-    success = processDataSubmessage(msgInfo);
+    success = processDataSubmessage(msgInfo, submsgHeader);
     break;
   case SubmessageKind::HEARTBEAT:
 #if RECV_VERBOSE
@@ -128,7 +128,7 @@ bool MessageReceiver::processSubmessage(MessageProcessingInfo &msgInfo,
   default:
 #if RECV_VERBOSE
     printf("Submessage of type %u currently not supported. Skipping..\n",
-           static_cast<uint8_t>(submsgHeader->submessageId));
+           static_cast<uint8_t>(submsgHeader.submessageId));
 #endif
     success = false;
   }
@@ -137,7 +137,7 @@ bool MessageReceiver::processSubmessage(MessageProcessingInfo &msgInfo,
   return success;
 }
 
-bool MessageReceiver::processDataSubmessage(MessageProcessingInfo &msgInfo) {
+bool MessageReceiver::processDataSubmessage(MessageProcessingInfo &msgInfo, const SubmessageHeader &submsgHeader) {
   SubmessageData dataSubmsg;
   if (!deserializeMessage(msgInfo, dataSubmsg)) {
     return false;
@@ -146,7 +146,7 @@ bool MessageReceiver::processDataSubmessage(MessageProcessingInfo &msgInfo) {
   const uint8_t *serializedData =
       msgInfo.getPointerToCurrentPos() + SubmessageData::getRawSize();
   const DataSize_t size =
-      msgInfo.size - (msgInfo.nextPos + SubmessageData::getRawSize());
+      submsgHeader.submessageLength - SubmessageData::getRawSize();
 
   // bool isLittleEndian = (submsgHeader->flags &
   // SubMessageFlag::FLAG_ENDIANESS); bool hasInlineQos = (submsgHeader->flags &
@@ -165,7 +165,7 @@ bool MessageReceiver::processDataSubmessage(MessageProcessingInfo &msgInfo) {
   } else {
 #if RECV_VERBOSE
     printf("Couldn't find a reader with id: ");
-    printEntityId(dataSubmsg->readerId);
+    printEntityId(dataSubmsg.readerId);
     printf("\n");
 #endif
   }
