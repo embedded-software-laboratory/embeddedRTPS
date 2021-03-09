@@ -38,13 +38,14 @@ bool TopicData::readFromUcdrBuffer(ucdrBuffer &buffer) {
   while (ucdr_buffer_remaining(&buffer) >= 4) {
     ParameterId pid;
     uint16_t length;
+    Locator uLoc;
     ucdr_deserialize_uint16_t(&buffer, reinterpret_cast<uint16_t *>(&pid));
     ucdr_deserialize_uint16_t(&buffer, &length);
 
     if (ucdr_buffer_remaining(&buffer) < length) {
       return false;
     }
-
+    
     switch (pid) {
     case ParameterId::PID_ENDPOINT_GUID:
       ucdr_deserialize_array_uint8_t(&buffer, endpointGuid.prefix.id.data(),
@@ -74,7 +75,10 @@ bool TopicData::readFromUcdrBuffer(ucdrBuffer &buffer) {
       ucdr_deserialize_array_char(&buffer, typeName, typeNameLength);
       break;
     case ParameterId::PID_UNICAST_LOCATOR:
-      unicastLocator.readFromUcdrBuffer(buffer);
+      uLoc.readFromUcdrBuffer(buffer);
+      if(uLoc.kind == LocatorKind_t::LOCATOR_KIND_UDPv4) {
+        unicastLocator = uLoc;
+      }
       break;
     case ParameterId::PID_MULTICAST_LOCATOR:
       multicastLocator.readFromUcdrBuffer(buffer);
