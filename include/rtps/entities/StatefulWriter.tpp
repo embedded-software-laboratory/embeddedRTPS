@@ -25,6 +25,7 @@ Author: i11 - Embedded Software, RWTH Aachen University
 #include "rtps/entities/StatefulWriter.h"
 
 #include "rtps/messages/MessageFactory.h"
+#include "lwip/sys.h"
 #include <cstring>
 #include <stdio.h>
 

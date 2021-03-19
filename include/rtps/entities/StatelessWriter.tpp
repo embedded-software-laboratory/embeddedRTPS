@@ -25,6 +25,7 @@ Author: i11 - Embedded Software, RWTH Aachen University
 #include <rtps/entities/ReaderProxy.h>
 
 #include "lwip/tcpip.h"
+#include "lwip/sys.h"
 #include "rtps/ThreadPool.h"
 #include "rtps/communication/UdpDriver.h"
 #include "rtps/messages/MessageFactory.h"
