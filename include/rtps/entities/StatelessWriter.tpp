@@ -25,6 +25,7 @@ Author: i11 - Embedded Software, RWTH Aachen University
 #include <rtps/entities/ReaderProxy.h>
 
 #include "lwip/tcpip.h"
+#include "lwip/sys.h"
 #include "rtps/ThreadPool.h"
 #include "rtps/communication/UdpDriver.h"
 #include "rtps/messages/MessageFactory.h"
@@ -44,9 +45,9 @@ using rtps::StatelessWriterT;
 
 template <class NetworkDriver>
 StatelessWriterT<NetworkDriver>::~StatelessWriterT() {
-  if(sys_mutex_valid(&m_mutex)){
-    sys_mutex_free(&m_mutex);
-  }
+//  if(sys_mutex_valid(&m_mutex)){
+//    sys_mutex_free(&m_mutex);
+//  }
 }
 
 template <typename NetworkDriver>
