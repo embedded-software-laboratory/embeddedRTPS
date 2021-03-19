@@ -16,10 +16,6 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE
-
-This file is part of embeddedRTPS.
-
-Author: i11 - Embedded Software, RWTH Aachen University
 */
 
 #ifndef RTPS_CONFIG_H
@@ -37,15 +33,15 @@ namespace rtps {
 
     namespace Config {
         const VendorId_t VENDOR_ID = {13, 37};
-        const std::array<uint8_t, 4> IP_ADDRESS = {192,168,0,66};  // Needs to be set in lwipcfg.h too.
-        const GuidPrefix_t BASE_GUID_PREFIX{1,2,3,4,5,6,7,8,9,10,12};
+        const std::array<uint8_t, 4> IP_ADDRESS = {192,168,1,10};  // Needs to be set in lwipcfg.h too.
+        const GuidPrefix_t BASE_GUID_PREFIX{1,22,3,12,5,6,7,8,19,10,18};
 
         const uint8_t DOMAIN_ID = 0; // 230 possible with UDP
-        const uint8_t NUM_STATELESS_WRITERS = 2;
-        const uint8_t NUM_STATELESS_READERS = 2;
-        const uint8_t NUM_STATEFUL_READERS = 2;
-        const uint8_t NUM_STATEFUL_WRITERS = 2;
-        const uint8_t MAX_NUM_PARTICIPANTS = 1;
+		const uint8_t MAX_NUM_PARTICIPANTS = 1;
+        const uint8_t NUM_STATELESS_WRITERS = MAX_NUM_PARTICIPANTS + 1; // Required + Additional
+        const uint8_t NUM_STATELESS_READERS = MAX_NUM_PARTICIPANTS + 1; // Required + Additional
+        const uint8_t NUM_STATEFUL_READERS = 4; // 1-4 required per participant depending on what they do and to whom they match
+        const uint8_t NUM_STATEFUL_WRITERS = 4; // 1-4 required per participant depending on what they do and to whom they match
         const uint8_t NUM_WRITERS_PER_PARTICIPANT = 4;
         const uint8_t NUM_READERS_PER_PARTICIPANT = 4;
         const uint8_t NUM_WRITER_PROXIES_PER_READER = 3;
@@ -61,9 +57,9 @@ namespace rtps {
         const int THREAD_POOL_READER_STACKSIZE = 1600; // byte
         const uint16_t SPDP_WRITER_STACKSIZE = 550; // byte
 
-        const uint16_t SF_WRITER_HB_PERIOD_MS = 4000;
+		const uint16_t SF_WRITER_HB_PERIOD_MS = 4000;
         const uint16_t SPDP_RESEND_PERIOD_MS = 10000;
-        const uint8_t SPDP_CYCLECOUNT_HEARTBEAT = 2; //skip x SPDP rounds before checking liveliness
+        const uint8_t SPDP_CYCLECOUNT_HEARTBEAT = 2; //In every x round, check for missing heartbeats
         const uint8_t SPDP_WRITER_PRIO = 3;
         const uint8_t SPDP_MAX_NUMBER_FOUND_PARTICIPANTS = 5;
         const uint8_t SPDP_MAX_NUM_LOCATORS = 5;

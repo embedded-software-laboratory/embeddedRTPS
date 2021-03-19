@@ -435,7 +435,11 @@ template <class NetworkDriver>
 void StatefulWriterT<NetworkDriver>::sendHeartBeatLoop() {
   while (m_running) {
     sendHeartBeat();
-    sys_msleep(Config::SF_WRITER_HB_PERIOD_MS);
+#ifdef OS_IS_FREERTOS
+  	vTaskDelay(pdMS_TO_TICKS(Config::SF_WRITER_HB_PERIOD_MS));
+#else
+	  sys_msleep(Config::SF_WRITER_HB_PERIOD_MS);
+#endif
   }
 }
 

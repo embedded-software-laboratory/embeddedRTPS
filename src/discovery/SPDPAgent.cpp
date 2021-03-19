@@ -82,7 +82,11 @@ void SPDPAgent::runBroadcast(void *args) {
   agent.m_buildInEndpoints.spdpWriter->newChange(
       ChangeKind_t::ALIVE, agent.m_microbuffer.init, size);
   while (agent.m_running) {
-    sys_msleep(Config::SPDP_RESEND_PERIOD_MS);
+#ifdef OS_IS_FREERTOS
+	  vTaskDelay(pdMS_TO_TICKS(Config::SPDP_RESEND_PERIOD_MS));
+#else
+	  sys_msleep(Config::SPDP_RESEND_PERIOD_MS);
+#endif
     agent.m_buildInEndpoints.spdpWriter->setAllChangesToUnsent();
     if(agent.m_cycleHB == Config::SPDP_CYCLECOUNT_HEARTBEAT) {
       agent.m_cycleHB = 0;
