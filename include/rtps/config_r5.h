@@ -33,7 +33,7 @@ namespace rtps {
 
     namespace Config {
         const VendorId_t VENDOR_ID = {13, 37};
-        const std::array<uint8_t, 4> IP_ADDRESS = {192,168,1,10};  // Needs to be set in lwipcfg.h too.
+        const std::array<uint8_t, 4> IP_ADDRESS = {192,168,1,66};  // Needs to be set in lwipcfg.h too.
         const GuidPrefix_t BASE_GUID_PREFIX{1,22,3,12,5,6,7,8,19,10,18};
 
         const uint8_t DOMAIN_ID = 0; // 230 possible with UDP
