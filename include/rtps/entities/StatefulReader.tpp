@@ -23,6 +23,7 @@ Author: i11 - Embedded Software, RWTH Aachen University
 */
 
 #include "lwip/tcpip.h"
+#include "lwip/sys.h"
 #include "rtps/entities/StatefulReader.h"
 #include "rtps/messages/MessageFactory.h"
 #include "rtps/utils/Lock.h"
