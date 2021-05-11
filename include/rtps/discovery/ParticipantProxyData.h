@@ -136,12 +136,10 @@ bool ParticipantProxyData::hasSubscriptionReader() {
           DISC_BUILTIN_ENDPOINT_SUBSCRIPTION_DETECTOR) != 0;
 }
 
-bool ParticipantProxyData::getReceivedHeartbeat() {
-    return receivedHeartbeat;
-}
+bool ParticipantProxyData::getReceivedHeartbeat() { return receivedHeartbeat; }
 
 void ParticipantProxyData::setReceivedHeartbeat(bool hb) {
-    receivedHeartbeat = hb;
+  receivedHeartbeat = hb;
 }
 
 } // namespace rtps

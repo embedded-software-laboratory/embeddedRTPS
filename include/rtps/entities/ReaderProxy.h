@@ -44,8 +44,8 @@ struct ReaderProxy {
       : remoteReaderGuid(guid), remoteLocator(loc),
         ackNackSet(), ackNackCount{0} {};
   ReaderProxy(const Guid &guid, const Locator &loc, const Locator &mcastloc)
-      : remoteReaderGuid(guid), remoteLocator(loc), remoteMulticastLocator(mcastloc), 
-        ackNackSet(), ackNackCount{0} {};
+      : remoteReaderGuid(guid), remoteLocator(loc),
+        remoteMulticastLocator(mcastloc), ackNackSet(), ackNackCount{0} {};
 };
 
 } // namespace rtps

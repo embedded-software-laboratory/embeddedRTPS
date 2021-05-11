@@ -45,7 +45,7 @@ bool TopicData::readFromUcdrBuffer(ucdrBuffer &buffer) {
     if (ucdr_buffer_remaining(&buffer) < length) {
       return false;
     }
-    
+
     switch (pid) {
     case ParameterId::PID_ENDPOINT_GUID:
       ucdr_deserialize_array_uint8_t(&buffer, endpointGuid.prefix.id.data(),
@@ -76,7 +76,7 @@ bool TopicData::readFromUcdrBuffer(ucdrBuffer &buffer) {
       break;
     case ParameterId::PID_UNICAST_LOCATOR:
       uLoc.readFromUcdrBuffer(buffer);
-      if(uLoc.kind == LocatorKind_t::LOCATOR_KIND_UDPv4) {
+      if (uLoc.kind == LocatorKind_t::LOCATOR_KIND_UDPv4) {
         unicastLocator = uLoc;
       }
       break;
@@ -100,23 +100,23 @@ bool TopicData::serializeIntoUcdrBuffer(ucdrBuffer &buffer) const {
   const uint16_t guidSize = sizeof(GuidPrefix_t::id) + 4;
 
 #if SUPPRESS_UNICAST
-  if(multicastLocator.kind != LocatorKind_t::LOCATOR_KIND_UDPv4) {
+  if (multicastLocator.kind != LocatorKind_t::LOCATOR_KIND_UDPv4) {
 #endif
-  ucdr_serialize_uint16_t(&buffer, ParameterId::PID_UNICAST_LOCATOR);
-  ucdr_serialize_uint16_t(&buffer, sizeof(Locator));
-  ucdr_serialize_array_uint8_t(
-      &buffer, reinterpret_cast<const uint8_t *>(&unicastLocator),
-      sizeof(Locator));
+    ucdr_serialize_uint16_t(&buffer, ParameterId::PID_UNICAST_LOCATOR);
+    ucdr_serialize_uint16_t(&buffer, sizeof(Locator));
+    ucdr_serialize_array_uint8_t(
+        &buffer, reinterpret_cast<const uint8_t *>(&unicastLocator),
+        sizeof(Locator));
 #if SUPPRESS_UNICAST
   }
 #endif
 
-  if(multicastLocator.kind == LocatorKind_t::LOCATOR_KIND_UDPv4) {
+  if (multicastLocator.kind == LocatorKind_t::LOCATOR_KIND_UDPv4) {
     ucdr_serialize_uint16_t(&buffer, ParameterId::PID_MULTICAST_LOCATOR);
     ucdr_serialize_uint16_t(&buffer, sizeof(Locator));
     ucdr_serialize_array_uint8_t(
-      &buffer, reinterpret_cast<const uint8_t *>(&multicastLocator),
-      sizeof(Locator));
+        &buffer, reinterpret_cast<const uint8_t *>(&multicastLocator),
+        sizeof(Locator));
   }
 
   // It's a 32 bit instead of 16 because it seems like the field is padded.
@@ -176,9 +176,8 @@ bool TopicData::serializeIntoUcdrBuffer(ucdrBuffer &buffer) const {
   ucdr_serialize_uint32_t(&buffer, 0); // unidentified additional value
 
   ucdr_serialize_uint16_t(&buffer, ParameterId::PID_DURABILITY);
-	ucdr_serialize_uint16_t(&buffer, sizeof(DurabilityKind_t));
-	ucdr_serialize_uint32_t(&buffer, static_cast<uint32_t>(durabilityKind));
-
+  ucdr_serialize_uint16_t(&buffer, sizeof(DurabilityKind_t));
+  ucdr_serialize_uint32_t(&buffer, static_cast<uint32_t>(durabilityKind));
 
   ucdr_serialize_uint16_t(&buffer, ParameterId::PID_SENTINEL);
   ucdr_serialize_uint16_t(&buffer, 0);

@@ -83,18 +83,17 @@ void SPDPAgent::runBroadcast(void *args) {
       ChangeKind_t::ALIVE, agent.m_microbuffer.init, size);
   while (agent.m_running) {
 #ifdef OS_IS_FREERTOS
-	  vTaskDelay(pdMS_TO_TICKS(Config::SPDP_RESEND_PERIOD_MS));
+    vTaskDelay(pdMS_TO_TICKS(Config::SPDP_RESEND_PERIOD_MS));
 #else
-	  sys_msleep(Config::SPDP_RESEND_PERIOD_MS);
+    sys_msleep(Config::SPDP_RESEND_PERIOD_MS);
 #endif
     agent.m_buildInEndpoints.spdpWriter->setAllChangesToUnsent();
-    if(agent.m_cycleHB == Config::SPDP_CYCLECOUNT_HEARTBEAT) {
+    if (agent.m_cycleHB == Config::SPDP_CYCLECOUNT_HEARTBEAT) {
       agent.m_cycleHB = 0;
       agent.mp_participant->checkAndResetHeartbeats();
     } else {
       agent.m_cycleHB++;
     }
-    
   }
 }
 
@@ -162,7 +161,8 @@ void SPDPAgent::processProxyData() {
 
   if (mp_participant->findRemoteParticipant(m_proxyDataBuffer.m_guid.prefix) !=
       nullptr) {
-    //m_buildInEndpoints.spdpWriter->setAllChangesToUnsent(); // Do NOT send again, spamming everything!
+    // m_buildInEndpoints.spdpWriter->setAllChangesToUnsent(); // Do NOT send
+    // again, spamming everything!
     return; // Already in our list
   }
 
@@ -204,9 +204,9 @@ bool SPDPAgent::addProxiesForBuiltInEndpoints() {
 
   ip4_addr_t ip4addr = locator->getIp4Address();
   const char *addr = ip4addr_ntoa(&ip4addr);
-  #if SPDP_VERBOSE
+#if SPDP_VERBOSE
   printf("Adding IPv4 Locator %s\n", addr);
-  #endif
+#endif
 
   if (m_proxyDataBuffer.hasPublicationWriter()) {
     const WriterProxy proxy{{m_proxyDataBuffer.m_guid.prefix,

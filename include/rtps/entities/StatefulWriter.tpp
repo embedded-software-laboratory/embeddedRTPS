@@ -24,8 +24,8 @@ Author: i11 - Embedded Software, RWTH Aachen University
 
 #include "rtps/entities/StatefulWriter.h"
 
-#include "rtps/messages/MessageFactory.h"
 #include "lwip/sys.h"
+#include "rtps/messages/MessageFactory.h"
 #include <cstring>
 #include <stdio.h>
 
@@ -51,10 +51,10 @@ line_cnt_ = (line_cnt_+1)%5; \
 template <class NetworkDriver>
 StatefulWriterT<NetworkDriver>::~StatefulWriterT() {
   m_running = false;
-//  sys_msleep(10); // Required for tests/ Join currently not available / increased because Segfault in Tests
-//  if(sys_mutex_valid(&m_mutex)){
-//    sys_mutex_free(&m_mutex);
-//  }
+  //  sys_msleep(10); // Required for tests/ Join currently not available /
+  //  increased because Segfault in Tests if(sys_mutex_valid(&m_mutex)){
+  //    sys_mutex_free(&m_mutex);
+  //  }
 }
 
 template <class NetworkDriver>
@@ -118,17 +118,19 @@ void StatefulWriterT<NetworkDriver>::manageSendOptions() {
   printf("Search for Multicast Partners!\n");
 #endif
   for (auto &proxy : m_proxies) {
-    if (proxy.remoteMulticastLocator.kind == LocatorKind_t::LOCATOR_KIND_INVALID) {
+    if (proxy.remoteMulticastLocator.kind ==
+        LocatorKind_t::LOCATOR_KIND_INVALID) {
       proxy.suppressUnicast = false;
       proxy.useMulticast = false;
     } else {
       bool found = false;
       for (auto &avproxy : m_proxies) {
-        if (avproxy.remoteMulticastLocator.kind == LocatorKind_t::LOCATOR_KIND_UDPv4 && 
-            avproxy.remoteMulticastLocator.getIp4Address().addr == 
-            proxy.remoteMulticastLocator.getIp4Address().addr &&
+        if (avproxy.remoteMulticastLocator.kind ==
+                LocatorKind_t::LOCATOR_KIND_UDPv4 &&
+            avproxy.remoteMulticastLocator.getIp4Address().addr ==
+                proxy.remoteMulticastLocator.getIp4Address().addr &&
             avproxy.remoteLocator.getIp4Address().addr !=
-            proxy.remoteLocator.getIp4Address().addr){
+                proxy.remoteLocator.getIp4Address().addr) {
           if (avproxy.suppressUnicast == false) {
             avproxy.useMulticast = false;
             avproxy.suppressUnicast = true;
@@ -137,7 +139,8 @@ void StatefulWriterT<NetworkDriver>::manageSendOptions() {
 #if SFW_VERBOSE
             printf("Found Multicast Partner!\n");
 #endif
-            if (avproxy.remoteReaderGuid.entityId != proxy.remoteReaderGuid.entityId) {
+            if (avproxy.remoteReaderGuid.entityId !=
+                proxy.remoteReaderGuid.entityId) {
               proxy.unknown_eid = true;
 #if SFW_VERBOSE
               printf("Found different EntityIds, using UNKNOWN_ENTITYID\n");
@@ -152,7 +155,6 @@ void StatefulWriterT<NetworkDriver>::manageSendOptions() {
         proxy.suppressUnicast = false;
       }
     }
-    
   }
 }
 
@@ -181,7 +183,8 @@ void StatefulWriterT<NetworkDriver>::removeReader(const Guid &guid) {
 }
 
 template <class NetworkDriver>
-void StatefulWriterT<NetworkDriver>::removeReaderOfParticipant(const GuidPrefix_t &guidPrefix) {
+void StatefulWriterT<NetworkDriver>::removeReaderOfParticipant(
+    const GuidPrefix_t &guidPrefix) {
   auto isElementToRemove = [&](const ReaderProxy &proxy) {
     return proxy.remoteReaderGuid.prefix == guidPrefix;
   };
@@ -227,7 +230,7 @@ template <class NetworkDriver> void StatefulWriterT<NetworkDriver>::progress() {
 
   for (const auto &proxy : m_proxies) {
     bool success;
-    if(!m_enforceUnicast) {
+    if (!m_enforceUnicast) {
       success = sendDataWRMulticast(proxy, m_nextSequenceNumberToSend);
     } else {
       success = sendData(proxy, m_nextSequenceNumberToSend);
@@ -380,7 +383,7 @@ template <class NetworkDriver>
 bool StatefulWriterT<NetworkDriver>::sendDataWRMulticast(
     const ReaderProxy &reader, const SequenceNumber_t &snMissing) {
 
-  if(reader.useMulticast || reader.suppressUnicast == false) {
+  if (reader.useMulticast || reader.suppressUnicast == false) {
     PacketInfo info;
     info.srcPort = m_packetInfo.srcPort;
 
@@ -388,7 +391,7 @@ bool StatefulWriterT<NetworkDriver>::sendDataWRMulticast(
     MessageFactory::addSubMessageTimeStamp(info.buffer);
 
     // Deceide whether multicast or not
-    if(reader.useMulticast) {
+    if (reader.useMulticast) {
       const Locator &locator = reader.remoteMulticastLocator;
       info.destAddr = locator.getIp4Address();
       info.destPort = (Ip4Port_t)locator.port;
@@ -402,15 +405,15 @@ bool StatefulWriterT<NetworkDriver>::sendDataWRMulticast(
       Lock lock(m_mutex);
       const CacheChange *next = m_history.getChangeBySN(snMissing);
       if (next == nullptr) {
-  #if SFW_VERBOSE
+#if SFW_VERBOSE
         log("StatefulWriter[%s]: Couldn't get a CacheChange with SN (%i,%u)\n",
             &this->m_attributes.topicName[0], snMissing.high, snMissing.low);
-  #endif
+#endif
         return false;
       }
 
       EntityId_t reid;
-      if(reader.useMulticast) {
+      if (reader.useMulticast) {
         reid = ENTITYID_UNKNOWN;
       } else {
         reid = reader.remoteReaderGuid.entityId;
@@ -437,9 +440,9 @@ void StatefulWriterT<NetworkDriver>::sendHeartBeatLoop() {
   while (m_running) {
     sendHeartBeat();
 #ifdef OS_IS_FREERTOS
-  	vTaskDelay(pdMS_TO_TICKS(Config::SF_WRITER_HB_PERIOD_MS));
+    vTaskDelay(pdMS_TO_TICKS(Config::SF_WRITER_HB_PERIOD_MS));
 #else
-	  sys_msleep(Config::SF_WRITER_HB_PERIOD_MS);
+    sys_msleep(Config::SF_WRITER_HB_PERIOD_MS);
 #endif
   }
 }

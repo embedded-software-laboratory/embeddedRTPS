@@ -26,6 +26,7 @@ Author: i11 - Embedded Software, RWTH Aachen University
 #define RTPS_DOMAIN_H
 
 #include "rtps/ThreadPool.h"
+#include "rtps/common/Locator.h"
 #include "rtps/config.h"
 #include "rtps/entities/Participant.h"
 #include "rtps/entities/StatefulReader.h"
@@ -33,7 +34,6 @@ Author: i11 - Embedded Software, RWTH Aachen University
 #include "rtps/entities/StatelessReader.h"
 #include "rtps/entities/StatelessWriter.h"
 #include "rtps/storages/PBufWrapper.h"
-#include "rtps/common/Locator.h"
 
 namespace rtps {
 class Domain {
@@ -45,9 +45,11 @@ public:
 
   Participant *createParticipant();
   Writer *createWriter(Participant &part, const char *topicName,
-                       const char *typeName, bool reliable, bool enforceUnicast = false);
+                       const char *typeName, bool reliable,
+                       bool enforceUnicast = false);
   Reader *createReader(Participant &part, const char *topicName,
-                       const char *typeName, bool reliable, ip4_addr_t mcastaddress = {0});
+                       const char *typeName, bool reliable,
+                       ip4_addr_t mcastaddress = {0});
 
   Writer *writerExists(Participant &part, const char *topicName,
                        const char *typeName, bool reliable);

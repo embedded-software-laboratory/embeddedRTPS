@@ -51,7 +51,6 @@ private:
   PacketInfo
       m_packetInfo; // TODO intended for reuse but buffer not used as such
   NetworkDriver *m_transport;
-  
 
   ddsReaderCallback_fp m_callback = nullptr;
   void *m_callee = nullptr;

@@ -40,19 +40,20 @@ char bf_[100];
 
 //#include <asoa/driver/os.h>
 
-/*#define SEDP_LOG(...) if(true){ 						 \
-		size_t t = snprintf(bf_, sizeof(bf_), __VA_ARGS__); 		 \
-		ASOA_ASSERT(t < sizeof(bf_), "overflow");			 
-		TFT_PrintLine(line_+3, bf_); 				 \
-		line_ = (line_+1)%30; 							 \
-		} */
+/*#define SEDP_LOG(...) if(true){ \
+                size_t t = snprintf(bf_, sizeof(bf_), __VA_ARGS__); \
+                ASOA_ASSERT(t < sizeof(bf_), "overflow");
+                TFT_PrintLine(line_+3, bf_); 				 \
+                line_ = (line_+1)%30;
+   \
+                } */
 #endif
 
 #define SEDP_LOG(...) printf(__VA_ARGS__)
 
-void SEDPAgent::init(Participant& part, const BuiltInEndpoints& endpoints){
-    // TODO move
-    if(sys_mutex_new(&m_mutex) != ERR_OK){
+void SEDPAgent::init(Participant &part, const BuiltInEndpoints &endpoints) {
+  // TODO move
+  if (sys_mutex_new(&m_mutex) != ERR_OK) {
 #if SEDP_VERBOSE
     printf("SEDPAgent failed to create mutex\n");
 #endif
@@ -196,14 +197,16 @@ void SEDPAgent::onNewSubscriber(const TopicData &readerData) {
   }
   SEDP_LOG("Subscriber\n");
 #endif
-  if(readerData.multicastLocator.kind == rtps::LocatorKind_t::LOCATOR_KIND_UDPv4) {
-    writer->addNewMatchedReader(
-      ReaderProxy{readerData.endpointGuid, readerData.unicastLocator, readerData.multicastLocator});  
+  if (readerData.multicastLocator.kind ==
+      rtps::LocatorKind_t::LOCATOR_KIND_UDPv4) {
+    writer->addNewMatchedReader(ReaderProxy{readerData.endpointGuid,
+                                            readerData.unicastLocator,
+                                            readerData.multicastLocator});
   } else {
     writer->addNewMatchedReader(
-      ReaderProxy{readerData.endpointGuid, readerData.unicastLocator});
+        ReaderProxy{readerData.endpointGuid, readerData.unicastLocator});
   }
-  
+
   if (mfp_onNewSubscriberCallback != nullptr) {
     mfp_onNewSubscriberCallback(m_onNewSubscriberArgs);
   }

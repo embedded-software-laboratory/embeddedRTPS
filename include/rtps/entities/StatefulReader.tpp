@@ -22,8 +22,8 @@ This file is part of embeddedRTPS.
 Author: i11 - Embedded Software, RWTH Aachen University
 */
 
-#include "lwip/tcpip.h"
 #include "lwip/sys.h"
+#include "lwip/tcpip.h"
 #include "rtps/entities/StatefulReader.h"
 #include "rtps/messages/MessageFactory.h"
 #include "rtps/utils/Lock.h"
@@ -38,15 +38,16 @@ using rtps::StatefulReaderT;
 
 template <class NetworkDriver>
 StatefulReaderT<NetworkDriver>::~StatefulReaderT() {
-//  if(sys_mutex_valid(&m_mutex)){ // Getting invalid pointer error, there seems sth strange
-//    sys_mutex_free(&m_mutex);
-//  }
+  //  if(sys_mutex_valid(&m_mutex)){ // Getting invalid pointer error, there
+  //  seems sth strange
+  //    sys_mutex_free(&m_mutex);
+  //  }
 }
 
 template <class NetworkDriver>
 void StatefulReaderT<NetworkDriver>::init(const TopicData &attributes,
                                           NetworkDriver &driver) {
-    if (sys_mutex_new(&m_mutex) != ERR_OK) {
+  if (sys_mutex_new(&m_mutex) != ERR_OK) {
 #if SFR_VERBOSE
     printf("StatefulReader: Failed to create mutex.\n");
 #endif
@@ -115,7 +116,8 @@ void StatefulReaderT<NetworkDriver>::removeWriter(const Guid &guid) {
 }
 
 template <class NetworkDriver>
-void StatefulReaderT<NetworkDriver>::removeWriterOfParticipant(const GuidPrefix_t &guidPrefix) {
+void StatefulReaderT<NetworkDriver>::removeWriterOfParticipant(
+    const GuidPrefix_t &guidPrefix) {
   auto isElementToRemove = [&](const WriterProxy &proxy) {
     return proxy.remoteWriterGuid.prefix == guidPrefix;
   };

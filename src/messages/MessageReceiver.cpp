@@ -137,7 +137,8 @@ bool MessageReceiver::processSubmessage(MessageProcessingInfo &msgInfo,
   return success;
 }
 
-bool MessageReceiver::processDataSubmessage(MessageProcessingInfo &msgInfo, const SubmessageHeader &submsgHeader) {
+bool MessageReceiver::processDataSubmessage(
+    MessageProcessingInfo &msgInfo, const SubmessageHeader &submsgHeader) {
   SubmessageData dataSubmsg;
   if (!deserializeMessage(msgInfo, dataSubmsg)) {
     return false;
@@ -153,7 +154,8 @@ bool MessageReceiver::processDataSubmessage(MessageProcessingInfo &msgInfo, cons
   // SubMessageFlag::FLAG_INLINE_QOS);
   Reader *reader;
   if (dataSubmsg.readerId == ENTITYID_UNKNOWN) {
-    reader = mp_part->getReaderByWriterId(Guid{sourceGuidPrefix, dataSubmsg.writerId});
+    reader = mp_part->getReaderByWriterId(
+        Guid{sourceGuidPrefix, dataSubmsg.writerId});
   } else {
     reader = mp_part->getReader(dataSubmsg.readerId);
   }

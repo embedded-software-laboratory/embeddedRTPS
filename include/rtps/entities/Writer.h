@@ -29,8 +29,8 @@ Author: i11 - Embedded Software, RWTH Aachen University
 #include "rtps/discovery/TopicData.h"
 #include "rtps/entities/ReaderProxy.h"
 #include "rtps/storages/CacheChange.h"
-#include "rtps/storages/PBufWrapper.h"
 #include "rtps/storages/MemoryPool.h"
+#include "rtps/storages/PBufWrapper.h"
 
 namespace rtps {
 

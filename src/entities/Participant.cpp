@@ -181,17 +181,16 @@ bool Participant::removeRemoteParticipant(const GuidPrefix_t &prefix) {
 }
 
 void Participant::removeAllEntitiesOfParticipant(const GuidPrefix_t &prefix) {
-  if(m_numWriters != 0) {
-    for(auto &proxyW : m_writers) {
+  if (m_numWriters != 0) {
+    for (auto &proxyW : m_writers) {
       proxyW->removeReaderOfParticipant(prefix);
     }
   }
-  if(m_numReaders != 0) {
-    for(auto &proxyR :  m_readers) {
+  if (m_numReaders != 0) {
+    for (auto &proxyR : m_readers) {
       proxyR->removeWriterOfParticipant(prefix);
     }
   }
-  
 }
 
 const rtps::ParticipantProxyData *
@@ -208,7 +207,7 @@ Participant::findRemoteParticipant(const GuidPrefix_t &prefix) {
 
 bool Participant::hasReaderWithMulticastLocator(ip4_addr_t address) {
   for (uint8_t i = 0; i < m_numReaders; i++) {
-    if(m_readers[i]->m_attributes.multicastLocator.isSameAddress(&address)){
+    if (m_readers[i]->m_attributes.multicastLocator.isSameAddress(&address)) {
       return true;
     }
   }
@@ -222,8 +221,8 @@ uint32_t Participant::getRemoteParticipantCount() {
 rtps::MessageReceiver *Participant::getMessageReceiver() { return &m_receiver; }
 
 void Participant::addHeartbeat(GuidPrefix_t sourceGuidPrefix) {
-  for(auto &remote : m_remoteParticipants){
-    if(remote.m_guid.prefix == sourceGuidPrefix) {
+  for (auto &remote : m_remoteParticipants) {
+    if (remote.m_guid.prefix == sourceGuidPrefix) {
       remote.setReceivedHeartbeat(true);
       break;
     }
@@ -231,18 +230,20 @@ void Participant::addHeartbeat(GuidPrefix_t sourceGuidPrefix) {
 }
 
 bool Participant::checkAndResetHeartbeats() {
-  for(auto &remote : m_remoteParticipants) {
-    if(remote.getReceivedHeartbeat()) {
+  for (auto &remote : m_remoteParticipants) {
+    if (remote.getReceivedHeartbeat()) {
       remote.setReceivedHeartbeat(false);
     } else {
       bool success = removeRemoteParticipant(remote.m_guid.prefix);
-      if(!success) {
+      if (!success) {
         return false;
       }
     }
   }
   return true;
 }
+
+rtps::SPDPAgent &Participant::getSPDPAgent() { return m_spdpAgent; }
 
 void Participant::addBuiltInEndpoints(BuiltInEndpoints &endpoints) {
   m_hasBuilInEndpoints = true;
@@ -256,8 +257,6 @@ void Participant::addBuiltInEndpoints(BuiltInEndpoints &endpoints) {
   addReader(endpoints.sedpPubReader);
   addWriter(endpoints.sedpSubWriter);
   addReader(endpoints.sedpSubReader);
-
-  m_spdpAgent.start();
 }
 
 void Participant::newMessage(const uint8_t *data, DataSize_t size) {

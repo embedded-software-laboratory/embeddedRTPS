@@ -32,39 +32,42 @@ Author: i11 - Embedded Software, RWTH Aachen University
 #include "ucdr/microcdr.h"
 #include <array>
 
-namespace rtps{
+namespace rtps {
 
-    struct BuiltInTopicKey{
-        std::array<uint32_t, 3> value;
-    };
+struct BuiltInTopicKey {
+  std::array<uint32_t, 3> value;
+};
 
-    struct TopicData{
-        Guid endpointGuid;
-        char typeName[Config::MAX_TYPENAME_LENGTH];
-        char topicName[Config::MAX_TOPICNAME_LENGTH];
-        ReliabilityKind_t reliabilityKind;
-        DurabilityKind_t durabilityKind;
-        Locator unicastLocator;
-        Locator multicastLocator;
-        
+struct TopicData {
+  Guid endpointGuid;
+  char typeName[Config::MAX_TYPENAME_LENGTH];
+  char topicName[Config::MAX_TOPICNAME_LENGTH];
+  ReliabilityKind_t reliabilityKind;
+  DurabilityKind_t durabilityKind;
+  Locator unicastLocator;
+  Locator multicastLocator;
 
-        TopicData()
-            : endpointGuid(GUID_UNKNOWN), typeName{'\0'}, topicName{'\0'},
-              reliabilityKind(ReliabilityKind_t::BEST_EFFORT), durabilityKind(DurabilityKind_t::TRANSIENT_LOCAL){
-                  rtps::Locator someLocator = rtps::Locator::createUDPv4Locator(192,168,0,42, rtps::getUserUnicastPort(0));
-                  unicastLocator = someLocator;
-                  multicastLocator = Locator();
-              };
-              
-        TopicData(Guid guid, ReliabilityKind_t reliability, Locator loc)
-            : endpointGuid(guid), typeName{'\0'}, topicName{'\0'},
-              reliabilityKind(reliability), durabilityKind(DurabilityKind_t::TRANSIENT_LOCAL), unicastLocator(loc){}
+  TopicData()
+      : endpointGuid(GUID_UNKNOWN), typeName{'\0'}, topicName{'\0'},
+        reliabilityKind(ReliabilityKind_t::BEST_EFFORT),
+        durabilityKind(DurabilityKind_t::TRANSIENT_LOCAL) {
+    rtps::Locator someLocator = rtps::Locator::createUDPv4Locator(
+        192, 168, 0, 42, rtps::getUserUnicastPort(0));
+    unicastLocator = someLocator;
+    multicastLocator = Locator();
+  };
 
-        bool matchesTopicOf(const TopicData& other);
+  TopicData(Guid guid, ReliabilityKind_t reliability, Locator loc)
+      : endpointGuid(guid), typeName{'\0'}, topicName{'\0'},
+        reliabilityKind(reliability),
+        durabilityKind(DurabilityKind_t::TRANSIENT_LOCAL), unicastLocator(loc) {
+  }
 
-        bool readFromUcdrBuffer(ucdrBuffer& buffer);
-        bool serializeIntoUcdrBuffer(ucdrBuffer& buffer) const;
-    };
-}
+  bool matchesTopicOf(const TopicData &other);
+
+  bool readFromUcdrBuffer(ucdrBuffer &buffer);
+  bool serializeIntoUcdrBuffer(ucdrBuffer &buffer) const;
+};
+} // namespace rtps
 
 #endif // RTPS_DISCOVEREDWRITERDATA_H

@@ -66,9 +66,9 @@ private:
 
   bool m_running = true;
 
-
   bool sendData(const ReaderProxy &reader, const SequenceNumber_t &sn);
-  bool sendDataWRMulticast(const ReaderProxy &reader, const SequenceNumber_t &sn);
+  bool sendDataWRMulticast(const ReaderProxy &reader,
+                           const SequenceNumber_t &sn);
   static void hbFunctionJumppad(void *thisPointer);
   void sendHeartBeatLoop();
   void sendHeartBeat();

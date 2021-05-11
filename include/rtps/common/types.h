@@ -77,7 +77,7 @@ enum class ReliabilityKind_t : uint32_t {
   RELIABLE = 2 // Specification says 3 but eprosima sends 2
 };
 
-enum class DurabilityKind_t : uint32_t{
+enum class DurabilityKind_t : uint32_t {
   VOLATILE = 0,
   TRANSIENT_LOCAL = 1,
   TRANSIENT = 2,

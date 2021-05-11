@@ -55,7 +55,7 @@ bool StatelessReader::addNewMatchedWriter(const WriterProxy &newProxy) {
   return m_proxies.add(newProxy);
 }
 
-void StatelessReader::removeWriter(const Guid & guid) {
+void StatelessReader::removeWriter(const Guid &guid) {
   auto isElementToRemove = [&](const WriterProxy &proxy) {
     return proxy.remoteWriterGuid == guid;
   };
@@ -66,7 +66,8 @@ void StatelessReader::removeWriter(const Guid & guid) {
   m_proxies.remove(thunk, &isElementToRemove);
 }
 
-void StatelessReader::removeWriterOfParticipant(const GuidPrefix_t &guidPrefix) {
+void StatelessReader::removeWriterOfParticipant(
+    const GuidPrefix_t &guidPrefix) {
   auto isElementToRemove = [&](const WriterProxy &proxy) {
     return proxy.remoteWriterGuid.prefix == guidPrefix;
   };

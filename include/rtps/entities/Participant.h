@@ -95,6 +95,8 @@ public:
   void addBuiltInEndpoints(BuiltInEndpoints &endpoints);
   void newMessage(const uint8_t *data, DataSize_t size);
 
+  SPDPAgent &getSPDPAgent();
+
 private:
   MessageReceiver m_receiver;
   bool m_hasBuilInEndpoints = false;
