@@ -264,8 +264,6 @@ void StatefulWriterT<NetworkDriver>::setAllChangesToUnsent() {
 template <class NetworkDriver>
 void StatefulWriterT<NetworkDriver>::onNewAckNack(
     const SubmessageAckNack &msg, const GuidPrefix_t &sourceGuidPrefix) {
-  // Lock lock{m_mutex};
-  // Search for reader
   ReaderProxy *reader = nullptr;
   for (auto &proxy : m_proxies) {
     if (proxy.remoteReaderGuid.prefix == sourceGuidPrefix &&

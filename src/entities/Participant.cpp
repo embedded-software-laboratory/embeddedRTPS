@@ -32,11 +32,21 @@ using rtps::Participant;
 
 Participant::Participant()
     : m_guidPrefix(GUIDPREFIX_UNKNOWN), m_participantId(PARTICIPANT_ID_INVALID),
-      m_receiver(this) {}
+      m_receiver(this) {
+  if (sys_mutex_new(&m_mutex) != ERR_OK) {
+    while (1)
+      ;
+  }
+}
 Participant::Participant(const GuidPrefix_t &guidPrefix,
                          ParticipantId_t participantId)
     : m_guidPrefix(guidPrefix), m_participantId(participantId),
-      m_receiver(this) {}
+      m_receiver(this) {
+  if (sys_mutex_new(&m_mutex) != ERR_OK) {
+    while (1)
+      ;
+  }
+}
 
 Participant::~Participant() { m_spdpAgent.stop(); }
 
@@ -166,6 +176,7 @@ Participant::getMatchingReader(const TopicData &writerTopicData) const {
 
 bool Participant::addNewRemoteParticipant(
     const ParticipantProxyData &remotePart) {
+  Lock lock{m_mutex};
   return m_remoteParticipants.add(remotePart);
 }
 
@@ -181,15 +192,12 @@ bool Participant::removeRemoteParticipant(const GuidPrefix_t &prefix) {
 }
 
 void Participant::removeAllEntitiesOfParticipant(const GuidPrefix_t &prefix) {
-  if (m_numWriters != 0) {
-    for (auto &proxyW : m_writers) {
-      proxyW->removeReaderOfParticipant(prefix);
-    }
+  for (auto i = 0; i < m_numWriters; i++) {
+    m_writers[i]->removeReaderOfParticipant(prefix);
   }
-  if (m_numReaders != 0) {
-    for (auto &proxyR : m_readers) {
-      proxyR->removeWriterOfParticipant(prefix);
-    }
+
+  for (auto i = 0; i < m_numReaders; i++) {
+    m_readers[i]->removeWriterOfParticipant(prefix);
   }
 }
 
@@ -201,7 +209,7 @@ Participant::findRemoteParticipant(const GuidPrefix_t &prefix) {
   auto thunk = [](void *arg, const ParticipantProxyData &value) {
     return (*static_cast<decltype(isElementToFind) *>(arg))(value);
   };
-
+  Lock lock{m_mutex};
   return m_remoteParticipants.find(thunk, &isElementToFind);
 }
 
@@ -215,12 +223,14 @@ bool Participant::hasReaderWithMulticastLocator(ip4_addr_t address) {
 }
 
 uint32_t Participant::getRemoteParticipantCount() {
+  Lock lock{m_mutex};
   return m_remoteParticipants.getNumElements();
 }
 
 rtps::MessageReceiver *Participant::getMessageReceiver() { return &m_receiver; }
 
 void Participant::addHeartbeat(GuidPrefix_t sourceGuidPrefix) {
+  Lock lock{m_mutex};
   for (auto &remote : m_remoteParticipants) {
     if (remote.m_guid.prefix == sourceGuidPrefix) {
       remote.setReceivedHeartbeat(true);
@@ -230,6 +240,7 @@ void Participant::addHeartbeat(GuidPrefix_t sourceGuidPrefix) {
 }
 
 bool Participant::checkAndResetHeartbeats() {
+  Lock lock{m_mutex};
   for (auto &remote : m_remoteParticipants) {
     if (remote.getReceivedHeartbeat()) {
       remote.setReceivedHeartbeat(false);

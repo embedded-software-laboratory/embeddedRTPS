@@ -58,7 +58,7 @@ public:
       m_defaultMulticastLocatorList;
   Count_t m_manualLivelinessCount{1};
   Duration_t m_leaseDuration = Config::SPDP_LEASE_DURATION;
-  bool receivedHeartbeat = true;
+  bool m_receivedHeartbeat = true;
 
   void reset();
 
@@ -136,10 +136,12 @@ bool ParticipantProxyData::hasSubscriptionReader() {
           DISC_BUILTIN_ENDPOINT_SUBSCRIPTION_DETECTOR) != 0;
 }
 
-bool ParticipantProxyData::getReceivedHeartbeat() { return receivedHeartbeat; }
+bool ParticipantProxyData::getReceivedHeartbeat() {
+  return m_receivedHeartbeat;
+}
 
 void ParticipantProxyData::setReceivedHeartbeat(bool hb) {
-  receivedHeartbeat = hb;
+  m_receivedHeartbeat = hb;
 }
 
 } // namespace rtps

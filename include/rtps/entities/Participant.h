@@ -106,6 +106,7 @@ private:
   std::array<Reader *, Config::NUM_READERS_PER_PARTICIPANT> m_readers{};
   uint8_t m_numReaders = 0;
 
+  sys_mutex_t m_mutex;
   MemoryPool<ParticipantProxyData, Config::SPDP_MAX_NUMBER_FOUND_PARTICIPANTS>
       m_remoteParticipants;
 
