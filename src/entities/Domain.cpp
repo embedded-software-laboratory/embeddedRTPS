@@ -411,7 +411,7 @@ rtps::Reader *Domain::createReader(Participant &part, const char *topicName,
 #endif
     }
   }
-  attributes.durabilityKind = DurabilityKind_t::TRANSIENT_LOCAL;
+  attributes.durabilityKind = DurabilityKind_t::VOLATILE;
 
 #if DOMAIN_VERBOSE
   printf("Creating reader[%s, %s]\n", topicName, typeName);
