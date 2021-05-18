@@ -43,7 +43,7 @@ public:
             NetworkDriver &driver, bool enfUnicast = false);
 
   bool addNewMatchedReader(const ReaderProxy &newProxy) override;
-  void removeReader(const Guid &guid) override;
+  void removeReader(const Guid_t &guid) override;
   void removeReaderOfParticipant(const GuidPrefix_t &guidPrefix) override;
   void progress() override;
   const CacheChange *newChange(ChangeKind_t kind, const uint8_t *data,

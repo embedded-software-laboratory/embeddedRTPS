@@ -23,10 +23,21 @@ Author: i11 - Embedded Software, RWTH Aachen University
 */
 
 #include "rtps/storages/PBufWrapper.h"
+#include "rtps/utils/Log.h"
 
 using rtps::PBufWrapper;
 
-#define PBUF_WRAP_VERBOSE 0
+#if PBUF_WRAP_VERBOSE && RTPS_GLOBAL_VERBOSE
+#include "rtps/utils/printutils.h"
+#define PBUF_WRAP_LOG(...)                                                     \
+  if (true) {                                                                  \
+    printf("[PBUF Wrapper] ");                                                 \
+    printf(__VA_ARGS__);                                                       \
+    printf("\n");                                                              \
+  }
+#else
+#define PBUF_WRAP_LOG(...) //
+#endif
 
 PBufWrapper::PBufWrapper(pbuf *bufferToWrap) : firstElement(bufferToWrap) {
   m_freeSpace = 0; // Assume it to be full
@@ -91,9 +102,7 @@ PBufWrapper PBufWrapper::deepCopy() const {
   clone.firstElement = pbuf_alloc(m_layer, this->firstElement->tot_len, m_type);
   if (clone.firstElement != nullptr) {
     if (pbuf_copy(clone.firstElement, this->firstElement) != ERR_OK) {
-#if PBUF_WRAP_VERBOSE
-      printf("PBufWrapper::deepCopy: Copy of pbuf failed");
-#endif
+      PBUF_WRAP_LOG("PBufWrapper::deepCopy: Copy of pbuf failed");
     }
   } else {
     clone.m_freeSpace = 0;

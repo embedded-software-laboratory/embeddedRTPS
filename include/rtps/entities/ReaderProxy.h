@@ -30,7 +30,7 @@ Author: i11 - Embedded Software, RWTH Aachen University
 
 namespace rtps {
 struct ReaderProxy {
-  Guid remoteReaderGuid;
+  Guid_t remoteReaderGuid;
   Locator remoteLocator;
   Locator remoteMulticastLocator;
   bool useMulticast = false;
@@ -40,10 +40,10 @@ struct ReaderProxy {
   Count_t ackNackCount;
 
   ReaderProxy() : remoteReaderGuid({GUIDPREFIX_UNKNOWN, ENTITYID_UNKNOWN}){};
-  ReaderProxy(const Guid &guid, const Locator &loc)
+  ReaderProxy(const Guid_t &guid, const Locator &loc)
       : remoteReaderGuid(guid), remoteLocator(loc),
         ackNackSet(), ackNackCount{0} {};
-  ReaderProxy(const Guid &guid, const Locator &loc, const Locator &mcastloc)
+  ReaderProxy(const Guid_t &guid, const Locator &loc, const Locator &mcastloc)
       : remoteReaderGuid(guid), remoteLocator(loc),
         remoteMulticastLocator(mcastloc), ackNackSet(), ackNackCount{0} {};
 };

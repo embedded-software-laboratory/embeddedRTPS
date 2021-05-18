@@ -44,10 +44,10 @@ private:
 public:
   const ChangeKind_t kind;
   const DataSize_t size;
-  const Guid writerGuid;
+  const Guid_t writerGuid;
   const SequenceNumber_t sn;
 
-  ReaderCacheChange(ChangeKind_t kind, Guid &writerGuid, SequenceNumber_t sn,
+  ReaderCacheChange(ChangeKind_t kind, Guid_t &writerGuid, SequenceNumber_t sn,
                     const uint8_t *data, DataSize_t size)
       : data(data), kind(kind), size(size), writerGuid(writerGuid), sn(sn){};
 
@@ -85,11 +85,11 @@ public:
   virtual bool onNewHeartbeat(const SubmessageHeartbeat &msg,
                               const GuidPrefix_t &remotePrefix) = 0;
   virtual bool addNewMatchedWriter(const WriterProxy &newProxy) = 0;
-  virtual void removeWriter(const Guid &guid) = 0;
+  virtual void removeWriter(const Guid_t &guid) = 0;
   virtual void removeWriterOfParticipant(const GuidPrefix_t &guidPrefix) = 0;
   bool isInitialized() { return m_is_initialized_; }
 
-  bool knowWriterId(const Guid &guid) {
+  bool knowWriterId(const Guid_t &guid) {
     for (const auto &proxy : m_proxies) {
       if (proxy.remoteWriterGuid.operator==(guid)) {
         return true;

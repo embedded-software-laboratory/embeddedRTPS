@@ -162,7 +162,7 @@ struct Header {
 struct SubmessageHeader {
   SubmessageKind submessageId;
   uint8_t flags;
-  uint16_t submessageLength;
+  uint16_t octetsToNextHeader;
   static constexpr uint16_t getRawSize() {
     return sizeof(SubmessageKind) + sizeof(uint8_t) + sizeof(uint16_t);
   }
@@ -239,7 +239,7 @@ bool serializeMessage(Buffer &buffer, SubmessageHeader &header) {
   buffer.append(reinterpret_cast<uint8_t *>(&header.submessageId),
                 sizeof(SubmessageKind));
   buffer.append(&header.flags, sizeof(uint8_t));
-  buffer.append(reinterpret_cast<uint8_t *>(&header.submessageLength),
+  buffer.append(reinterpret_cast<uint8_t *>(&header.octetsToNextHeader),
                 sizeof(uint16_t));
   return true;
 }

@@ -40,11 +40,13 @@ typedef uint32_t BuiltinEndpointSet_t;
 
 class ParticipantProxyData {
 public:
-  ParticipantProxyData() = default;
-  ParticipantProxyData(Guid guid);
+  ParticipantProxyData() {
+    m_lastLivelinessReceivedTickCount = xTaskGetTickCount();
+  }
+  ParticipantProxyData(Guid_t guid);
 
   ProtocolVersion_t m_protocolVersion = PROTOCOLVERSION;
-  Guid m_guid = Guid{GUIDPREFIX_UNKNOWN, ENTITYID_UNKNOWN};
+  Guid_t m_guid = Guid_t{GUIDPREFIX_UNKNOWN, ENTITYID_UNKNOWN};
   VendorId_t m_vendorId = VENDOR_UNKNOWN;
   bool m_expectsInlineQos = false;
   BuiltinEndpointSet_t m_availableBuiltInEndpoints;
@@ -57,8 +59,8 @@ public:
   std::array<Locator, Config::SPDP_MAX_NUM_LOCATORS>
       m_defaultMulticastLocatorList;
   Count_t m_manualLivelinessCount{1};
-  Duration_t m_leaseDuration = Config::SPDP_LEASE_DURATION;
-  bool m_receivedHeartbeat = true;
+  Duration_t m_leaseDuration = Config::SPDP_DEFAULT_REMOTE_LEASE_DURATION;
+  TickType_t m_lastLivelinessReceivedTickCount = 0;
 
   void reset();
 
@@ -71,8 +73,9 @@ public:
   inline bool hasSubscriptionWriter();
   inline bool hasSubscriptionReader();
 
-  inline bool getReceivedHeartbeat();
-  inline void setReceivedHeartbeat(bool hb);
+  inline void onAliveSignal();
+  inline bool isAlive();
+  inline uint32_t getAliveSignalAgeInMilliseconds();
 
 private:
   bool
@@ -136,12 +139,32 @@ bool ParticipantProxyData::hasSubscriptionReader() {
           DISC_BUILTIN_ENDPOINT_SUBSCRIPTION_DETECTOR) != 0;
 }
 
-bool ParticipantProxyData::getReceivedHeartbeat() {
-  return m_receivedHeartbeat;
+void ParticipantProxyData::onAliveSignal() {
+  m_lastLivelinessReceivedTickCount = xTaskGetTickCount();
 }
 
-void ParticipantProxyData::setReceivedHeartbeat(bool hb) {
-  m_receivedHeartbeat = hb;
+uint32_t ParticipantProxyData::getAliveSignalAgeInMilliseconds() {
+  return (xTaskGetTickCount() - m_lastLivelinessReceivedTickCount) *
+         (1000 / configTICK_RATE_HZ);
+}
+
+/*
+ *  Returns true if last heartbeat within lease duration, else false
+ */
+bool ParticipantProxyData::isAlive() {
+  uint32_t lease_in_ms =
+      m_leaseDuration.seconds * 1000 + m_leaseDuration.fraction * 1e-6;
+
+  uint32_t max_lease_in_ms =
+      Config::SPDP_MAX_REMOTE_LEASE_DURATION.seconds * 1000 +
+      Config::SPDP_MAX_REMOTE_LEASE_DURATION.fraction * 1e-6;
+
+  auto heatbeat_age_in_ms = getAliveSignalAgeInMilliseconds();
+
+  if (heatbeat_age_in_ms > std::min(lease_in_ms, max_lease_in_ms)) {
+    return false;
+  }
+  return true;
 }
 
 } // namespace rtps

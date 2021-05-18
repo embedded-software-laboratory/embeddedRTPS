@@ -37,10 +37,11 @@ using rtps::CacheChange;
 using rtps::SequenceNumber_t;
 using rtps::StatelessWriterT;
 
-#define SLW_VERBOSE 0
-
-#if SLW_VERBOSE
-#include "rtps/utils/printutils.h"
+#if SLW_VERBOSE && RTPS_GLOBAL_VERBOSE
+#define SLW_LOG(...)
+#include "rtps/utils/printutils.h" if (true){printf("[StatelessWriter %s] ", &this->m_attributes.topicName[0]); printf(__VA_ARGS__); printf("\n"); }
+#else
+#define SLW_LOG(...) //
 #endif
 
 template <class NetworkDriver>
@@ -58,7 +59,7 @@ bool StatelessWriterT<NetworkDriver>::init(TopicData attributes,
                                            bool enfUnicast) {
   if (sys_mutex_new(&m_mutex) != ERR_OK) {
 #if SLW_VERBOSE
-    Log::printLine("SFW:Failed to create mutex \n");
+    SLW_LOG("Failed to create mutex \n");
 #endif
     return false;
   }
@@ -77,11 +78,9 @@ bool StatelessWriterT<NetworkDriver>::init(TopicData attributes,
 template <class NetworkDriver>
 bool StatelessWriterT<NetworkDriver>::addNewMatchedReader(
     const ReaderProxy &newProxy) {
-#if SLW_VERBOSE
-  printf("StatefulWriter[%s]: New reader added with id: ",
-         &this->m_attributes.topicName[0]);
+#if SLW_VERBOSE && RTPS_GLOBAL_VERBOSE
+  SLW_LOG("New reader added with id: ");
   printGuid(newProxy.remoteReaderGuid);
-  printf("\n");
 #endif
   bool success = m_proxies.add(newProxy);
   if (!m_enforceUnicast) {
@@ -92,9 +91,7 @@ bool StatelessWriterT<NetworkDriver>::addNewMatchedReader(
 
 template <class NetworkDriver>
 void StatelessWriterT<NetworkDriver>::manageSendOptions() {
-#if SLW_VERBOSE
-  printf("Search for Multicast Partners!\n");
-#endif
+  SLW_LOG("Search for Multicast Partners!\n");
   for (auto &proxy : m_proxies) {
     if (proxy.remoteMulticastLocator.kind ==
         LocatorKind_t::LOCATOR_KIND_INVALID) {
@@ -114,15 +111,11 @@ void StatelessWriterT<NetworkDriver>::manageSendOptions() {
             avproxy.suppressUnicast = true;
             proxy.useMulticast = true;
             proxy.suppressUnicast = true;
-#if SLW_VERBOSE
-            printf("Found Multicast Partner!\n");
-#endif
+            SLW_LOG("Found Multicast Partner!\n");
             if (avproxy.remoteReaderGuid.entityId !=
                 proxy.remoteReaderGuid.entityId) {
               proxy.unknown_eid = true;
-#if SLW_VERBOSE
-              printf("Found different EntityIds, using UNKNOWN_ENTITYID\n");
-#endif
+              SLW_LOG("Found different EntityIds, using UNKNOWN_ENTITYID\n");
             }
           }
           found = true;
@@ -147,7 +140,7 @@ void StatelessWriterT<NetworkDriver>::resetSendOptions() {
 }
 
 template <class NetworkDriver>
-void StatelessWriterT<NetworkDriver>::removeReader(const Guid &guid) {
+void StatelessWriterT<NetworkDriver>::removeReader(const Guid_t &guid) {
   auto isElementToRemove = [&](const ReaderProxy &proxy) {
     return proxy.remoteReaderGuid == guid;
   };
@@ -194,10 +187,7 @@ const CacheChange *StatelessWriterT<NetworkDriver>::newChange(
     mp_threadPool->addWorkload(this);
   }
 
-#if SLW_VERBOSE
-  printf("StatelessWriter[%s]: Adding new data.\n",
-         this->m_attributes.topicName);
-#endif
+  SLW_LOG("Adding new data.\n");
   return result;
 }
 
@@ -234,9 +224,7 @@ void StatelessWriterT<NetworkDriver>::progress() {
 
   for (const auto &proxy : m_proxies) {
 
-#if SLW_VERBOSE
-    printf("StatelessWriter[%s]: Progess.\n", this->m_attributes.topicName);
-#endif
+    SLW_LOG("Progess.\n");
     // Do nothing, if someone else sends for me... (Multicast)
     if (proxy.useMulticast || !proxy.suppressUnicast || m_enforceUnicast) {
       PacketInfo info;
@@ -250,19 +238,15 @@ void StatelessWriterT<NetworkDriver>::progress() {
         const CacheChange *next =
             m_history.getChangeBySN(m_nextSequenceNumberToSend);
         if (next == nullptr) {
-#if SLW_VERBOSE
-          printf("StatelessWriter[%s]: Couldn't get a new CacheChange with SN "
-                 "(%i,%i)\n",
-                 &m_attributes.topicName[0], m_nextSequenceNumberToSend.high,
-                 m_nextSequenceNumberToSend.low);
-#endif
+          SLW_LOG("Couldn't get a new CacheChange with SN "
+                  "(%i,%i)\n",
+                  m_nextSequenceNumberToSend.high,
+                  m_nextSequenceNumberToSend.low);
           return;
         } else {
-#if SLW_VERBOSE
-          printf("StatelessWriter[%s]: Sending change with SN (%i,%i)\n",
-                 &m_attributes.topicName[0], m_nextSequenceNumberToSend.high,
-                 m_nextSequenceNumberToSend.low);
-#endif
+          SLW_LOG("Sending change with SN (%i,%i)\n",
+                  m_nextSequenceNumberToSend.high,
+                  m_nextSequenceNumberToSend.low);
         }
 
         // Set EntityId to UNKNOWN if using multicast, because there might be

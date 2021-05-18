@@ -29,16 +29,23 @@ Author: i11 - Embedded Software, RWTH Aachen University
 #include "rtps/entities/Reader.h"
 #include "rtps/entities/Writer.h"
 #include "rtps/messages/MessageTypes.h"
+#include "rtps/utils/Log.h"
 #include "rtps/utils/udpUtils.h"
 
 using rtps::SPDPAgent;
 using rtps::SMElement::BuildInEndpointSet;
 using rtps::SMElement::ParameterId;
 
-#define SPDP_VERBOSE 0
-
-#if SPDP_VERBOSE
+#if SPDP_VERBOSE && RTPS_GLOBAL_VERBOSE
 #include "rtps/utils/printutils.h"
+#define SPDP_LOG(...)                                                          \
+  if (true) {                                                                  \
+    printf("[SPDP] ");                                                         \
+    printf(__VA_ARGS__);                                                       \
+    printf("\n");                                                              \
+  }
+#else
+#define SPDP_LOG(...) //
 #endif
 
 SPDPAgent::~SPDPAgent() {
@@ -49,9 +56,7 @@ SPDPAgent::~SPDPAgent() {
 
 void SPDPAgent::init(Participant &participant, BuiltInEndpoints &endpoints) {
   if (sys_mutex_new(&m_mutex) != ERR_OK) {
-#if SPDP_VERBOSE
-    printf("Could not alloc mutex");
-#endif
+    SPDP_LOG("Could not alloc mutex");
     return;
   }
   mp_participant = &participant;
@@ -105,17 +110,13 @@ void SPDPAgent::receiveCallback(void *callee,
 
 void SPDPAgent::handleSPDPPackage(const ReaderCacheChange &cacheChange) {
   if (!initialized) {
-#if SPDP_VERBOSE
-    printf("SPDP: Callback called without initialization\n");
-#endif
+    SPDP_LOG("Callback called without initialization\n");
     return;
   }
 
   Lock lock{m_mutex};
   if (cacheChange.size > m_inputBuffer.size()) {
-#if SPDP_VERBOSE
-    printf("SPDP: Input buffer to small\n");
-#endif
+    SPDP_LOG("Input buffer to small\n");
     return;
   }
 
@@ -159,28 +160,31 @@ void SPDPAgent::processProxyData() {
     return; // Our own packet
   }
 
-  if (mp_participant->findRemoteParticipant(m_proxyDataBuffer.m_guid.prefix) !=
-      nullptr) {
-    // m_buildInEndpoints.spdpWriter->setAllChangesToUnsent(); // Do NOT send
-    // again, spamming everything!
+  const rtps::ParticipantProxyData *remote_part;
+  remote_part =
+      mp_participant->findRemoteParticipant(m_proxyDataBuffer.m_guid.prefix);
+  if (remote_part != nullptr) {
+    SPDP_LOG("Not adding remote participant guid.prefix = %u \n",
+             (unsigned int)Guid_t::sum(remote_part->m_guid));
+    mp_participant->refreshRemoteParticipantLiveliness(
+        m_proxyDataBuffer.m_guid.prefix);
     return; // Already in our list
   }
-
-  // New participant, help him join fast by broadcasting data again
-  // if(mp_participant->getRemoteParticipantCount() == 1){
-  //	return;
-  //}
 
   if (mp_participant->addNewRemoteParticipant(m_proxyDataBuffer)) {
     addProxiesForBuiltInEndpoints();
     m_buildInEndpoints.spdpWriter->setAllChangesToUnsent();
-#if SPDP_VERBOSE
-    printf("Added new participant with guid: ");
+#if SPDP_VERBOSE && RTPS_GLOBAL_VERBOSE
+    SPDP_LOG("Added new participant with guid: ");
     printGuidPrefix(m_proxyDataBuffer.m_guid.prefix);
-    printf("\n");
   } else {
-    printf("Failed to add new participant");
+    SPDP_LOG("Failed to add new participant");
 #endif
+  }
+  else {
+    while (1) {
+      SPDP_LOG("failed to add remote participant");
+    }
   }
 }
 
@@ -204,9 +208,7 @@ bool SPDPAgent::addProxiesForBuiltInEndpoints() {
 
   ip4_addr_t ip4addr = locator->getIp4Address();
   const char *addr = ip4addr_ntoa(&ip4addr);
-#if SPDP_VERBOSE
-  printf("Adding IPv4 Locator %s\n", addr);
-#endif
+  SPDP_LOG("Adding IPv4 Locator %s\n", addr);
 
   if (m_proxyDataBuffer.hasPublicationWriter()) {
     const WriterProxy proxy{{m_proxyDataBuffer.m_guid.prefix,
@@ -322,8 +324,10 @@ void SPDPAgent::addParticipantParameters() {
   ucdr_serialize_uint16_t(&m_microbuffer,
                           ParameterId::PID_PARTICIPANT_LEASE_DURATION);
   ucdr_serialize_uint16_t(&m_microbuffer, durationSize);
-  ucdr_serialize_int32_t(&m_microbuffer, Config::SPDP_LEASE_DURATION.seconds);
-  ucdr_serialize_uint32_t(&m_microbuffer, Config::SPDP_LEASE_DURATION.fraction);
+  ucdr_serialize_int32_t(&m_microbuffer,
+                         Config::SPDP_DEFAULT_REMOTE_LEASE_DURATION.seconds);
+  ucdr_serialize_uint32_t(&m_microbuffer,
+                          Config::SPDP_DEFAULT_REMOTE_LEASE_DURATION.fraction);
 
   ucdr_serialize_uint16_t(&m_microbuffer, ParameterId::PID_PARTICIPANT_GUID);
   ucdr_serialize_uint16_t(&m_microbuffer, guidSize);

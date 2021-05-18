@@ -26,10 +26,10 @@ Author: i11 - Embedded Software, RWTH Aachen University
 
 using rtps::ParticipantProxyData;
 
-ParticipantProxyData::ParticipantProxyData(Guid guid) : m_guid(guid) {}
+ParticipantProxyData::ParticipantProxyData(Guid_t guid) : m_guid(guid) {}
 
 void ParticipantProxyData::reset() {
-  m_guid = Guid{GUIDPREFIX_UNKNOWN, ENTITYID_UNKNOWN};
+  m_guid = Guid_t{GUIDPREFIX_UNKNOWN, ENTITYID_UNKNOWN};
   m_manualLivelinessCount = Count_t{1};
   m_expectsInlineQos = false;
   for (int i = 0; i < Config::SPDP_MAX_NUM_LOCATORS; ++i) {
@@ -164,6 +164,5 @@ bool ParticipantProxyData::readLocatorIntoList(
       return true;
     }
   }
-  // TODO printf("SPDP: m_metatrafficMulticastLocatorList full.");
   return false;
 }

@@ -78,13 +78,14 @@ public:
   Writer *getMatchingWriter(const TopicData &topicData) const;
   //! (Probably) Thread safe if readers cannot be removed
   Reader *getReader(EntityId_t id) const;
-  Reader *getReaderByWriterId(const Guid &guid) const;
+  Reader *getReaderByWriterId(const Guid_t &guid) const;
   Reader *getMatchingReader(const TopicData &topicData) const;
 
   bool addNewRemoteParticipant(const ParticipantProxyData &remotePart);
   bool removeRemoteParticipant(const GuidPrefix_t &prefix);
   void removeAllEntitiesOfParticipant(const GuidPrefix_t &prefix);
   const ParticipantProxyData *findRemoteParticipant(const GuidPrefix_t &prefix);
+  void refreshRemoteParticipantLiveliness(const GuidPrefix_t &prefix);
   uint32_t getRemoteParticipantCount();
   MessageReceiver *getMessageReceiver();
   void addHeartbeat(GuidPrefix_t sourceGuidPrefix);

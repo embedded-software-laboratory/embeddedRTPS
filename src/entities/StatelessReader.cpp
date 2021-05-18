@@ -23,10 +23,21 @@ Author: i11 - Embedded Software, RWTH Aachen University
 */
 
 #include "rtps/entities/StatelessReader.h"
+#include "rtps/utils/Log.h"
 
 using rtps::StatelessReader;
 
-#define SLR_VERBOSE 0
+#if SLR_VERBOSE && RTPS_GLOBAL_VERBOSE
+#include "rtps/utils/printutils.h"
+#define SLR_LOG(...)                                                           \
+  if (true) {                                                                  \
+    printf("[StatelessReader %s] ", &m_attributes.topicName[0]);               \
+    printf(__VA_ARGS__);                                                       \
+    printf("\n");                                                              \
+  }
+#else
+#define SLR_LOG(...) //
+#endif
 
 void StatelessReader::init(const TopicData &attributes) {
   m_attributes = attributes;
@@ -45,8 +56,7 @@ void StatelessReader::registerCallback(ddsReaderCallback_fp cb, void *callee) {
     m_callee = callee; // It's okay if this is null
   } else {
 #if SLR_VERBOSE
-    printf("StatelessReader[%s]: Passed callback is nullptr\n",
-           &m_attributes.topicName[0]);
+    SLR_LOG("Passed callback is nullptr\n");
 #endif
   }
 }
@@ -55,7 +65,7 @@ bool StatelessReader::addNewMatchedWriter(const WriterProxy &newProxy) {
   return m_proxies.add(newProxy);
 }
 
-void StatelessReader::removeWriter(const Guid &guid) {
+void StatelessReader::removeWriter(const Guid_t &guid) {
   auto isElementToRemove = [&](const WriterProxy &proxy) {
     return proxy.remoteWriterGuid == guid;
   };

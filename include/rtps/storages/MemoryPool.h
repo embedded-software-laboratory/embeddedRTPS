@@ -22,6 +22,8 @@ This file is part of embeddedRTPS.
 Author: i11 - Embedded Software, RWTH Aachen University
 */
 
+#include <iostream>
+
 #ifndef RTPS_MEMORYPOOL_H
 #define RTPS_MEMORYPOOL_H
 
@@ -63,12 +65,11 @@ public:
         m_bit = SIZE;
         return *this;
       }
-      uint8_t bucket;
+      uint32_t bucket;
       do {
         ++m_bit;
         bucket = m_bit / static_cast<uint8_t>(8);
-        m_bitMap[bucket] = m_bitMap[bucket] >> 1;
-      } while (!(m_bitMap[bucket] & 1) && m_bit < SIZE);
+      } while (!(m_bitMap[bucket] & (1 << (m_bit % 8))) && m_bit < SIZE);
 
       return *this;
     }
@@ -149,8 +150,8 @@ public:
     return false;
   }
 
-  const TYPE *find(bool (*jumppad)(void *, const TYPE &data),
-                   void *isCorrectElement) {
+  TYPE *find(bool (*jumppad)(void *, const TYPE &data),
+             void *isCorrectElement) {
     for (auto it = begin(); it != end(); ++it) {
       if (jumppad(isCorrectElement, *it)) {
         return &(*it);

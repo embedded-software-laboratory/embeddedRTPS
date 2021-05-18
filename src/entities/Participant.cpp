@@ -27,6 +27,18 @@ Author: i11 - Embedded Software, RWTH Aachen University
 #include "rtps/entities/Reader.h"
 #include "rtps/entities/Writer.h"
 #include "rtps/messages/MessageReceiver.h"
+#include "rtps/utils/Log.h"
+
+#if PARTICIPANT_VERBOSE && RTPS_GLOBAL_VERBOSE
+#define PARTICIPANT_LOG(...)                                                   \
+  if (true) {                                                                  \
+    printf("[Participant] ");                                                  \
+    printf(__VA_ARGS__);                                                       \
+    printf("\n");                                                              \
+  }
+#else
+#define PARTICIPANT_LOG(...) //
+#endif
 
 using rtps::Participant;
 
@@ -139,7 +151,7 @@ rtps::Reader *Participant::getReader(EntityId_t id) const {
   return nullptr;
 }
 
-rtps::Reader *Participant::getReaderByWriterId(const Guid &guid) const {
+rtps::Reader *Participant::getReaderByWriterId(const Guid_t &guid) const {
   for (uint8_t i = 0; i < m_numReaders; ++i) {
     if (m_readers[i]->knowWriterId(guid)) {
       return m_readers[i];
@@ -213,6 +225,19 @@ Participant::findRemoteParticipant(const GuidPrefix_t &prefix) {
   return m_remoteParticipants.find(thunk, &isElementToFind);
 }
 
+void Participant::refreshRemoteParticipantLiveliness(
+    const GuidPrefix_t &prefix) {
+  auto isElementToFind = [&](const ParticipantProxyData &proxy) {
+    return proxy.m_guid.prefix == prefix;
+  };
+  auto thunk = [](void *arg, const ParticipantProxyData &value) {
+    return (*static_cast<decltype(isElementToFind) *>(arg))(value);
+  };
+  Lock lock{m_mutex};
+  auto remoteParticipant = m_remoteParticipants.find(thunk, &isElementToFind);
+  remoteParticipant->onAliveSignal();
+}
+
 bool Participant::hasReaderWithMulticastLocator(ip4_addr_t address) {
   for (uint8_t i = 0; i < m_numReaders; i++) {
     if (m_readers[i]->m_attributes.multicastLocator.isSameAddress(&address)) {
@@ -233,7 +258,7 @@ void Participant::addHeartbeat(GuidPrefix_t sourceGuidPrefix) {
   Lock lock{m_mutex};
   for (auto &remote : m_remoteParticipants) {
     if (remote.m_guid.prefix == sourceGuidPrefix) {
-      remote.setReceivedHeartbeat(true);
+      remote.onAliveSignal();
       break;
     }
   }
@@ -241,14 +266,19 @@ void Participant::addHeartbeat(GuidPrefix_t sourceGuidPrefix) {
 
 bool Participant::checkAndResetHeartbeats() {
   Lock lock{m_mutex};
+  PARTICIPANT_LOG("Have %u remote participants\n",
+                  (unsigned int)m_remoteParticipants.getNumElements());
   for (auto &remote : m_remoteParticipants) {
-    if (remote.getReceivedHeartbeat()) {
-      remote.setReceivedHeartbeat(false);
-    } else {
-      bool success = removeRemoteParticipant(remote.m_guid.prefix);
-      if (!success) {
-        return false;
-      }
+    PARTICIPANT_LOG("remote participant age = %u\n",
+                    (unsigned int)remote.getAliveSignalAgeInMilliseconds());
+    if (remote.isAlive()) {
+      PARTICIPANT_LOG("remote participant is alive\n");
+      continue;
+    }
+    PARTICIPANT_LOG("!!! REMOVING PARTICIPANT !!!\n");
+    bool success = removeRemoteParticipant(remote.m_guid.prefix);
+    if (!success) {
+      return false;
     }
   }
   return true;

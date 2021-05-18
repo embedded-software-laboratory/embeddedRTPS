@@ -39,7 +39,7 @@ struct BuiltInTopicKey {
 };
 
 struct TopicData {
-  Guid endpointGuid;
+  Guid_t endpointGuid;
   char typeName[Config::MAX_TYPENAME_LENGTH];
   char topicName[Config::MAX_TOPICNAME_LENGTH];
   ReliabilityKind_t reliabilityKind;
@@ -57,7 +57,7 @@ struct TopicData {
     multicastLocator = Locator();
   };
 
-  TopicData(Guid guid, ReliabilityKind_t reliability, Locator loc)
+  TopicData(Guid_t guid, ReliabilityKind_t reliability, Locator loc)
       : endpointGuid(guid), typeName{'\0'}, topicName{'\0'},
         reliabilityKind(reliability),
         durabilityKind(DurabilityKind_t::TRANSIENT_LOCAL), unicastLocator(loc) {

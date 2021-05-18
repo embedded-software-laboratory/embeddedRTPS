@@ -22,30 +22,25 @@ This file is part of embeddedRTPS.
 Author: i11 - Embedded Software, RWTH Aachen University
 */
 
-#include "rtps/entities/StatefulWriter.h"
-
 #include "lwip/sys.h"
+#include "rtps/entities/StatefulWriter.h"
 #include "rtps/messages/MessageFactory.h"
+#include "rtps/utils/Log.h"
 #include <cstring>
 #include <stdio.h>
 
 using rtps::StatefulWriterT;
 
-/*
-static int line_cnt_ = 0;
-static char tft_buffer_[150];
-
-#define log(args...) if(true){ \
-Lock lock{m_mutex}; \
-snprintf(tft_buffer_, sizeof(tft_buffer_), args); 		 \
-TFT_PrintLine(line_cnt_, tft_buffer_); 					 \
-line_cnt_ = (line_cnt_+1)%5; \
-}
-*/
-#define SFW_VERBOSE 0
-
-#if SFW_VERBOSE
+#if SFW_VERBOSE && RTPS_GLOBAL_VERBOSE
 #include "rtps/utils/printutils.h"
+#define SFW_LOG(...)                                                           \
+  if (true) {                                                                  \
+    printf("[Stateful Writer %s] ", this->m_attributes.topicName);             \
+    printf(__VA_ARGS__);                                                       \
+    printf("\n");                                                              \
+  }
+#else
+#define SFW_LOG(...) //
 #endif
 
 template <class NetworkDriver>
@@ -64,9 +59,9 @@ bool StatefulWriterT<NetworkDriver>::init(TopicData attributes,
                                           NetworkDriver &driver,
                                           bool enfUnicast) {
   if (sys_mutex_new(&m_mutex) != ERR_OK) {
-#if SFW_VERBOSE
-    log("StatefulWriter: Failed to create mutex.\n");
-#endif
+
+    SFW_LOG("Failed to create mutex.\n");
+
     return false;
   }
 
@@ -99,12 +94,11 @@ bool StatefulWriterT<NetworkDriver>::init(TopicData attributes,
 template <class NetworkDriver>
 bool StatefulWriterT<NetworkDriver>::addNewMatchedReader(
     const ReaderProxy &newProxy) {
-#if SFW_VERBOSE
-  log("StatefulWriter[%s]: New reader added with id: ",
-      &this->m_attributes.topicName[0]);
+#if SFW_VERBOSE && RTPS_GLOBAL_VERBOSE
+  SFW_LOG("New reader added with id: ");
   printGuid(newProxy.remoteReaderGuid);
-  log("\n");
 #endif
+
   bool success = m_proxies.add(newProxy);
   if (!m_enforceUnicast) {
     manageSendOptions();
@@ -114,9 +108,9 @@ bool StatefulWriterT<NetworkDriver>::addNewMatchedReader(
 
 template <class NetworkDriver>
 void StatefulWriterT<NetworkDriver>::manageSendOptions() {
-#if SFW_VERBOSE
-  printf("Search for Multicast Partners!\n");
-#endif
+
+  SFW_LOG("Search for Multicast Partners!\n");
+
   for (auto &proxy : m_proxies) {
     if (proxy.remoteMulticastLocator.kind ==
         LocatorKind_t::LOCATOR_KIND_INVALID) {
@@ -136,15 +130,14 @@ void StatefulWriterT<NetworkDriver>::manageSendOptions() {
             avproxy.suppressUnicast = true;
             proxy.useMulticast = true;
             proxy.suppressUnicast = true;
-#if SFW_VERBOSE
-            printf("Found Multicast Partner!\n");
-#endif
+
+            SFW_LOG("Found Multicast Partner!\n");
+
             if (avproxy.remoteReaderGuid.entityId !=
                 proxy.remoteReaderGuid.entityId) {
               proxy.unknown_eid = true;
-#if SFW_VERBOSE
-              printf("Found different EntityIds, using UNKNOWN_ENTITYID\n");
-#endif
+
+              SFW_LOG("Found different EntityIds, using UNKNOWN_ENTITYID\n");
             }
           }
           found = true;
@@ -170,7 +163,7 @@ void StatefulWriterT<NetworkDriver>::resetSendOptions() {
 
 // TODO: manage Multicast Options again...
 template <class NetworkDriver>
-void StatefulWriterT<NetworkDriver>::removeReader(const Guid &guid) {
+void StatefulWriterT<NetworkDriver>::removeReader(const Guid_t &guid) {
   auto isElementToRemove = [&](const ReaderProxy &proxy) {
     return proxy.remoteReaderGuid == guid;
   };
@@ -220,9 +213,8 @@ const rtps::CacheChange *StatefulWriterT<NetworkDriver>::newChange(
     mp_threadPool->addWorkload(this);
   }
 
-#if SFW_VERBOSE
-  log("StatefulWriter[%s]: Adding new data.\n", this->m_attributes.topicName);
-#endif
+  SFW_LOG("Adding new data.\n");
+
   return result;
 }
 
@@ -274,17 +266,16 @@ void StatefulWriterT<NetworkDriver>::onNewAckNack(
   }
 
   if (reader == nullptr) {
-#if SFW_VERBOSE
-    log("StatefulWriter[%s]: No proxy found with id: ",
-        &this->m_attributes.topicName[0]);
+#if SFW_VERBOSE && RTPS_GLOBAL_VERBOSE
+    SFW_LOG("No proxy found with id: ");
     printEntityId(msg.readerId);
-    log(" Dropping acknack.\n");
+    SFW_LOG(" Dropping acknack.\n");
 #endif
     return;
   }
 
   uint8_t hash = 0;
-  for (int i = 0; i < sourceGuidPrefix.id.size(); i++) {
+  for (unsigned int i = 0; i < sourceGuidPrefix.id.size(); i++) {
     hash += sourceGuidPrefix.id.at(i);
   }
 
@@ -297,10 +288,9 @@ void StatefulWriterT<NetworkDriver>::onNewAckNack(
   }
 
   if (msg.count.value <= reader->ackNackCount.value) {
-#if SFW_VERBOSE
-    log("StatefulWriter[%s]: Count too small. Dropping acknack.\n",
-        &this->m_attributes.topicName[0]);
-#endif
+
+    SFW_LOG("Count too small. Dropping acknack.\n");
+
     return;
   }
 
@@ -308,21 +298,18 @@ void StatefulWriterT<NetworkDriver>::onNewAckNack(
 
   // Send missing packets
   SequenceNumber_t nextSN = msg.readerSNState.base;
-#if SFW_VERBOSE
+
   if (nextSN.low == 0 && nextSN.high == 0) {
-    log("StatefulWriter[%s]: Received preemptive acknack. Ignored.\n",
-        &this->m_attributes.topicName[0]);
+    SFW_LOG("Received preemptive acknack. Ignored.\n");
   } else {
-    log("StatefulWriter[%s]: Received non-preemptive acknack.\n",
-        &this->m_attributes.topicName[0]);
+    SFW_LOG("Received non-preemptive acknack.\n");
   }
-#endif
+
   for (uint32_t i = 0; i < msg.readerSNState.numBits; ++i, ++nextSN) {
     if (msg.readerSNState.isSet(i)) {
-#if SFW_VERBOSE
-      log("StatefulWriter[%s]: Send Packet on acknack.\n",
-          this->m_attributes.topicName);
-#endif
+
+      SFW_LOG("Send Packet on acknack.\n");
+
       sendData(*reader, nextSN);
     }
   }
@@ -362,10 +349,10 @@ bool StatefulWriterT<NetworkDriver>::sendData(
     Lock lock(m_mutex);
     const CacheChange *next = m_history.getChangeBySN(snMissing);
     if (next == nullptr) {
-#if SFW_VERBOSE
-      log("StatefulWriter[%s]: Couldn't get a CacheChange with SN (%i,%u)\n",
-          &this->m_attributes.topicName[0], snMissing.high, snMissing.low);
-#endif
+
+      SFW_LOG("Couldn't get a CacheChange with SN (%i,%u)\n", snMissing.high,
+              snMissing.low);
+
       return false;
     }
     MessageFactory::addSubMessageData(
@@ -403,10 +390,10 @@ bool StatefulWriterT<NetworkDriver>::sendDataWRMulticast(
       Lock lock(m_mutex);
       const CacheChange *next = m_history.getChangeBySN(snMissing);
       if (next == nullptr) {
-#if SFW_VERBOSE
-        log("StatefulWriter[%s]: Couldn't get a CacheChange with SN (%i,%u)\n",
-            &this->m_attributes.topicName[0], snMissing.high, snMissing.low);
-#endif
+
+        SFW_LOG("Couldn't get a CacheChange with SN (%i,%u)\n", snMissing.high,
+                snMissing.low);
+
         return false;
       }
 
@@ -448,10 +435,8 @@ void StatefulWriterT<NetworkDriver>::sendHeartBeatLoop() {
 template <class NetworkDriver>
 void StatefulWriterT<NetworkDriver>::sendHeartBeat() {
   if (m_proxies.isEmpty()) {
-#if SFW_VERBOSE
-    log("StatefulWriter[%s]: Skipping heartbeat. No proxies.\n",
-        this->m_attributes.topicName);
-#endif
+
+    SFW_LOG("Skipping heartbeat. No proxies.\n");
     return;
   }
 
@@ -469,12 +454,10 @@ void StatefulWriterT<NetworkDriver>::sendHeartBeat() {
       lastSN = m_history.getSeqNumMax();
     }
     if (firstSN == SEQUENCENUMBER_UNKNOWN || lastSN == SEQUENCENUMBER_UNKNOWN) {
-#if SFW_VERBOSE
+
       if (strlen(&this->m_attributes.typeName[0]) != 0) {
-        log("StatefulWriter[%s]: Skipping heartbeat. No data.\n",
-            this->m_attributes.topicName);
+        SFW_LOG("Skipping heartbeat. No data.\n");
       }
-#endif
       return;
     }
 

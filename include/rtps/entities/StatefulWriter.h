@@ -39,7 +39,7 @@ public:
             NetworkDriver &driver, bool enfUnicast = false);
 
   bool addNewMatchedReader(const ReaderProxy &newProxy) override;
-  void removeReader(const Guid &guid) override;
+  void removeReader(const Guid_t &guid) override;
   void removeReaderOfParticipant(const GuidPrefix_t &guidPrefix) override;
   //! Executes required steps like sending packets. Intended to be called by
   //! worker threads

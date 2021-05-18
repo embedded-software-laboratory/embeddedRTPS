@@ -28,35 +28,26 @@ Author: i11 - Embedded Software, RWTH Aachen University
 #include "rtps/entities/Reader.h"
 #include "rtps/entities/Writer.h"
 #include "rtps/messages/MessageTypes.h"
+#include "rtps/utils/Log.h"
 #include "ucdr/microcdr.h"
-
-#define SEDP_VERBOSE 0
 
 using rtps::SEDPAgent;
 
-#if SEDP_VERBOSE
-uint32_t line_ = 0;
-char bf_[100];
-
-//#include <asoa/driver/os.h>
-
-/*#define SEDP_LOG(...) if(true){ \
-                size_t t = snprintf(bf_, sizeof(bf_), __VA_ARGS__); \
-                ASOA_ASSERT(t < sizeof(bf_), "overflow");
-                TFT_PrintLine(line_+3, bf_); 				 \
-                line_ = (line_+1)%30;
-   \
-                } */
+#if SEDP_VERBOSE && RTPS_GLOBAL_VERBOSE
+#define SEDP_LOG(...)                                                          \
+  if (true) {                                                                  \
+    printf("[SEDP] ");                                                         \
+    printf(__VA_ARGS__);                                                       \
+    printf("\n");                                                              \
+  }
+#else
+#define SEDP_LOG(...) //
 #endif
-
-#define SEDP_LOG(...) printf(__VA_ARGS__)
 
 void SEDPAgent::init(Participant &part, const BuiltInEndpoints &endpoints) {
   // TODO move
   if (sys_mutex_new(&m_mutex) != ERR_OK) {
-#if SEDP_VERBOSE
-    printf("SEDPAgent failed to create mutex\n");
-#endif
+    SEDP_LOG("SEDPAgent failed to create mutex\n");
     return;
   }
 

@@ -20,7 +20,7 @@ inline void printGuidPrefix(rtps::GuidPrefix_t prefix) {
   }
 }
 
-inline void printGuid(rtps::Guid guid) {
+inline void printGuid(rtps::Guid_t guid) {
   printGuidPrefix(guid.prefix);
   printf(":");
   printEntityId(guid.entityId);
