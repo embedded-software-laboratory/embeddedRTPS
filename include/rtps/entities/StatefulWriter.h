@@ -65,6 +65,7 @@ private:
   Count_t m_hbCount{1};
 
   bool m_running = true;
+  bool m_thread_running = false;
 
   bool sendData(const ReaderProxy &reader, const SequenceNumber_t &sn);
   bool sendDataWRMulticast(const ReaderProxy &reader,

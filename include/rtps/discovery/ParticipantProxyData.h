@@ -29,7 +29,9 @@ Author: i11 - Embedded Software, RWTH Aachen University
 #include "rtps/config.h"
 #include "rtps/messages/MessageTypes.h"
 #include "ucdr/microcdr.h"
-
+#if defined(unix) || defined(__unix__)
+#include <chrono>
+#endif
 #include <array>
 
 namespace rtps {
@@ -40,9 +42,7 @@ typedef uint32_t BuiltinEndpointSet_t;
 
 class ParticipantProxyData {
 public:
-  ParticipantProxyData() {
-    m_lastLivelinessReceivedTickCount = xTaskGetTickCount();
-  }
+  ParticipantProxyData() { onAliveSignal(); }
   ParticipantProxyData(Guid_t guid);
 
   ProtocolVersion_t m_protocolVersion = PROTOCOLVERSION;
@@ -60,8 +60,12 @@ public:
       m_defaultMulticastLocatorList;
   Count_t m_manualLivelinessCount{1};
   Duration_t m_leaseDuration = Config::SPDP_DEFAULT_REMOTE_LEASE_DURATION;
+#if defined(unix) || defined(__unix__)
+  std::chrono::time_point<std::chrono::high_resolution_clock>
+      m_lastLivelinessReceivedTimestamp;
+#else
   TickType_t m_lastLivelinessReceivedTickCount = 0;
-
+#endif
   void reset();
 
   bool readFromUcdrBuffer(ucdrBuffer &buffer);
@@ -140,12 +144,23 @@ bool ParticipantProxyData::hasSubscriptionReader() {
 }
 
 void ParticipantProxyData::onAliveSignal() {
+#if defined(unix) || defined(__unix__)
+  m_lastLivelinessReceivedTimestamp = std::chrono::high_resolution_clock::now();
+#else
   m_lastLivelinessReceivedTickCount = xTaskGetTickCount();
+#endif
 }
 
 uint32_t ParticipantProxyData::getAliveSignalAgeInMilliseconds() {
+#if defined(unix) || defined(__unix__)
+  auto now = std::chrono::high_resolution_clock::now();
+  std::chrono::duration<double, std::milli> duration =
+      now - m_lastLivelinessReceivedTimestamp;
+  return duration.count();
+#else
   return (xTaskGetTickCount() - m_lastLivelinessReceivedTickCount) *
          (1000 / configTICK_RATE_HZ);
+#endif
 }
 
 /*

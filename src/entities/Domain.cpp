@@ -47,6 +47,8 @@ Domain::Domain()
   m_transport.joinMultiCastGroup(transformIP4ToU32(239, 255, 0, 1));
 }
 
+Domain::~Domain() { stop(); }
+
 bool Domain::completeInit() {
   m_initComplete = m_threadPool.startThreads();
 

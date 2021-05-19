@@ -39,6 +39,7 @@ namespace rtps {
 class Domain {
 public:
   Domain();
+  ~Domain();
 
   bool completeInit();
   void stop();

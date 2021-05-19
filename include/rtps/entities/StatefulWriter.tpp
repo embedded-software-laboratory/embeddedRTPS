@@ -46,10 +46,12 @@ using rtps::StatefulWriterT;
 template <class NetworkDriver>
 StatefulWriterT<NetworkDriver>::~StatefulWriterT() {
   m_running = false;
-  //  sys_msleep(10); // Required for tests/ Join currently not available /
-  //  increased because Segfault in Tests if(sys_mutex_valid(&m_mutex)){
-  //    sys_mutex_free(&m_mutex);
-  //  }
+  while (m_thread_running) {
+    sys_msleep(500); // Required for tests/ Join currently not available /
+    //  increased because Segfault in Tests if(sys_mutex_valid(&m_mutex)){
+    //    sys_mutex_free(&m_mutex);
+    //  }
+  }
 }
 
 template <class NetworkDriver>
@@ -422,6 +424,7 @@ void StatefulWriterT<NetworkDriver>::hbFunctionJumppad(void *thisPointer) {
 
 template <class NetworkDriver>
 void StatefulWriterT<NetworkDriver>::sendHeartBeatLoop() {
+  m_thread_running = true;
   while (m_running) {
     sendHeartBeat();
 #ifdef OS_IS_FREERTOS
@@ -430,6 +433,7 @@ void StatefulWriterT<NetworkDriver>::sendHeartBeatLoop() {
     sys_msleep(Config::SF_WRITER_HB_PERIOD_MS);
 #endif
   }
+  m_thread_running = false;
 }
 
 template <class NetworkDriver>

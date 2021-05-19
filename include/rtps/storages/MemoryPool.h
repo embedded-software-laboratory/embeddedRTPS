@@ -22,8 +22,6 @@ This file is part of embeddedRTPS.
 Author: i11 - Embedded Software, RWTH Aachen University
 */
 
-#include <iostream>
-
 #ifndef RTPS_MEMORYPOOL_H
 #define RTPS_MEMORYPOOL_H
 
