@@ -38,7 +38,7 @@ The following repository provides code examples for running embeddedRTPS on the 
 
 The following repository allow to compile and run embeddedRTPS on Linux for development purposes. This repository also contains unittests for embeddedRTPS.
 
-- [embeddedRTPS-linux](https://github.com/embedded-software-laboratory/embeddedRTPS-STM32)
+- [embeddedRTPS-linux](https://github.com/embedded-software-laboratory/embeddedRTPS-Linux)
 
 ### Third Party Libraries
 
