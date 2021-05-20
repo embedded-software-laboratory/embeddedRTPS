@@ -37,7 +37,8 @@ public:
   bool onNewHeartbeat(const SubmessageHeartbeat &msg,
                       const GuidPrefix_t &remotePrefix) override;
   bool addNewMatchedWriter(const WriterProxy &newProxy) override;
-  void removeWriter(const Guid &guid) override;
+  void removeWriter(const Guid_t &guid) override;
+  void removeWriterOfParticipant(const GuidPrefix_t &guidPrefix) override;
 
 private:
   ddsReaderCallback_fp m_callback = nullptr;

@@ -24,13 +24,25 @@ Author: i11 - Embedded Software, RWTH Aachen University
 
 #include "rtps/communication/UdpDriver.h"
 #include "rtps/communication/TcpipCoreLock.h"
+#include "rtps/utils/Lock.h"
+#include "rtps/utils/Log.h"
 
 #include <lwip/igmp.h>
 #include <lwip/tcpip.h>
 
 using rtps::UdpDriver;
 
-#define UDP_DRIVER_VERBOSE 0
+#if UDP_DRIVER_VERBOSE && RTPS_GLOBAL_VERBOSE
+#include "rtps/utils/printutils.h"
+#define UDP_DRIVER_LOG(...)                                                    \
+  if (true) {                                                                  \
+    printf("[UDP Driver] ");                                                   \
+    printf(__VA_ARGS__);                                                       \
+    printf("\n");                                                              \
+  }
+#else
+#define UDP_DRIVER_LOG(...) //
+#endif
 
 UdpDriver::UdpDriver(rtps::UdpDriver::udpRxFunc_fp callback, void *args)
     : m_rxCallback(callback), m_callbackArgs(args) {}
@@ -63,9 +75,10 @@ UdpDriver::createUdpConnection(Ip4Port_t receivePort) {
 
   m_conns[m_numConns] = std::move(udp_conn);
   m_numConns++;
-#if UDP_DRIVER_VERBOSE
-  printf("Successfully created UDP connection on port %u \n", receivePort);
-#endif
+
+  UDP_DRIVER_LOG("Successfully created UDP connection on port %u \n",
+                 receivePort);
+
   return &m_conns[m_numConns - 1];
 }
 
@@ -83,14 +96,15 @@ bool UdpDriver::joinMultiCastGroup(ip4_addr_t addr) const {
   }
 
   if (iret != ERR_OK) {
-#if UDP_DRIVER_VERBOSE
-    printf("Failed to join IGMP multicast group %s\n", ipaddr_ntoa(&addr));
-#endif
+
+    UDP_DRIVER_LOG("Failed to join IGMP multicast group %s\n",
+                   ipaddr_ntoa(&addr));
+
     return false;
   } else {
-#if UDP_DRIVER_VERBOSE
-    printf("Succesfully joined  IGMP multicast group %s\n", ipaddr_ntoa(&addr));
-#endif
+
+    UDP_DRIVER_LOG("Succesfully joined  IGMP multicast group %s\n",
+                   ipaddr_ntoa(&addr));
   }
   return true;
 }
@@ -105,10 +119,10 @@ bool UdpDriver::sendPacket(const UdpConnection &conn, ip4_addr_t &destAddr,
 
   if (err != ERR_OK) {
     ;
-#if UDP_DRIVER_VERBOSE
-    printf("UDP TRANSMIT NOT SUCCESSFUL %s:%u size: %u err: %i\n",
-           ipaddr_ntoa(&destAddr), destPort, buffer.tot_len, err);
-#endif
+
+    UDP_DRIVER_LOG("UDP TRANSMIT NOT SUCCESSFUL %s:%u size: %u err: %i\n",
+                   ipaddr_ntoa(&destAddr), destPort, buffer.tot_len, err);
+
     return false;
   }
   return true;
@@ -118,9 +132,9 @@ void UdpDriver::sendPacket(PacketInfo &packet) {
   auto p_conn = createUdpConnection(packet.srcPort);
   if (p_conn == nullptr) {
     ;
-#if UDP_DRIVER_VERBOSE
-    printf("Failed to create connection on port %u \n", packet.srcPort);
-#endif
+
+    UDP_DRIVER_LOG("Failed to create connection on port %u \n", packet.srcPort);
+
     return;
   }
 

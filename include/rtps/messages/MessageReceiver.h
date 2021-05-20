@@ -63,7 +63,8 @@ private:
   bool processHeader(MessageProcessingInfo &msgInfo);
   bool processSubmessage(MessageProcessingInfo &msgInfo,
                          const SubmessageHeader &submsgHeader);
-  bool processDataSubmessage(MessageProcessingInfo &msgInfo);
+  bool processDataSubmessage(MessageProcessingInfo &msgInfo,
+                             const SubmessageHeader &submsgHeader);
   bool processHeartbeatSubmessage(MessageProcessingInfo &msgInfo);
   bool processAckNackSubmessage(MessageProcessingInfo &msgInfo);
 };

@@ -28,13 +28,15 @@ Author: i11 - Embedded Software, RWTH Aachen University
 #include "rtps/entities/Reader.h"
 #include "rtps/entities/Writer.h"
 #include "rtps/messages/MessageTypes.h"
+#include "rtps/utils/Log.h"
 
 using rtps::MessageReceiver;
 
-#define RECV_VERBOSE 0
-
-#if RECV_VERBOSE
-#include "rtps/utils/printutils.h"
+#if RECV_VERBOSE && RTPS_GLOBAL_VERBOSE
+#define RECV_LOG(...)
+#include "rtps/utils/printutils.h" if (true){printf("[MessageReceiver] "); printf(__VA_ARGS__); printf("\n"); }
+#else
+#define RECV_LOG(...) //
 #endif
 
 MessageReceiver::MessageReceiver(Participant *part) : mp_part(part) {}
@@ -71,9 +73,7 @@ bool MessageReceiver::processHeader(MessageProcessingInfo &msgInfo) {
   }
 
   if (header.guidPrefix.id == mp_part->m_guidPrefix.id) {
-#if RECV_VERBOSE
-    printf("[MessageReceiver]: Received own message.\n");
-#endif
+    RECV_LOG("[MessageReceiver]: Received own message.\n");
     return false; // Don't process our own packet
   }
 
@@ -96,48 +96,37 @@ bool MessageReceiver::processSubmessage(MessageProcessingInfo &msgInfo,
 
   switch (submsgHeader.submessageId) {
   case SubmessageKind::ACKNACK:
-#if RECV_VERBOSE
-    printf("Processing AckNack submessage\n");
-#endif
+    RECV_LOG("Processing AckNack submessage\n");
     success = processAckNackSubmessage(msgInfo);
     break;
   case SubmessageKind::DATA:
-#if RECV_VERBOSE
-    printf("Processing Data submessage\n");
-#endif
-    success = processDataSubmessage(msgInfo);
+    RECV_LOG("Processing Data submessage\n");
+    success = processDataSubmessage(msgInfo, submsgHeader);
     break;
   case SubmessageKind::HEARTBEAT:
-#if RECV_VERBOSE
-    printf("Processing Heartbeat submessage\n");
-#endif
+    RECV_LOG("Processing Heartbeat submessage\n");
     success = processHeartbeatSubmessage(msgInfo);
     break;
   case SubmessageKind::INFO_DST:
-#if RECV_VERBOSE
-    printf("Info_DST submessage not relevant.\n");
-#endif
+    RECV_LOG("Info_DST submessage not relevant.\n");
     success = true; // Not relevant
     break;
   case SubmessageKind::INFO_TS:
-#if RECV_VERBOSE
-    printf("Info_TS submessage not relevant.\n");
-#endif
+    RECV_LOG("Info_TS submessage not relevant.\n");
     success = true; // Not relevant now
     break;
   default:
-#if RECV_VERBOSE
-    printf("Submessage of type %u currently not supported. Skipping..\n",
-           static_cast<uint8_t>(submsgHeader->submessageId));
-#endif
+    RECV_LOG("Submessage of type %u currently not supported. Skipping..\n",
+             static_cast<uint8_t>(submsgHeader.submessageId));
     success = false;
   }
   msgInfo.nextPos +=
-      submsgHeader.submessageLength + SubmessageHeader::getRawSize();
+      submsgHeader.octetsToNextHeader + SubmessageHeader::getRawSize();
   return success;
 }
 
-bool MessageReceiver::processDataSubmessage(MessageProcessingInfo &msgInfo) {
+bool MessageReceiver::processDataSubmessage(
+    MessageProcessingInfo &msgInfo, const SubmessageHeader &submsgHeader) {
   SubmessageData dataSubmsg;
   if (!deserializeMessage(msgInfo, dataSubmsg)) {
     return false;
@@ -145,24 +134,27 @@ bool MessageReceiver::processDataSubmessage(MessageProcessingInfo &msgInfo) {
 
   const uint8_t *serializedData =
       msgInfo.getPointerToCurrentPos() + SubmessageData::getRawSize();
-  const DataSize_t size =
-      msgInfo.size - (msgInfo.nextPos + SubmessageData::getRawSize());
 
-  // bool isLittleEndian = (submsgHeader->flags &
-  // SubMessageFlag::FLAG_ENDIANESS); bool hasInlineQos = (submsgHeader->flags &
-  // SubMessageFlag::FLAG_INLINE_QOS);
+  const DataSize_t size = submsgHeader.octetsToNextHeader -
+                          SubmessageData::getRawSize() +
+                          SubmessageHeader::getRawSize();
 
-  Reader *reader = mp_part->getReader(dataSubmsg.readerId);
+  Reader *reader;
+  if (dataSubmsg.readerId == ENTITYID_UNKNOWN) {
+    reader = mp_part->getReaderByWriterId(
+        Guid_t{sourceGuidPrefix, dataSubmsg.writerId});
+  } else {
+    reader = mp_part->getReader(dataSubmsg.readerId);
+  }
   if (reader != nullptr) {
-    Guid writerGuid{sourceGuidPrefix, dataSubmsg.writerId};
+    Guid_t writerGuid{sourceGuidPrefix, dataSubmsg.writerId};
     ReaderCacheChange change{ChangeKind_t::ALIVE, writerGuid,
                              dataSubmsg.writerSN, serializedData, size};
     reader->newChange(change);
   } else {
-#if RECV_VERBOSE
-    printf("Couldn't find a reader with id: ");
-    printEntityId(dataSubmsg->readerId);
-    printf("\n");
+#if RECV_VERBOSE && RTPS_GLOBAL_VERBOSE
+    RECV_LOG("Couldn't find a reader with id: ");
+    printEntityId(dataSubmsg.readerId);
 #endif
   }
 
@@ -179,6 +171,7 @@ bool MessageReceiver::processHeartbeatSubmessage(
   Reader *reader = mp_part->getReader(submsgHB.readerId);
   if (reader != nullptr) {
     reader->onNewHeartbeat(submsgHB, sourceGuidPrefix);
+    mp_part->addHeartbeat(sourceGuidPrefix);
     return true;
   } else {
     return false;

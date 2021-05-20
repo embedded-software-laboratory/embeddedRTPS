@@ -30,7 +30,7 @@ Author: i11 - Embedded Software, RWTH Aachen University
 
 namespace rtps {
 struct WriterProxy {
-  Guid remoteWriterGuid;
+  Guid_t remoteWriterGuid;
   SequenceNumber_t expectedSN;
   Count_t ackNackCount;
   Count_t hbCount;
@@ -38,7 +38,7 @@ struct WriterProxy {
 
   WriterProxy() = default;
 
-  WriterProxy(const Guid &guid, const Locator &loc)
+  WriterProxy(const Guid_t &guid, const Locator &loc)
       : remoteWriterGuid(guid),
         expectedSN(SequenceNumber_t{0, 1}), ackNackCount{1}, hbCount{0},
         remoteLocator(loc) {}

@@ -77,6 +77,13 @@ enum class ReliabilityKind_t : uint32_t {
   RELIABLE = 2 // Specification says 3 but eprosima sends 2
 };
 
+enum class DurabilityKind_t : uint32_t {
+  VOLATILE = 0,
+  TRANSIENT_LOCAL = 1,
+  TRANSIENT = 2,
+  PERSISTENT = 3
+};
+
 struct GuidPrefix_t {
   std::array<uint8_t, 12> id;
 
@@ -97,12 +104,23 @@ struct EntityId_t {
   bool operator!=(const EntityId_t &other) const { return !(*this == other); }
 };
 
-struct Guid {
+struct Guid_t {
   GuidPrefix_t prefix;
   EntityId_t entityId;
 
-  bool operator==(const Guid &other) const {
+  bool operator==(const Guid_t &other) const {
     return this->prefix == other.prefix && this->entityId == other.entityId;
+  }
+
+  static uint32_t sum(const Guid_t &other) {
+    uint32_t ret = 0;
+    for (const auto &i : other.prefix.id) {
+      ret += i;
+    }
+    for (const auto &i : other.entityId.entityKey) {
+      ret += i;
+    }
+    return ret;
   }
 };
 
@@ -240,6 +258,7 @@ const EntityId_t ENTITYID_P2P_BUILTIN_PARTICIPANT_MESSAGE_READER = {
     {00, 02, 00}, EntityKind_t::BUILD_IN_READER_WITH_KEY};
 
 const GuidPrefix_t GUIDPREFIX_UNKNOWN{};
+const Guid_t GUID_UNKNOWN{};
 
 const ParticipantId_t PARTICIPANT_ID_INVALID = -1;
 

@@ -31,10 +31,13 @@ namespace rtps {
 
 #define IS_LITTLE_ENDIAN 1
 
+// define only if using FreeRTOS
+#define OS_IS_FREERTOS
+
 namespace Config {
 const VendorId_t VENDOR_ID = {13, 37};
 const std::array<uint8_t, 4> IP_ADDRESS = {
-    192, 168, 0, 47}; // Needs to be set in lwipcfg.h too.
+    192, 168, 0, 66}; // Needs to be set in lwipcfg.h too.
 const GuidPrefix_t BASE_GUID_PREFIX{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12};
 
 const uint8_t DOMAIN_ID = 0; // 230 possible with UDP
@@ -60,6 +63,8 @@ const uint16_t SPDP_WRITER_STACKSIZE = 550;    // byte
 
 const uint16_t SF_WRITER_HB_PERIOD_MS = 4000;
 const uint16_t SPDP_RESEND_PERIOD_MS = 10000;
+const uint8_t SPDP_CYCLECOUNT_HEARTBEAT =
+    2; // skip x SPDP rounds before checking liveliness
 const uint8_t SPDP_WRITER_PRIO = 3;
 const uint8_t SPDP_MAX_NUMBER_FOUND_PARTICIPANTS = 5;
 const uint8_t SPDP_MAX_NUM_LOCATORS = 5;

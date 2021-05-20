@@ -29,20 +29,20 @@ Author: i11 - Embedded Software, RWTH Aachen University
 
 // Currently initialization is expected to be done in project main for e.g.
 // Aurix and STM32
-#if defined(unix) || defined(WIN32) || defined(_WIN32) ||                      \
+#if defined(unix) || defined(__unix__) || defined(WIN32) || defined(_WIN32) || \
     defined(__WIN32) && !defined(__CYGWIN__)
 
 #include "lwip/ip4_addr.h"
 #include "lwip/netif.h"
+#include "lwipcfg.h"
 #include <lwip/tcpip.h>
 
-#ifdef unix
+#if defined(unix) || defined(__unix__)
 #include "netif/tapif.h"
 #elif defined(WIN32) || defined(_WIN32) ||                                     \
     defined(__WIN32) && !defined(__CYGWIN__)
 #include "../pcapif.h"
 #include "default_netif.h"
-#include "lwipcfg.h"
 #else
 #include "ethernetif.h"
 #endif
@@ -72,7 +72,7 @@ static void init(void *arg) {
   printf("Starting lwIP, local interface IP is %s\n", ip4addr_ntoa(&ipaddr));
 #endif
 
-#ifdef unix
+#if defined(unix) || defined(__unix__)
   netif_add(&netif, &ipaddr, &netmask, &gw, nullptr, tapif_init, tcpip_input);
 #elif defined(WIN32) || defined(_WIN32) ||                                     \
     defined(__WIN32) && !defined(__CYGWIN__)

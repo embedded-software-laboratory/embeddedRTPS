@@ -87,6 +87,13 @@ struct Locator {
                              address[15]);
   }
 
+  bool isSameAddress(ip4_addr_t *address) {
+    ip4_addr_t ownaddress = getIp4Address();
+    return ip4_addr_cmp(&ownaddress, address);
+  }
+
+  inline uint32_t getLocatorPort() { return static_cast<Ip4Port_t>(port); }
+
   inline bool isSameSubnet() const {
     return UdpDriver::isSameSubnet(getIp4Address());
   }
@@ -109,7 +116,8 @@ inline Locator getUserUnicastLocator(ParticipantId_t participantId) {
       Config::IP_ADDRESS[3], getUserUnicastPort(participantId));
 }
 
-inline Locator getUserMulticastLocator() {
+inline Locator getUserMulticastLocator() { // this would be a unicastaddress, as
+                                           // defined in config
   return Locator::createUDPv4Locator(
       Config::IP_ADDRESS[0], Config::IP_ADDRESS[1], Config::IP_ADDRESS[2],
       Config::IP_ADDRESS[3], getUserMulticastPort());

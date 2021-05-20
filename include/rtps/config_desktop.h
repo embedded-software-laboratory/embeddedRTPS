@@ -34,7 +34,7 @@ namespace rtps {
 namespace Config {
 const VendorId_t VENDOR_ID = {13, 37};
 const std::array<uint8_t, 4> IP_ADDRESS = {
-    192, 168, 0, 66}; // Needs to be set in lwipcfg.h too.
+   192, 168, 1, 2}; // Needs to be set in lwipcfg.h too.
 const GuidPrefix_t BASE_GUID_PREFIX{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 9};
 
 const uint8_t DOMAIN_ID = 0; // 230 possible with UDP
@@ -64,12 +64,19 @@ const int THREAD_POOL_WRITER_STACKSIZE = 1100; // byte
 const int THREAD_POOL_READER_STACKSIZE = 1600; // byte
 const uint16_t SPDP_WRITER_STACKSIZE = 550;    // byte
 
-const uint16_t SF_WRITER_HB_PERIOD_MS = 4000;
+const uint16_t SF_WRITER_HB_PERIOD_MS = 500;
 const uint16_t SPDP_RESEND_PERIOD_MS = 10000;
+const uint8_t SPDP_CYCLECOUNT_HEARTBEAT =
+    2; // skip x SPDP rounds before checking liveliness
 const uint8_t SPDP_WRITER_PRIO = 3;
 const uint8_t SPDP_MAX_NUMBER_FOUND_PARTICIPANTS = 5;
 const uint8_t SPDP_MAX_NUM_LOCATORS = 5;
-const Duration_t SPDP_LEASE_DURATION = {100, 0};
+const Duration_t SPDP_DEFAULT_REMOTE_LEASE_DURATION = {
+    100, 0}; // Default lease duration for remote participants, usually
+             // overwritten by remote info
+const Duration_t SPDP_MAX_REMOTE_LEASE_DURATION = {
+    180,
+    0}; // Absolute maximum lease duration, ignoring remote participant info
 
 const int MAX_NUM_UDP_CONNECTIONS = 10;
 

@@ -22,33 +22,46 @@ This file is part of embeddedRTPS.
 Author: i11 - Embedded Software, RWTH Aachen University
 */
 
+#include "lwip/sys.h"
 #include "lwip/tcpip.h"
 #include "rtps/entities/StatefulReader.h"
 #include "rtps/messages/MessageFactory.h"
 #include "rtps/utils/Lock.h"
 
-#define SFR_VERBOSE 0
-
-#if SFR_VERBOSE
+#if SFR_VERBOSE && RTPS_GLOBAL_VERBOSE
 #include "rtps/utils/printutils.h"
+#define SFR_LOG(...)                                                           \
+  if (true) {                                                                  \
+    printf("[StatefulReader %s] ", &m_attributes.topicName[0]);                \
+    printf(__VA_ARGS__);                                                       \
+    printf("\n");                                                              \
+  }
+#else
+#define SFR_LOG(...) //
 #endif
 
 using rtps::StatefulReaderT;
 
 template <class NetworkDriver>
 StatefulReaderT<NetworkDriver>::~StatefulReaderT() {
-  // if(sys_mutex_valid(&m_mutex)){
-  sys_mutex_free(&m_mutex);
-  //}
+  //  if(sys_mutex_valid(&m_mutex)){ // Getting invalid pointer error, there
+  //  seems sth strange
+  //    sys_mutex_free(&m_mutex);
+  //  }
 }
 
 template <class NetworkDriver>
 void StatefulReaderT<NetworkDriver>::init(const TopicData &attributes,
                                           NetworkDriver &driver) {
+  if (sys_mutex_new(&m_mutex) != ERR_OK) {
+
+    SFR_LOG("StatefulReader: Failed to create mutex.\n");
+
+    return;
+  }
   m_attributes = attributes;
   m_transport = &driver;
   m_packetInfo.srcPort = attributes.unicastLocator.port;
-  sys_mutex_new(&m_mutex);
   m_is_initialized_ = true;
 }
 
@@ -77,29 +90,39 @@ void StatefulReaderT<NetworkDriver>::registerCallback(ddsReaderCallback_fp cb,
     m_callback = cb;
     m_callee = callee; // It's okay if this is null
   } else {
-#if SLR_VERBOSE
-    printf("StatefulReader[%s]: Passed callback is nullptr\n",
-           &m_attributes.topicName[0]);
-#endif
+
+    SFR_LOG("Passed callback is nullptr\n");
   }
 }
 
 template <class NetworkDriver>
 bool StatefulReaderT<NetworkDriver>::addNewMatchedWriter(
     const WriterProxy &newProxy) {
-#if SFR_VERBOSE
-  printf("StatefulReader[%s]: New writer added with id: ",
-         &this->m_attributes.topicName[0]);
+#if SFR_VERBOSE && RTPS_GLOBAL_VERBOSE
+  SFR_LOG("New writer added with id: ");
   printGuid(newProxy.remoteWriterGuid);
-  printf("\n");
+  SFR_LOG("\n");
 #endif
   return m_proxies.add(newProxy);
 }
 
 template <class NetworkDriver>
-void StatefulReaderT<NetworkDriver>::removeWriter(const Guid &guid) {
+void StatefulReaderT<NetworkDriver>::removeWriter(const Guid_t &guid) {
   auto isElementToRemove = [&](const WriterProxy &proxy) {
     return proxy.remoteWriterGuid == guid;
+  };
+  auto thunk = [](void *arg, const WriterProxy &value) {
+    return (*static_cast<decltype(isElementToRemove) *>(arg))(value);
+  };
+
+  m_proxies.remove(thunk, &isElementToRemove);
+}
+
+template <class NetworkDriver>
+void StatefulReaderT<NetworkDriver>::removeWriterOfParticipant(
+    const GuidPrefix_t &guidPrefix) {
+  auto isElementToRemove = [&](const WriterProxy &proxy) {
+    return proxy.remoteWriterGuid.prefix == guidPrefix;
   };
   auto thunk = [](void *arg, const WriterProxy &value) {
     return (*static_cast<decltype(isElementToRemove) *>(arg))(value);
@@ -125,21 +148,19 @@ bool StatefulReaderT<NetworkDriver>::onNewHeartbeat(
   }
 
   if (writer == nullptr) {
-#if SFR_VERBOSE
-    printf("StatefulReader[%s]: Ignore heartbeat. Couldn't find a matching "
-           "writer with id: ",
-           &this->m_attributes.topicName[0]);
+
+#if SFR_VERBOSE && RTPS_GLOBAL_VERBOSE
+    SFR_LOG("Ignore heartbeat. Couldn't find a matching "
+            "writer with id:");
     printEntityId(msg.writerId);
-    printf("\n");
+    SFR_LOG("\n");
 #endif
     return false;
   }
 
   if (msg.count.value <= writer->hbCount.value) {
-#if SFR_VERBOSE
-    printf("StatefulReader[%s]: Ignore heartbeat. Count too low.\n",
-           &this->m_attributes.topicName[0]);
-#endif
+
+    SFR_LOG("Ignore heartbeat. Count too low.\n");
     return false;
   }
 
@@ -152,10 +173,7 @@ bool StatefulReaderT<NetworkDriver>::onNewHeartbeat(
                                    writer->getMissing(msg.firstSN, msg.lastSN),
                                    writer->getNextAckNackCount());
 
-#if SFR_VERBOSE
-  printf("StatefulReader[%s]: Sending acknack.\n",
-         &this->m_attributes.topicName[0]);
-#endif
+  SFR_LOG("Sending acknack.\n");
   m_transport->sendPacket(info);
   return true;
 }

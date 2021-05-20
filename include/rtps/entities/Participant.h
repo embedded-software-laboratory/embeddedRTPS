@@ -78,16 +78,25 @@ public:
   Writer *getMatchingWriter(const TopicData &topicData) const;
   //! (Probably) Thread safe if readers cannot be removed
   Reader *getReader(EntityId_t id) const;
+  Reader *getReaderByWriterId(const Guid_t &guid) const;
   Reader *getMatchingReader(const TopicData &topicData) const;
 
   bool addNewRemoteParticipant(const ParticipantProxyData &remotePart);
   bool removeRemoteParticipant(const GuidPrefix_t &prefix);
+  void removeAllEntitiesOfParticipant(const GuidPrefix_t &prefix);
   const ParticipantProxyData *findRemoteParticipant(const GuidPrefix_t &prefix);
+  void refreshRemoteParticipantLiveliness(const GuidPrefix_t &prefix);
   uint32_t getRemoteParticipantCount();
   MessageReceiver *getMessageReceiver();
+  void addHeartbeat(GuidPrefix_t sourceGuidPrefix);
+  bool checkAndResetHeartbeats();
+
+  bool hasReaderWithMulticastLocator(ip4_addr_t address);
 
   void addBuiltInEndpoints(BuiltInEndpoints &endpoints);
   void newMessage(const uint8_t *data, DataSize_t size);
+
+  SPDPAgent &getSPDPAgent();
 
 private:
   MessageReceiver m_receiver;
@@ -98,6 +107,7 @@ private:
   std::array<Reader *, Config::NUM_READERS_PER_PARTICIPANT> m_readers{};
   uint8_t m_numReaders = 0;
 
+  sys_mutex_t m_mutex;
   MemoryPool<ParticipantProxyData, Config::SPDP_MAX_NUMBER_FOUND_PARTICIPANTS>
       m_remoteParticipants;
 

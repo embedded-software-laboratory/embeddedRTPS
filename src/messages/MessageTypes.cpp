@@ -60,7 +60,7 @@ bool rtps::deserializeMessage(const MessageProcessingInfo &info,
   const uint8_t *currentPos = info.getPointerToCurrentPos();
   header.submessageId = static_cast<SubmessageKind>(*currentPos++);
   header.flags = *(currentPos++);
-  doCopyAndMoveOn(reinterpret_cast<uint8_t *>(&header.submessageLength),
+  doCopyAndMoveOn(reinterpret_cast<uint8_t *>(&header.octetsToNextHeader),
                   currentPos, sizeof(uint16_t));
   return true;
 }
@@ -76,7 +76,7 @@ bool rtps::deserializeMessage(const MessageProcessingInfo &info,
 
   // Check for length including data
   if (info.getRemainingSize() <
-      SubmessageHeader::getRawSize() + msg.header.submessageLength) {
+      SubmessageHeader::getRawSize() + msg.header.octetsToNextHeader) {
     return false;
   }
 

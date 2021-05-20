@@ -42,7 +42,8 @@ public:
   void newChange(const ReaderCacheChange &cacheChange) override;
   void registerCallback(ddsReaderCallback_fp cb, void *callee) override;
   bool addNewMatchedWriter(const WriterProxy &newProxy) override;
-  void removeWriter(const Guid &guid) override;
+  void removeWriter(const Guid_t &guid) override;
+  void removeWriterOfParticipant(const GuidPrefix_t &guidPrefix) override;
   bool onNewHeartbeat(const SubmessageHeartbeat &msg,
                       const GuidPrefix_t &remotePrefix) override;
 
@@ -50,7 +51,6 @@ private:
   PacketInfo
       m_packetInfo; // TODO intended for reuse but buffer not used as such
   NetworkDriver *m_transport;
-  MemoryPool<WriterProxy, Config::NUM_WRITER_PROXIES_PER_READER> m_proxies;
 
   ddsReaderCallback_fp m_callback = nullptr;
   void *m_callee = nullptr;

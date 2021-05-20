@@ -52,7 +52,8 @@ protected: // For testing purposes
 private:
   Participant *m_part;
   sys_mutex_t m_mutex;
-  uint8_t m_buffer[300]; // TODO check size
+  uint8_t m_buffer[600]; // TODO check size, currently changed from 300 to 600
+                         // (FastDDS gives too much options)
   BuiltInEndpoints m_endpoints;
   void (*mfp_onNewPublisherCallback)(void *arg) = nullptr;
   void *m_onNewPublisherArgs = nullptr;

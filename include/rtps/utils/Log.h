@@ -28,41 +28,19 @@ Author: i11 - Embedded Software, RWTH Aachen University
 #include <cstdio>
 #include <stdarg.h>
 
-#ifdef HIGHTEC_TOOLCHAIN
-#include "FreeRTOS.h"
-#include "TFT.h"
-#include "task.h"
-#endif
+#define RTPS_GLOBAL_VERBOSE 0
 
-namespace rtps {
-class Log {
-public:
-  Log() = delete;
-  static void printLine(const char *format, ...) {
-#ifdef HIGHTEC_TOOLCHAIN
-    //        	constexpr uint8_t size = 25;
-    //			static const uint8_t firstLine = 0;
-    //			static const uint8_t lastLine = 10;
-    //			static uint8_t currentLine = 0;
-    //			static char output[size];
-    //
-    //        	taskENTER_CRITICAL();
-    //          va_list argList;
-    //          va_start(argList,format);
-    //          vsprintf(output,format,argList);
-    //          va_end(argList);
-    //          TFT_PrintLine(currentLine, output);
-    //          currentLine = ((currentLine + 1) % lastLine) + firstLine;
-    //          taskEXIT_CRITICAL();
-  }
-#else
-    va_list argptr;
-    va_start(argptr, format);
-    vprintf(format, argptr);
-    va_end(argptr);
-  }
-#endif
-};
-} // namespace rtps
+#define SFW_VERBOSE 1
+#define SPDP_VERBOSE 1
+#define PBUF_WRAP_VERBOSE 1
+#define SEDP_VERBOSE 1
+#define RECV_VERBOSE 1
+#define PARTICIPANT_VERBOSE 1
+#define DOMAIN_VERBOSE 1
+#define UDP_DRIVER_VERBOSE 1
+#define TSCB_VERBOSE 1
+#define SLW_VERBOSE 1
+#define SFR_VERBOSE 1
+#define SLR_VERBOSE 1
 
 #endif // RTPS_LOG_H

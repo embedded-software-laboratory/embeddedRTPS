@@ -64,15 +64,15 @@ void addSubMessageTimeStamp(Buffer &buffer, bool setInvalid = false) {
 
   if (setInvalid) {
     header.flags |= FLAG_INVALIDATE;
-    header.submessageLength = 0;
+    header.octetsToNextHeader = 0;
   } else {
-    header.submessageLength = sizeof(Time_t);
+    header.octetsToNextHeader = sizeof(Time_t);
   }
 
   serializeMessage(buffer, header);
 
   if (!setInvalid) {
-    buffer.reserve(header.submessageLength);
+    buffer.reserve(header.octetsToNextHeader);
     Time_t now = getCurrentTimeStamp();
     buffer.append(reinterpret_cast<uint8_t *>(&now.seconds),
                   sizeof(Time_t::seconds));
@@ -93,9 +93,9 @@ void addSubMessageData(Buffer &buffer, const Buffer &filledPayload,
   msg.header.flags = FLAG_BIG_ENDIAN;
 #endif
 
-  msg.header.submessageLength = SubmessageData::getRawSize() +
-                                filledPayload.spaceUsed() -
-                                numBytesUntilEndOfLength;
+  msg.header.octetsToNextHeader = SubmessageData::getRawSize() +
+                                  filledPayload.spaceUsed() -
+                                  numBytesUntilEndOfLength;
 
   if (containsInlineQos) {
     msg.header.flags |= FLAG_INLINE_QOS;
@@ -127,7 +127,7 @@ void addHeartbeat(Buffer &buffer, EntityId_t writerId, EntityId_t readerId,
                   Count_t count) {
   SubmessageHeartbeat subMsg;
   subMsg.header.submessageId = SubmessageKind::HEARTBEAT;
-  subMsg.header.submessageLength =
+  subMsg.header.octetsToNextHeader =
       SubmessageHeartbeat::getRawSize() - numBytesUntilEndOfLength;
 #if IS_LITTLE_ENDIAN
   subMsg.header.flags = FLAG_LITTLE_ENDIAN;
@@ -156,7 +156,7 @@ void addAckNack(Buffer &buffer, EntityId_t writerId, EntityId_t readerId,
   subMsg.header.flags = FLAG_BIG_ENDIAN;
 #endif
   subMsg.header.flags |= FLAG_FINAL; // For now, we don't want any response
-  subMsg.header.submessageLength =
+  subMsg.header.octetsToNextHeader =
       SubmessageAckNack::getRawSize(readerSNState) - numBytesUntilEndOfLength;
 
   subMsg.writerId = writerId;

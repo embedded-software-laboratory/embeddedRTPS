@@ -29,6 +29,7 @@ Author: i11 - Embedded Software, RWTH Aachen University
 #include "rtps/discovery/TopicData.h"
 #include "rtps/entities/ReaderProxy.h"
 #include "rtps/storages/CacheChange.h"
+#include "rtps/storages/MemoryPool.h"
 #include "rtps/storages/PBufWrapper.h"
 
 namespace rtps {
@@ -37,7 +38,8 @@ class Writer {
 public:
   TopicData m_attributes;
   virtual bool addNewMatchedReader(const ReaderProxy &newProxy) = 0;
-  virtual void removeReader(const Guid &guid) = 0;
+  virtual void removeReader(const Guid_t &guid) = 0;
+  virtual void removeReaderOfParticipant(const GuidPrefix_t &guidPrefix) = 0;
 
   //! Executes required steps like sending packets. Intended to be called by
   //! worker threads
@@ -53,6 +55,7 @@ public:
 protected:
   bool m_is_initialized_ = false;
   virtual ~Writer() = default;
+  MemoryPool<ReaderProxy, Config::NUM_READER_PROXIES_PER_WRITER> m_proxies;
 };
 } // namespace rtps
 

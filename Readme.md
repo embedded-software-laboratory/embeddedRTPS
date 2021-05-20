@@ -10,11 +10,11 @@ More information is provided in our ITSC'2019 publication [1], which we kindly a
 
 **Discovery** Simple Participant Discovery Protocol (SPDP) as well as Simple Endpoint Discovery Protocol (SEDP) are implemented.
 
-**Interoperability** We have successfully tested interoperability with eProsima FastRTPS v1.8.0.
+**Interoperability** We have sucessfully tested interoperability with **FastDDS 2.3.1**
 
 **QoS Policies** Both reliable as well as best-effort endpoints are implemented.
 
-**UDP Multicast** Our implementation currently does not make use of UDP multicast communication. This can lead to sub-optimal performance.
+**UDP Multicast** Our implementation supports multicast locators.
 
 **Message Size** Message size is currently limited by lwIP buffer size and are not split up among multiple buffers
 
@@ -34,6 +34,12 @@ The following repository provides code examples for running embeddedRTPS on the 
 
 - [STM32F767ZI](https://github.com/embedded-software-laboratory/embeddedRTPS-STM32)
 
+#### Runnig on Linux & Unittests
+
+The following repository allow to compile and run embeddedRTPS on Linux for development purposes. This repository also contains unittests for embeddedRTPS.
+
+- [embeddedRTPS-linux](https://github.com/embedded-software-laboratory/embeddedRTPS-Linux)
+
 ### Third Party Libraries
 
 embeddedRTPS makes use of the following third party libraries:
@@ -47,7 +53,7 @@ Round-trip-times (RTT) for different platforms and packet sizes are depicted in 
 
 **Table 1** 2x Infineon Aurix TC277 running embeddedRTPS. 
 
-**Table 2** STM32F7 running embeddedRTPS connected to an Intel NUC running eProsima FastRTPS.
+**Table 2** STM32F7 running embeddedRTPS connected to an Intel NUC running eProsima FastRTPS 1.8.0.
 
 <img src="https://raw.githubusercontent.com/embedded-software-laboratory/embeddedRTPS/master/media/performance_rtt.png" width="60%">
 

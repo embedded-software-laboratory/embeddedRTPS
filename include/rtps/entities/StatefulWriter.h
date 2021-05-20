@@ -36,10 +36,11 @@ template <class NetworkDriver> class StatefulWriterT final : public Writer {
 public:
   ~StatefulWriterT() override;
   bool init(TopicData attributes, TopicKind_t topicKind, ThreadPool *threadPool,
-            NetworkDriver &driver);
+            NetworkDriver &driver, bool enfUnicast = false);
 
   bool addNewMatchedReader(const ReaderProxy &newProxy) override;
-  void removeReader(const Guid &guid) override;
+  void removeReader(const Guid_t &guid) override;
+  void removeReaderOfParticipant(const GuidPrefix_t &guidPrefix) override;
   //! Executes required steps like sending packets. Intended to be called by
   //! worker threads
   void progress() override;
@@ -55,6 +56,7 @@ private:
 
   PacketInfo m_packetInfo;
   NetworkDriver *m_transport;
+  bool m_enforceUnicast;
 
   TopicKind_t m_topicKind = TopicKind_t::NO_KEY;
   SequenceNumber_t m_nextSequenceNumberToSend = {0, 1};
@@ -63,14 +65,17 @@ private:
   Count_t m_hbCount{1};
 
   bool m_running = true;
-
-  MemoryPool<ReaderProxy, Config::NUM_READER_PROXIES_PER_WRITER> m_proxies;
+  bool m_thread_running = false;
 
   bool sendData(const ReaderProxy &reader, const SequenceNumber_t &sn);
+  bool sendDataWRMulticast(const ReaderProxy &reader,
+                           const SequenceNumber_t &sn);
   static void hbFunctionJumppad(void *thisPointer);
   void sendHeartBeatLoop();
   void sendHeartBeat();
   bool isIrrelevant(ChangeKind_t kind) const;
+  void manageSendOptions();
+  void resetSendOptions();
 };
 
 using StatefulWriter = StatefulWriterT<UdpDriver>;

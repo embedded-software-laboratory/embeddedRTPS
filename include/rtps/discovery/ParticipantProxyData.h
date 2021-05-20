@@ -29,7 +29,9 @@ Author: i11 - Embedded Software, RWTH Aachen University
 #include "rtps/config.h"
 #include "rtps/messages/MessageTypes.h"
 #include "ucdr/microcdr.h"
-
+#if defined(unix) || defined(__unix__)
+#include <chrono>
+#endif
 #include <array>
 
 namespace rtps {
@@ -40,11 +42,11 @@ typedef uint32_t BuiltinEndpointSet_t;
 
 class ParticipantProxyData {
 public:
-  ParticipantProxyData() = default;
-  ParticipantProxyData(Guid guid);
+  ParticipantProxyData() { onAliveSignal(); }
+  ParticipantProxyData(Guid_t guid);
 
   ProtocolVersion_t m_protocolVersion = PROTOCOLVERSION;
-  Guid m_guid = Guid{GUIDPREFIX_UNKNOWN, ENTITYID_UNKNOWN};
+  Guid_t m_guid = Guid_t{GUIDPREFIX_UNKNOWN, ENTITYID_UNKNOWN};
   VendorId_t m_vendorId = VENDOR_UNKNOWN;
   bool m_expectsInlineQos = false;
   BuiltinEndpointSet_t m_availableBuiltInEndpoints;
@@ -57,8 +59,13 @@ public:
   std::array<Locator, Config::SPDP_MAX_NUM_LOCATORS>
       m_defaultMulticastLocatorList;
   Count_t m_manualLivelinessCount{1};
-  Duration_t m_leaseDuration = Config::SPDP_LEASE_DURATION;
-
+  Duration_t m_leaseDuration = Config::SPDP_DEFAULT_REMOTE_LEASE_DURATION;
+#if defined(unix) || defined(__unix__)
+  std::chrono::time_point<std::chrono::high_resolution_clock>
+      m_lastLivelinessReceivedTimestamp;
+#else
+  TickType_t m_lastLivelinessReceivedTickCount = 0;
+#endif
   void reset();
 
   bool readFromUcdrBuffer(ucdrBuffer &buffer);
@@ -69,6 +76,10 @@ public:
   inline bool hasPublicationReader();
   inline bool hasSubscriptionWriter();
   inline bool hasSubscriptionReader();
+
+  inline void onAliveSignal();
+  inline bool isAlive();
+  inline uint32_t getAliveSignalAgeInMilliseconds();
 
 private:
   bool
@@ -131,5 +142,45 @@ bool ParticipantProxyData::hasSubscriptionReader() {
   return (m_availableBuiltInEndpoints &
           DISC_BUILTIN_ENDPOINT_SUBSCRIPTION_DETECTOR) != 0;
 }
+
+void ParticipantProxyData::onAliveSignal() {
+#if defined(unix) || defined(__unix__)
+  m_lastLivelinessReceivedTimestamp = std::chrono::high_resolution_clock::now();
+#else
+  m_lastLivelinessReceivedTickCount = xTaskGetTickCount();
+#endif
+}
+
+uint32_t ParticipantProxyData::getAliveSignalAgeInMilliseconds() {
+#if defined(unix) || defined(__unix__)
+  auto now = std::chrono::high_resolution_clock::now();
+  std::chrono::duration<double, std::milli> duration =
+      now - m_lastLivelinessReceivedTimestamp;
+  return duration.count();
+#else
+  return (xTaskGetTickCount() - m_lastLivelinessReceivedTickCount) *
+         (1000 / configTICK_RATE_HZ);
+#endif
+}
+
+/*
+ *  Returns true if last heartbeat within lease duration, else false
+ */
+bool ParticipantProxyData::isAlive() {
+  uint32_t lease_in_ms =
+      m_leaseDuration.seconds * 1000 + m_leaseDuration.fraction * 1e-6;
+
+  uint32_t max_lease_in_ms =
+      Config::SPDP_MAX_REMOTE_LEASE_DURATION.seconds * 1000 +
+      Config::SPDP_MAX_REMOTE_LEASE_DURATION.fraction * 1e-6;
+
+  auto heatbeat_age_in_ms = getAliveSignalAgeInMilliseconds();
+
+  if (heatbeat_age_in_ms > std::min(lease_in_ms, max_lease_in_ms)) {
+    return false;
+  }
+  return true;
+}
+
 } // namespace rtps
 #endif // RTPS_PARTICIPANTPROXYDATA_H

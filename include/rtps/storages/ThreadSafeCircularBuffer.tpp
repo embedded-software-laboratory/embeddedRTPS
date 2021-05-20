@@ -3,8 +3,19 @@
 #define RTPS_THREADSAFECIRCULARBUFFER_TPP
 
 #include "rtps/utils/Lock.h"
+#include "rtps/utils/Log.h"
 
-#define TSCB_VERBOSE 0
+#if TSCB_VERBOSE && RTPS_GLOBAL_VERBOSE
+#define TSCB_LOG(...)                                                          \
+  if (true) {                                                                  \
+    printf("[TSCircularBuffer] ");                                             \
+    printf(__VA_ARGS__);                                                       \
+    printf("\n");                                                              \
+  }
+#else
+#define TSCB_LOG(...) //
+#endif
+
 namespace rtps {
 
 template <typename T, uint16_t SIZE>
@@ -13,14 +24,11 @@ bool ThreadSafeCircularBuffer<T, SIZE>::init() {
     return true;
   }
   if (sys_mutex_new(&m_mutex) != ERR_OK) {
-#if TSCB_VERBOSE
-    printf("Failed to create mutex \n");
-#endif
+    TSCB_LOG("Failed to create mutex \n");
     return false;
   } else {
-#if TSCB_VERBOSE
-    printf("Successfully created mutex at %p\n", static_cast<void *>(&m_mutex));
-#endif
+    TSCB_LOG("Successfully created mutex at %p\n",
+             static_cast<void *>(&m_mutex));
     m_initialized = true;
     return true;
   }
