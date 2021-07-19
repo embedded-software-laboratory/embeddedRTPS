@@ -31,7 +31,11 @@ Author: i11 - Embedded Software, RWTH Aachen University
 namespace rtps {
 
 struct UdpConnection {
+#ifdef CHIBIOS
+  udp_pcb *pcb = NULL;
+#else
   udp_pcb *pcb = nullptr;
+#endif
   uint16_t port = 0;
 
   UdpConnection() = default; // Required for static allocation

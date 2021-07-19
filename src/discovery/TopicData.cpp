@@ -76,7 +76,7 @@ bool TopicData::readFromUcdrBuffer(ucdrBuffer &buffer) {
       break;
     case ParameterId::PID_UNICAST_LOCATOR:
       uLoc.readFromUcdrBuffer(buffer);
-      if (uLoc.kind == LocatorKind_t::LOCATOR_KIND_UDPv4 && uLoc.isSameSubnet()) {
+      if (uLoc.kind == LocatorKind_t::LOCATOR_KIND_UDPv4) {
         unicastLocator = uLoc;
       }
       break;
