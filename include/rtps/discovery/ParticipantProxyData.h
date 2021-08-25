@@ -29,11 +29,8 @@ Author: i11 - Embedded Software, RWTH Aachen University
 #include "rtps/config.h"
 #include "rtps/messages/MessageTypes.h"
 
-#ifdef CHIBIOS
-#include <ucdr/microcdr.h>
-#else
 #include "ucdr/microcdr.h"
-#endif
+
 #if defined(unix) || defined(__unix__)
 #include <chrono>
 #elif defined(CHIBIOS)
@@ -172,8 +169,7 @@ uint32_t ParticipantProxyData::getAliveSignalAgeInMilliseconds() {
   return (xTaskGetTickCount() - m_lastLivelinessReceivedTickCount) *
          (1000 / configTICK_RATE_HZ);
 #else
-  return (chVTGetSystemTimeX() - m_lastLivelinessReceivedTickCount) *
-           (1000 / 1);
+  return chTimeI2MS(chVTGetSystemTimeX() - m_lastLivelinessReceivedTickCount);
 #endif
 }
 
