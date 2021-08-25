@@ -273,8 +273,9 @@ const SequenceNumber_t SEQUENCENUMBER_UNKNOWN = {-1, 0};
 
 const Time_t TIME_ZERO = {};
 const Time_t TIME_INVALID = {-1, 0xFFFFFFFF};
-//const Time_t TIME_INFINITE = {0x7FFFFFFF, 0xFFFFFFFF};
-
+#ifndef CHIBIOS //has its own TIME_INFINITE
+const Time_t TIME_INFINITE = {0x7FFFFFFF, 0xFFFFFFFF};
+#endif
 const VendorId_t VENDOR_UNKNOWN = {};
 } // namespace rtps
 

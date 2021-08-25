@@ -29,7 +29,7 @@ Author: i11 - Embedded Software, RWTH Aachen University
 
 #include "rtps/common/Locator.h"
 #include "rtps/config.h"
-//#include "ucdr/microcdr.h"
+#include "ucdr/microcdr.h"
 #include <array>
 
 namespace rtps {

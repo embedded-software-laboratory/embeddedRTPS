@@ -30,7 +30,7 @@ Author: i11 - Embedded Software, RWTH Aachen University
 #include "rtps/config.h"
 #include "rtps/discovery/BuiltInEndpoints.h"
 #include "rtps/discovery/ParticipantProxyData.h"
-//#include "ucdr/microcdr.h"
+#include "ucdr/microcdr.h"
 
 namespace rtps {
 class Participant;

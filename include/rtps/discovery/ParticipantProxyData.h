@@ -37,7 +37,7 @@ Author: i11 - Embedded Software, RWTH Aachen University
 #if defined(unix) || defined(__unix__)
 #include <chrono>
 #elif defined(CHIBIOS)
-//#include "chtime.h"
+#include "chtime.h"
 #endif
 #include <array>
 
