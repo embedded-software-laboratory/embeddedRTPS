@@ -77,7 +77,8 @@ bool TopicData::readFromUcdrBuffer(ucdrBuffer &buffer) {
       break;
     case ParameterId::PID_UNICAST_LOCATOR:
       uLoc.readFromUcdrBuffer(buffer);
-      if (uLoc.kind == LocatorKind_t::LOCATOR_KIND_UDPv4 && uLoc.isSameSubnet()) {
+      if (uLoc.kind == LocatorKind_t::LOCATOR_KIND_UDPv4 &&
+          uLoc.isSameSubnet()) {
         unicastLocator = uLoc;
       }
       break;
@@ -186,7 +187,7 @@ bool TopicData::serializeIntoUcdrBuffer(ucdrBuffer &buffer) const {
   return true;
 }
 
-bool TopicDataCompressed::matchesTopicOf(const TopicData& other) const {
+bool TopicDataCompressed::matchesTopicOf(const TopicData &other) const {
   return (std::hash<std::string>{}(std::string(other.topicName)) == topicHash &&
-		  std::hash<std::string>{}(std::string(other.typeName)) == typeHash);
+          std::hash<std::string>{}(std::string(other.typeName)) == typeHash);
 }

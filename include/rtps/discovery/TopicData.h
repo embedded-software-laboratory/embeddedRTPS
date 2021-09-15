@@ -69,7 +69,6 @@ struct TopicData {
   bool serializeIntoUcdrBuffer(ucdrBuffer &buffer) const;
 };
 
-
 struct TopicDataCompressed {
   Guid_t endpointGuid;
   std::size_t topicHash;
@@ -80,17 +79,17 @@ struct TopicDataCompressed {
   Locator multicastLocator;
 
   TopicDataCompressed() = default;
-  TopicDataCompressed(const TopicData& topic_data){
-	  endpointGuid = topic_data.endpointGuid;
-	  topicHash = std::hash<std::string>{}(std::string(topic_data.topicName));
-	  typeHash = std::hash<std::string>{}(std::string(topic_data.typeName));
-	  reliabilityKind = topic_data.reliabilityKind;
-	  durabilityKind = topic_data.durabilityKind;
-	  unicastLocator = topic_data.unicastLocator;
-	  multicastLocator = topic_data.multicastLocator;
+  TopicDataCompressed(const TopicData &topic_data) {
+    endpointGuid = topic_data.endpointGuid;
+    topicHash = std::hash<std::string>{}(std::string(topic_data.topicName));
+    typeHash = std::hash<std::string>{}(std::string(topic_data.typeName));
+    reliabilityKind = topic_data.reliabilityKind;
+    durabilityKind = topic_data.durabilityKind;
+    unicastLocator = topic_data.unicastLocator;
+    multicastLocator = topic_data.multicastLocator;
   }
 
-  bool matchesTopicOf (const TopicData& topic_data) const;
+  bool matchesTopicOf(const TopicData &topic_data) const;
 };
 } // namespace rtps
 

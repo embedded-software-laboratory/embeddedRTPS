@@ -23,8 +23,8 @@ Author: i11 - Embedded Software, RWTH Aachen University
 */
 
 #include "rtps/entities/StatelessReader.h"
-#include "rtps/utils/Log.h"
 #include "rtps/utils/Lock.h"
+#include "rtps/utils/Log.h"
 
 using rtps::StatelessReader;
 
@@ -104,6 +104,5 @@ bool StatelessReader::onNewHeartbeat(const SubmessageHeartbeat &,
   // nothing to do
   return true;
 }
-
 
 #undef SLR_VERBOSE

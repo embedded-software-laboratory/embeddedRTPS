@@ -56,18 +56,21 @@ private:
                          // (FastDDS gives too many options)
   BuiltInEndpoints m_endpoints;
   /*
-   * If we add readers later on, remote participants will not send matching writer proxies again (and vice versa).
-   * This is done only once during discovery.
-   * Therefore, we need to keep track of remote endpoints. Topic and type are represented as hash values to save memory.
+   * If we add readers later on, remote participants will not send matching
+   * writer proxies again (and vice versa). This is done only once during
+   * discovery. Therefore, we need to keep track of remote endpoints. Topic and
+   * type are represented as hash values to save memory.
    */
-  MemoryPool<TopicDataCompressed, Config::MAX_NUM_UNMATCHED_REMOTE_WRITERS> m_unmatchedRemoteWriters;
+  MemoryPool<TopicDataCompressed, Config::MAX_NUM_UNMATCHED_REMOTE_WRITERS>
+      m_unmatchedRemoteWriters;
   size_t m_numUnmatchedRemoteWriters = 0;
-  MemoryPool<TopicDataCompressed, Config::MAX_NUM_UNMATCHED_REMOTE_READERS> m_unmatchedRemoteReaders;
+  MemoryPool<TopicDataCompressed, Config::MAX_NUM_UNMATCHED_REMOTE_READERS>
+      m_unmatchedRemoteReaders;
   size_t m_numMatchedRemoteReaders = 0;
 
   void tryMatchUnmatchedEndpoints();
-  void addUnmatchedRemoteWriter(const TopicData& writerData);
-  void addUnmatchedRemoteReader(const TopicData& readerData);
+  void addUnmatchedRemoteWriter(const TopicData &writerData);
+  void addUnmatchedRemoteReader(const TopicData &readerData);
 
   void (*mfp_onNewPublisherCallback)(void *arg) = nullptr;
   void *m_onNewPublisherArgs = nullptr;

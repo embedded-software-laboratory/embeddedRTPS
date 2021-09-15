@@ -149,23 +149,24 @@ bool MessageReceiver::processDataSubmessage(
   Reader *reader;
   if (dataSubmsg.readerId == ENTITYID_UNKNOWN) {
 #if RECV_VERBOSE
-	RECV_LOG("Received ENTITYID_UNKNOWN readerID, searching for writer ID = ");
-	printGuid(Guid_t{sourceGuidPrefix, dataSubmsg.writerId});
-	print("\n");
+    RECV_LOG("Received ENTITYID_UNKNOWN readerID, searching for writer ID = ");
+    printGuid(Guid_t{sourceGuidPrefix, dataSubmsg.writerId});
+    print("\n");
 #endif
     reader = mp_part->getReaderByWriterId(
         Guid_t{sourceGuidPrefix, dataSubmsg.writerId});
-    if(reader != nullptr) RECV_LOG("Found reader!");
+    if (reader != nullptr)
+      RECV_LOG("Found reader!");
   } else {
     reader = mp_part->getReader(dataSubmsg.readerId);
 #if RECV_VERBOSE
     auto reader_by_writer = mp_part->getReaderByWriterId(
         Guid_t{sourceGuidPrefix, dataSubmsg.writerId});
 
-    if(reader_by_writer == nullptr && reader != nullptr){
-    	RECV_LOG("FOUND By READER ID, NOT BY WRITER ID =");
-    	printGuid(Guid_t{sourceGuidPrefix, dataSubmsg.writerId});
-    	print("\n");
+    if (reader_by_writer == nullptr && reader != nullptr) {
+      RECV_LOG("FOUND By READER ID, NOT BY WRITER ID =");
+      printGuid(Guid_t{sourceGuidPrefix, dataSubmsg.writerId});
+      print("\n");
     }
 #endif
   }

@@ -238,7 +238,6 @@ bool SPDPAgent::addProxiesForBuiltInEndpoints() {
     m_buildInEndpoints.sedpSubWriter->addNewMatchedReader(proxy);
   }
 
-
   return true;
 }
 

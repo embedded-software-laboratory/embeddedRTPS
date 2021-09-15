@@ -161,7 +161,7 @@ void Domain::createBuiltinWritersAndReaders(Participant &part) {
 
   TopicData spdpReaderAttributes;
   spdpReaderAttributes.endpointGuid = {
-	      part.m_guidPrefix, ENTITYID_SPDP_BUILTIN_PARTICIPANT_READER};
+      part.m_guidPrefix, ENTITYID_SPDP_BUILTIN_PARTICIPANT_READER};
   spdpReader.init(spdpReaderAttributes);
 
   // SEDP
@@ -444,8 +444,8 @@ rtps::GuidPrefix_t Domain::generateGuidPrefix(ParticipantId_t id) const {
   GuidPrefix_t prefix = Config::BASE_GUID_PREFIX;
   unsigned int seed = (int)xTaskGetTickCount();
   srand(seed);
-  for(auto i = 0; i < rtps::Config::BASE_GUID_PREFIX.id.size(); i++){
-  	  prefix.id[i] = (rand() % 256);
+  for (auto i = 0; i < rtps::Config::BASE_GUID_PREFIX.id.size(); i++) {
+    prefix.id[i] = (rand() % 256);
   }
   prefix.id[prefix.id.size() - 1] = *reinterpret_cast<uint8_t *>(&id);
   return prefix;

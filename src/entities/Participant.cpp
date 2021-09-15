@@ -186,8 +186,8 @@ Participant::getMatchingReader(const TopicData &writerTopicData) const {
   return nullptr;
 }
 
-rtps::Writer *
-Participant::getMatchingWriter(const TopicDataCompressed &readerTopicData) const {
+rtps::Writer *Participant::getMatchingWriter(
+    const TopicDataCompressed &readerTopicData) const {
   for (uint8_t i = 0; i < m_numWriters; ++i) {
     if (readerTopicData.matchesTopicOf(m_writers[i]->m_attributes) &&
         (readerTopicData.reliabilityKind == ReliabilityKind_t::BEST_EFFORT ||
@@ -199,8 +199,8 @@ Participant::getMatchingWriter(const TopicDataCompressed &readerTopicData) const
   return nullptr;
 }
 
-rtps::Reader *
-Participant::getMatchingReader(const TopicDataCompressed &writerTopicData) const {
+rtps::Reader *Participant::getMatchingReader(
+    const TopicDataCompressed &writerTopicData) const {
   for (uint8_t i = 0; i < m_numReaders; ++i) {
     if (writerTopicData.matchesTopicOf(m_readers[i]->m_attributes) &&
         (writerTopicData.reliabilityKind == ReliabilityKind_t::RELIABLE ||

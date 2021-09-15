@@ -181,7 +181,7 @@ void StatefulWriterT<NetworkDriver>::removeReader(const Guid_t &guid) {
 template <class NetworkDriver>
 void StatefulWriterT<NetworkDriver>::removeReaderOfParticipant(
     const GuidPrefix_t &guidPrefix) {
-	Lock lock(m_mutex);
+  Lock lock(m_mutex);
   auto isElementToRemove = [&](const ReaderProxy &proxy) {
     return proxy.remoteReaderGuid.prefix == guidPrefix;
   };

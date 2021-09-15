@@ -195,14 +195,13 @@ struct SubmessageHeartbeat {
   }
 };
 
-struct SubmessageInfoDST{
-	SubmessageHeader header;
-	GuidPrefix_t guidPrefix;
+struct SubmessageInfoDST {
+  SubmessageHeader header;
+  GuidPrefix_t guidPrefix;
 
-	static constexpr uint16_t getRawSize() {
-		return SubmessageHeader::getRawSize() + (sizeof(guidPrefix));
-	}
-
+  static constexpr uint16_t getRawSize() {
+    return SubmessageHeader::getRawSize() + (sizeof(guidPrefix));
+  }
 };
 
 struct SubmessageAckNack {
@@ -256,16 +255,16 @@ bool serializeMessage(Buffer &buffer, SubmessageHeader &header) {
 
 template <typename Buffer>
 bool serializeMessage(Buffer &buffer, SubmessageInfoDST &msg) {
-	if(!buffer.reserve(SubmessageInfoDST::getRawSize())){
-		return false;
-	}
+  if (!buffer.reserve(SubmessageInfoDST::getRawSize())) {
+    return false;
+  }
 
-	bool ret = serializeMessage(buffer, msg.header);
-	if(!ret){
-		return false;
-	}
+  bool ret = serializeMessage(buffer, msg.header);
+  if (!ret) {
+    return false;
+  }
 
-	return buffer.append(msg.guidPrefix.id.data(), sizeof(GuidPrefix_t));
+  return buffer.append(msg.guidPrefix.id.data(), sizeof(GuidPrefix_t));
 }
 
 template <typename Buffer>

@@ -52,7 +52,7 @@ void addHeader(Buffer &buffer, const GuidPrefix_t &guidPrefix) {
 }
 
 template <class Buffer>
-bool addSubMessageInfoDST(Buffer &buffer, GuidPrefix_t &dst){
+bool addSubMessageInfoDST(Buffer &buffer, GuidPrefix_t &dst) {
   SubmessageInfoDST msg;
   msg.header.submessageId = SubmessageKind::INFO_DST;
 
@@ -164,7 +164,8 @@ void addHeartbeat(Buffer &buffer, EntityId_t writerId, EntityId_t readerId,
 
 template <class Buffer>
 void addAckNack(Buffer &buffer, EntityId_t writerId, EntityId_t readerId,
-                SequenceNumberSet readerSNState, Count_t count, bool final_flag) {
+                SequenceNumberSet readerSNState, Count_t count,
+                bool final_flag) {
   SubmessageAckNack subMsg;
   subMsg.header.submessageId = SubmessageKind::ACKNACK;
 #if IS_LITTLE_ENDIAN
@@ -172,10 +173,10 @@ void addAckNack(Buffer &buffer, EntityId_t writerId, EntityId_t readerId,
 #else
   subMsg.header.flags = FLAG_BIG_ENDIAN;
 #endif
-  if(final_flag){
-	  subMsg.header.flags |= FLAG_FINAL; // For now, we don't want any response
-  }else{
-	  subMsg.header.flags &= ~FLAG_FINAL; // For now, we don't want any response
+  if (final_flag) {
+    subMsg.header.flags |= FLAG_FINAL; // For now, we don't want any response
+  } else {
+    subMsg.header.flags &= ~FLAG_FINAL; // For now, we don't want any response
   }
   subMsg.header.octetsToNextHeader =
       SubmessageAckNack::getRawSize(readerSNState) - numBytesUntilEndOfLength;

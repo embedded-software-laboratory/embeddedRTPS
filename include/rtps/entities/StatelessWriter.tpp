@@ -39,7 +39,12 @@ using rtps::StatelessWriterT;
 
 #if SLW_VERBOSE && RTPS_GLOBAL_VERBOSE
 #include "rtps/utils/printutils.h"
-#define SLW_LOG(...) if (true){printf("[StatelessWriter %s] ", &this->m_attributes.topicName[0]); printf(__VA_ARGS__); printf("\n"); }
+#define SLW_LOG(...)                                                           \
+  if (true) {                                                                  \
+    printf("[StatelessWriter %s] ", &this->m_attributes.topicName[0]);         \
+    printf(__VA_ARGS__);                                                       \
+    printf("\n");                                                              \
+  }
 #else
 #define SLW_LOG(...) //
 #endif
@@ -156,7 +161,7 @@ void StatelessWriterT<NetworkDriver>::removeReader(const Guid_t &guid) {
 template <class NetworkDriver>
 void StatelessWriterT<NetworkDriver>::removeReaderOfParticipant(
     const GuidPrefix_t &guidPrefix) {
-	Lock lock(m_mutex);
+  Lock lock(m_mutex);
   auto isElementToRemove = [&](const ReaderProxy &proxy) {
     return proxy.remoteReaderGuid.prefix == guidPrefix;
   };
@@ -224,9 +229,9 @@ void StatelessWriterT<NetworkDriver>::progress() {
   // adjusting values Reusing the pbuf is not possible. See
   // https://www.nongnu.org/lwip/2_1_x/raw_api.html (Zero-Copy MACs)
 
-	if(m_proxies.getNumElements() == 0){
-		SLW_LOG("No Proxy!\n");
-	}
+  if (m_proxies.getNumElements() == 0) {
+    SLW_LOG("No Proxy!\n");
+  }
 
   for (const auto &proxy : m_proxies) {
 

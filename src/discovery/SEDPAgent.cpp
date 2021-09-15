@@ -107,28 +107,29 @@ void SEDPAgent::onNewPublisher(const ReaderCacheChange &change) {
   }
 }
 
-void SEDPAgent::addUnmatchedRemoteWriter(const TopicData& writerData){
-	if(m_unmatchedRemoteWriters.isFull()){
+void SEDPAgent::addUnmatchedRemoteWriter(const TopicData &writerData) {
+  if (m_unmatchedRemoteWriters.isFull()) {
 #if SEDP_VERBOSE
     SEDP_LOG("List of unmatched remote writers is full.\n");
 #endif
     return;
-	}
-    SEDP_LOG("Adding unmatched remote writer %s %s.\n", writerData.topicName, writerData.typeName);
-	m_unmatchedRemoteWriters.add(TopicDataCompressed(writerData));
+  }
+  SEDP_LOG("Adding unmatched remote writer %s %s.\n", writerData.topicName,
+           writerData.typeName);
+  m_unmatchedRemoteWriters.add(TopicDataCompressed(writerData));
 }
 
-void SEDPAgent::addUnmatchedRemoteReader(const TopicData& readerData){
-	if(m_unmatchedRemoteReaders.isFull()){
+void SEDPAgent::addUnmatchedRemoteReader(const TopicData &readerData) {
+  if (m_unmatchedRemoteReaders.isFull()) {
 #if SEDP_VERBOSE
     SEDP_LOG("List of unmatched remote readers is full.\n");
 #endif
     return;
-	}
-    SEDP_LOG("Adding unmatched remote reader %s %s.\n", readerData.topicName, readerData.typeName);
-	m_unmatchedRemoteReaders.add(TopicDataCompressed(readerData));
+  }
+  SEDP_LOG("Adding unmatched remote reader %s %s.\n", readerData.topicName,
+           readerData.typeName);
+  m_unmatchedRemoteReaders.add(TopicDataCompressed(readerData));
 }
-
 
 void SEDPAgent::onNewPublisher(const TopicData &writerData) {
   // TODO Is it okay to add Endpoint if the respective participant is unknown
@@ -228,27 +229,25 @@ void SEDPAgent::onNewSubscriber(const TopicData &readerData) {
   }
 }
 
-void SEDPAgent::tryMatchUnmatchedEndpoints(){
-	// Try to match remote readers with local writers
-	for(auto& proxy : m_unmatchedRemoteReaders){
-		auto writer = m_part->getMatchingWriter(proxy);
-	    if(writer != nullptr){
-			writer->addNewMatchedReader(ReaderProxy{proxy.endpointGuid,
-													proxy.unicastLocator,
-													proxy.multicastLocator});
-		}
-	}
+void SEDPAgent::tryMatchUnmatchedEndpoints() {
+  // Try to match remote readers with local writers
+  for (auto &proxy : m_unmatchedRemoteReaders) {
+    auto writer = m_part->getMatchingWriter(proxy);
+    if (writer != nullptr) {
+      writer->addNewMatchedReader(ReaderProxy{
+          proxy.endpointGuid, proxy.unicastLocator, proxy.multicastLocator});
+    }
+  }
 
-	// Try to match remote writers with local readers
-	for(auto& proxy : m_unmatchedRemoteWriters){
-		auto reader = m_part->getMatchingReader(proxy);
-		if(reader!= nullptr){
-			reader->addNewMatchedWriter(WriterProxy{proxy.endpointGuid,
-													proxy.unicastLocator});
-		}
-	}
+  // Try to match remote writers with local readers
+  for (auto &proxy : m_unmatchedRemoteWriters) {
+    auto reader = m_part->getMatchingReader(proxy);
+    if (reader != nullptr) {
+      reader->addNewMatchedWriter(
+          WriterProxy{proxy.endpointGuid, proxy.unicastLocator});
+    }
+  }
 }
-
 
 void SEDPAgent::addWriter(Writer &writer) {
   if (m_endpoints.sedpPubWriter == nullptr) {

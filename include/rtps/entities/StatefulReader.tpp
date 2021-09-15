@@ -172,8 +172,8 @@ bool StatefulReaderT<NetworkDriver>::onNewHeartbeat(
   rtps::MessageFactory::addHeader(info.buffer,
                                   m_attributes.endpointGuid.prefix);
   rtps::MessageFactory::addAckNack(info.buffer, msg.writerId, msg.readerId,
-									   writer->getMissing(msg.firstSN, msg.lastSN),
-									   writer->getNextAckNackCount(),false);
+                                   writer->getMissing(msg.firstSN, msg.lastSN),
+                                   writer->getNextAckNackCount(), false);
 
   SFR_LOG("Sending acknack.\n");
   m_transport->sendPacket(info);
