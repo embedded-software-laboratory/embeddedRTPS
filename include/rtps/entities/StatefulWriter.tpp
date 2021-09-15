@@ -166,6 +166,7 @@ void StatefulWriterT<NetworkDriver>::resetSendOptions() {
 // TODO: manage Multicast Options again...
 template <class NetworkDriver>
 void StatefulWriterT<NetworkDriver>::removeReader(const Guid_t &guid) {
+  Lock lock(m_mutex);
   auto isElementToRemove = [&](const ReaderProxy &proxy) {
     return proxy.remoteReaderGuid == guid;
   };
@@ -180,6 +181,7 @@ void StatefulWriterT<NetworkDriver>::removeReader(const Guid_t &guid) {
 template <class NetworkDriver>
 void StatefulWriterT<NetworkDriver>::removeReaderOfParticipant(
     const GuidPrefix_t &guidPrefix) {
+	Lock lock(m_mutex);
   auto isElementToRemove = [&](const ReaderProxy &proxy) {
     return proxy.remoteReaderGuid.prefix == guidPrefix;
   };
@@ -330,7 +332,6 @@ void StatefulWriterT<NetworkDriver>::onNewAckNack(
 template <class NetworkDriver>
 bool StatefulWriterT<NetworkDriver>::sendData(
     const ReaderProxy &reader, const SequenceNumber_t &snMissing) {
-
   // TODO smarter packaging e.g. by creating MessageStruct and serialize after
   // adjusting values Reusing the pbuf is not possible. See
   // https://www.nongnu.org/lwip/2_0_x/raw_api.html (Zero-Copy MACs)

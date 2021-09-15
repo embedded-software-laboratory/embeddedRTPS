@@ -107,6 +107,29 @@ void SEDPAgent::onNewPublisher(const ReaderCacheChange &change) {
   }
 }
 
+void SEDPAgent::addUnmatchedRemoteWriter(const TopicData& writerData){
+	if(m_unmatchedRemoteWriters.isFull()){
+#if SEDP_VERBOSE
+    SEDP_LOG("List of unmatched remote writers is full.\n");
+#endif
+    return;
+	}
+    SEDP_LOG("Adding unmatched remote writer %s %s.\n", writerData.topicName, writerData.typeName);
+	m_unmatchedRemoteWriters.add(TopicDataCompressed(writerData));
+}
+
+void SEDPAgent::addUnmatchedRemoteReader(const TopicData& readerData){
+	if(m_unmatchedRemoteReaders.isFull()){
+#if SEDP_VERBOSE
+    SEDP_LOG("List of unmatched remote readers is full.\n");
+#endif
+    return;
+	}
+    SEDP_LOG("Adding unmatched remote reader %s %s.\n", readerData.topicName, readerData.typeName);
+	m_unmatchedRemoteReaders.add(TopicDataCompressed(readerData));
+}
+
+
 void SEDPAgent::onNewPublisher(const TopicData &writerData) {
   // TODO Is it okay to add Endpoint if the respective participant is unknown
   // participant?
@@ -119,8 +142,9 @@ void SEDPAgent::onNewPublisher(const TopicData &writerData) {
   Reader *reader = m_part->getMatchingReader(writerData);
   if (reader == nullptr) {
 #if SEDP_VERBOSE
-    SEDP_LOG("SEDPAgent: Couldn't find reader for new Publisher[%s, %s]\n",
+    SEDP_LOG("SEDPAgent: Couldn't find reader for new Publisher[%s, %s] \n",
              writerData.topicName, writerData.typeName);
+    addUnmatchedRemoteWriter(writerData);
 #endif
     return;
   }
@@ -174,6 +198,7 @@ void SEDPAgent::onNewSubscriber(const TopicData &readerData) {
 #if SEDP_VERBOSE
     SEDP_LOG("SEDPAgent: Couldn't find writer for new subscriber[%s, %s]\n",
              readerData.topicName, readerData.typeName);
+    addUnmatchedRemoteReader(readerData);
 #endif
     return;
   }
@@ -203,6 +228,28 @@ void SEDPAgent::onNewSubscriber(const TopicData &readerData) {
   }
 }
 
+void SEDPAgent::tryMatchUnmatchedEndpoints(){
+	// Try to match remote readers with local writers
+	for(auto& proxy : m_unmatchedRemoteReaders){
+		auto writer = m_part->getMatchingWriter(proxy);
+	    if(writer != nullptr){
+			writer->addNewMatchedReader(ReaderProxy{proxy.endpointGuid,
+													proxy.unicastLocator,
+													proxy.multicastLocator});
+		}
+	}
+
+	// Try to match remote writers with local readers
+	for(auto& proxy : m_unmatchedRemoteWriters){
+		auto reader = m_part->getMatchingReader(proxy);
+		if(reader!= nullptr){
+			reader->addNewMatchedWriter(WriterProxy{proxy.endpointGuid,
+													proxy.unicastLocator});
+		}
+	}
+}
+
+
 void SEDPAgent::addWriter(Writer &writer) {
   if (m_endpoints.sedpPubWriter == nullptr) {
     return;
@@ -215,6 +262,10 @@ void SEDPAgent::addWriter(Writer &writer) {
   }
 
   Lock lock{m_mutex};
+
+  // Check unmatched writers for this new reader
+  tryMatchUnmatchedEndpoints();
+
   ucdrBuffer microbuffer;
   ucdr_init_buffer(&microbuffer, m_buffer,
                    sizeof(m_buffer) / sizeof(m_buffer[0]));
@@ -245,6 +296,10 @@ void SEDPAgent::addReader(Reader &reader) {
   }
 
   Lock lock{m_mutex};
+
+  // Check unmatched writers for this new reader
+  tryMatchUnmatchedEndpoints();
+
   ucdrBuffer microbuffer;
   ucdr_init_buffer(&microbuffer, m_buffer,
                    sizeof(m_buffer) / sizeof(m_buffer[0]));
@@ -257,7 +312,6 @@ void SEDPAgent::addReader(Reader &reader) {
   reader.m_attributes.serializeIntoUcdrBuffer(microbuffer);
   m_endpoints.sedpSubWriter->newChange(ChangeKind_t::ALIVE, m_buffer,
                                        ucdr_buffer_length(&microbuffer));
-
 #if SEDP_VERBOSE
   SEDP_LOG("Added new change to sedpSubWriter.\n");
 #endif

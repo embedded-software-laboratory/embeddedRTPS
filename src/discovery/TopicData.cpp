@@ -26,6 +26,7 @@ Author: i11 - Embedded Software, RWTH Aachen University
 #include <cstring>
 
 using rtps::TopicData;
+using rtps::TopicDataCompressed;
 using rtps::SMElement::ParameterId;
 
 bool TopicData::matchesTopicOf(const TopicData &other) {
@@ -183,4 +184,9 @@ bool TopicData::serializeIntoUcdrBuffer(ucdrBuffer &buffer) const {
   ucdr_serialize_uint16_t(&buffer, 0);
 
   return true;
+}
+
+bool TopicDataCompressed::matchesTopicOf(const TopicData& other) const {
+  return (std::hash<std::string>{}(std::string(other.topicName)) == topicHash &&
+		  std::hash<std::string>{}(std::string(other.typeName)) == typeHash);
 }

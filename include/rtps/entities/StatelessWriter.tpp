@@ -38,8 +38,8 @@ using rtps::SequenceNumber_t;
 using rtps::StatelessWriterT;
 
 #if SLW_VERBOSE && RTPS_GLOBAL_VERBOSE
-#define SLW_LOG(...)
-#include "rtps/utils/printutils.h" if (true){printf("[StatelessWriter %s] ", &this->m_attributes.topicName[0]); printf(__VA_ARGS__); printf("\n"); }
+#include "rtps/utils/printutils.h"
+#define SLW_LOG(...) if (true){printf("[StatelessWriter %s] ", &this->m_attributes.topicName[0]); printf(__VA_ARGS__); printf("\n"); }
 #else
 #define SLW_LOG(...) //
 #endif
@@ -141,6 +141,7 @@ void StatelessWriterT<NetworkDriver>::resetSendOptions() {
 
 template <class NetworkDriver>
 void StatelessWriterT<NetworkDriver>::removeReader(const Guid_t &guid) {
+  Lock lock(m_mutex);
   auto isElementToRemove = [&](const ReaderProxy &proxy) {
     return proxy.remoteReaderGuid == guid;
   };
@@ -155,6 +156,7 @@ void StatelessWriterT<NetworkDriver>::removeReader(const Guid_t &guid) {
 template <class NetworkDriver>
 void StatelessWriterT<NetworkDriver>::removeReaderOfParticipant(
     const GuidPrefix_t &guidPrefix) {
+	Lock lock(m_mutex);
   auto isElementToRemove = [&](const ReaderProxy &proxy) {
     return proxy.remoteReaderGuid.prefix == guidPrefix;
   };
@@ -221,6 +223,10 @@ void StatelessWriterT<NetworkDriver>::progress() {
   // TODO smarter packaging e.g. by creating MessageStruct and serialize after
   // adjusting values Reusing the pbuf is not possible. See
   // https://www.nongnu.org/lwip/2_1_x/raw_api.html (Zero-Copy MACs)
+
+	if(m_proxies.getNumElements() == 0){
+		SLW_LOG("No Proxy!\n");
+	}
 
   for (const auto &proxy : m_proxies) {
 

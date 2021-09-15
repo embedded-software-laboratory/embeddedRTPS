@@ -108,6 +108,7 @@ bool StatefulReaderT<NetworkDriver>::addNewMatchedWriter(
 
 template <class NetworkDriver>
 void StatefulReaderT<NetworkDriver>::removeWriter(const Guid_t &guid) {
+  Lock lock(m_mutex);
   auto isElementToRemove = [&](const WriterProxy &proxy) {
     return proxy.remoteWriterGuid == guid;
   };
@@ -121,6 +122,7 @@ void StatefulReaderT<NetworkDriver>::removeWriter(const Guid_t &guid) {
 template <class NetworkDriver>
 void StatefulReaderT<NetworkDriver>::removeWriterOfParticipant(
     const GuidPrefix_t &guidPrefix) {
+  Lock lock(m_mutex);
   auto isElementToRemove = [&](const WriterProxy &proxy) {
     return proxy.remoteWriterGuid.prefix == guidPrefix;
   };
@@ -170,8 +172,8 @@ bool StatefulReaderT<NetworkDriver>::onNewHeartbeat(
   rtps::MessageFactory::addHeader(info.buffer,
                                   m_attributes.endpointGuid.prefix);
   rtps::MessageFactory::addAckNack(info.buffer, msg.writerId, msg.readerId,
-                                   writer->getMissing(msg.firstSN, msg.lastSN),
-                                   writer->getNextAckNackCount());
+									   writer->getMissing(msg.firstSN, msg.lastSN),
+									   writer->getNextAckNackCount(),false);
 
   SFR_LOG("Sending acknack.\n");
   m_transport->sendPacket(info);
