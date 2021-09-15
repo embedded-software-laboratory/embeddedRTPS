@@ -442,8 +442,12 @@ rtps::Reader *Domain::createReader(Participant &part, const char *topicName,
 
 rtps::GuidPrefix_t Domain::generateGuidPrefix(ParticipantId_t id) const {
   GuidPrefix_t prefix = Config::BASE_GUID_PREFIX;
+#if defined(unix) || defined(__unix__)
+  srand(time(nullptr));
+#else
   unsigned int seed = (int)xTaskGetTickCount();
   srand(seed);
+#endif
   for (auto i = 0; i < rtps::Config::BASE_GUID_PREFIX.id.size(); i++) {
     prefix.id[i] = (rand() % 256);
   }

@@ -28,7 +28,7 @@ Author: i11 - Embedded Software, RWTH Aachen University
 #include <cstdio>
 #include <stdarg.h>
 
-#define RTPS_GLOBAL_VERBOSE 1
+#define RTPS_GLOBAL_VERBOSE 0
 
 #define SFW_VERBOSE 1
 #define SPDP_VERBOSE 0

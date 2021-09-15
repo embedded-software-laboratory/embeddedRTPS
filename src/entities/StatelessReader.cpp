@@ -59,14 +59,14 @@ void StatelessReader::registerCallback(ddsReaderCallback_fp cb, void *callee) {
     m_callback = cb;
     m_callee = callee; // It's okay if this is null
   } else {
-#if SLR_VERBOSE
+#if (SLR_VERBOSE && RTPS_GLOBAL_VERBOSE)
     SLR_LOG("Passed callback is nullptr\n");
 #endif
   }
 }
 
 bool StatelessReader::addNewMatchedWriter(const WriterProxy &newProxy) {
-#if SLR_VERBOSE
+#if (SLR_VERBOSE && RTPS_GLOBAL_VERBOSE)
   SLR_LOG("Adding WriterProxy");
   printGuid(newProxy.remoteWriterGuid);
   printf("\n");
