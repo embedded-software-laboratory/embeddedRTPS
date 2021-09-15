@@ -41,6 +41,7 @@ public:
   void removeWriterOfParticipant(const GuidPrefix_t &guidPrefix) override;
 
 private:
+  sys_mutex_t m_mutex;
   ddsReaderCallback_fp m_callback = nullptr;
   void *m_callee = nullptr;
 };

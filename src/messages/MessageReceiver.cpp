@@ -33,8 +33,13 @@ Author: i11 - Embedded Software, RWTH Aachen University
 using rtps::MessageReceiver;
 
 #if RECV_VERBOSE && RTPS_GLOBAL_VERBOSE
-#define RECV_LOG(...)
-#include "rtps/utils/printutils.h" if (true){printf("[MessageReceiver] "); printf(__VA_ARGS__); printf("\n"); }
+#include "rtps/utils/printutils.h"
+#define RECV_LOG(...)                                                          \
+  if (true) {                                                                  \
+    printf("[RECV] ");                                                         \
+    printf(__VA_ARGS__);                                                       \
+    printf("\n");                                                              \
+  }
 #else
 #define RECV_LOG(...) //
 #endif
@@ -139,12 +144,31 @@ bool MessageReceiver::processDataSubmessage(
                           SubmessageData::getRawSize() +
                           SubmessageHeader::getRawSize();
 
+  RECV_LOG("Received data message size %u", (int)size);
+
   Reader *reader;
   if (dataSubmsg.readerId == ENTITYID_UNKNOWN) {
+#if RECV_VERBOSE
+    RECV_LOG("Received ENTITYID_UNKNOWN readerID, searching for writer ID = ");
+    printGuid(Guid_t{sourceGuidPrefix, dataSubmsg.writerId});
+    print("\n");
+#endif
     reader = mp_part->getReaderByWriterId(
         Guid_t{sourceGuidPrefix, dataSubmsg.writerId});
+    if (reader != nullptr)
+      RECV_LOG("Found reader!");
   } else {
     reader = mp_part->getReader(dataSubmsg.readerId);
+#if RECV_VERBOSE
+    auto reader_by_writer = mp_part->getReaderByWriterId(
+        Guid_t{sourceGuidPrefix, dataSubmsg.writerId});
+
+    if (reader_by_writer == nullptr && reader != nullptr) {
+      RECV_LOG("FOUND By READER ID, NOT BY WRITER ID =");
+      printGuid(Guid_t{sourceGuidPrefix, dataSubmsg.writerId});
+      print("\n");
+    }
+#endif
   }
   if (reader != nullptr) {
     Guid_t writerGuid{sourceGuidPrefix, dataSubmsg.writerId};
@@ -155,6 +179,7 @@ bool MessageReceiver::processDataSubmessage(
 #if RECV_VERBOSE && RTPS_GLOBAL_VERBOSE
     RECV_LOG("Couldn't find a reader with id: ");
     printEntityId(dataSubmsg.readerId);
+    print("\n");
 #endif
   }
 

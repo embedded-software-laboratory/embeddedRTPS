@@ -195,6 +195,15 @@ struct SubmessageHeartbeat {
   }
 };
 
+struct SubmessageInfoDST {
+  SubmessageHeader header;
+  GuidPrefix_t guidPrefix;
+
+  static constexpr uint16_t getRawSize() {
+    return SubmessageHeader::getRawSize() + (sizeof(guidPrefix));
+  }
+};
+
 struct SubmessageAckNack {
   SubmessageHeader header;
   EntityId_t readerId;
@@ -242,6 +251,20 @@ bool serializeMessage(Buffer &buffer, SubmessageHeader &header) {
   buffer.append(reinterpret_cast<uint8_t *>(&header.octetsToNextHeader),
                 sizeof(uint16_t));
   return true;
+}
+
+template <typename Buffer>
+bool serializeMessage(Buffer &buffer, SubmessageInfoDST &msg) {
+  if (!buffer.reserve(SubmessageInfoDST::getRawSize())) {
+    return false;
+  }
+
+  bool ret = serializeMessage(buffer, msg.header);
+  if (!ret) {
+    return false;
+  }
+
+  return buffer.append(msg.guidPrefix.id.data(), sizeof(GuidPrefix_t));
 }
 
 template <typename Buffer>

@@ -161,16 +161,16 @@ void ThreadPool::doWriterWork() {
   }
 }
 
-
 void ThreadPool::readCallback(void *args, udp_pcb *target, pbuf *pbuf,
                               const ip_addr_t * /*addr*/, Ip4Port_t port) {
   auto &pool = *static_cast<ThreadPool *>(args);
 
   PacketInfo packet;
 
-  // TODO This is a workaround for chained pbufs caused by hardware limitations, not a general fix
-  if(pbuf->next != nullptr){
-    struct pbuf* test = pbuf_alloc(PBUF_RAW, pbuf->tot_len, PBUF_POOL);
+  // TODO This is a workaround for chained pbufs caused by hardware limitations,
+  // not a general fix
+  if (pbuf->next != nullptr) {
+    struct pbuf *test = pbuf_alloc(PBUF_RAW, pbuf->tot_len, PBUF_POOL);
     pbuf_copy(test, pbuf);
     pbuf_free(pbuf);
     pbuf = test;
