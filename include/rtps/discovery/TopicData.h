@@ -46,6 +46,8 @@ struct TopicData {
   DurabilityKind_t durabilityKind;
   Locator unicastLocator;
   Locator multicastLocator;
+  OwnershipKind_t ownership_Kind;
+  OwnershipStrength ownership_strenght;
 
   TopicData()
       : endpointGuid(GUID_UNKNOWN), typeName{'\0'}, topicName{'\0'},
@@ -55,13 +57,26 @@ struct TopicData {
         192, 168, 0, 42, rtps::getUserUnicastPort(0));
     unicastLocator = someLocator;
     multicastLocator = Locator();
+    ownership_Kind = OwnershipKind_t::SHARED;
+    ownership_strenght = 0;
   };
 
   TopicData(Guid_t guid, ReliabilityKind_t reliability, Locator loc)
       : endpointGuid(guid), typeName{'\0'}, topicName{'\0'},
         reliabilityKind(reliability),
-        durabilityKind(DurabilityKind_t::TRANSIENT_LOCAL), unicastLocator(loc) {
-  }
+        durabilityKind(DurabilityKind_t::TRANSIENT_LOCAL), unicastLocator(loc) ,
+        ownership_Kind(OwnershipKind_t::SHARED), ownership_strenght(0){
+  };
+
+  TopicData(Guid_t guid, OwnershipKind_t kind, OwnershipStrength  strength, Locator loc)
+            : endpointGuid(guid), typeName{'\0'}, topicName{'\0'},
+              ownership_Kind(kind), ownership_strenght(strength),
+              durabilityKind(DurabilityKind_t::TRANSIENT_LOCAL), unicastLocator(loc) {
+
+      if(ownership_Kind == OwnershipKind_t::EXCLUSIVE ) {
+          reliabilityKind(ReliabilityKind_t::RELIABLE);
+      }
+  };
 
   bool matchesTopicOf(const TopicData &other);
 

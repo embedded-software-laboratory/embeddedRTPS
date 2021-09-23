@@ -45,12 +45,23 @@ public:
   void stop();
 
   Participant *createParticipant();
+
   Writer *createWriter(Participant &part, const char *topicName,
                        const char *typeName, bool reliable,
                        bool enforceUnicast = false);
+
+  Writer *createWriter(Participant &part, const char *topicName,
+                         const char *typeName, OwnershipKind_t ownership_kind, OwnershipStrength ownership_strenght,
+                         bool enforceUnicast = false);
+
+
   Reader *createReader(Participant &part, const char *topicName,
                        const char *typeName, bool reliable,
                        ip4_addr_t mcastaddress = {0});
+
+  Reader *createReader(Participant &part, const char *topicName,
+                         const char *typeName, OwnerShipKind_t ownership_Kind,
+                         ip4_addr_t mcastaddress = {0});
 
   Writer *writerExists(Participant &part, const char *topicName,
                        const char *typeName, bool reliable);

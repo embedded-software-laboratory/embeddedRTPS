@@ -84,6 +84,13 @@ enum class DurabilityKind_t : uint32_t {
   PERSISTENT = 3
 };
 
+enum class OwnershipKind_t : uint32_t{
+    SHARED = 0,
+    EXCLUSIVE = 1
+};
+
+typedef uint32_t OwnershipStrength;
+
 struct GuidPrefix_t {
   std::array<uint8_t, 12> id;
 

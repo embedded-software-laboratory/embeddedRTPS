@@ -359,6 +359,47 @@ rtps::Writer *Domain::createWriter(Participant &part, const char *topicName,
   }
 }
 
+rtps::Writer *Domain::createWriter(Participant &part, const char *topicName,
+                     const char *typeName, OwnershipKind_t ownership_kind, OwnershipStrength ownership_strenght,
+                     bool enforceUnicast){
+    // Check if there is enough capacity for more writers Ownership currently just support reliable writer so its compatible with fastDDS (dont really get why thats a problem)
+    if (m_statefulWriters.size() <= m_numStatefulWriters) {
+        DOMAIN_LOG("No Writer created. Max Number of Writers reached.\n");
+        return nullptr;
+    }
+
+    // TODO Distinguish WithKey and NoKey (Also changes EntityKind)
+    TopicData attributes;
+
+    if (strlen(topicName) > Config::MAX_TOPICNAME_LENGTH ||
+        strlen(typeName) > Config::MAX_TYPENAME_LENGTH) {
+        return nullptr;
+    }
+    strcpy(attributes.topicName, topicName);
+    strcpy(attributes.typeName, typeName);
+    attributes.endpointGuid.prefix = part.m_guidPrefix;
+    attributes.endpointGuid.entityId = {
+            part.getNextUserEntityKey(),
+            EntityKind_t::USER_DEFINED_WRITER_WITHOUT_KEY};
+    attributes.unicastLocator = getUserUnicastLocator(part.m_participantId);
+    attributes.durabilityKind = DurabilityKind_t::TRANSIENT_LOCAL;
+
+    DOMAIN_LOG("Creating writer[%s, %s]\n", topicName, typeName);
+
+    attributes.reliabilityKind = ReliabilityKind_t::RELIABLE;
+
+    attributes.ownership_Kind = ownership_kind;
+    attributes.ownership_strenght = ownership_strenght;
+
+    StatefulWriter &writer = m_statefulWriters[m_numStatefulWriters++];
+    writer.init(attributes, TopicKind_t::NO_KEY, &m_threadPool, m_transport,
+                    enforceUnicast);
+
+    part.addWriter(&writer);
+    return &writer;
+
+}
+
 rtps::Reader *Domain::createReader(Participant &part, const char *topicName,
                                    const char *typeName, bool reliable,
                                    ip4_addr_t mcastaddress) {
