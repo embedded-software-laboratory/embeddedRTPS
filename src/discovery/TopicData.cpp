@@ -181,6 +181,14 @@ bool TopicData::serializeIntoUcdrBuffer(ucdrBuffer &buffer) const {
 
   ucdr_serialize_uint16_t(&buffer, ParameterId::PID_SENTINEL);
   ucdr_serialize_uint16_t(&buffer, 0);
+  //Ownership
+  ucdr_serialize_uint16_t(&buffer, ParameterId::PID_OWNERSHIP);
+  ucdr_serialize_uint16_t(&buffer, sizeof(OwnershipKind_t));
+  ucdr_serialize_uint32_t(&buffer, static_cast<uint32_t>(ownership_Kind));
+
+  ucdr_serialize_uint16_t(&buffer, ParameterId::PID_OWNERSHIP_STRENGTH);
+  ucdr_serialize_uint16_t(&buffer, sizeof(OwnershipStrength));
+  ucdr_serialize_uint32_t(&buffer, ownership_strenght);
 
   return true;
 }
