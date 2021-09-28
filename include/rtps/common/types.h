@@ -84,7 +84,7 @@ enum class DurabilityKind_t : uint32_t {
   PERSISTENT = 3
 };
 
-enum class OwnershipKind_t : uint32_t{
+enum class OwnershipKind_t : uint8_t{
     SHARED = 0,
     EXCLUSIVE = 1
 };

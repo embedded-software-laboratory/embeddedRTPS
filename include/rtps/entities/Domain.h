@@ -60,7 +60,7 @@ public:
                        ip4_addr_t mcastaddress = {0});
 
   Reader *createReader(Participant &part, const char *topicName,
-                         const char *typeName, OwnerShipKind_t ownership_Kind,
+                         const char *typeName, OwnershipKind_t ownership_Kind,
                          ip4_addr_t mcastaddress = {0});
 
   Writer *writerExists(Participant &part, const char *topicName,

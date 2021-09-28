@@ -74,7 +74,7 @@ struct TopicData {
               durabilityKind(DurabilityKind_t::TRANSIENT_LOCAL), unicastLocator(loc) {
 
       if(ownership_Kind == OwnershipKind_t::EXCLUSIVE ) {
-          reliabilityKind(ReliabilityKind_t::RELIABLE);
+          reliabilityKind = (ReliabilityKind_t::RELIABLE);
       }
   };
 

@@ -84,7 +84,7 @@ void addSubMessageTimeStamp(Buffer &buffer, bool setInvalid = false) {
 template <class Buffer>
 void addSubMessageData(Buffer &buffer, const Buffer &filledPayload,
                        bool containsInlineQos, const SequenceNumber_t &SN,
-                       const EntityId_t &writerID, const EntityId_t &readerID) {
+                       const EntityId_t &writerID, const EntityId_t &readerID, const OwnershipKind_t ownershipKind, const OwnershipStrength ownershipStrength) {
   SubmessageData msg;
   msg.header.submessageId = SubmessageKind::DATA;
 #if IS_LITTLE_ENDIAN
@@ -112,13 +112,21 @@ void addSubMessageData(Buffer &buffer, const Buffer &filledPayload,
   constexpr uint16_t octetsToInlineQoS =
       4 + 4 + 8; // EntityIds + SequenceNumber
   msg.octetsToInlineQos = octetsToInlineQoS;
-
+  msg.ownershipKind = ownershipKind;
+  msg.ownershipStrength = ownershipStrength;
   serializeMessage(buffer, msg);
 
   if (filledPayload.isValid()) {
     Buffer shallowCopy = filledPayload;
     buffer.append(std::move(shallowCopy));
   }
+}
+
+template <class Buffer>
+void addSubMessageData(Buffer &buffer, const Buffer &filledPayload,
+                       bool containsInlineQos, const SequenceNumber_t &SN,
+                       const EntityId_t &writerID, const EntityId_t &readerID) {
+    addSubMessageData(buffer,filledPayload,containsInlineQos,SN,writerID,readerID, OwnershipKind_t::SHARED,0);
 }
 
 template <class Buffer>

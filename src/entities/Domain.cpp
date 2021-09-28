@@ -336,6 +336,7 @@ rtps::Writer *Domain::createWriter(Participant &part, const char *topicName,
   attributes.unicastLocator = getUserUnicastLocator(part.m_participantId);
   attributes.durabilityKind = DurabilityKind_t::TRANSIENT_LOCAL;
 
+  attributes.ownership_Kind = OwnershipKind_t::SHARED;
   DOMAIN_LOG("Creating writer[%s, %s]\n", topicName, typeName);
 
   if (reliable) {
@@ -363,11 +364,13 @@ rtps::Writer *Domain::createWriter(Participant &part, const char *topicName,
                      const char *typeName, OwnershipKind_t ownership_kind, OwnershipStrength ownership_strenght,
                      bool enforceUnicast){
     // Check if there is enough capacity for more writers Ownership currently just support reliable writer so its compatible with fastDDS (dont really get why thats a problem)
-    if (m_statefulWriters.size() <= m_numStatefulWriters) {
+    if (m_statefulWriters.size() <= m_numStatefulWriters && (ownership_kind == OwnershipKind_t::EXCLUSIVE)) {
         DOMAIN_LOG("No Writer created. Max Number of Writers reached.\n");
         return nullptr;
     }
-
+    if(OwnershipKind_t::SHARED == ownership_kind) {
+        return createWriter(part, topicName, typeName, false, enforceUnicast);
+    }
     // TODO Distinguish WithKey and NoKey (Also changes EntityKind)
     TopicData attributes;
 

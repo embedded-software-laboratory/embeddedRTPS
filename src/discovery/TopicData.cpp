@@ -83,6 +83,19 @@ bool TopicData::readFromUcdrBuffer(ucdrBuffer &buffer) {
     case ParameterId::PID_MULTICAST_LOCATOR:
       multicastLocator.readFromUcdrBuffer(buffer);
       break;
+    case ParameterId::PID_OWNERSHIP:
+      uint32_t ownershipKindLength;
+      ucdr_deserialize_uint32_t(&buffer, &ownershipKindLength);
+      if(ownershipKindLength == 1) {
+          ucdr_deserialize_uint8_t(&buffer, reinterpret_cast<uint8_t *>(&ownership_Kind));
+      }
+      break;
+    case ParameterId::PID_OWNERSHIP_STRENGTH:
+      uint32_t ownershipStrenghtLength;
+      ucdr_deserialize_uint32_t(&buffer, &ownershipStrenghtLength);
+      if(ownershipStrenghtLength == 4)
+          ucdr_deserialize_uint32_t(&buffer, &ownership_strenght);
+      break;
     default:
       buffer.iterator += length;
       buffer.last_data_size = 1;
@@ -169,9 +182,9 @@ bool TopicData::serializeIntoUcdrBuffer(ucdrBuffer &buffer) const {
 
   const uint8_t unidentifiedOffset = 8;
   ucdr_serialize_uint16_t(&buffer, ParameterId::PID_RELIABILITY);
-  ucdr_serialize_uint16_t(&buffer,
-                          sizeof(ReliabilityKind_t) + unidentifiedOffset);
+  ucdr_serialize_uint16_t(&buffer,sizeof(ReliabilityKind_t) + unidentifiedOffset);
   ucdr_serialize_uint32_t(&buffer, static_cast<uint32_t>(reliabilityKind));
+
   ucdr_serialize_uint32_t(&buffer, 0); // unidentified additional value
   ucdr_serialize_uint32_t(&buffer, 0); // unidentified additional value
 
@@ -184,11 +197,13 @@ bool TopicData::serializeIntoUcdrBuffer(ucdrBuffer &buffer) const {
   //Ownership
   ucdr_serialize_uint16_t(&buffer, ParameterId::PID_OWNERSHIP);
   ucdr_serialize_uint16_t(&buffer, sizeof(OwnershipKind_t));
-  ucdr_serialize_uint32_t(&buffer, static_cast<uint32_t>(ownership_Kind));
+  ucdr_serialize_uint8_t(&buffer, static_cast<uint8_t>(ownership_Kind));
 
-  ucdr_serialize_uint16_t(&buffer, ParameterId::PID_OWNERSHIP_STRENGTH);
-  ucdr_serialize_uint16_t(&buffer, sizeof(OwnershipStrength));
-  ucdr_serialize_uint32_t(&buffer, ownership_strenght);
+  if(ownership_Kind == OwnershipKind_t::EXCLUSIVE) {
+      ucdr_serialize_uint16_t(&buffer, ParameterId::PID_OWNERSHIP_STRENGTH);
+      ucdr_serialize_uint16_t(&buffer, sizeof(OwnershipStrength));
+      ucdr_serialize_uint32_t(&buffer, ownership_strenght);
+  }
 
   return true;
 }
