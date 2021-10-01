@@ -31,6 +31,8 @@ Author: i11 - Embedded Software, RWTH Aachen University
 #include "rtps/config.h"
 #include "ucdr/microcdr.h"
 #include <array>
+#include <functional>
+#include <string>
 
 namespace rtps {
 
