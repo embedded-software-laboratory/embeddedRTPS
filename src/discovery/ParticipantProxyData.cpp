@@ -145,7 +145,9 @@ bool ParticipantProxyData::readFromUcdrBuffer(ucdrBuffer &buffer) {
     case ParameterId::PID_SENTINEL: {
       return true;
     }
-    default: { return false; }
+    default: {
+      return false;
+    }
     }
     // Parameter lists are 4-byte aligned
     uint32_t alignment = ucdr_buffer_alignment(&buffer, 4);

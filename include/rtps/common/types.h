@@ -262,18 +262,13 @@ const Guid_t GUID_UNKNOWN{};
 
 const ParticipantId_t PARTICIPANT_ID_INVALID = -1;
 
-const ProtocolVersion_t PROTOCOLVERSION_1_0 = {1, 0};
-const ProtocolVersion_t PROTOCOLVERSION_1_1 = {1, 1};
-const ProtocolVersion_t PROTOCOLVERSION_2_0 = {2, 0};
-const ProtocolVersion_t PROTOCOLVERSION_2_1 = {2, 1};
-const ProtocolVersion_t PROTOCOLVERSION_2_2 = {2, 2};
-const ProtocolVersion_t PROTOCOLVERSION = PROTOCOLVERSION_2_2;
+const ProtocolVersion_t PROTOCOLVERSION = {2, 2};
 
 const SequenceNumber_t SEQUENCENUMBER_UNKNOWN = {-1, 0};
 
 const Time_t TIME_ZERO = {};
 const Time_t TIME_INVALID = {-1, 0xFFFFFFFF};
-const Time_t TIME_INFINITE = {0x7FFFFFFF, 0xFFFFFFFF};
+const Time_t TIME_INFINITY = {0x7FFFFFFF, 0xFFFFFFFF};
 
 const VendorId_t VENDOR_UNKNOWN = {};
 } // namespace rtps
