@@ -48,7 +48,7 @@ struct TopicData {
   Locator multicastLocator;
   OwnershipKind_t ownership_Kind;
   OwnershipStrength ownership_strenght;
-
+  TopicKind_t topicKind;
   TopicData()
       : endpointGuid(GUID_UNKNOWN), typeName{'\0'}, topicName{'\0'},
         reliabilityKind(ReliabilityKind_t::BEST_EFFORT),
@@ -59,6 +59,7 @@ struct TopicData {
     multicastLocator = Locator();
     ownership_Kind = OwnershipKind_t::SHARED;
     ownership_strenght = 0;
+    topicKind = TopicKind_t::NO_KEY;
   };
 
   TopicData(Guid_t guid, ReliabilityKind_t reliability, Locator loc)
@@ -66,6 +67,7 @@ struct TopicData {
         reliabilityKind(reliability),
         durabilityKind(DurabilityKind_t::TRANSIENT_LOCAL), unicastLocator(loc) ,
         ownership_Kind(OwnershipKind_t::SHARED), ownership_strenght(0){
+      topicKind = TopicKind_t::NO_KEY;
   };
 
   TopicData(Guid_t guid, OwnershipKind_t kind, OwnershipStrength  strength, Locator loc)
@@ -75,6 +77,7 @@ struct TopicData {
 
       if(ownership_Kind == OwnershipKind_t::EXCLUSIVE ) {
           reliabilityKind = (ReliabilityKind_t::RELIABLE);
+          topicKind = TopicKind_t::WITH_KEY;
       }
   };
 
