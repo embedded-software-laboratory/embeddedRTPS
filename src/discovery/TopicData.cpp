@@ -164,6 +164,7 @@ bool TopicData::serializeIntoUcdrBuffer(ucdrBuffer &buffer) const {
 
   ucdr_serialize_uint16_t(&buffer, ParameterId::PID_KEY_HASH);
   ucdr_serialize_uint16_t(&buffer, guidSize);
+
   ucdr_serialize_array_uint8_t(&buffer, endpointGuid.prefix.id.data(),
                                endpointGuid.prefix.id.size());
   ucdr_serialize_array_uint8_t(&buffer, endpointGuid.entityId.entityKey.data(),

@@ -393,9 +393,12 @@ rtps::Writer *Domain::createWriter(Participant &part, const char *topicName,
 
     attributes.ownership_Kind = ownership_kind;
     attributes.ownership_strenght = ownership_strenght;
-
+    attributes.topicKind = TopicKind_t::WITH_KEY;
+    if(attributes.topicKind == TopicKind_t::WITH_KEY){
+        attributes.endpointGuid.entityId.entityKind = EntityKind_t::USER_DEFINED_WRITER_WITH_KEY;
+    }
     StatefulWriter &writer = m_statefulWriters[m_numStatefulWriters++];
-    writer.init(attributes, TopicKind_t::NO_KEY, &m_threadPool, m_transport,
+    writer.init(attributes, attributes.topicKind, &m_threadPool, m_transport,
                     enforceUnicast);
 
     part.addWriter(&writer);

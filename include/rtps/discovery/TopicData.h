@@ -78,6 +78,7 @@ struct TopicData {
       if(ownership_Kind == OwnershipKind_t::EXCLUSIVE ) {
           reliabilityKind = (ReliabilityKind_t::RELIABLE);
           topicKind = TopicKind_t::WITH_KEY;
+          endpointGuid.entityId.entityKind = EntityKind_t::USER_DEFINED_WRITER_WITH_KEY;
       }
   };
 
