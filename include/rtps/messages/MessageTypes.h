@@ -268,14 +268,14 @@ bool serializeMessage(Buffer &buffer, SubmessageData &msg) {
                 sizeof(msg.writerSN.high));
   buffer.append(reinterpret_cast<uint8_t *>(&msg.writerSN.low),
                 sizeof(msg.writerSN.low));
-  if(msg.ownershipKind == OwnershipKind_t::EXCLUSIVE){
+  /*if(msg.ownershipKind == OwnershipKind_t::EXCLUSIVE){
       buffer.append(reinterpret_cast<uint8_t*>(SMElement::ParameterId::PID_OWNERSHIP_STRENGTH), sizeof(uint16_t));
       buffer.append(reinterpret_cast<uint8_t*>(sizeof(OwnershipStrength)), sizeof(OwnershipStrength));
       buffer.append(reinterpret_cast<uint8_t*>(msg.ownershipStrength), sizeof(OwnershipStrength));
       buffer.append(reinterpret_cast<uint8_t*>(SMElement::ParameterId::PID_KEY_HASH), sizeof(uint16_t));
       uint16_t key = 1;
       buffer.append(reinterpret_cast<uint8_t*>(key), sizeof(uint16_t));
-  }
+  }*/
   return true;
 }
 

@@ -336,7 +336,7 @@ rtps::Writer *Domain::createWriter(Participant &part, const char *topicName,
   attributes.unicastLocator = getUserUnicastLocator(part.m_participantId);
   attributes.durabilityKind = DurabilityKind_t::TRANSIENT_LOCAL;
 
-  attributes.ownership_Kind = OwnershipKind_t::SHARED;
+//  attributes.ownership_Kind = OwnershipKind_t::SHARED;
   DOMAIN_LOG("Creating writer[%s, %s]\n", topicName, typeName);
 
   if (reliable) {
@@ -358,52 +358,6 @@ rtps::Writer *Domain::createWriter(Participant &part, const char *topicName,
     part.addWriter(&writer);
     return &writer;
   }
-}
-
-rtps::Writer *Domain::createWriter(Participant &part, const char *topicName,
-                     const char *typeName, OwnershipKind_t ownership_kind, OwnershipStrength ownership_strenght,
-                     bool enforceUnicast){
-    // Check if there is enough capacity for more writers Ownership currently just support reliable writer so its compatible with fastDDS (dont really get why thats a problem)
-    if (m_statefulWriters.size() <= m_numStatefulWriters && (ownership_kind == OwnershipKind_t::EXCLUSIVE)) {
-        DOMAIN_LOG("No Writer created. Max Number of Writers reached.\n");
-        return nullptr;
-    }
-    if(OwnershipKind_t::SHARED == ownership_kind) {
-        return createWriter(part, topicName, typeName, false, enforceUnicast);
-    }
-    // TODO Distinguish WithKey and NoKey (Also changes EntityKind)
-    TopicData attributes;
-
-    if (strlen(topicName) > Config::MAX_TOPICNAME_LENGTH ||
-        strlen(typeName) > Config::MAX_TYPENAME_LENGTH) {
-        return nullptr;
-    }
-    strcpy(attributes.topicName, topicName);
-    strcpy(attributes.typeName, typeName);
-    attributes.endpointGuid.prefix = part.m_guidPrefix;
-    attributes.endpointGuid.entityId = {
-            part.getNextUserEntityKey(),
-            EntityKind_t::USER_DEFINED_WRITER_WITHOUT_KEY};
-    attributes.unicastLocator = getUserUnicastLocator(part.m_participantId);
-    attributes.durabilityKind = DurabilityKind_t::TRANSIENT_LOCAL;
-
-    DOMAIN_LOG("Creating writer[%s, %s]\n", topicName, typeName);
-
-    attributes.reliabilityKind = ReliabilityKind_t::RELIABLE;
-
-    attributes.ownership_Kind = ownership_kind;
-    attributes.ownership_strenght = ownership_strenght;
-    attributes.topicKind = TopicKind_t::WITH_KEY;
-    if(attributes.topicKind == TopicKind_t::WITH_KEY){
-        attributes.endpointGuid.entityId.entityKind = EntityKind_t::USER_DEFINED_WRITER_WITH_KEY;
-    }
-    StatefulWriter &writer = m_statefulWriters[m_numStatefulWriters++];
-    writer.init(attributes, attributes.topicKind, &m_threadPool, m_transport,
-                    enforceUnicast);
-
-    part.addWriter(&writer);
-    return &writer;
-
 }
 
 rtps::Reader *Domain::createReader(Participant &part, const char *topicName,
