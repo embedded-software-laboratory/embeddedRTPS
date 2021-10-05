@@ -89,7 +89,7 @@ enum class OwnershipKind_t : uint8_t{
     EXCLUSIVE = 1
 };
 
-typedef uint32_t OwnershipStrength;
+typedef uint32_t OwnershipStrength_t;
 
 struct GuidPrefix_t {
   std::array<uint8_t, 12> id;

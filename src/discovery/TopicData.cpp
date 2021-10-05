@@ -29,8 +29,10 @@ using rtps::TopicData;
 using rtps::SMElement::ParameterId;
 
 bool TopicData::matchesTopicOf(const TopicData &other) {
-  return strcmp(this->topicName, other.topicName) == 0 &&
+  bool sameTopicAndType = strcmp(this->topicName, other.topicName) == 0 &&
          strcmp(this->typeName, other.typeName) == 0;
+
+  return sameTopicAndType;
 }
 
 bool TopicData::readFromUcdrBuffer(ucdrBuffer &buffer) {
@@ -62,8 +64,6 @@ bool TopicData::readFromUcdrBuffer(ucdrBuffer &buffer) {
       buffer.iterator += 8;
       // TODO Skip 8 bytes. don't know what they are yet
       break;
-    case ParameterId::PID_SENTINEL:
-      return true;
     case ParameterId::PID_TOPIC_NAME:
       uint32_t topicNameLength;
       ucdr_deserialize_uint32_t(&buffer, &topicNameLength);
@@ -94,6 +94,8 @@ bool TopicData::readFromUcdrBuffer(ucdrBuffer &buffer) {
       ucdr_deserialize_uint32_t(&buffer, &ownershipStrenghtLength);
       //ucdr_deserialize_uint32_t(&buffer, &ownership_strenght);
       break;
+    case ParameterId::PID_SENTINEL:
+        return true;//End of information
     default:
       buffer.iterator += length;
       buffer.last_data_size = 1;
@@ -190,17 +192,17 @@ bool TopicData::serializeIntoUcdrBuffer(ucdrBuffer &buffer) const {
   ucdr_serialize_uint16_t(&buffer, ParameterId::PID_DURABILITY);
   ucdr_serialize_uint16_t(&buffer, sizeof(DurabilityKind_t));
   ucdr_serialize_uint32_t(&buffer, static_cast<uint32_t>(durabilityKind));
-/*
+
   ucdr_serialize_uint16_t(&buffer, ParameterId::PID_OWNERSHIP);
   ucdr_serialize_uint16_t(&buffer, sizeof(OwnershipKind_t));
   ucdr_serialize_uint8_t(&buffer, static_cast<uint8_t>(ownership_Kind));
 
   if(ownership_Kind == OwnershipKind_t::EXCLUSIVE) {
       ucdr_serialize_uint16_t(&buffer, ParameterId::PID_OWNERSHIP_STRENGTH);
-      ucdr_serialize_uint16_t(&buffer, sizeof(OwnershipStrength));
+      ucdr_serialize_uint16_t(&buffer, sizeof(ownership_strenght));
       ucdr_serialize_uint32_t(&buffer, ownership_strenght);
   }
-  */
+
   //End of QoS
   ucdr_serialize_uint16_t(&buffer, ParameterId::PID_SENTINEL);
   ucdr_serialize_uint16_t(&buffer, 0);

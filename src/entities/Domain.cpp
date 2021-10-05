@@ -306,21 +306,19 @@ rtps::Writer *Domain::writerExists(Participant &part, const char *topicName,
   return nullptr;
 }
 
-rtps::Writer *Domain::createWriter(Participant &part, const char *topicName,
-                                   const char *typeName, bool reliable,
-                                   bool enforceUnicast) {
+rtps::Writer *Domain::createWriter(Participant &part, const char *topicName, const char *typeName,
+                           OwnershipKind_t ownership_kind, OwnershipStrength_t ownershipStrength,
+                           bool reliable ,
+                           bool topichasKey,
+                           bool enforceUnicast ){
+    // Check if there is enough capacity for more writers
+  if (((reliable || ownership_kind == OwnershipKind_t::EXCLUSIVE) && m_statefulWriters.size() <= m_numStatefulWriters) || //Ownership needs reliable writer
+    ((!reliable) && m_statelessWriters.size() <= m_numStatelessWriters) ||
+    part.isWritersFull()) {
+      DOMAIN_LOG("No Writer created. Max Number of Writers reached.\n");
+      return nullptr;
+    }
 
-  // Check if there is enough capacity for more writers
-  if ((reliable && m_statefulWriters.size() <= m_numStatefulWriters) ||
-      (!reliable && m_statelessWriters.size() <= m_numStatelessWriters) ||
-      part.isWritersFull()) {
-
-    DOMAIN_LOG("No Writer created. Max Number of Writers reached.\n");
-
-    return nullptr;
-  }
-
-  // TODO Distinguish WithKey and NoKey (Also changes EntityKind)
   TopicData attributes;
 
   if (strlen(topicName) > Config::MAX_TOPICNAME_LENGTH ||
@@ -331,19 +329,25 @@ rtps::Writer *Domain::createWriter(Participant &part, const char *topicName,
   strcpy(attributes.typeName, typeName);
   attributes.endpointGuid.prefix = part.m_guidPrefix;
   attributes.endpointGuid.entityId = {
-      part.getNextUserEntityKey(),
-      EntityKind_t::USER_DEFINED_WRITER_WITHOUT_KEY};
+          part.getNextUserEntityKey(),
+          EntityKind_t::USER_DEFINED_WRITER_WITHOUT_KEY};
+
+  TopicKind_t kind = TopicKind_t::NO_KEY;
+  if(topichasKey){
+    kind = TopicKind_t::WITH_KEY;
+    attributes.endpointGuid.entityId.entityKind = EntityKind_t::USER_DEFINED_WRITER_WITH_KEY;
+  }
   attributes.unicastLocator = getUserUnicastLocator(part.m_participantId);
   attributes.durabilityKind = DurabilityKind_t::TRANSIENT_LOCAL;
 
-//  attributes.ownership_Kind = OwnershipKind_t::SHARED;
-  DOMAIN_LOG("Creating writer[%s, %s]\n", topicName, typeName);
-
-  if (reliable) {
+  if (reliable || ownership_kind == OwnershipKind_t::EXCLUSIVE) {
     attributes.reliabilityKind = ReliabilityKind_t::RELIABLE;
-
+    if(ownership_kind == OwnershipKind_t::EXCLUSIVE){
+      attributes.ownership_Kind = OwnershipKind_t::EXCLUSIVE;
+      attributes.ownership_strenght = ownershipStrength;
+    }
     StatefulWriter &writer = m_statefulWriters[m_numStatefulWriters++];
-    writer.init(attributes, TopicKind_t::NO_KEY, &m_threadPool, m_transport,
+    writer.init(attributes, kind, &m_threadPool, m_transport,
                 enforceUnicast);
 
     part.addWriter(&writer);
@@ -352,12 +356,24 @@ rtps::Writer *Domain::createWriter(Participant &part, const char *topicName,
     attributes.reliabilityKind = ReliabilityKind_t::BEST_EFFORT;
 
     StatelessWriter &writer = m_statelessWriters[m_numStatelessWriters++];
-    writer.init(attributes, TopicKind_t::NO_KEY, &m_threadPool, m_transport,
+    writer.init(attributes, kind, &m_threadPool, m_transport,
                 enforceUnicast);
 
     part.addWriter(&writer);
     return &writer;
   }
+}
+
+rtps::Writer *Domain::createWriter(Participant &part, const char *topicName,
+                     const char *typeName, OwnershipStrength_t ownership_strenght,
+                     bool enforceUnicast ){
+  return createWriter(part, topicName,typeName, OwnershipKind_t::EXCLUSIVE, ownership_strenght, true, true, enforceUnicast);
+}
+
+rtps::Writer *Domain::createWriter(Participant &part, const char *topicName,
+                                   const char *typeName, bool reliable,
+                                   bool enforceUnicast) {
+  return createWriter(part,topicName,typeName,OwnershipKind_t::SHARED, 0, reliable, false, enforceUnicast);
 }
 
 rtps::Reader *Domain::createReader(Participant &part, const char *topicName,

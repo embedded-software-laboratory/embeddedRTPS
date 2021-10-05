@@ -82,7 +82,7 @@ namespace rtps {
         template <class Buffer>
         void addSubMessageData(Buffer &buffer, const Buffer &filledPayload,
                                bool containsInlineQos, const SequenceNumber_t &SN,
-                               const EntityId_t &writerID, const EntityId_t &readerID) {
+                               const EntityId_t &writerID, const EntityId_t &readerID, const OwnershipKind_t ownershipKind = OwnershipKind_t::SHARED, const OwnershipStrength_t ownershipStrength = 0) {
             SubmessageData msg;
             msg.header.submessageId = SubmessageKind::DATA;
 #if IS_LITTLE_ENDIAN
@@ -107,6 +107,8 @@ namespace rtps {
             msg.readerId = readerID;
             msg.writerId = writerID;
 
+            msg.ownershipKind = ownershipKind;
+            msg.ownershipStrength = ownershipStrength;
             constexpr uint16_t octetsToInlineQoS =
                     4 + 4 + 8; // EntityIds + SequenceNumber
             msg.octetsToInlineQos = octetsToInlineQoS;

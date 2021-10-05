@@ -357,9 +357,14 @@ bool StatefulWriterT<NetworkDriver>::sendData(
 
       return false;
     }
+    bool inlineQoS = false;
+    if(m_attributes.ownership_Kind == OwnershipKind_t::EXCLUSIVE){
+      inlineQoS = true;
+    }
     MessageFactory::addSubMessageData(
-        info.buffer, next->data, false, next->sequenceNumber,
-        m_attributes.endpointGuid.entityId, reader.remoteReaderGuid.entityId);
+        info.buffer, next->data, inlineQoS, next->sequenceNumber,
+        m_attributes.endpointGuid.entityId, reader.remoteReaderGuid.entityId, m_attributes.ownership_Kind, m_attributes.ownership_strenght
+    );
   }
 
   m_transport->sendPacket(info);

@@ -51,13 +51,16 @@ public:
                        bool enforceUnicast = false);
 
   Writer *createWriter(Participant &part, const char *topicName,
-                         const char *typeName, OwnershipKind_t ownership_kind, OwnershipStrength ownership_strenght,
+                         const char *typeName, OwnershipStrength_t ownership_strenght,
                          bool enforceUnicast = false);
+
+  Writer *createWriter(Participant &part, const char *topicName, const char *typeName, OwnershipKind_t ownership_kind, OwnershipStrength_t ownershipStrength, bool reliable , bool topichasKey , bool enforceUnicast);
 
 
   Reader *createReader(Participant &part, const char *topicName,
                        const char *typeName, bool reliable,
                        ip4_addr_t mcastaddress = {0});
+
 
   Reader *createReader(Participant &part, const char *topicName,
                          const char *typeName, OwnershipKind_t ownership_Kind,

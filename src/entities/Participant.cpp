@@ -166,8 +166,8 @@ Participant::getMatchingWriter(const TopicData &readerTopicData) const {
   for (uint8_t i = 0; i < m_numWriters; ++i) {
     if (m_writers[i]->m_attributes.matchesTopicOf(readerTopicData) &&
         (readerTopicData.reliabilityKind == ReliabilityKind_t::BEST_EFFORT ||
-         m_writers[i]->m_attributes.reliabilityKind ==
-             ReliabilityKind_t::RELIABLE)) {
+         m_writers[i]->m_attributes.reliabilityKind == ReliabilityKind_t::RELIABLE ||
+         m_writers[i]->m_attributes.ownership_Kind == readerTopicData.ownership_Kind)) {
       return m_writers[i];
     }
   }
