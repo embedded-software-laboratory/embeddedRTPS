@@ -275,6 +275,8 @@ bool serializeMessage(Buffer &buffer, SubmessageData &msg) {
       buffer.append(reinterpret_cast<uint8_t*>(SMElement::ParameterId::PID_KEY_HASH), sizeof(uint16_t));
       uint16_t key = 1;
       buffer.append(reinterpret_cast<uint8_t*>(key), sizeof(uint16_t));
+      buffer.append(reinterpret_cast<uint8_t*>(SMElement::ParameterId::PID_SENTINEL), sizeof(uint16_t));
+      buffer.append(reinterpret_cast<uint8_t*>((uint16_t) 0), sizeof(uint16_t));
   }
   return true;
 }

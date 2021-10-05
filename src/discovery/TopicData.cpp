@@ -195,7 +195,7 @@ bool TopicData::serializeIntoUcdrBuffer(ucdrBuffer &buffer) const {
 
   ucdr_serialize_uint16_t(&buffer, ParameterId::PID_OWNERSHIP);
   ucdr_serialize_uint16_t(&buffer, sizeof(OwnershipKind_t));
-  ucdr_serialize_uint8_t(&buffer, static_cast<uint8_t>(ownership_Kind));
+  ucdr_serialize_uint32_t(&buffer, static_cast<uint32_t>(ownership_Kind));
 
   if(ownership_Kind == OwnershipKind_t::EXCLUSIVE) {
       ucdr_serialize_uint16_t(&buffer, ParameterId::PID_OWNERSHIP_STRENGTH);
