@@ -71,17 +71,58 @@ void StatefulReaderT<NetworkDriver>::init(const TopicData &attributes,
 }
 
 template <class NetworkDriver>
+rtps::Guid_t StatefulReaderT<NetworkDriver>::searchOwner(InstanceHandle_t &handle, WriterProxy *proxy){
+  for(auto &instance : instances){
+    if(instance.handle == handle){
+      if(instance.owner == nullptr){
+        instance.owner = proxy;
+        return proxy->remoteWriterGuid;
+      }
+      if(instance.owner == proxy){
+        return proxy->remoteWriterGuid;
+      }
+      else{
+        if(proxy->ownershipStrength < instance.owner->ownershipStrength){
+          return instance.owner->remoteWriterGuid;
+        }
+        else if(proxy->ownershipStrength > instance.owner->ownershipStrength){
+          instance.owner = proxy;
+          return proxy->remoteWriterGuid;
+        }
+        else{//equal strength , just pick the first one
+          return instance.owner->remoteWriterGuid;
+        }
+      }
+    }
+  }
+  Instance_t instance;
+  instance.owner = proxy;
+  instance.handle = handle;
+  instances.add(instance);
+  return proxy->remoteWriterGuid;
+}
+
+template <class NetworkDriver>
 void StatefulReaderT<NetworkDriver>::newChange(
     const ReaderCacheChange &cacheChange) {
   if (m_callback == nullptr) {
     return;
   }
   Lock lock{m_mutex};
+  InstanceHandle_t handle;
+
   for (auto &proxy : m_proxies) {
     if (proxy.remoteWriterGuid == cacheChange.writerGuid) {
       if (proxy.expectedSN == cacheChange.sn) {
-        m_callback(m_callee, cacheChange);
         ++proxy.expectedSN;
+        if(m_attributes.ownership_Kind == OwnershipKind_t::EXCLUSIVE)
+          m_KeyCallback(cacheChange.getData(),cacheChange.getDataSize(), handle);
+          if(searchOwner(handle, &proxy) == proxy.remoteWriterGuid) { //
+            m_callback(m_callee, cacheChange);
+          }
+        else{
+          m_callback(m_callee, cacheChange);
+        }
         return;
       }
     }
@@ -97,6 +138,16 @@ void StatefulReaderT<NetworkDriver>::registerCallback(ddsReaderCallback_fp cb,
   } else {
 
     SFR_LOG("Passed callback is nullptr\n");
+  }
+}
+
+template <class NetworkDriver>
+void StatefulReaderT<NetworkDriver>::registerKeyCallback(ddsGetKey_Callback_fp cb){
+  if(cb != nullptr){
+    m_KeyCallback = cb;
+  }
+  else{
+    SFR_LOG("Passed Key callback is nullptr\n");
   }
 }
 

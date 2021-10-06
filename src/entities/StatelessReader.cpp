@@ -94,4 +94,10 @@ bool StatelessReader::onNewHeartbeat(const SubmessageHeartbeat &,
   return true;
 }
 
+void StatelessReader::registerKeyCallback(ddsGetKey_Callback_fp cb){
+  if(cb != nullptr){
+    m_keyCallback = cb;
+  }
+}
+
 #undef SLR_VERBOSE

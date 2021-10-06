@@ -41,6 +41,7 @@ public:
   void init(const TopicData &attributes, NetworkDriver &driver);
   void newChange(const ReaderCacheChange &cacheChange) override;
   void registerCallback(ddsReaderCallback_fp cb, void *callee) override;
+  void registerKeyCallback(ddsGetKey_Callback_fp cb) override;
   bool addNewMatchedWriter(const WriterProxy &newProxy) override;
   void removeWriter(const Guid_t &guid) override;
   void removeWriterOfParticipant(const GuidPrefix_t &guidPrefix) override;
@@ -53,8 +54,11 @@ private:
   NetworkDriver *m_transport;
   TopicKind_t m_kind = TopicKind_t::NO_KEY;
   ddsReaderCallback_fp m_callback = nullptr;
+  ddsGetKey_Callback_fp m_KeyCallback = nullptr;
   void *m_callee = nullptr;
   sys_mutex_t m_mutex;
+  Guid_t searchOwner(InstanceHandle_t &handle, WriterProxy *proxy);
+  MemoryPool<Instance_t, rtps::Config::MAX_NUMBER_INSTANCE> instances;
 };
 
 using StatefulReader = StatefulReaderT<UdpDriver>;

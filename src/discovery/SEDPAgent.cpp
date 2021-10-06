@@ -133,7 +133,7 @@ void SEDPAgent::onNewPublisher(const TopicData &writerData) {
     SEDP_LOG("publisher\n");
 #endif
     reader->addNewMatchedWriter(
-            WriterProxy{writerData.endpointGuid, writerData.unicastLocator});
+            WriterProxy{writerData.endpointGuid, writerData.unicastLocator, writerData.ownership_strenght});
     if (mfp_onNewPublisherCallback != nullptr) {
         mfp_onNewPublisherCallback(m_onNewPublisherArgs);
     }

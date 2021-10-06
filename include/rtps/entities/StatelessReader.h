@@ -39,9 +39,10 @@ public:
   bool addNewMatchedWriter(const WriterProxy &newProxy) override;
   void removeWriter(const Guid_t &guid) override;
   void removeWriterOfParticipant(const GuidPrefix_t &guidPrefix) override;
-
+  void registerKeyCallback(ddsGetKey_Callback_fp cb) override;
 private:
   ddsReaderCallback_fp m_callback = nullptr;
+  ddsGetKey_Callback_fp m_keyCallback = nullptr;
   void *m_callee = nullptr;
 };
 

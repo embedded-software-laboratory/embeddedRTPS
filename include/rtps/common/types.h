@@ -30,7 +30,7 @@ Author: i11 - Embedded Software, RWTH Aachen University
 #include <array>
 #include <cstdint>
 #include <initializer_list>
-
+#include <ucdr/common.h>
 // TODO subnamespaces
 namespace rtps {
 
@@ -40,9 +40,7 @@ typedef uint16_t Ip4Port_t;
 typedef uint16_t DataSize_t;
 typedef int8_t ParticipantId_t; // With UDP only 120 possible
 
-class DynamicDataType{
-    virtual void getKeyAttributes(uint8_t *buff, uint32_t &len) = 0;//Put all key attributes into an array
-};
+
 
 enum class EntityKind_t : uint8_t {
   USER_DEFINED_UNKNOWN = 0x00,
@@ -237,7 +235,18 @@ enum class ChangeForReaderStatusKind {
 enum class ChangeFromWriterStatusKind { LOST, MISSING, RECEIVED, UNKNOWN };
 
 struct InstanceHandle_t { // TODO
-  uint64_t value;
+  //std::array<uint8_t, 16> key;
+  uint64_t key;
+  bool operator==(const InstanceHandle_t &other) const {
+    return key == other.key;
+
+    //for (int i = 0; i < 16; i++) {
+    //  if(key[i] != other.key[i]) {
+    //    return false;
+    //  }
+    //}
+    //return true;
+  }
 };
 
 struct ParticipantMessageData { // TODO
@@ -284,6 +293,14 @@ const SequenceNumber_t SEQUENCENUMBER_UNKNOWN = {-1, 0};
 
 const Time_t TIME_ZERO = {};
 const Time_t TIME_INVALID = {-1, 0xFFFFFFFF};
+
+class WriterProxy;
+
+struct Instance_t{
+    InstanceHandle_t handle;
+    WriterProxy *owner = nullptr;
+};
+
 #ifndef CHIBIOS //has its own TIME_INFINITE
 const Time_t TIME_INFINITE = {0x7FFFFFFF, 0xFFFFFFFF};
 #endif
