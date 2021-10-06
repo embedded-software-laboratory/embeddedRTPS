@@ -64,8 +64,6 @@ struct TopicData {
       : endpointGuid(guid), typeName{'\0'}, topicName{'\0'},
         reliabilityKind(reliability),
         durabilityKind(DurabilityKind_t::TRANSIENT_LOCAL), unicastLocator(loc) {
-     //  ownership_Kind(OwnershipKind_t::SHARED), ownership_strenght(0){
-      //topicKind = TopicKind_t::NO_KEY;
   };
 
   bool matchesTopicOf(const TopicData &other);

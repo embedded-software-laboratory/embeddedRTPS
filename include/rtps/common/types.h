@@ -40,6 +40,10 @@ typedef uint16_t Ip4Port_t;
 typedef uint16_t DataSize_t;
 typedef int8_t ParticipantId_t; // With UDP only 120 possible
 
+class DynamicDataType{
+    virtual void getKeyAttributes(uint8_t *buff, uint32_t &len) = 0;//Put all key attributes into an array
+};
+
 enum class EntityKind_t : uint8_t {
   USER_DEFINED_UNKNOWN = 0x00,
   // No user define participant

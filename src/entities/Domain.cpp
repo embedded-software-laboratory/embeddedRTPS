@@ -306,6 +306,7 @@ rtps::Writer *Domain::writerExists(Participant &part, const char *topicName,
   return nullptr;
 }
 
+
 rtps::Writer *Domain::createWriter(Participant &part, const char *topicName, const char *typeName,
                            OwnershipKind_t ownership_kind, OwnershipStrength_t ownershipStrength,
                            bool reliable ,
@@ -376,10 +377,10 @@ rtps::Writer *Domain::createWriter(Participant &part, const char *topicName,
   return createWriter(part,topicName,typeName,OwnershipKind_t::SHARED, 0, reliable, false, enforceUnicast);
 }
 
-rtps::Reader *Domain::createReader(Participant &part, const char *topicName,
-                                   const char *typeName, bool reliable,
-                                   ip4_addr_t mcastaddress) {
-  if ((reliable && m_statefulReaders.size() <= m_numStatefulReaders) ||
+rtps::Reader *Domain::createReader(Participant &part, const char *topicName, bool topichasKey,
+                                   const char *typeName, bool reliable, OwnershipKind_t ownershipKind,
+                                   ip4_addr_t mcastaddress){
+  if (((reliable || (ownershipKind == OwnershipKind_t::EXCLUSIVE) )&& m_statefulReaders.size() <= m_numStatefulReaders) ||
       (!reliable && m_statelessReaders.size() <= m_numStatelessReaders) ||
       part.isReadersFull()) {
 
@@ -387,8 +388,6 @@ rtps::Reader *Domain::createReader(Participant &part, const char *topicName,
 
     return nullptr;
   }
-
-  // TODO Distinguish WithKey and NoKey (Also changes EntityKind)
   TopicData attributes;
 
   if (strlen(topicName) > Config::MAX_TOPICNAME_LENGTH ||
@@ -399,17 +398,17 @@ rtps::Reader *Domain::createReader(Participant &part, const char *topicName,
   strcpy(attributes.typeName, typeName);
   attributes.endpointGuid.prefix = part.m_guidPrefix;
   attributes.endpointGuid.entityId = {
-      part.getNextUserEntityKey(),
-      EntityKind_t::USER_DEFINED_READER_WITHOUT_KEY};
+          part.getNextUserEntityKey(),
+          EntityKind_t::USER_DEFINED_READER_WITHOUT_KEY};
   attributes.unicastLocator = getUserUnicastLocator(part.m_participantId);
   if (!isZeroAddress(mcastaddress)) {
     if (ip4_addr_ismulticast(&mcastaddress)) {
       attributes.multicastLocator = rtps::Locator::createUDPv4Locator(
-          ip4_addr1(&mcastaddress), ip4_addr2(&mcastaddress),
-          ip4_addr3(&mcastaddress), ip4_addr4(&mcastaddress),
-          getUserMulticastPort());
+              ip4_addr1(&mcastaddress), ip4_addr2(&mcastaddress),
+              ip4_addr3(&mcastaddress), ip4_addr4(&mcastaddress),
+              getUserMulticastPort());
       m_transport.joinMultiCastGroup(
-          attributes.multicastLocator.getIp4Address());
+              attributes.multicastLocator.getIp4Address());
       registerMulticastPort(attributes.multicastLocator);
 
       DOMAIN_LOG("Multicast enabled!\n");
@@ -420,16 +419,20 @@ rtps::Reader *Domain::createReader(Participant &part, const char *topicName,
     }
   }
   attributes.durabilityKind = DurabilityKind_t::VOLATILE;
-
+  TopicKind_t kind;
+  if(topichasKey){
+    kind = TopicKind_t::WITH_KEY;
+    attributes.endpointGuid.entityId.entityKind = EntityKind_t::USER_DEFINED_READER_WITH_KEY;
+  }
   DOMAIN_LOG("Creating reader[%s, %s]\n", topicName, typeName);
 
-  if (reliable) {
+  if (reliable || (ownershipKind == OwnershipKind_t::EXCLUSIVE)) {
     if (m_numStatefulReaders == m_statefulReaders.size()) {
       return nullptr;
     }
 
     attributes.reliabilityKind = ReliabilityKind_t::RELIABLE;
-
+    attributes.ownership_Kind = ownershipKind;
     StatefulReader &reader = m_statefulReaders[m_numStatefulReaders++];
     reader.init(attributes, m_transport);
 
@@ -452,7 +455,16 @@ rtps::Reader *Domain::createReader(Participant &part, const char *topicName,
     }
     return &reader;
   }
+
 }
+
+rtps::Reader *Domain::createReader(Participant &part, const char *topicName,
+                                   const char *typeName, bool reliable,
+                                   ip4_addr_t mcastaddress) {
+  return createReader(part,topicName, false,typeName, reliable, OwnershipKind_t::SHARED, mcastaddress);
+}
+
+
 
 rtps::GuidPrefix_t Domain::generateGuidPrefix(ParticipantId_t id) const {
   GuidPrefix_t prefix = Config::BASE_GUID_PREFIX;

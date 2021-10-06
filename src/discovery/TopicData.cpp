@@ -84,15 +84,11 @@ bool TopicData::readFromUcdrBuffer(ucdrBuffer &buffer) {
       multicastLocator.readFromUcdrBuffer(buffer);
       break;
     case ParameterId::PID_OWNERSHIP:
-      uint32_t ownershipKindLength;
-      ucdr_deserialize_uint32_t(&buffer, &ownershipKindLength);
-//    ucdr_deserialize_uint8_t(&buffer, reinterpret_cast<uint8_t *>(&ownership_Kind));
+      ucdr_deserialize_uint32_t(&buffer,reinterpret_cast<uint32_t *>(&ownership_Kind));
 
       break;
     case ParameterId::PID_OWNERSHIP_STRENGTH:
-      uint32_t ownershipStrenghtLength;
-      ucdr_deserialize_uint32_t(&buffer, &ownershipStrenghtLength);
-      //ucdr_deserialize_uint32_t(&buffer, &ownership_strenght);
+      ucdr_deserialize_uint32_t(&buffer,reinterpret_cast<uint32_t*>(&ownership_strenght));
       break;
     case ParameterId::PID_SENTINEL:
         return true;//End of information
@@ -197,7 +193,7 @@ bool TopicData::serializeIntoUcdrBuffer(ucdrBuffer &buffer) const {
   ucdr_serialize_uint16_t(&buffer, sizeof(OwnershipKind_t));
   ucdr_serialize_uint32_t(&buffer, static_cast<uint32_t>(ownership_Kind));
 
-  if(ownership_Kind == OwnershipKind_t::EXCLUSIVE) {
+  if(ownership_Kind == OwnershipKind_t::EXCLUSIVE && endpointGuid.entityId.entityKind == EntityKind_t::USER_DEFINED_WRITER_WITH_KEY) {//Only writers have strength
       ucdr_serialize_uint16_t(&buffer, ParameterId::PID_OWNERSHIP_STRENGTH);
       ucdr_serialize_uint16_t(&buffer, sizeof(ownership_strenght));
       ucdr_serialize_uint32_t(&buffer, ownership_strenght);

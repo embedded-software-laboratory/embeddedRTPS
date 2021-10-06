@@ -51,7 +51,7 @@ private:
   PacketInfo
       m_packetInfo; // TODO intended for reuse but buffer not used as such
   NetworkDriver *m_transport;
-
+  TopicKind_t m_kind = TopicKind_t::NO_KEY;
   ddsReaderCallback_fp m_callback = nullptr;
   void *m_callee = nullptr;
   sys_mutex_t m_mutex;

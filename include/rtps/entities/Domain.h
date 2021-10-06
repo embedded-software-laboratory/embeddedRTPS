@@ -57,14 +57,14 @@ public:
   Writer *createWriter(Participant &part, const char *topicName, const char *typeName, OwnershipKind_t ownership_kind, OwnershipStrength_t ownershipStrength, bool reliable , bool topichasKey , bool enforceUnicast);
 
 
+  Reader *createReader(Participant &part, const char *topicName, bool topichasKey,
+                         const char *typeName, bool reliable, OwnershipKind_t ownershipKind,
+                         ip4_addr_t mcastaddress = {0});
+
   Reader *createReader(Participant &part, const char *topicName,
                        const char *typeName, bool reliable,
                        ip4_addr_t mcastaddress = {0});
 
-
-  Reader *createReader(Participant &part, const char *topicName,
-                         const char *typeName, OwnershipKind_t ownership_Kind,
-                         ip4_addr_t mcastaddress = {0});
 
   Writer *writerExists(Participant &part, const char *topicName,
                        const char *typeName, bool reliable);

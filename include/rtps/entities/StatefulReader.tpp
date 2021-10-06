@@ -59,6 +59,11 @@ void StatefulReaderT<NetworkDriver>::init(const TopicData &attributes,
 
     return;
   }
+
+  if(attributes.endpointGuid.entityId.entityKind == EntityKind_t::USER_DEFINED_READER_WITH_KEY){
+    m_kind = TopicKind_t::WITH_KEY;
+  }
+
   m_attributes = attributes;
   m_transport = &driver;
   m_packetInfo.srcPort = attributes.unicastLocator.port;
