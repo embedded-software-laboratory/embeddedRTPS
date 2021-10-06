@@ -32,7 +32,7 @@ Author: i11 - Embedded Software, RWTH Aachen University
 #include <cstdint>
 
 namespace rtps {
-    namespace MessageFactory {
+  namespace MessageFactory {
         const std::array<uint8_t, 4> PROTOCOL_TYPE{'R', 'T', 'P', 'S'};
         const uint8_t numBytesUntilEndOfLength =
                 4; // The first bytes incl. submessagelength don't count

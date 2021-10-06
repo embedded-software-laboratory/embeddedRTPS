@@ -347,6 +347,7 @@ bool StatefulWriterT<NetworkDriver>::sendData(
   info.destAddr = locator.getIp4Address();
   info.destPort = (Ip4Port_t)locator.port;
 
+
   {
     Lock lock(m_mutex);
     const CacheChange *next = m_history.getChangeBySN(snMissing);
@@ -358,9 +359,9 @@ bool StatefulWriterT<NetworkDriver>::sendData(
       return false;
     }
     bool inlineQoS = false;
-    if(m_attributes.ownership_Kind == OwnershipKind_t::EXCLUSIVE){
-      inlineQoS = true;
-    }
+   // if(m_attributes.ownership_Kind == OwnershipKind_t::EXCLUSIVE){
+    //  inlineQoS = true;
+    //}
     MessageFactory::addSubMessageData(
         info.buffer, next->data, inlineQoS, next->sequenceNumber,
         m_attributes.endpointGuid.entityId, reader.remoteReaderGuid.entityId, m_attributes.ownership_Kind, m_attributes.ownership_strenght
