@@ -71,26 +71,26 @@ void StatefulReaderT<NetworkDriver>::init(const TopicData &attributes,
 }
 
 template <class NetworkDriver>
-rtps::Guid_t StatefulReaderT<NetworkDriver>::searchOwner(InstanceHandle_t &handle, WriterProxy *proxy){
+bool StatefulReaderT<NetworkDriver>::isOwner(InstanceHandle_t &handle, WriterProxy *proxy){
   for(auto &instance : instances){
     if(instance.handle == handle){
       if(instance.owner == nullptr){
         instance.owner = proxy;
-        return proxy->remoteWriterGuid;
+        return true;
       }
       if(instance.owner == proxy){
-        return proxy->remoteWriterGuid;
+        return true;
       }
       else{
         if(proxy->ownershipStrength < instance.owner->ownershipStrength){
-          return instance.owner->remoteWriterGuid;
+          return false;
         }
         else if(proxy->ownershipStrength > instance.owner->ownershipStrength){
           instance.owner = proxy;
-          return proxy->remoteWriterGuid;
+          return true;
         }
         else{//equal strength , just pick the first one
-          return instance.owner->remoteWriterGuid;
+          return false;
         }
       }
     }
@@ -99,7 +99,7 @@ rtps::Guid_t StatefulReaderT<NetworkDriver>::searchOwner(InstanceHandle_t &handl
   instance.owner = proxy;
   instance.handle = handle;
   instances.add(instance);
-  return proxy->remoteWriterGuid;
+  return true;
 }
 
 template <class NetworkDriver>
@@ -117,7 +117,7 @@ void StatefulReaderT<NetworkDriver>::newChange(
         ++proxy.expectedSN;
         if(m_attributes.ownership_Kind == OwnershipKind_t::EXCLUSIVE)
           m_KeyCallback(cacheChange.getData(),cacheChange.getDataSize(), handle);
-          if(searchOwner(handle, &proxy) == proxy.remoteWriterGuid) { //
+          if(isOwner(handle, &proxy)) { //
             m_callback(m_callee, cacheChange);
           }
         else{
@@ -164,6 +164,14 @@ bool StatefulReaderT<NetworkDriver>::addNewMatchedWriter(
 
 template <class NetworkDriver>
 void StatefulReaderT<NetworkDriver>::removeWriter(const Guid_t &guid) {
+  auto isElementToRemove_Instance = [&](const Instance_t &instance){
+      return instance.owner->remoteWriterGuid == guid;
+  };
+  auto thunk_instance = [](void *arg, const Instance_t &value) {
+      return (*static_cast<decltype(isElementToRemove_Instance) *>(arg))(value);
+  };
+  instances.remove(thunk_instance, &isElementToRemove_Instance);
+
   auto isElementToRemove = [&](const WriterProxy &proxy) {
     return proxy.remoteWriterGuid == guid;
   };
@@ -172,11 +180,20 @@ void StatefulReaderT<NetworkDriver>::removeWriter(const Guid_t &guid) {
   };
 
   m_proxies.remove(thunk, &isElementToRemove);
+
 }
 
 template <class NetworkDriver>
 void StatefulReaderT<NetworkDriver>::removeWriterOfParticipant(
     const GuidPrefix_t &guidPrefix) {
+  auto isElementToRemove_Instance = [&](const Instance_t &instance){
+      return instance.owner->remoteWriterGuid.prefix == guidPrefix;
+  };
+  auto thunk_instance = [](void *arg, const Instance_t &value) {
+      return (*static_cast<decltype(isElementToRemove_Instance) *>(arg))(value);
+  };
+  instances.remove(thunk_instance, &isElementToRemove_Instance);
+
   auto isElementToRemove = [&](const WriterProxy &proxy) {
     return proxy.remoteWriterGuid.prefix == guidPrefix;
   };

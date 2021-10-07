@@ -57,7 +57,7 @@ private:
   ddsGetKey_Callback_fp m_KeyCallback = nullptr;
   void *m_callee = nullptr;
   sys_mutex_t m_mutex;
-  Guid_t searchOwner(InstanceHandle_t &handle, WriterProxy *proxy);
+  bool isOwner(InstanceHandle_t &handle, WriterProxy *proxy);
   MemoryPool<Instance_t, rtps::Config::MAX_NUMBER_INSTANCE> instances;
 };
 

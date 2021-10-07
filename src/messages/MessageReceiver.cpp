@@ -115,6 +115,9 @@ bool MessageReceiver::processSubmessage(MessageProcessingInfo &msgInfo,
     RECV_LOG("Info_TS submessage not relevant.\n");
     success = true; // Not relevant now
     break;
+    case SubmessageKind::GAP:
+      //success = processGapSubmessage(&msgInfo, )
+    break;
   default:
     RECV_LOG("Submessage of type %u currently not supported. Skipping..\n",
              static_cast<uint8_t>(submsgHeader.submessageId));
