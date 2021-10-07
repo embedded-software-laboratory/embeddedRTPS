@@ -115,11 +115,12 @@ void StatefulReaderT<NetworkDriver>::newChange(
     if (proxy.remoteWriterGuid == cacheChange.writerGuid) {
       if (proxy.expectedSN == cacheChange.sn) {
         ++proxy.expectedSN;
-        if(m_attributes.ownership_Kind == OwnershipKind_t::EXCLUSIVE)
-          m_KeyCallback(cacheChange.getData(),cacheChange.getDataSize(), handle);
-          if(isOwner(handle, &proxy)) { //
+        if(m_attributes.ownership_Kind == OwnershipKind_t::EXCLUSIVE) {
+          m_KeyCallback(cacheChange.getData(), cacheChange.getDataSize(), handle);
+          if (isOwner(handle, &proxy)) { //
             m_callback(m_callee, cacheChange);
           }
+        }
         else{
           m_callback(m_callee, cacheChange);
         }
