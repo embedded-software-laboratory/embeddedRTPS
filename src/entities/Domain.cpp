@@ -313,7 +313,7 @@ rtps::Writer *Domain::createWriter(Participant &part, const char *topicName, con
                            bool topichasKey,
                            bool enforceUnicast ){
     // Check if there is enough capacity for more writers
-  if (((reliable || ownership_kind == OwnershipKind_t::EXCLUSIVE) && m_statefulWriters.size() <= m_numStatefulWriters) || //Ownership needs reliable writer
+  if ((reliable  && m_statefulWriters.size() <= m_numStatefulWriters) ||
     ((!reliable) && m_statelessWriters.size() <= m_numStatelessWriters) ||
     part.isWritersFull()) {
       DOMAIN_LOG("No Writer created. Max Number of Writers reached.\n");
@@ -341,12 +341,12 @@ rtps::Writer *Domain::createWriter(Participant &part, const char *topicName, con
   attributes.unicastLocator = getUserUnicastLocator(part.m_participantId);
   attributes.durabilityKind = DurabilityKind_t::TRANSIENT_LOCAL;
 
+  attributes.ownership_Kind = ownership_kind;
+  if(ownership_kind == OwnershipKind_t::EXCLUSIVE) {
+    attributes.ownership_strenght = ownershipStrength;
+  }
   if (reliable || ownership_kind == OwnershipKind_t::EXCLUSIVE) {
     attributes.reliabilityKind = ReliabilityKind_t::RELIABLE;
-    if(ownership_kind == OwnershipKind_t::EXCLUSIVE){
-      attributes.ownership_Kind = OwnershipKind_t::EXCLUSIVE;
-      attributes.ownership_strenght = ownershipStrength;
-    }
     StatefulWriter &writer = m_statefulWriters[m_numStatefulWriters++];
     writer.init(attributes, kind, &m_threadPool, m_transport,
                 enforceUnicast);
@@ -366,12 +366,6 @@ rtps::Writer *Domain::createWriter(Participant &part, const char *topicName, con
 }
 
 rtps::Writer *Domain::createWriter(Participant &part, const char *topicName,
-                     const char *typeName, OwnershipStrength_t ownership_strenght,
-                     bool enforceUnicast ){
-  return createWriter(part, topicName,typeName, OwnershipKind_t::EXCLUSIVE, ownership_strenght, true, true, enforceUnicast);
-}
-
-rtps::Writer *Domain::createWriter(Participant &part, const char *topicName,
                                    const char *typeName, bool reliable,
                                    bool enforceUnicast) {
   return createWriter(part,topicName,typeName,OwnershipKind_t::SHARED, 0, reliable, false, enforceUnicast);
@@ -380,7 +374,7 @@ rtps::Writer *Domain::createWriter(Participant &part, const char *topicName,
 rtps::Reader *Domain::createReader(Participant &part, const char *topicName, bool topichasKey,
                                    const char *typeName, bool reliable, OwnershipKind_t ownershipKind,
                                    ip4_addr_t mcastaddress){
-  if (((reliable || (ownershipKind == OwnershipKind_t::EXCLUSIVE) )&& m_statefulReaders.size() <= m_numStatefulReaders) ||
+  if ((reliable&& m_statefulReaders.size() <= m_numStatefulReaders) ||
       (!reliable && m_statelessReaders.size() <= m_numStatelessReaders) ||
       part.isReadersFull()) {
 
@@ -426,13 +420,14 @@ rtps::Reader *Domain::createReader(Participant &part, const char *topicName, boo
   }
   DOMAIN_LOG("Creating reader[%s, %s]\n", topicName, typeName);
 
-  if (reliable || (ownershipKind == OwnershipKind_t::EXCLUSIVE)) {
+  attributes.ownership_Kind = ownershipKind;
+
+  if (reliable) {
     if (m_numStatefulReaders == m_statefulReaders.size()) {
       return nullptr;
     }
 
     attributes.reliabilityKind = ReliabilityKind_t::RELIABLE;
-    attributes.ownership_Kind = ownershipKind;
     StatefulReader &reader = m_statefulReaders[m_numStatefulReaders++];
     reader.init(attributes, m_transport);
 

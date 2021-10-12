@@ -50,9 +50,6 @@ public:
                        const char *typeName, bool reliable,
                        bool enforceUnicast = false);
 
-  Writer *createWriter(Participant &part, const char *topicName,
-                         const char *typeName, OwnershipStrength_t ownership_strenght,
-                         bool enforceUnicast = false);
 
   Writer *createWriter(Participant &part, const char *topicName, const char *typeName, OwnershipKind_t ownership_kind, OwnershipStrength_t ownershipStrength, bool reliable , bool topichasKey , bool enforceUnicast);
 
