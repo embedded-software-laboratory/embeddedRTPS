@@ -44,8 +44,51 @@ void StatelessReader::init(const TopicData &attributes) {
   m_is_initialized_ = true;
 }
 
+bool StatelessReader::isOwner(InstanceHandle_t &handle, WriterProxy *proxy){
+  for(auto &instance : m_instances){
+    if(instance.handle == handle){
+      if(instance.owner == nullptr){
+        instance.owner = proxy;
+        return true;
+      }
+      if(instance.owner == proxy){
+        return true;
+      }
+      else{
+        if(proxy->ownershipStrength < instance.owner->ownershipStrength){
+          return false;
+        }
+        else if(proxy->ownershipStrength > instance.owner->ownershipStrength){
+          instance.owner = proxy;
+          return true;
+        }
+        else{//equal strength , just pick the first one
+          return false;
+        }
+      }
+    }
+  }
+  Instance_t instance;
+  instance.owner = proxy;
+  instance.handle = handle;
+  m_instances.add(instance);
+  return true;
+}
+
 void StatelessReader::newChange(const ReaderCacheChange &cacheChange) {
   if (m_callback != nullptr) {
+    if(m_attributes.ownership_Kind == OwnershipKind_t::EXCLUSIVE) {
+      InstanceHandle_t handle;
+      m_keyCallback(cacheChange.getData(), cacheChange.getDataSize(), handle);
+      for (auto &proxy:m_proxies) {
+        if (cacheChange.writerGuid == proxy.remoteWriterGuid && isOwner(handle, &proxy)) { //
+          m_callback(m_callee, cacheChange);
+        }
+      }
+    }
+    else{
+      m_callback(m_callee, cacheChange);
+    }
     m_callback(m_callee, cacheChange);
   }
 }

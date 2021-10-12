@@ -72,7 +72,7 @@ void StatefulReaderT<NetworkDriver>::init(const TopicData &attributes,
 
 template <class NetworkDriver>
 bool StatefulReaderT<NetworkDriver>::isOwner(InstanceHandle_t &handle, WriterProxy *proxy){
-  for(auto &instance : instances){
+  for(auto &instance : m_instances){
     if(instance.handle == handle){
       if(instance.owner == nullptr){
         instance.owner = proxy;
@@ -98,7 +98,7 @@ bool StatefulReaderT<NetworkDriver>::isOwner(InstanceHandle_t &handle, WriterPro
   Instance_t instance;
   instance.owner = proxy;
   instance.handle = handle;
-  instances.add(instance);
+  m_instances.add(instance);
   return true;
 }
 

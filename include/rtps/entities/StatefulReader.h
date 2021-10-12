@@ -58,7 +58,7 @@ private:
   void *m_callee = nullptr;
   sys_mutex_t m_mutex;
   bool isOwner(InstanceHandle_t &handle, WriterProxy *proxy);
-  MemoryPool<Instance_t, rtps::Config::MAX_NUMBER_INSTANCE> instances;
+  MemoryPool<Instance_t, rtps::Config::MAX_NUMBER_INSTANCE> m_instances;
 };
 
 using StatefulReader = StatefulReaderT<UdpDriver>;

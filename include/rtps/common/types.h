@@ -293,7 +293,7 @@ const SequenceNumber_t SEQUENCENUMBER_UNKNOWN = {-1, 0};
 
 const Time_t TIME_ZERO = {};
 const Time_t TIME_INVALID = {-1, 0xFFFFFFFF};
-
+const Time_t TIME_INFINITY = {0x7FFFFFFF, 0xFFFFFFFF};
 class WriterProxy;
 
 struct Instance_t{

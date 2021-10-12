@@ -44,6 +44,9 @@ private:
   ddsReaderCallback_fp m_callback = nullptr;
   ddsGetKey_Callback_fp m_keyCallback = nullptr;
   void *m_callee = nullptr;
+  MemoryPool<Instance_t, rtps::Config::MAX_NUMBER_INSTANCE> m_instances;
+
+  bool isOwner(InstanceHandle_t &handle, WriterProxy *proxy);
 };
 
 } // namespace rtps
