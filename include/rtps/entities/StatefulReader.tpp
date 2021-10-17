@@ -171,7 +171,7 @@ void StatefulReaderT<NetworkDriver>::removeWriter(const Guid_t &guid) {
   auto thunk_instance = [](void *arg, const Instance_t &value) {
       return (*static_cast<decltype(isElementToRemove_Instance) *>(arg))(value);
   };
-  instances.remove(thunk_instance, &isElementToRemove_Instance);
+  m_instances.remove(thunk_instance, &isElementToRemove_Instance);
 
   auto isElementToRemove = [&](const WriterProxy &proxy) {
     return proxy.remoteWriterGuid == guid;
@@ -193,7 +193,7 @@ void StatefulReaderT<NetworkDriver>::removeWriterOfParticipant(
   auto thunk_instance = [](void *arg, const Instance_t &value) {
       return (*static_cast<decltype(isElementToRemove_Instance) *>(arg))(value);
   };
-  instances.remove(thunk_instance, &isElementToRemove_Instance);
+  m_instances.remove(thunk_instance, &isElementToRemove_Instance);
 
   auto isElementToRemove = [&](const WriterProxy &proxy) {
     return proxy.remoteWriterGuid.prefix == guidPrefix;

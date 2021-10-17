@@ -235,17 +235,17 @@ enum class ChangeForReaderStatusKind {
 enum class ChangeFromWriterStatusKind { LOST, MISSING, RECEIVED, UNKNOWN };
 
 struct InstanceHandle_t { // TODO
-  //std::array<uint8_t, 16> key;
-  uint64_t key;
+  uint8_t key[16];
+  //uint64_t key;
   bool operator==(const InstanceHandle_t &other) const {
     return key == other.key;
 
-    //for (int i = 0; i < 16; i++) {
-    //  if(key[i] != other.key[i]) {
-    //    return false;
-    //  }
-    //}
-    //return true;
+    for (int i = 0; i < 16; i++) {
+      if(key[i] != other.key[i]) {
+        return false;
+      }
+    }
+    return true;
   }
 };
 

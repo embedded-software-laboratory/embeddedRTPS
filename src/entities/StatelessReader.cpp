@@ -109,6 +109,14 @@ bool StatelessReader::addNewMatchedWriter(const WriterProxy &newProxy) {
 }
 
 void StatelessReader::removeWriter(const Guid_t &guid) {
+  auto isElementToRemove_Instance = [&](const Instance_t &instance){
+      return instance.owner->remoteWriterGuid == guid;
+  };
+  auto thunk_instance = [](void *arg, const Instance_t &value) {
+      return (*static_cast<decltype(isElementToRemove_Instance) *>(arg))(value);
+  };
+  m_instances.remove(thunk_instance, &isElementToRemove_Instance);
+
   auto isElementToRemove = [&](const WriterProxy &proxy) {
     return proxy.remoteWriterGuid == guid;
   };
@@ -121,6 +129,13 @@ void StatelessReader::removeWriter(const Guid_t &guid) {
 
 void StatelessReader::removeWriterOfParticipant(
     const GuidPrefix_t &guidPrefix) {
+  auto isElementToRemove_Instance = [&](const Instance_t &instance){
+      return instance.owner->remoteWriterGuid.prefix == guidPrefix;
+  };
+  auto thunk_instance = [](void *arg, const Instance_t &value) {
+      return (*static_cast<decltype(isElementToRemove_Instance) *>(arg))(value);
+  };
+  m_instances.remove(thunk_instance, &isElementToRemove_Instance);
   auto isElementToRemove = [&](const WriterProxy &proxy) {
     return proxy.remoteWriterGuid.prefix == guidPrefix;
   };
