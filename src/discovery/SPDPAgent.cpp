@@ -290,15 +290,13 @@ void SPDPAgent::addParticipantParameters() {
   ucdr_serialize_uint16_t(&m_microbuffer, protocolVersionSize + 2);
   ucdr_serialize_uint8_t(&m_microbuffer, PROTOCOLVERSION.major);
   ucdr_serialize_uint8_t(&m_microbuffer, PROTOCOLVERSION.minor);
-  m_microbuffer.iterator += 2;      // padding
-  m_microbuffer.last_data_size = 4; // to 4 byte
+  ucdr_advance_buffer(&m_microbuffer, 2);
 
   ucdr_serialize_uint16_t(&m_microbuffer, ParameterId::PID_VENDORID);
   ucdr_serialize_uint16_t(&m_microbuffer, vendorIdSize + 2);
   ucdr_serialize_array_uint8_t(&m_microbuffer,
                                Config::VENDOR_ID.vendorId.data(), vendorIdSize);
-  m_microbuffer.iterator += 2;      // padding
-  m_microbuffer.last_data_size = 4; // to 4 byte
+  ucdr_advance_buffer(&m_microbuffer, 2);
 
   ucdr_serialize_uint16_t(&m_microbuffer,
                           ParameterId::PID_DEFAULT_UNICAST_LOCATOR);

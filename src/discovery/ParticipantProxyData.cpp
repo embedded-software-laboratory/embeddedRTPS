@@ -121,25 +121,21 @@ bool ParticipantProxyData::readFromUcdrBuffer(ucdrBuffer &buffer) {
     }
     case ParameterId::PID_ENTITY_NAME: {
       // TODO
-      buffer.iterator += length;
-      buffer.last_data_size = 1;
+      ucdr_advance_buffer(&buffer, length);
       break;
     }
     case ParameterId::PID_PROPERTY_LIST: {
       // TODO
-      buffer.iterator += length;
-      buffer.last_data_size = 1;
+      ucdr_advance_buffer(&buffer, length);
       break;
     }
     case ParameterId::PID_USER_DATA: {
       // TODO
-      buffer.iterator += length;
-      buffer.last_data_size = 1;
+      ucdr_advance_buffer(&buffer, length);
       break;
     }
     case ParameterId::PID_PAD: {
-      buffer.iterator += length;
-      buffer.last_data_size = 1;
+      ucdr_advance_buffer(&buffer, length);
       break;
     }
     case ParameterId::PID_SENTINEL: {
@@ -148,9 +144,7 @@ bool ParticipantProxyData::readFromUcdrBuffer(ucdrBuffer &buffer) {
     default: { return false; }
     }
     // Parameter lists are 4-byte aligned
-    uint32_t alignment = ucdr_buffer_alignment(&buffer, 4);
-    buffer.iterator += alignment;
-    buffer.last_data_size = 4;
+    ucdr_align_to(&buffer, 4);
   }
   return true;
 }
