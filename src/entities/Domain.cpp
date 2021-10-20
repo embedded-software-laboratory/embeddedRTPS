@@ -307,11 +307,11 @@ rtps::Writer *Domain::writerExists(Participant &part, const char *topicName,
 }
 
 
-rtps::Writer *Domain::createWriter(Participant &part, const char *topicName, const char *typeName,
-                           OwnershipKind_t ownership_kind, OwnershipStrength_t ownershipStrength,
-                           bool reliable ,
-                           bool topichasKey,
-                           bool enforceUnicast ){
+rtps::Writer *Domain::createWriter(Participant &part, const char *topicName,
+                             const char *typeName,bool topichasKey,
+                             OwnershipKind_t ownership_kind, OwnershipStrength_t ownershipStrength,
+                             bool reliable ,
+                             bool enforceUnicast ){
     // Check if there is enough capacity for more writers
   if ((reliable  && m_statefulWriters.size() <= m_numStatefulWriters) ||
     ((!reliable) && m_statelessWriters.size() <= m_numStatelessWriters) ||
@@ -368,7 +368,7 @@ rtps::Writer *Domain::createWriter(Participant &part, const char *topicName, con
 rtps::Writer *Domain::createWriter(Participant &part, const char *topicName,
                                    const char *typeName, bool reliable,
                                    bool enforceUnicast) {
-  return createWriter(part,topicName,typeName,OwnershipKind_t::SHARED, 0, reliable, false, enforceUnicast);
+  return createWriter(part,topicName,typeName,false,OwnershipKind_t::SHARED, 0, reliable, enforceUnicast);
 }
 
 rtps::Reader *Domain::createReader(Participant &part, const char *topicName, bool topichasKey,

@@ -34,7 +34,6 @@ Author: i11 - Embedded Software, RWTH Aachen University
 #include "rtps/utils/udpUtils.h"
 
 using rtps::CacheChange;
-using rtps::SequenceNumber_t;
 using rtps::StatelessWriterT;
 
 #if SLW_VERBOSE && RTPS_GLOBAL_VERBOSE
