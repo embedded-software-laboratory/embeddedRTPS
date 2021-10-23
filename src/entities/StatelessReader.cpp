@@ -46,6 +46,7 @@ void StatelessReader::init(const TopicData &attributes) {
 
 bool StatelessReader::isOwner(InstanceHandle_t &handle, WriterProxy *proxy){
   for(auto &instance : m_instances){
+    bool keyEqual = instance.handle == handle;
     if(instance.handle == handle){
       if(instance.owner == nullptr){
         instance.owner = proxy;
@@ -67,7 +68,7 @@ bool StatelessReader::isOwner(InstanceHandle_t &handle, WriterProxy *proxy){
         }
       }
     }
-  }
+  }//Instance not knwon
   Instance_t instance;
   instance.owner = proxy;
   instance.handle = handle;
@@ -89,7 +90,6 @@ void StatelessReader::newChange(const ReaderCacheChange &cacheChange) {
     else{
       m_callback(m_callee, cacheChange);
     }
-    m_callback(m_callee, cacheChange);
   }
 }
 
