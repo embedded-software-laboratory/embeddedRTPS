@@ -114,6 +114,7 @@ void StatefulReaderT<NetworkDriver>::newChange(
       if (proxy.expectedSN == cacheChange.sn) {
         ++proxy.expectedSN;
         if(m_attributes.ownership_Kind == OwnershipKind_t::EXCLUSIVE) {
+          InstanceHandle_t handle;
           m_KeyCallback(cacheChange.getData(), cacheChange.getDataSize(), handle);
           if (isOwner(handle, &proxy)) { //
             m_callback(m_callee, cacheChange);

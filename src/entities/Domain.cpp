@@ -416,9 +416,9 @@ rtps::Reader *Domain::createReader(Participant &part, const char *topicName, boo
     }
   }
   attributes.durabilityKind = DurabilityKind_t::VOLATILE;
-  TopicKind_t kind;
+  //TopicKind_t kind;
   if(topichasKey){
-    kind = TopicKind_t::WITH_KEY;
+  //  kind = TopicKind_t::WITH_KEY;
     attributes.endpointGuid.entityId.entityKind = EntityKind_t::USER_DEFINED_READER_WITH_KEY;
   }
   DOMAIN_LOG("Creating reader[%s, %s]\n", topicName, typeName);
@@ -468,8 +468,14 @@ rtps::GuidPrefix_t Domain::generateGuidPrefix(ParticipantId_t id) const {
   GuidPrefix_t prefix = Config::BASE_GUID_PREFIX;
 #if defined(unix) || defined(__unix__)
   srand(time(nullptr));
-#else
+#elseif defined(CHIBIOS)
+  unsigned int seed = (int)chVTGetSystemTimeX();
+  srand(seed);
+#elseif defined(CHIBIOS)
   unsigned int seed = (int)xTaskGetTickCount();
+  srand(seed);
+#else
+  unsigned int seed = (int)chVTGetSystemTimeX();
   srand(seed);
 #endif
   for (auto i = 0; i < rtps::Config::BASE_GUID_PREFIX.id.size(); i++) {
