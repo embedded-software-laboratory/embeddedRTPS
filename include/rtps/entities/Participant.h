@@ -76,10 +76,13 @@ public:
   //! (Probably) Thread safe if writers cannot be removed
   Writer *getWriter(EntityId_t id) const;
   Writer *getMatchingWriter(const TopicData &topicData) const;
+  Writer *getMatchingWriter(const TopicDataCompressed &topicData) const;
+
   //! (Probably) Thread safe if readers cannot be removed
   Reader *getReader(EntityId_t id) const;
   Reader *getReaderByWriterId(const Guid_t &guid) const;
   Reader *getMatchingReader(const TopicData &topicData) const;
+  Reader *getMatchingReader(const TopicDataCompressed &topicData) const;
 
   bool addNewRemoteParticipant(const ParticipantProxyData &remotePart);
   bool removeRemoteParticipant(const GuidPrefix_t &prefix);

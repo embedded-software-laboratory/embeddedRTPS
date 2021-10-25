@@ -23,6 +23,7 @@ Author: i11 - Embedded Software, RWTH Aachen University
 */
 
 #include "rtps/entities/StatelessReader.h"
+#include "rtps/utils/Lock.h"
 #include "rtps/utils/Log.h"
 
 using rtps::StatelessReader;
@@ -42,6 +43,9 @@ using rtps::StatelessReader;
 void StatelessReader::init(const TopicData &attributes) {
   m_attributes = attributes;
   m_is_initialized_ = true;
+  if (sys_mutex_new(&m_mutex) != ERR_OK) {
+    SLR_LOG("Failed to create mutex.\n");
+  }
 }
 
 void StatelessReader::newChange(const ReaderCacheChange &cacheChange) {
@@ -55,17 +59,23 @@ void StatelessReader::registerCallback(ddsReaderCallback_fp cb, void *callee) {
     m_callback = cb;
     m_callee = callee; // It's okay if this is null
   } else {
-#if SLR_VERBOSE
+#if (SLR_VERBOSE && RTPS_GLOBAL_VERBOSE)
     SLR_LOG("Passed callback is nullptr\n");
 #endif
   }
 }
 
 bool StatelessReader::addNewMatchedWriter(const WriterProxy &newProxy) {
+#if (SLR_VERBOSE && RTPS_GLOBAL_VERBOSE)
+  SLR_LOG("Adding WriterProxy");
+  printGuid(newProxy.remoteWriterGuid);
+  printf("\n");
+#endif SLR_VERBOSE
   return m_proxies.add(newProxy);
 }
 
 void StatelessReader::removeWriter(const Guid_t &guid) {
+  Lock lock(m_mutex);
   auto isElementToRemove = [&](const WriterProxy &proxy) {
     return proxy.remoteWriterGuid == guid;
   };
@@ -78,6 +88,7 @@ void StatelessReader::removeWriter(const Guid_t &guid) {
 
 void StatelessReader::removeWriterOfParticipant(
     const GuidPrefix_t &guidPrefix) {
+  Lock lock(m_mutex);
   auto isElementToRemove = [&](const WriterProxy &proxy) {
     return proxy.remoteWriterGuid.prefix == guidPrefix;
   };

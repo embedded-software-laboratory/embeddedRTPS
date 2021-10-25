@@ -26,6 +26,7 @@ Author: i11 - Embedded Software, RWTH Aachen University
 #include <cstring>
 
 using rtps::TopicData;
+using rtps::TopicDataCompressed;
 using rtps::SMElement::ParameterId;
 
 bool TopicData::matchesTopicOf(const TopicData &other) {
@@ -76,7 +77,8 @@ bool TopicData::readFromUcdrBuffer(ucdrBuffer &buffer) {
       break;
     case ParameterId::PID_UNICAST_LOCATOR:
       uLoc.readFromUcdrBuffer(buffer);
-      if (uLoc.kind == LocatorKind_t::LOCATOR_KIND_UDPv4&& uLoc.isSameSubnet()) {
+      if (uLoc.kind == LocatorKind_t::LOCATOR_KIND_UDPv4 &&
+          uLoc.isSameSubnet()) {
         unicastLocator = uLoc;
       }
       break;
@@ -183,4 +185,9 @@ bool TopicData::serializeIntoUcdrBuffer(ucdrBuffer &buffer) const {
   ucdr_serialize_uint16_t(&buffer, 0);
 
   return true;
+}
+
+bool TopicDataCompressed::matchesTopicOf(const TopicData &other) const {
+  return (std::hash<std::string>{}(std::string(other.topicName)) == topicHash &&
+          std::hash<std::string>{}(std::string(other.typeName)) == typeHash);
 }

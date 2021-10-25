@@ -166,13 +166,16 @@ void ThreadPool::readCallback(void *args, udp_pcb *target, pbuf *pbuf,
   auto &pool = *static_cast<ThreadPool *>(args);
 
   PacketInfo packet;
-  // TODO This is a workaround for chained pbufs caused by hardware limitations, not a general fix
-    if(pbuf->next != nullptr){
-      struct pbuf* test = pbuf_alloc(PBUF_RAW, pbuf->tot_len, PBUF_POOL);
-      pbuf_copy(test, pbuf);
-      pbuf_free(pbuf);
-      pbuf = test;
-    }
+
+  // TODO This is a workaround for chained pbufs caused by hardware limitations,
+  // not a general fix
+  if (pbuf->next != nullptr) {
+    struct pbuf *test = pbuf_alloc(PBUF_RAW, pbuf->tot_len, PBUF_POOL);
+    pbuf_copy(test, pbuf);
+    pbuf_free(pbuf);
+    pbuf = test;
+  }
+
   packet.destAddr = {0}; // not relevant
   packet.destPort = target->local_port;
   packet.srcPort = port;

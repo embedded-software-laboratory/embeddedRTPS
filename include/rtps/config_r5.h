@@ -23,6 +23,10 @@ const uint8_t NUM_STATELESS_WRITERS = 64;
 const uint8_t NUM_STATELESS_READERS = 64;
 const uint8_t NUM_STATEFUL_READERS = 4;
 const uint8_t NUM_STATEFUL_WRITERS = 4;
+
+const uint8_t MAX_NUM_UNMATCHED_REMOTE_WRITERS = 100;
+const uint8_t MAX_NUM_UNMATCHED_REMOTE_READERS = 10;
+
 const uint8_t MAX_NUM_PARTICIPANTS = 1;
 const uint8_t NUM_WRITERS_PER_PARTICIPANT =
     64; // 3 will be reserved for SPDP & SEDP
