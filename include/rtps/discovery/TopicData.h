@@ -31,6 +31,8 @@ Author: i11 - Embedded Software, RWTH Aachen University
 #include "rtps/config.h"
 #include "ucdr/microcdr.h"
 #include <array>
+#include <functional>
+#include <string>
 
 namespace rtps {
 
@@ -67,6 +69,29 @@ struct TopicData {
 
   bool readFromUcdrBuffer(ucdrBuffer &buffer);
   bool serializeIntoUcdrBuffer(ucdrBuffer &buffer) const;
+};
+
+struct TopicDataCompressed {
+  Guid_t endpointGuid;
+  std::size_t topicHash;
+  std::size_t typeHash;
+  ReliabilityKind_t reliabilityKind;
+  DurabilityKind_t durabilityKind;
+  Locator unicastLocator;
+  Locator multicastLocator;
+
+  TopicDataCompressed() = default;
+  TopicDataCompressed(const TopicData &topic_data) {
+    endpointGuid = topic_data.endpointGuid;
+    topicHash = std::hash<std::string>{}(std::string(topic_data.topicName));
+    typeHash = std::hash<std::string>{}(std::string(topic_data.typeName));
+    reliabilityKind = topic_data.reliabilityKind;
+    durabilityKind = topic_data.durabilityKind;
+    unicastLocator = topic_data.unicastLocator;
+    multicastLocator = topic_data.multicastLocator;
+  }
+
+  bool matchesTopicOf(const TopicData &topic_data) const;
 };
 } // namespace rtps
 
