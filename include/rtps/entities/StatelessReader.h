@@ -39,11 +39,15 @@ public:
   bool addNewMatchedWriter(const WriterProxy &newProxy) override;
   void removeWriter(const Guid_t &guid) override;
   void removeWriterOfParticipant(const GuidPrefix_t &guidPrefix) override;
-
+  void registerKeyCallback(ddsGetKey_Callback_fp cb) override;
 private:
   sys_mutex_t m_mutex;
   ddsReaderCallback_fp m_callback = nullptr;
+  ddsGetKey_Callback_fp m_keyCallback = nullptr;
   void *m_callee = nullptr;
+  MemoryPool<Instance_t, rtps::Config::MAX_NUMBER_INSTANCE> m_instances;
+
+  bool isOwner(InstanceHandle_t &handle, WriterProxy *proxy);
 };
 
 } // namespace rtps

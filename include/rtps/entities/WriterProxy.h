@@ -35,13 +35,13 @@ struct WriterProxy {
   Count_t ackNackCount;
   Count_t hbCount;
   Locator remoteLocator;
-
+  OwnershipStrength_t ownershipStrength;
   WriterProxy() = default;
 
-  WriterProxy(const Guid_t &guid, const Locator &loc)
+  WriterProxy(const Guid_t &guid, const Locator &loc, const OwnershipStrength_t ownershipStrength = 0)
       : remoteWriterGuid(guid),
         expectedSN(SequenceNumber_t{0, 1}), ackNackCount{1}, hbCount{0},
-        remoteLocator(loc) {}
+        remoteLocator(loc), ownershipStrength(ownershipStrength) {}
 
   // For now, we don't store any packets, so we just request all starting from
   // the next expected

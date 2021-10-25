@@ -175,6 +175,9 @@ struct SubmessageData {
   EntityId_t readerId;
   EntityId_t writerId;
   SequenceNumber_t writerSN;
+
+  OwnershipKind_t ownershipKind;
+  OwnershipStrength_t ownershipStrength;
   static constexpr uint16_t getRawSize() {
     return SubmessageHeader::getRawSize() + sizeof(uint16_t) +
            sizeof(uint16_t) + (2 * 3 + 2 * 1) // EntityID
@@ -288,6 +291,19 @@ bool serializeMessage(Buffer &buffer, SubmessageData &msg) {
                 sizeof(msg.writerSN.high));
   buffer.append(reinterpret_cast<uint8_t *>(&msg.writerSN.low),
                 sizeof(msg.writerSN.low));
+  if(msg.ownershipKind == OwnershipKind_t::EXCLUSIVE ){
+  //    buffer.append(reinterpret_cast<uint8_t*>(SMElement::ParameterId::PID_OWNERSHIP_STRENGTH), sizeof(uint16_t));
+  //    buffer.append(reinterpret_cast<uint8_t*>(sizeof(OwnershipStrength_t)), sizeof(uint16_t));
+  //    buffer.append(reinterpret_cast<uint8_t*>(msg.ownershipStrength), sizeof(OwnershipStrength_t));
+      //buffer.append(reinterpret_cast<uint8_t*>(SMElement::ParameterId::PID_KEY_HASH), sizeof(uint16_t));
+      //uint8_t key[16];
+     // buffer.append(reinterpret_cast<uint8_t*>(16),sizeof(uint16_t));
+     // buffer.append(reinterpret_cast<uint8_t*>(key), 16);
+
+  //    buffer.append(reinterpret_cast<uint8_t*>(SMElement::ParameterId::PID_SENTINEL), sizeof(uint16_t));
+  //    buffer.append(reinterpret_cast<uint8_t*>(0), sizeof(uint16_t));
+
+  }
   return true;
 }
 

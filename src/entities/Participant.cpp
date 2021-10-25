@@ -164,10 +164,12 @@ rtps::Reader *Participant::getReaderByWriterId(const Guid_t &guid) const {
 rtps::Writer *
 Participant::getMatchingWriter(const TopicData &readerTopicData) const {
   for (uint8_t i = 0; i < m_numWriters; ++i) {
-    if (m_writers[i]->m_attributes.matchesTopicOf(readerTopicData) &&
-        (readerTopicData.reliabilityKind == ReliabilityKind_t::BEST_EFFORT ||
-         m_writers[i]->m_attributes.reliabilityKind ==
-             ReliabilityKind_t::RELIABLE)) {
+    bool topic = m_writers[i]->m_attributes.matchesTopicOf(readerTopicData);
+    bool reliable = (readerTopicData.reliabilityKind == ReliabilityKind_t::BEST_EFFORT ||
+         m_writers[i]->m_attributes.reliabilityKind == ReliabilityKind_t::RELIABLE );
+
+    bool ownership =  m_writers[i]->m_attributes.ownership_Kind == readerTopicData.ownership_Kind;
+    if(reliable && ownership && topic){
       return m_writers[i];
     }
   }
@@ -177,10 +179,13 @@ Participant::getMatchingWriter(const TopicData &readerTopicData) const {
 rtps::Reader *
 Participant::getMatchingReader(const TopicData &writerTopicData) const {
   for (uint8_t i = 0; i < m_numReaders; ++i) {
-    if (m_readers[i]->m_attributes.matchesTopicOf(writerTopicData) &&
-        (writerTopicData.reliabilityKind == ReliabilityKind_t::RELIABLE ||
+    bool topic = m_readers[i]->m_attributes.matchesTopicOf(writerTopicData);
+    bool reliabale = (writerTopicData.reliabilityKind == ReliabilityKind_t::RELIABLE ||
          m_readers[i]->m_attributes.reliabilityKind ==
-             ReliabilityKind_t::BEST_EFFORT)) {
+             ReliabilityKind_t::BEST_EFFORT);
+
+    bool ownership = m_readers[i]->m_attributes.ownership_Kind == writerTopicData.ownership_Kind;
+    if(ownership && reliabale && topic){
       return m_readers[i];
     }
   }

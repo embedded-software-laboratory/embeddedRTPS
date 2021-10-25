@@ -53,7 +53,7 @@ private:
   Participant *m_part;
   sys_mutex_t m_mutex;
   uint8_t m_buffer[600]; // TODO check size, currently changed from 300 to 600
-                         // (FastDDS gives too many options)
+                         // (FastDDS gives too much options)
   BuiltInEndpoints m_endpoints;
   /*
    * If we add readers later on, remote participants will not send matching
