@@ -9,14 +9,14 @@
 
 inline void printEntityId(rtps::EntityId_t id) {
   for (const auto byte : id.entityKey) {
-    printf("%i", byte);
+    printf("%x", (int)byte);
   }
-  printf("%i", static_cast<uint8_t>(id.entityKind));
+  printf("%x", static_cast<uint8_t>(id.entityKind));
 }
 
 inline void printGuidPrefix(rtps::GuidPrefix_t prefix) {
   for (const auto byte : prefix.id) {
-    printf("%i", byte);
+    printf("%x", (int)byte);
   }
 }
 
