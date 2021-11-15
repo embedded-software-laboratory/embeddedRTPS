@@ -98,6 +98,8 @@ public:
     return false;
   }
 
+  uint32_t getNumMatchedWriters() { return m_proxies.getSize(); }
+
 protected:
   bool m_is_initialized_ = false;
   virtual ~Reader() = default;
