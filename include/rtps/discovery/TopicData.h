@@ -29,10 +29,9 @@ Author: i11 - Embedded Software, RWTH Aachen University
 
 #include "rtps/common/Locator.h"
 #include "rtps/config.h"
+#include "rtps/utils/hash.h"
 #include "ucdr/microcdr.h"
 #include <array>
-#include <functional>
-#include <string>
 
 namespace rtps {
 
@@ -83,8 +82,8 @@ struct TopicDataCompressed {
   TopicDataCompressed() = default;
   TopicDataCompressed(const TopicData &topic_data) {
     endpointGuid = topic_data.endpointGuid;
-    topicHash = std::hash<std::string>{}(std::string(topic_data.topicName));
-    typeHash = std::hash<std::string>{}(std::string(topic_data.typeName));
+    topicHash = hashCharArray(topic_data.topicName, Config::MAX_TOPICNAME_LENGTH);
+    typeHash = hashCharArray(topic_data.typeName, Config::MAX_TYPENAME_LENGTH);
     reliabilityKind = topic_data.reliabilityKind;
     durabilityKind = topic_data.durabilityKind;
     unicastLocator = topic_data.unicastLocator;

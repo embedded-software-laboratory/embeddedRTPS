@@ -188,6 +188,6 @@ bool TopicData::serializeIntoUcdrBuffer(ucdrBuffer &buffer) const {
 }
 
 bool TopicDataCompressed::matchesTopicOf(const TopicData &other) const {
-  return (std::hash<std::string>{}(std::string(other.topicName)) == topicHash &&
-          std::hash<std::string>{}(std::string(other.typeName)) == typeHash);
+  return (hashCharArray(other.topicName, sizeof(other.topicName)) == topicHash &&
+		  hashCharArray(other.typeName, sizeof(other.typeName)) == typeHash);
 }
