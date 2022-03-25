@@ -179,13 +179,14 @@ void SPDPAgent::processProxyData() {
     printGuidPrefix(m_proxyDataBuffer.m_guid.prefix);
   } else {
     SPDP_LOG("Failed to add new participant");
-#endif
   }
-  else {
+#else
+  } else {
     while (1) {
       SPDP_LOG("failed to add remote participant");
     }
   }
+#endif
 }
 
 bool SPDPAgent::addProxiesForBuiltInEndpoints() {

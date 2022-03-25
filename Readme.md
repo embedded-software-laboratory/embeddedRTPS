@@ -58,7 +58,7 @@ Round-trip-times (RTT) for different platforms and packet sizes are depicted in 
 <img src="https://raw.githubusercontent.com/embedded-software-laboratory/embeddedRTPS/master/media/performance_rtt.png" width="60%">
 
 ### Acknowledgment
-embeddedRTPS has been developed at **[i11 - Embedded Software, RWTH Aachen University](www.embedded.rwth-aachen.de)** in the context of the **[UNICARagil](www.unicaragil.de)** project.
+embeddedRTPS has been developed at **[i11 - Embedded Software, RWTH Aachen University](https://www.embedded.rwth-aachen.de)** in the context of the **[UNICARagil](https://www.unicaragil.de/en/)** project.
 
 *This research is accomplished within the project “UNICARagil” (FKZ EM2ADIS002). We acknowledge the financial support for the project by the Federal Ministry of Education and Research of Germany (BMBF).*
 

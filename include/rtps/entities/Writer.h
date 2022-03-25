@@ -52,6 +52,8 @@ public:
 
   bool isInitialized() { return m_is_initialized_; }
 
+  uint32_t getNumMatchedReader(){ return m_proxies.getSize();}
+
 protected:
   bool m_is_initialized_ = false;
   virtual ~Writer() = default;

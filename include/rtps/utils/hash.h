@@ -22,25 +22,18 @@ This file is part of embeddedRTPS.
 Author: i11 - Embedded Software, RWTH Aachen University
 */
 
-#ifndef RTPS_LOG_H
-#define RTPS_LOG_H
+#ifndef RTPS_HASH_H
+#define RTPS_HASH_H
 
-#include <cstdio>
-#include <stdarg.h>
+namespace rtps {
+inline size_t hashCharArray(const char* p, size_t s){
+	 size_t result = 0;
+	 const size_t prime = 31;
+	 for (size_t i = 0; i < s; ++i) {
+	  result = p[i] + (result * prime);
+	 }
+	 return result;
+}
+}
 
-#define RTPS_GLOBAL_VERBOSE 0
-
-#define SFW_VERBOSE 1
-#define SPDP_VERBOSE 1
-#define PBUF_WRAP_VERBOSE 1
-#define SEDP_VERBOSE 1
-#define RECV_VERBOSE 1
-#define PARTICIPANT_VERBOSE 1
-#define DOMAIN_VERBOSE 1
-#define UDP_DRIVER_VERBOSE 1
-#define TSCB_VERBOSE 1
-#define SLW_VERBOSE 1
-#define SFR_VERBOSE 1
-#define SLR_VERBOSE 1
-
-#endif // RTPS_LOG_H
+#endif
