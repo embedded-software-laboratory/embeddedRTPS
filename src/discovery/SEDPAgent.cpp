@@ -136,12 +136,20 @@ void SEDPAgent::removeUnmatchedEntitiesOfParticipant(const GuidPrefix_t &guidPre
 	  return topicData.endpointGuid.prefix == guidPrefix;
   };
   
-  auto thunk = [](void *arg, const TopicData &value) {
+  auto thunk = [](void *arg, const TopicDataCompressed &value) {
 	  return (*static_cast<decltype(isElementToRemove) *>(arg))(value);
   };
 
   m_unmatchedRemoteReaders.remove(thunk, &isElementToRemove);
   m_unmatchedRemoteWriters.remove(thunk, &isElementToRemove);
+}
+
+uint32_t SEDPAgent::getNumRemoteUnmatchedReaders(){
+  return m_unmatchedRemoteReaders.getNumElements();
+}
+
+uint32_t SEDPAgent::getNumRemoteUnmatchedWriters(){
+  return m_unmatchedRemoteWriters.getNumElements();
 }
  
 void SEDPAgent::onNewPublisher(const TopicData &writerData) {
