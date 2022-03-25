@@ -226,6 +226,7 @@ bool Participant::removeRemoteParticipant(const GuidPrefix_t &prefix) {
     return (*static_cast<decltype(isElementToRemove) *>(arg))(value);
   };
   removeAllEntitiesOfParticipant(prefix);
+  m_sedpAgent.removeUnmatchedEntitiesOfParticipant(prefix);
   return m_remoteParticipants.remove(thunk, &isElementToRemove);
 }
 
@@ -294,6 +295,8 @@ bool Participant::checkAndResetHeartbeats() {
   Lock lock{m_mutex};
   PARTICIPANT_LOG("Have %u remote participants\n",
                   (unsigned int)m_remoteParticipants.getNumElements());
+  PARTICIPANT_LOG("Unmatched remote writers/readers, %u / %u\n", static_cast<unsigned int>(m_sedpAgent.getNumRemoteUnmatchedWriters()),
+		  static_cast<unsigned int>(m_sedpAgent.getNumRemoteUnmatchedReaders()));
   for (auto &remote : m_remoteParticipants) {
     PARTICIPANT_LOG("remote participant age = %u\n",
                     (unsigned int)remote.getAliveSignalAgeInMilliseconds());
@@ -301,7 +304,7 @@ bool Participant::checkAndResetHeartbeats() {
       PARTICIPANT_LOG("remote participant is alive\n");
       continue;
     }
-    PARTICIPANT_LOG("!!! REMOVING PARTICIPANT !!!\n");
+    PARTICIPANT_LOG("removing remote participant\n");
     bool success = removeRemoteParticipant(remote.m_guid.prefix);
     if (!success) {
       return false;

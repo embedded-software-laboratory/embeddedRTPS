@@ -142,7 +142,6 @@ public:
                 7}; // 7 sets all bits above and including the one for 8 to 0
         m_bitMap[bucket] &= ~(static_cast<uint8_t>(1) << pos);
         --m_numElements;
-        return true;
       }
     }
     return false;
