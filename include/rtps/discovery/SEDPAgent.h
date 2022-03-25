@@ -44,6 +44,9 @@ public:
                                              void *args);
   void registerOnNewSubscriberMatchedCallback(void (*callback)(void *arg),
                                               void *args);
+  void removeUnmatchedEntitiesOfParticipant(const GuidPrefix_t &guidPrefix);
+  uint32_t getNumRemoteUnmatchedReaders();
+  uint32_t getNumRemoteUnmatchedWriters();
 
 protected: // For testing purposes
   void onNewPublisher(const TopicData &writerData);

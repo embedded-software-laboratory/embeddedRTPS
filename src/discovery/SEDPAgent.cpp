@@ -131,6 +131,19 @@ void SEDPAgent::addUnmatchedRemoteReader(const TopicData &readerData) {
   m_unmatchedRemoteReaders.add(TopicDataCompressed(readerData));
 }
 
+void SEDPAgent::removeUnmatchedEntitiesOfParticipant(const GuidPrefix_t &guidPrefix){
+  auto isElementToRemove = [&](const TopicDataCompressed &topicData) {
+	  return topicData.endpointGuid.prefix == guidPrefix;
+  };
+  
+  auto thunk = [](void *arg, const TopicData &value) {
+	  return (*static_cast<decltype(isElementToRemove) *>(arg))(value);
+  };
+
+  m_unmatchedRemoteReaders.remove(thunk, &isElementToRemove);
+  m_unmatchedRemoteWriters.remove(thunk, &isElementToRemove);
+}
+ 
 void SEDPAgent::onNewPublisher(const TopicData &writerData) {
   // TODO Is it okay to add Endpoint if the respective participant is unknown
   // participant?
