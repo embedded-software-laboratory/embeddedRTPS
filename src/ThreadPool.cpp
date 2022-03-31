@@ -180,8 +180,8 @@ void ThreadPool::readCallback(void *args, udp_pcb *target, pbuf *pbuf,
   packet.destPort = target->local_port;
   packet.srcPort = port;
   packet.buffer = PBufWrapper{pbuf};
-
   if (!pool.addNewPacket(std::move(packet))) {
+
     THREAD_POOL_LOG("ThreadPool: dropped packet\n");
   }
 }
@@ -207,7 +207,7 @@ void ThreadPool::doReaderWork() {
       continue;
     }
 
-    m_receiveJumppad(m_callee, const_cast<const PacketInfo &>(packet));
+     m_receiveJumppad(m_callee, const_cast<const PacketInfo &>(packet));
   }
 }
 

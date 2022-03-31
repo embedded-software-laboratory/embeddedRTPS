@@ -65,7 +65,7 @@ void SPDPAgent::init(Participant &participant, BuiltInEndpoints &endpoints) {
 
   ucdr_init_buffer(&m_microbuffer, m_outputBuffer.data(),
                    m_outputBuffer.size());
-  // addInlineQos();
+//   addInlineQos();
   addParticipantParameters();
   initialized = true;
 }

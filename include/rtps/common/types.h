@@ -84,6 +84,13 @@ enum class DurabilityKind_t : uint32_t {
   PERSISTENT = 3
 };
 
+enum class OwnershipKind_t : uint32_t{
+    SHARED = 0,
+    EXCLUSIVE = 1
+};
+
+typedef uint32_t OwnershipStrength_t;
+
 struct GuidPrefix_t {
   std::array<uint8_t, 12> id;
 
@@ -225,8 +232,16 @@ enum class ChangeForReaderStatusKind {
 
 enum class ChangeFromWriterStatusKind { LOST, MISSING, RECEIVED, UNKNOWN };
 
-struct InstanceHandle_t { // TODO
-  uint64_t value;
+struct InstanceHandle_t {
+  uint8_t key[16];
+  bool operator==(const InstanceHandle_t &other) const {
+    for (int i = 0; i < 16; i++) {
+      if(key[i] != other.key[i]) {
+        return false;
+      }
+    }
+    return true;
+  }
 };
 
 struct ParticipantMessageData { // TODO
@@ -269,7 +284,16 @@ const SequenceNumber_t SEQUENCENUMBER_UNKNOWN = {-1, 0};
 const Time_t TIME_ZERO = {};
 const Time_t TIME_INVALID = {-1, 0xFFFFFFFF};
 const Time_t TIME_INFINITY = {0x7FFFFFFF, 0xFFFFFFFF};
+class WriterProxy;
 
+struct Instance_t{
+    InstanceHandle_t handle;
+    WriterProxy *owner = nullptr;
+};
+
+#ifndef CHIBIOS //has its own TIME_INFINITE
+const Time_t TIME_INFINITE = {0x7FFFFFFF, 0xFFFFFFFF};
+#endif
 const VendorId_t VENDOR_UNKNOWN = {};
 } // namespace rtps
 

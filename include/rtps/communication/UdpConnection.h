@@ -32,6 +32,7 @@ namespace rtps {
 
 struct UdpConnection {
   udp_pcb *pcb = nullptr;
+
   uint16_t port = 0;
 
   UdpConnection() = default; // Required for static allocation

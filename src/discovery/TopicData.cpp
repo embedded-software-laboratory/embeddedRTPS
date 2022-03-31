@@ -30,8 +30,10 @@ using rtps::TopicDataCompressed;
 using rtps::SMElement::ParameterId;
 
 bool TopicData::matchesTopicOf(const TopicData &other) {
-  return strcmp(this->topicName, other.topicName) == 0 &&
+  bool sameTopicAndType = strcmp(this->topicName, other.topicName) == 0 &&
          strcmp(this->typeName, other.typeName) == 0;
+
+  return sameTopicAndType;
 }
 
 bool TopicData::readFromUcdrBuffer(ucdrBuffer &buffer) {
@@ -63,8 +65,6 @@ bool TopicData::readFromUcdrBuffer(ucdrBuffer &buffer) {
       buffer.iterator += 8;
       // TODO Skip 8 bytes. don't know what they are yet
       break;
-    case ParameterId::PID_SENTINEL:
-      return true;
     case ParameterId::PID_TOPIC_NAME:
       uint32_t topicNameLength;
       ucdr_deserialize_uint32_t(&buffer, &topicNameLength);
@@ -85,6 +85,15 @@ bool TopicData::readFromUcdrBuffer(ucdrBuffer &buffer) {
     case ParameterId::PID_MULTICAST_LOCATOR:
       multicastLocator.readFromUcdrBuffer(buffer);
       break;
+    case ParameterId::PID_OWNERSHIP:
+      ucdr_deserialize_uint32_t(&buffer,reinterpret_cast<uint32_t *>(&ownership_Kind));
+
+      break;
+    case ParameterId::PID_OWNERSHIP_STRENGTH:
+      ucdr_deserialize_uint32_t(&buffer,reinterpret_cast<uint32_t*>(&ownership_strenght));
+      break;
+    case ParameterId::PID_SENTINEL:
+        return true;//End of information
     default:
       buffer.iterator += length;
       buffer.last_data_size = 1;
@@ -153,6 +162,7 @@ bool TopicData::serializeIntoUcdrBuffer(ucdrBuffer &buffer) const {
 
   ucdr_serialize_uint16_t(&buffer, ParameterId::PID_KEY_HASH);
   ucdr_serialize_uint16_t(&buffer, guidSize);
+
   ucdr_serialize_array_uint8_t(&buffer, endpointGuid.prefix.id.data(),
                                endpointGuid.prefix.id.size());
   ucdr_serialize_array_uint8_t(&buffer, endpointGuid.entityId.entityKey.data(),
@@ -171,9 +181,9 @@ bool TopicData::serializeIntoUcdrBuffer(ucdrBuffer &buffer) const {
 
   const uint8_t unidentifiedOffset = 8;
   ucdr_serialize_uint16_t(&buffer, ParameterId::PID_RELIABILITY);
-  ucdr_serialize_uint16_t(&buffer,
-                          sizeof(ReliabilityKind_t) + unidentifiedOffset);
+  ucdr_serialize_uint16_t(&buffer,sizeof(ReliabilityKind_t) + unidentifiedOffset);
   ucdr_serialize_uint32_t(&buffer, static_cast<uint32_t>(reliabilityKind));
+
   ucdr_serialize_uint32_t(&buffer, 0); // unidentified additional value
   ucdr_serialize_uint32_t(&buffer, 0); // unidentified additional value
 
@@ -181,6 +191,17 @@ bool TopicData::serializeIntoUcdrBuffer(ucdrBuffer &buffer) const {
   ucdr_serialize_uint16_t(&buffer, sizeof(DurabilityKind_t));
   ucdr_serialize_uint32_t(&buffer, static_cast<uint32_t>(durabilityKind));
 
+  ucdr_serialize_uint16_t(&buffer, ParameterId::PID_OWNERSHIP);
+  ucdr_serialize_uint16_t(&buffer, sizeof(OwnershipKind_t));
+  ucdr_serialize_uint32_t(&buffer, static_cast<uint32_t>(ownership_Kind));
+
+  if(ownership_Kind == OwnershipKind_t::EXCLUSIVE && endpointGuid.entityId.entityKind == EntityKind_t::USER_DEFINED_WRITER_WITH_KEY) {//Only writers have strength
+      ucdr_serialize_uint16_t(&buffer, ParameterId::PID_OWNERSHIP_STRENGTH);
+      ucdr_serialize_uint16_t(&buffer, sizeof(ownership_strenght));
+      ucdr_serialize_uint32_t(&buffer, ownership_strenght);
+  }
+
+  //End of QoS
   ucdr_serialize_uint16_t(&buffer, ParameterId::PID_SENTINEL);
   ucdr_serialize_uint16_t(&buffer, 0);
 

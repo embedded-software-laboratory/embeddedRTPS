@@ -28,9 +28,13 @@ Author: i11 - Embedded Software, RWTH Aachen University
 #include "rtps/common/Locator.h"
 #include "rtps/config.h"
 #include "rtps/messages/MessageTypes.h"
+
 #include "ucdr/microcdr.h"
+
 #if defined(unix) || defined(__unix__)
 #include <chrono>
+#elif defined(CHIBIOS)
+#include "chtime.h"
 #endif
 #include <array>
 
@@ -63,8 +67,10 @@ public:
 #if defined(unix) || defined(__unix__)
   std::chrono::time_point<std::chrono::high_resolution_clock>
       m_lastLivelinessReceivedTimestamp;
-#else
+#elif !defined(CHIBIOS)
   TickType_t m_lastLivelinessReceivedTickCount = 0;
+#else
+  sysinterval_t m_lastLivelinessReceivedTickCount = 0;
 #endif
   void reset();
 
@@ -146,8 +152,10 @@ bool ParticipantProxyData::hasSubscriptionReader() {
 void ParticipantProxyData::onAliveSignal() {
 #if defined(unix) || defined(__unix__)
   m_lastLivelinessReceivedTimestamp = std::chrono::high_resolution_clock::now();
-#else
+#elif !defined(CHIBIOS)
   m_lastLivelinessReceivedTickCount = xTaskGetTickCount();
+#else
+  m_lastLivelinessReceivedTickCount = chVTGetSystemTimeX();
 #endif
 }
 
@@ -157,9 +165,11 @@ uint32_t ParticipantProxyData::getAliveSignalAgeInMilliseconds() {
   std::chrono::duration<double, std::milli> duration =
       now - m_lastLivelinessReceivedTimestamp;
   return duration.count();
-#else
+#elif !defined(CHIBIOS)
   return (xTaskGetTickCount() - m_lastLivelinessReceivedTickCount) *
          (1000 / configTICK_RATE_HZ);
+#else
+  return chTimeI2MS(chVTGetSystemTimeX() - m_lastLivelinessReceivedTickCount);
 #endif
 }
 

@@ -76,12 +76,13 @@ public:
 
 typedef void (*ddsReaderCallback_fp)(void *callee,
                                      const ReaderCacheChange &cacheChange);
-
+typedef void (*ddsGetKey_Callback_fp)(const uint8_t *data, uint32_t data_len, InstanceHandle_t &key);
 class Reader {
 public:
   TopicData m_attributes;
   virtual void newChange(const ReaderCacheChange &cacheChange) = 0;
   virtual void registerCallback(ddsReaderCallback_fp cb, void *callee) = 0;
+  virtual void registerKeyCallback(ddsGetKey_Callback_fp cb) = 0;
   virtual bool onNewHeartbeat(const SubmessageHeartbeat &msg,
                               const GuidPrefix_t &remotePrefix) = 0;
   virtual bool addNewMatchedWriter(const WriterProxy &newProxy) = 0;

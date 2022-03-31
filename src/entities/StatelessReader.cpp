@@ -48,9 +48,52 @@ void StatelessReader::init(const TopicData &attributes) {
   }
 }
 
+bool StatelessReader::isOwner(InstanceHandle_t &handle, WriterProxy *proxy){
+  for(auto &instance : m_instances){
+    bool keyEqual = instance.handle == handle;
+    if(instance.handle == handle){
+      if(instance.owner == nullptr){
+        instance.owner = proxy;
+        return true;
+      }
+      if(instance.owner == proxy){
+        return true;
+      }
+      else{
+        if(proxy->ownershipStrength < instance.owner->ownershipStrength){
+          return false;
+        }
+        else if(proxy->ownershipStrength > instance.owner->ownershipStrength){
+          instance.owner = proxy;
+          return true;
+        }
+        else{//equal strength , just pick the first one
+          return false;
+        }
+      }
+    }
+  }//Instance not knwon
+  Instance_t instance;
+  instance.owner = proxy;
+  instance.handle = handle;
+  m_instances.add(instance);
+  return true;
+}
+
 void StatelessReader::newChange(const ReaderCacheChange &cacheChange) {
   if (m_callback != nullptr) {
-    m_callback(m_callee, cacheChange);
+    if(m_attributes.ownership_Kind == OwnershipKind_t::EXCLUSIVE) {
+      InstanceHandle_t handle;
+      m_keyCallback(cacheChange.getData(), cacheChange.getDataSize(), handle);
+      for (auto &proxy:m_proxies) {
+        if (cacheChange.writerGuid == proxy.remoteWriterGuid && isOwner(handle, &proxy)) { //
+          m_callback(m_callee, cacheChange);
+        }
+      }
+    }
+    else{
+      m_callback(m_callee, cacheChange);
+    }
   }
 }
 
@@ -59,7 +102,7 @@ void StatelessReader::registerCallback(ddsReaderCallback_fp cb, void *callee) {
     m_callback = cb;
     m_callee = callee; // It's okay if this is null
   } else {
-#if (SLR_VERBOSE && RTPS_GLOBAL_VERBOSE)
+#if SLR_VERBOSE
     SLR_LOG("Passed callback is nullptr\n");
 #endif
   }
@@ -76,6 +119,14 @@ bool StatelessReader::addNewMatchedWriter(const WriterProxy &newProxy) {
 
 void StatelessReader::removeWriter(const Guid_t &guid) {
   Lock lock(m_mutex);
+  auto isElementToRemove_Instance = [&](const Instance_t &instance){
+      return instance.owner->remoteWriterGuid == guid;
+  };
+  auto thunk_instance = [](void *arg, const Instance_t &value) {
+      return (*static_cast<decltype(isElementToRemove_Instance) *>(arg))(value);
+  };
+  m_instances.remove(thunk_instance, &isElementToRemove_Instance);
+
   auto isElementToRemove = [&](const WriterProxy &proxy) {
     return proxy.remoteWriterGuid == guid;
   };
@@ -89,6 +140,13 @@ void StatelessReader::removeWriter(const Guid_t &guid) {
 void StatelessReader::removeWriterOfParticipant(
     const GuidPrefix_t &guidPrefix) {
   Lock lock(m_mutex);
+  auto isElementToRemove_Instance = [&](const Instance_t &instance){
+      return instance.owner->remoteWriterGuid.prefix == guidPrefix;
+  };
+  auto thunk_instance = [](void *arg, const Instance_t &value) {
+      return (*static_cast<decltype(isElementToRemove_Instance) *>(arg))(value);
+  };
+  m_instances.remove(thunk_instance, &isElementToRemove_Instance);
   auto isElementToRemove = [&](const WriterProxy &proxy) {
     return proxy.remoteWriterGuid.prefix == guidPrefix;
   };
@@ -103,6 +161,12 @@ bool StatelessReader::onNewHeartbeat(const SubmessageHeartbeat &,
                                      const GuidPrefix_t &) {
   // nothing to do
   return true;
+}
+
+void StatelessReader::registerKeyCallback(ddsGetKey_Callback_fp cb){
+  if(cb != nullptr){
+    m_keyCallback = cb;
+  }
 }
 
 #undef SLR_VERBOSE
