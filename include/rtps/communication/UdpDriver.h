@@ -49,6 +49,7 @@ public:
   void sendPacket(PacketInfo &info);
 
   static bool isSameSubnet(ip4_addr_t addr);
+  static bool isMulticastAddress(ip4_addr_t addr);
 
 private:
   std::array<UdpConnection, Config::MAX_NUM_UDP_CONNECTIONS> m_conns;

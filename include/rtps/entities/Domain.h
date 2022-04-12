@@ -58,6 +58,7 @@ public:
                        const char *typeName, bool reliable);
 
 private:
+  friend class SizeInspector;
   ThreadPool m_threadPool;
   UdpDriver m_transport;
   std::array<Participant, Config::MAX_NUM_PARTICIPANTS> m_participants;

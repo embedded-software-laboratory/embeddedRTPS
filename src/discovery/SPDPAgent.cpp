@@ -268,7 +268,7 @@ void SPDPAgent::addParticipantParameters() {
   const uint16_t protocolVersionSize =
       sizeof(PROTOCOLVERSION.major) + sizeof(PROTOCOLVERSION.minor);
   const uint16_t vendorIdSize = Config::VENDOR_ID.vendorId.size();
-  const uint16_t locatorSize = sizeof(Locator);
+  const uint16_t locatorSize = Locator::getFullSize();
   const uint16_t durationSize =
       sizeof(Duration_t::seconds) + sizeof(Duration_t::fraction);
   const uint16_t entityKeySize = 3;

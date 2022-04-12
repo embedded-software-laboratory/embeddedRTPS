@@ -187,7 +187,7 @@ struct SequenceNumberSet {
   SequenceNumber_t base = {0, 0};
   // Cannot be static because of packed
   uint32_t numBits = SNS_NUM_BITS;
-  std::array<uint32_t, 8> bitMap{};
+  std::array<uint32_t, 1> bitMap{};
 
   // We only need 1 byte because atm we don't store packets.
   bool isSet(uint32_t bit) const {

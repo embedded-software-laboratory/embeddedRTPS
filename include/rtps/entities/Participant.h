@@ -102,6 +102,7 @@ public:
   SPDPAgent &getSPDPAgent();
 
 private:
+  friend class SizeInspector;
   MessageReceiver m_receiver;
   bool m_hasBuilInEndpoints = false;
   std::array<uint8_t, 3> m_nextUserEntityId{{0, 0, 1}};

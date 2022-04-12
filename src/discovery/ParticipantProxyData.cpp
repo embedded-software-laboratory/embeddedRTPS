@@ -163,6 +163,10 @@ bool ParticipantProxyData::readLocatorIntoList(
   for (auto &loc : list) {
     if (!loc.isValid()) {
       loc.readFromUcdrBuffer(buffer);
+      // We only care about unicast locators in our subnet or multicast locators
+      //if(!loc.isSameSubnet() && !loc.isMulticastAddress()){
+      //  loc.setInvalid();
+      //}
       return true;
     }
   }

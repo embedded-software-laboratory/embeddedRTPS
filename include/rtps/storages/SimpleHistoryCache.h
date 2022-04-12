@@ -28,46 +28,154 @@ Author: i11 - Embedded Software, RWTH Aachen University
 #include "rtps/config.h"
 #include "rtps/storages/CacheChange.h"
 
-namespace rtps {
+namespace rtps
+{
 
-/**
+  /**
  * Simple version of a history cache. It sets consecutive sequence numbers
  * automatically which allows an easy and fast approach of dropping acknowledged
  * changes. Furthermore, disposing of arbitrary changes is not possible.
  * However, this is in principle easy to add by changing the ChangeKind and
  * dropping it when passing it during deleting of other sequence numbers
  */
+  template <uint16_t SIZE>
+  class SimpleHistoryCache
+  {
+  public:
+    SimpleHistoryCache() = default;
 
-class SimpleHistoryCache {
-public:
-  SimpleHistoryCache() = default;
+    bool isFull() const
+    {
+      uint16_t it = m_head;
+      incrementIterator(it);
+      return it == m_tail;
+    }
 
-  bool isFull() const;
-  const CacheChange *addChange(const uint8_t *data, DataSize_t size);
-  void dropOldest();
-  void removeUntilIncl(SequenceNumber_t sn);
-  const CacheChange *getChangeBySN(SequenceNumber_t sn) const;
+    const CacheChange *addChange(const uint8_t *data, DataSize_t size)
+    {
+      CacheChange change;
+      change.kind = ChangeKind_t::ALIVE;
+      change.data.reserve(size);
+      change.data.append(data, size);
+      change.sequenceNumber = ++m_lastUsedSequenceNumber;
 
-  const SequenceNumber_t &getSeqNumMin() const;
-  const SequenceNumber_t &getSeqNumMax() const;
+      CacheChange *place = &m_buffer[m_head];
+      incrementHead();
 
-private:
-  std::array<CacheChange, Config::HISTORY_SIZE + 1> m_buffer{};
-  uint16_t m_head = 0;
-  uint16_t m_tail = 0;
-  static_assert(sizeof(rtps::Config::HISTORY_SIZE) < sizeof(m_head),
-                "Iterator is large enough for given size");
+      *place = std::move(change);
+      return place;
+    }
 
-  SequenceNumber_t m_lastUsedSequenceNumber{0, 0};
+    void removeUntilIncl(SequenceNumber_t sn)
+    {
+      if (m_head == m_tail)
+      {
+        return;
+      }
 
-  inline void incrementHead();
-  inline void incrementIterator(uint16_t &iterator) const;
-  inline void incrementTail();
+      if (getSeqNumMax() <= sn)
+      { // We won't overrun head
+        m_head = m_tail;
+        return;
+      }
 
-protected:
-  // This constructor was created for unit testing
-  explicit SimpleHistoryCache(SequenceNumber_t SN);
-};
+      while (m_buffer[m_tail].sequenceNumber <= sn)
+      {
+        incrementTail();
+      }
+    }
+
+    void dropOldest() { removeUntilIncl(getSeqNumMin()); }
+
+    const CacheChange *getChangeBySN(SequenceNumber_t sn) const
+    {
+      SequenceNumber_t minSN = getSeqNumMin();
+      if (sn < minSN || getSeqNumMax() < sn)
+      {
+        return nullptr;
+      }
+      static_assert(std::is_unsigned<decltype(sn.low)>::value,
+                    "Underflow well defined");
+      static_assert(sizeof(m_tail) <= sizeof(uint16_t), "Cast ist well defined");
+      // We don't overtake head, therefore difference of sn is within same range as
+      // iterators
+      uint16_t pos = m_tail + static_cast<uint16_t>(sn.low - minSN.low);
+
+      // Diff is smaller than the size of the array -> max one overflow
+      if (pos >= m_buffer.size())
+      {
+        pos -= m_buffer.size();
+      }
+      return &m_buffer[pos];
+    }
+
+    const SequenceNumber_t &getSeqNumMin() const
+    {
+      if (m_head == m_tail)
+      {
+        return SEQUENCENUMBER_UNKNOWN;
+      }
+      else
+      {
+        return m_buffer[m_tail].sequenceNumber;
+      }
+    }
+
+    const SequenceNumber_t &getSeqNumMax() const
+    {
+      if (m_head == m_tail)
+      {
+        return SEQUENCENUMBER_UNKNOWN;
+      }
+      else
+      {
+        return m_lastUsedSequenceNumber;
+      }
+    }
+
+  private:
+    std::array<CacheChange, SIZE + 1> m_buffer{};
+    uint16_t m_head = 0;
+    uint16_t m_tail = 0;
+    static_assert(sizeof(SIZE) <= sizeof(m_head),
+                  "Iterator is large enough for given size");
+
+    SequenceNumber_t m_lastUsedSequenceNumber{0, 0};
+
+    inline void incrementHead()
+    {
+      incrementIterator(m_head);
+      if (m_head == m_tail)
+      {
+        // Move without check
+        incrementIterator(m_tail); // drop one
+      }
+    }
+
+    inline void incrementIterator(uint16_t &iterator) const
+    {
+      ++iterator;
+      if (iterator >= m_buffer.size())
+      {
+        iterator = 0;
+      }
+    }
+
+    inline void incrementTail()
+    {
+      if (m_head != m_tail)
+      {
+        incrementIterator(m_tail);
+      }
+    }
+
+  protected:
+    // This constructor was created for unit testing
+    explicit SimpleHistoryCache(SequenceNumber_t lastUsed) : SimpleHistoryCache()
+    {
+      m_lastUsedSequenceNumber = lastUsed;
+    }
+  };
 } // namespace rtps
 
 #endif // PROJECT_SIMPLEHISTORYCACHE_H

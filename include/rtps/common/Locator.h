@@ -40,21 +40,26 @@ enum class LocatorKind_t : int32_t {
 };
 
 const uint32_t LOCATOR_PORT_INVALID = 0;
-const std::array<uint8_t, 16> LOCATOR_ADDRESS_INVALID = {
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+const std::array<uint8_t, 4> LOCATOR_ADDRESS_INVALID = {0};
+
+const std::array<uint8_t, 16> FULL_LOCATOR = {0};
 
 struct Locator {
   LocatorKind_t kind = LocatorKind_t::LOCATOR_KIND_INVALID;
   uint32_t port = LOCATOR_PORT_INVALID;
-  std::array<uint8_t, 16> address =
+  std::array<uint8_t, 4> address =
       LOCATOR_ADDRESS_INVALID; // TODO make private such that kind and address
                                // always match?
+
+  static size_t getFullSize(){
+	return sizeof(Locator)+ sizeof(FULL_LOCATOR) - sizeof(address);
+  }
 
   static Locator createUDPv4Locator(uint8_t a, uint8_t b, uint8_t c, uint8_t d,
                                     uint32_t port) {
     Locator locator;
     locator.kind = LocatorKind_t::LOCATOR_KIND_UDPv4;
-    locator.address = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, a, b, c, d};
+    locator.address = {a, b, c, d};
     locator.port = port;
     return locator;
   }
@@ -64,27 +69,40 @@ struct Locator {
   bool isValid() const { return kind != LocatorKind_t::LOCATOR_KIND_INVALID; }
 
   bool readFromUcdrBuffer(ucdrBuffer &buffer) {
-    if (ucdr_buffer_remaining(&buffer) < sizeof(Locator)) {
+    if (ucdr_buffer_remaining(&buffer) < (sizeof(Locator)+(sizeof(FULL_LOCATOR) - sizeof(address)))) {
       return false;
     } else {
-      ucdr_deserialize_array_uint8_t(&buffer, reinterpret_cast<uint8_t *>(this),
-                                     sizeof(Locator));
+      ucdr_deserialize_array_uint8_t(&buffer, reinterpret_cast<uint8_t *>(this->kind),
+                                     sizeof(LocatorKind_t));
+      ucdr_deserialize_array_uint8_t(&buffer, reinterpret_cast<uint8_t *>(this->port),
+                                     sizeof(this->port));
+      buffer.iterator += sizeof(FULL_LOCATOR) - sizeof(address);
+      ucdr_deserialize_array_uint8_t(&buffer, reinterpret_cast<uint8_t *>(this->address.data()),
+                                     sizeof(this->address));
       return true;
     }
   }
 
-  bool serializeIntoUdcrBuffer(ucdrBuffer &buffer) {
-    if (ucdr_buffer_remaining(&buffer) < sizeof(Locator)) {
+  bool serializeIntoUdcrBuffer(ucdrBuffer &buffer) const {
+    if (ucdr_buffer_remaining(&buffer) < sizeof(address)) {
       return false;
     } else {
-      ucdr_serialize_array_uint8_t(&buffer, reinterpret_cast<uint8_t *>(this),
-                                   sizeof(Locator));
+        ucdr_serialize_array_uint8_t(&buffer, reinterpret_cast<uint8_t *>(this->kind),
+                                       sizeof(LocatorKind_t));
+        ucdr_serialize_array_uint8_t(&buffer, reinterpret_cast<uint8_t *>(this->port),
+                                       sizeof(this->port));
+        ucdr_serialize_array_uint8_t(&buffer, reinterpret_cast<const uint8_t *>(FULL_LOCATOR.data()),
+                                       sizeof(sizeof(FULL_LOCATOR) - sizeof(Locator)));
+        ucdr_serialize_array_uint8_t(&buffer, reinterpret_cast<const uint8_t *>(this->address.data()),
+                                       sizeof(this->address));
+
+        return true;
     }
   }
 
   ip4_addr_t getIp4Address() const {
-    return transformIP4ToU32(address[12], address[13], address[14],
-                             address[15]);
+    return transformIP4ToU32(address[0], address[1], address[2],
+                             address[3]);
   }
 
   bool isSameAddress(ip4_addr_t *address) {
@@ -96,6 +114,10 @@ struct Locator {
 
   inline bool isSameSubnet() const {
     return UdpDriver::isSameSubnet(getIp4Address());
+  }
+
+  inline bool isMulticastAddress() const {
+    return UdpDriver::isMulticastAddress(getIp4Address());
   }
 
 } __attribute__((packed));
