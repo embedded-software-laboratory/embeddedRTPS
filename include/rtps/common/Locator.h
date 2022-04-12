@@ -43,6 +43,7 @@ const uint32_t LOCATOR_PORT_INVALID = 0;
 const std::array<uint8_t, 16> LOCATOR_ADDRESS_INVALID = {
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 
+
 struct Locator {
   LocatorKind_t kind = LocatorKind_t::LOCATOR_KIND_INVALID;
   uint32_t port = LOCATOR_PORT_INVALID;
@@ -131,6 +132,20 @@ inline Locator getUserMulticastLocator() { // this would be a unicastaddress, as
 inline Locator getDefaultSendMulticastLocator() {
   return Locator::createUDPv4Locator(239, 255, 0, 1, getBuiltInMulticastPort());
 }
+
+
+struct LocatorCompressed {
+	LocatorKind_t kind = LocatorKind_t::LOCATOR_KIND_INVALID;
+	std::array<uint8_t, 4> address;
+	uint32_t port = LOCATOR_PORT_INVALID;
+	LocatorCompressed(Locator& locator){
+		address[0] = locator.address[12];
+		address[1] = locator.address[13];
+		address[2] = locator.address[14];
+		address[3] = locator.address[15];
+	}
+};
+
 } // namespace rtps
 
 #endif // RTPS_LOCATOR_T_H

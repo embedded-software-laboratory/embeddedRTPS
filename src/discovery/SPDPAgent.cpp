@@ -131,7 +131,7 @@ void SPDPAgent::handleSPDPPackage(const ReaderCacheChange &cacheChange) {
 
   if (cacheChange.kind == ChangeKind_t::ALIVE) {
     configureEndianessAndOptions(buffer);
-    volatile bool success = m_proxyDataBuffer.readFromUcdrBuffer(buffer);
+    volatile bool success = m_proxyDataBuffer.readFromUcdrBuffer(buffer, mp_participant);
     if (success) {
       // TODO In case we store the history we can free the history mutex here
       processProxyData();

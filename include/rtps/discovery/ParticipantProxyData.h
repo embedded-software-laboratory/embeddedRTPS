@@ -36,6 +36,7 @@ Author: i11 - Embedded Software, RWTH Aachen University
 
 namespace rtps {
 
+class Participant;
 using SMElement::ParameterId;
 
 typedef uint32_t BuiltinEndpointSet_t;
@@ -68,7 +69,7 @@ public:
 #endif
   void reset();
 
-  bool readFromUcdrBuffer(ucdrBuffer &buffer);
+  bool readFromUcdrBuffer(ucdrBuffer &buffer, Participant* participant);
 
   inline bool hasParticipantWriter();
   inline bool hasParticipantReader();

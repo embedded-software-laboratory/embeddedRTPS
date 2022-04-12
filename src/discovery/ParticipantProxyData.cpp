@@ -23,6 +23,7 @@ Author: i11 - Embedded Software, RWTH Aachen University
 */
 
 #include "rtps/discovery/ParticipantProxyData.h"
+#include "rtps/entities/Participant.h"
 
 using rtps::ParticipantProxyData;
 
@@ -42,7 +43,7 @@ void ParticipantProxyData::reset() {
 
 #include "xil_printf.h"
 
-bool ParticipantProxyData::readFromUcdrBuffer(ucdrBuffer &buffer) {
+bool ParticipantProxyData::readFromUcdrBuffer(ucdrBuffer &buffer, Participant* participant) {
   reset();
   SMElement::ParameterId pid;
   uint16_t length;
@@ -86,6 +87,10 @@ bool ParticipantProxyData::readFromUcdrBuffer(ucdrBuffer &buffer) {
                                      m_guid.entityId.entityKey.size());
       ucdr_deserialize_uint8_t(
           &buffer, reinterpret_cast<uint8_t *>(&m_guid.entityId.entityKind));
+      if(participant->findRemoteParticipant(m_guid.prefix)){
+    	  xil_printf("stopping deserialization early, participant is known\n");
+    	  return true;
+      }
       break;
     }
     case ParameterId::PID_METATRAFFIC_MULTICAST_LOCATOR: {
@@ -167,8 +172,7 @@ bool ParticipantProxyData::readFromUcdrBuffer(ucdrBuffer &buffer) {
 bool ParticipantProxyData::readLocatorIntoList(
     ucdrBuffer &buffer,
     std::array<Locator, Config::SPDP_MAX_NUM_LOCATORS> &list) {
-	int i = 0;
-	bool has_valid_locators = false;
+	int valid_locators = 0;
   for (auto &loc : list) {
     if (!loc.isValid()) {
       bool ret = loc.readFromUcdrBuffer(buffer);
@@ -183,10 +187,14 @@ bool ParticipantProxyData::readLocatorIntoList(
         return false;
       }
     }else{
-    	buffer.iterator += sizeof(Locator);
-        xil_printf("Location %u contains valid data, continue\n", i++);
+    	valid_locators++;
+    	if(valid_locators == Config::SPDP_MAX_NUM_LOCATORS){
+        	buffer.iterator += sizeof(Locator);
+            xil_printf("Max number of valid locators exceed, ignoring this locator as we have at least one valid locator\n");
+        	return true;
+    	}
+        xil_printf("Location %u contains valid data, continue\n");
     	xil_printf(">>>>>>>>>>> Locator existing: %u %u %u %u \n", (int)loc.address[12], (int)loc.address[13], (int)loc.address[14], (int)loc.address[15]);
-    	return true;
     }
   }
   return false;
