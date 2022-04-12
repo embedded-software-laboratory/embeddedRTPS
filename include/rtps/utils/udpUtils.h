@@ -86,9 +86,6 @@ inline bool isZeroAddress(ip4_addr_t address) { return address.addr == 0; }
 
 inline ParticipantId_t getParticipantIdFromUnicastPort(Ip4Port_t port,
                                                        bool isUserPort) {
-  // if(isMultiCastPort(port)){ // TODO remove?
-  //    return PARTICIPANT_ID_INVALID;
-  //}
 
   const auto basePart = PB + DG * Config::DOMAIN_ID;
   ParticipantId_t participantPart = port - basePart;

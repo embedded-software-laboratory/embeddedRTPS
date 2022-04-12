@@ -40,6 +40,8 @@ void ParticipantProxyData::reset() {
   }
 }
 
+#include "xil_printf.h"
+
 bool ParticipantProxyData::readFromUcdrBuffer(ucdrBuffer &buffer) {
   reset();
   SMElement::ParameterId pid;
@@ -88,24 +90,28 @@ bool ParticipantProxyData::readFromUcdrBuffer(ucdrBuffer &buffer) {
     }
     case ParameterId::PID_METATRAFFIC_MULTICAST_LOCATOR: {
       if (!readLocatorIntoList(buffer, m_metatrafficMulticastLocatorList)) {
+    	  xil_printf("Failed 2");
         return false;
       }
       break;
     }
     case ParameterId::PID_METATRAFFIC_UNICAST_LOCATOR: {
       if (!readLocatorIntoList(buffer, m_metatrafficUnicastLocatorList)) {
+    	  xil_printf("Failed 3");
         return false;
       }
       break;
     }
     case ParameterId::PID_DEFAULT_UNICAST_LOCATOR: {
       if (!readLocatorIntoList(buffer, m_defaultUnicastLocatorList)) {
+    	  xil_printf("Failed 4");
         return false;
       }
       break;
     }
     case ParameterId::PID_DEFAULT_MULTICAST_LOCATOR: {
       if (!readLocatorIntoList(buffer, m_defaultMulticastLocatorList)) {
+    	  xil_printf("Failed 5");
         return false;
       }
       break;
@@ -157,17 +163,30 @@ bool ParticipantProxyData::readFromUcdrBuffer(ucdrBuffer &buffer) {
   return true;
 }
 
+#include "xil_printf.h"
 bool ParticipantProxyData::readLocatorIntoList(
     ucdrBuffer &buffer,
     std::array<Locator, Config::SPDP_MAX_NUM_LOCATORS> &list) {
+	int i = 0;
+	bool has_valid_locators = false;
   for (auto &loc : list) {
     if (!loc.isValid()) {
-      loc.readFromUcdrBuffer(buffer);
+      bool ret = loc.readFromUcdrBuffer(buffer);
       // We only care about unicast locators in our subnet or multicast locators
-      //if(!loc.isSameSubnet() && !loc.isMulticastAddress()){
-      //  loc.setInvalid();
-      //}
-      return true;
+      xil_printf(">>>>>>>>>>> Adding locator: %u %u %u %u \n", (int)loc.address[12], (int)loc.address[13], (int)loc.address[14], (int)loc.address[15]);
+
+      if(ret && loc.isSameSubnet() || loc.isMulticastAddress()){
+        return true;
+      }else{
+      	xil_printf(">>>>>>>>>>> Ignoring locator: %u %u %u %u \n", (int)loc.address[12], (int)loc.address[13], (int)loc.address[14], (int)loc.address[15]);
+        loc.setInvalid();
+        return false;
+      }
+    }else{
+    	buffer.iterator += sizeof(Locator);
+        xil_printf("Location %u contains valid data, continue\n", i++);
+    	xil_printf(">>>>>>>>>>> Locator existing: %u %u %u %u \n", (int)loc.address[12], (int)loc.address[13], (int)loc.address[14], (int)loc.address[15]);
+    	return true;
     }
   }
   return false;

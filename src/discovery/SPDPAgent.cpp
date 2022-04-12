@@ -108,6 +108,7 @@ void SPDPAgent::receiveCallback(void *callee,
   agent->handleSPDPPackage(cacheChange);
 }
 
+#include "xil_printf.h"
 void SPDPAgent::handleSPDPPackage(const ReaderCacheChange &cacheChange) {
   if (!initialized) {
     SPDP_LOG("Callback called without initialization\n");
@@ -134,6 +135,8 @@ void SPDPAgent::handleSPDPPackage(const ReaderCacheChange &cacheChange) {
     if (success) {
       // TODO In case we store the history we can free the history mutex here
       processProxyData();
+    }else{
+    	xil_printf(">>>> DESERIALIZATION FAILED\n");
     }
   } else {
     // TODO RemoveParticipant
@@ -268,7 +271,7 @@ void SPDPAgent::addParticipantParameters() {
   const uint16_t protocolVersionSize =
       sizeof(PROTOCOLVERSION.major) + sizeof(PROTOCOLVERSION.minor);
   const uint16_t vendorIdSize = Config::VENDOR_ID.vendorId.size();
-  const uint16_t locatorSize = Locator::getFullSize();
+  const uint16_t locatorSize = sizeof(Locator);
   const uint16_t durationSize =
       sizeof(Duration_t::seconds) + sizeof(Duration_t::fraction);
   const uint16_t entityKeySize = 3;
