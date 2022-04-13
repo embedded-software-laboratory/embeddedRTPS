@@ -94,6 +94,8 @@ bool ParticipantProxyData::readFromUcdrBuffer(ucdrBuffer &buffer, Participant* p
       break;
     }
     case ParameterId::PID_METATRAFFIC_MULTICAST_LOCATOR: {
+  	  xil_printf("Start 2");
+
       if (!readLocatorIntoList(buffer, m_metatrafficMulticastLocatorList)) {
     	  xil_printf("Failed 2");
         return false;
@@ -101,6 +103,8 @@ bool ParticipantProxyData::readFromUcdrBuffer(ucdrBuffer &buffer, Participant* p
       break;
     }
     case ParameterId::PID_METATRAFFIC_UNICAST_LOCATOR: {
+    	  xil_printf("Start 3");
+
       if (!readLocatorIntoList(buffer, m_metatrafficUnicastLocatorList)) {
     	  xil_printf("Failed 3");
         return false;
@@ -108,6 +112,8 @@ bool ParticipantProxyData::readFromUcdrBuffer(ucdrBuffer &buffer, Participant* p
       break;
     }
     case ParameterId::PID_DEFAULT_UNICAST_LOCATOR: {
+    	  xil_printf("Start 4");
+
       if (!readLocatorIntoList(buffer, m_defaultUnicastLocatorList)) {
     	  xil_printf("Failed 4");
         return false;
@@ -171,19 +177,18 @@ bool ParticipantProxyData::readFromUcdrBuffer(ucdrBuffer &buffer, Participant* p
 #include "xil_printf.h"
 bool ParticipantProxyData::readLocatorIntoList(
     ucdrBuffer &buffer,
-    std::array<Locator, Config::SPDP_MAX_NUM_LOCATORS> &list) {
+    std::array<LocatorCompressed, Config::SPDP_MAX_NUM_LOCATORS> &list) {
 	int valid_locators = 0;
-  for (auto &loc : list) {
-    if (!loc.isValid()) {
-      bool ret = loc.readFromUcdrBuffer(buffer);
-      // We only care about unicast locators in our subnet or multicast locators
-      xil_printf(">>>>>>>>>>> Adding locator: %u %u %u %u \n", (int)loc.address[12], (int)loc.address[13], (int)loc.address[14], (int)loc.address[15]);
-
-      if(ret && loc.isSameSubnet() || loc.isMulticastAddress()){
+	Locator full_length_locator;
+  for (auto &proxy_locator : list) {
+    if (!proxy_locator.isValid()) {
+     	bool ret = full_length_locator.readFromUcdrBuffer(buffer);
+      if(ret && full_length_locator.isSameSubnet() || full_length_locator.isMulticastAddress()){
+    	  proxy_locator = LocatorCompressed(full_length_locator);
+          xil_printf(">>>>>>>>>>> Adding locator: %u %u %u %u \n", (int)proxy_locator.address[12], (int)proxy_locator.address[13], (int)proxy_locator.address[14], (int)proxy_locator.address[15]);
         return true;
       }else{
-      	xil_printf(">>>>>>>>>>> Ignoring locator: %u %u %u %u \n", (int)loc.address[12], (int)loc.address[13], (int)loc.address[14], (int)loc.address[15]);
-        loc.setInvalid();
+      	xil_printf(">>>>>>>>>>> Ignoring locator: %u %u %u %u \n", (int)full_length_locator.address[12], (int)full_length_locator.address[13], (int)full_length_locator.address[14], (int)full_length_locator.address[15]);
         return false;
       }
     }else{
@@ -194,7 +199,7 @@ bool ParticipantProxyData::readLocatorIntoList(
         	return true;
     	}
         xil_printf("Location %u contains valid data, continue\n");
-    	xil_printf(">>>>>>>>>>> Locator existing: %u %u %u %u \n", (int)loc.address[12], (int)loc.address[13], (int)loc.address[14], (int)loc.address[15]);
+    	xil_printf(">>>>>>>>>>> Locator existing: %u %u %u %u \n", (int)proxy_locator.address[12], (int)proxy_locator.address[13], (int)proxy_locator.address[14], (int)proxy_locator.address[15]);
     }
   }
   return false;

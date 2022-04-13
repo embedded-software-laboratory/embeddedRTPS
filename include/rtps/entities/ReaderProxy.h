@@ -40,7 +40,7 @@ struct ReaderProxy {
   Count_t ackNackCount;
 
   ReaderProxy() : remoteReaderGuid({GUIDPREFIX_UNKNOWN, ENTITYID_UNKNOWN}){};
-  ReaderProxy(const Guid_t &guid, const Locator &loc)
+  ReaderProxy(const Guid_t &guid, const LocatorCompressed &loc)
       : remoteReaderGuid(guid), remoteLocator(loc),
         ackNackSet(), ackNackCount{0} {};
   ReaderProxy(const Guid_t &guid, const Locator &loc, const Locator &mcastloc)

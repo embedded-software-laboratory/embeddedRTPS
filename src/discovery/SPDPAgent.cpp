@@ -194,12 +194,12 @@ void SPDPAgent::processProxyData() {
 
 bool SPDPAgent::addProxiesForBuiltInEndpoints() {
 
-  Locator *locator = nullptr;
+  LocatorCompressed *locator = nullptr;
 
   // Check if the remote participants has a locator in our subnet
   for (unsigned int i = 0;
        i < m_proxyDataBuffer.m_metatrafficUnicastLocatorList.size(); i++) {
-    Locator *l = &(m_proxyDataBuffer.m_metatrafficUnicastLocatorList[i]);
+    LocatorCompressed *l = &(m_proxyDataBuffer.m_metatrafficUnicastLocatorList[i]);
     if (l->isValid() && l->isSameSubnet()) {
       locator = l;
       break;

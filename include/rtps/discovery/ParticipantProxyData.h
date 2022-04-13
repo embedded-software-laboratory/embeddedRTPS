@@ -51,13 +51,13 @@ public:
   VendorId_t m_vendorId = VENDOR_UNKNOWN;
   bool m_expectsInlineQos = false;
   BuiltinEndpointSet_t m_availableBuiltInEndpoints;
-  std::array<Locator, Config::SPDP_MAX_NUM_LOCATORS>
+  std::array<LocatorCompressed, Config::SPDP_MAX_NUM_LOCATORS>
       m_metatrafficUnicastLocatorList;
-  std::array<Locator, Config::SPDP_MAX_NUM_LOCATORS>
+  std::array<LocatorCompressed, Config::SPDP_MAX_NUM_LOCATORS>
       m_metatrafficMulticastLocatorList;
-  std::array<Locator, Config::SPDP_MAX_NUM_LOCATORS>
+  std::array<LocatorCompressed, Config::SPDP_MAX_NUM_LOCATORS>
       m_defaultUnicastLocatorList;
-  std::array<Locator, Config::SPDP_MAX_NUM_LOCATORS>
+  std::array<LocatorCompressed, Config::SPDP_MAX_NUM_LOCATORS>
       m_defaultMulticastLocatorList;
   Count_t m_manualLivelinessCount{1};
   Duration_t m_leaseDuration = Config::SPDP_DEFAULT_REMOTE_LEASE_DURATION;
@@ -85,7 +85,7 @@ public:
 private:
   bool
   readLocatorIntoList(ucdrBuffer &buffer,
-                      std::array<Locator, Config::SPDP_MAX_NUM_LOCATORS> &list);
+                      std::array<LocatorCompressed, Config::SPDP_MAX_NUM_LOCATORS> &list);
 
   static const BuiltinEndpointSet_t
       DISC_BUILTIN_ENDPOINT_PARTICIPANT_ANNOUNCER = 1 << 0;

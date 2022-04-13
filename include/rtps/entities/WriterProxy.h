@@ -38,7 +38,7 @@ struct WriterProxy {
 
   WriterProxy() = default;
 
-  WriterProxy(const Guid_t &guid, const Locator &loc)
+  WriterProxy(const Guid_t &guid, const LocatorCompressed &loc)
       : remoteWriterGuid(guid),
         expectedSN(SequenceNumber_t{0, 1}), ackNackCount{1}, hbCount{0},
         remoteLocator(loc) {}

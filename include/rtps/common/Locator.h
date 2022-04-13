@@ -149,10 +149,24 @@ struct LocatorCompressed {
 		kind = locator.kind;
 	}
 
-  ip4_addr_t getIp4Address() const {
-	return transformIP4ToU32(address[0], address[1], address[2],
+    ip4_addr_t getIp4Address() const {
+	  return transformIP4ToU32(address[0], address[1], address[2],
 							 address[3]);
-  }
+    }
+
+    void setInvalid() { kind = LocatorKind_t::LOCATOR_KIND_INVALID; }
+
+    bool isValid() const { return kind != LocatorKind_t::LOCATOR_KIND_INVALID; }
+
+
+    inline bool isSameSubnet() const {
+      return UdpDriver::isSameSubnet(getIp4Address());
+    }
+
+    inline bool isMulticastAddress() const {
+      return UdpDriver::isMulticastAddress(getIp4Address());
+    }
+
 };
 
 } // namespace rtps
