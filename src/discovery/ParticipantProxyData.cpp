@@ -22,7 +22,8 @@ This file is part of embeddedRTPS.
 Author: i11 - Embedded Software, RWTH Aachen University
 */
 
-#include "rtps/discovery/ParticipantProxyData.h"
+#include "rtps/utils/Log.h"
+#include "rtps/discovery/SPDPAgent.h"
 #include "rtps/entities/Participant.h"
 
 using rtps::ParticipantProxyData;
@@ -40,8 +41,6 @@ void ParticipantProxyData::reset() {
     m_defaultMulticastLocatorList[i].setInvalid();
   }
 }
-
-#include "xil_printf.h"
 
 bool ParticipantProxyData::readFromUcdrBuffer(ucdrBuffer &buffer, Participant* participant) {
   reset();
@@ -88,41 +87,31 @@ bool ParticipantProxyData::readFromUcdrBuffer(ucdrBuffer &buffer, Participant* p
       ucdr_deserialize_uint8_t(
           &buffer, reinterpret_cast<uint8_t *>(&m_guid.entityId.entityKind));
       if(participant->findRemoteParticipant(m_guid.prefix)){
-    	  xil_printf("stopping deserialization early, participant is known\n");
+		  SPDP_LOG("stopping deserialization early, participant is known\n");
     	  return true;
       }
       break;
     }
     case ParameterId::PID_METATRAFFIC_MULTICAST_LOCATOR: {
-  	  xil_printf("Start 2");
-
       if (!readLocatorIntoList(buffer, m_metatrafficMulticastLocatorList)) {
-    	  xil_printf("Failed 2");
         return false;
       }
       break;
     }
     case ParameterId::PID_METATRAFFIC_UNICAST_LOCATOR: {
-    	  xil_printf("Start 3");
-
       if (!readLocatorIntoList(buffer, m_metatrafficUnicastLocatorList)) {
-    	  xil_printf("Failed 3");
         return false;
       }
       break;
     }
     case ParameterId::PID_DEFAULT_UNICAST_LOCATOR: {
-    	  xil_printf("Start 4");
-
       if (!readLocatorIntoList(buffer, m_defaultUnicastLocatorList)) {
-    	  xil_printf("Failed 4");
         return false;
       }
       break;
     }
     case ParameterId::PID_DEFAULT_MULTICAST_LOCATOR: {
       if (!readLocatorIntoList(buffer, m_defaultMulticastLocatorList)) {
-    	  xil_printf("Failed 5");
         return false;
       }
       break;
@@ -174,7 +163,6 @@ bool ParticipantProxyData::readFromUcdrBuffer(ucdrBuffer &buffer, Participant* p
   return true;
 }
 
-#include "xil_printf.h"
 bool ParticipantProxyData::readLocatorIntoList(
     ucdrBuffer &buffer,
     std::array<LocatorCompressed, Config::SPDP_MAX_NUM_LOCATORS> &list) {
@@ -185,21 +173,19 @@ bool ParticipantProxyData::readLocatorIntoList(
      	bool ret = full_length_locator.readFromUcdrBuffer(buffer);
       if(ret && full_length_locator.isSameSubnet() || full_length_locator.isMulticastAddress()){
     	  proxy_locator = LocatorCompressed(full_length_locator);
-          xil_printf(">>>>>>>>>>> Adding locator: %u %u %u %u \n", (int)proxy_locator.address[12], (int)proxy_locator.address[13], (int)proxy_locator.address[14], (int)proxy_locator.address[15]);
+    	  SPDP_LOG("Adding locator: %u %u %u %u \n", (int)proxy_locator.address[12], (int)proxy_locator.address[13], (int)proxy_locator.address[14], (int)proxy_locator.address[15]);
         return true;
       }else{
-      	xil_printf(">>>>>>>>>>> Ignoring locator: %u %u %u %u \n", (int)full_length_locator.address[12], (int)full_length_locator.address[13], (int)full_length_locator.address[14], (int)full_length_locator.address[15]);
+    	  SPDP_LOG("Ignoring locator: %u %u %u %u \n", (int)full_length_locator.address[12], (int)full_length_locator.address[13], (int)full_length_locator.address[14], (int)full_length_locator.address[15]);
         return false;
       }
     }else{
     	valid_locators++;
     	if(valid_locators == Config::SPDP_MAX_NUM_LOCATORS){
         	buffer.iterator += sizeof(Locator);
-            xil_printf("Max number of valid locators exceed, ignoring this locator as we have at least one valid locator\n");
+        	SPDP_LOG("Max number of valid locators exceed, ignoring this locator as we have at least one valid locator\n");
         	return true;
     	}
-        xil_printf("Location %u contains valid data, continue\n");
-    	xil_printf(">>>>>>>>>>> Locator existing: %u %u %u %u \n", (int)proxy_locator.address[12], (int)proxy_locator.address[13], (int)proxy_locator.address[14], (int)proxy_locator.address[15]);
     }
   }
   return false;

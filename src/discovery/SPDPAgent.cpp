@@ -36,18 +36,6 @@ using rtps::SPDPAgent;
 using rtps::SMElement::BuildInEndpointSet;
 using rtps::SMElement::ParameterId;
 
-#if SPDP_VERBOSE && RTPS_GLOBAL_VERBOSE
-#include "rtps/utils/printutils.h"
-#define SPDP_LOG(...)                                                          \
-  if (true) {                                                                  \
-    printf("[SPDP] ");                                                         \
-    printf(__VA_ARGS__);                                                       \
-    printf("\n");                                                              \
-  }
-#else
-#define SPDP_LOG(...) //
-#endif
-
 SPDPAgent::~SPDPAgent() {
   if (initialized) {
     sys_mutex_free(&m_mutex);
@@ -108,7 +96,6 @@ void SPDPAgent::receiveCallback(void *callee,
   agent->handleSPDPPackage(cacheChange);
 }
 
-#include "xil_printf.h"
 void SPDPAgent::handleSPDPPackage(const ReaderCacheChange &cacheChange) {
   if (!initialized) {
     SPDP_LOG("Callback called without initialization\n");
@@ -136,7 +123,7 @@ void SPDPAgent::handleSPDPPackage(const ReaderCacheChange &cacheChange) {
       // TODO In case we store the history we can free the history mutex here
       processProxyData();
     }else{
-    	xil_printf(">>>> DESERIALIZATION FAILED\n");
+    	SPDP_LOG("ParticipantProxyData deserializtaion failed\n");
     }
   } else {
     // TODO RemoveParticipant
