@@ -43,7 +43,8 @@ struct ReaderProxy {
   ReaderProxy(const Guid_t &guid, const LocatorIPv4 &loc)
       : remoteReaderGuid(guid), remoteLocator(loc),
         ackNackSet(), ackNackCount{0} {};
-  ReaderProxy(const Guid_t &guid, const LocatorIPv4 &loc, const LocatorIPv4 &mcastloc)
+  ReaderProxy(const Guid_t &guid, const LocatorIPv4 &loc,
+              const LocatorIPv4 &mcastloc)
       : remoteReaderGuid(guid), remoteLocator(loc),
         remoteMulticastLocator(mcastloc), ackNackSet(), ackNackCount{0} {};
 };

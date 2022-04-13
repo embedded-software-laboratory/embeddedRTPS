@@ -25,8 +25,8 @@ Author: i11 - Embedded Software, RWTH Aachen University
 #ifndef RTPS_WRITERPROXY_H
 #define RTPS_WRITERPROXY_H
 
-#include <rtps/common/Locator.h>
 #include "rtps/common/types.h"
+#include <rtps/common/Locator.h>
 
 namespace rtps {
 struct WriterProxy {

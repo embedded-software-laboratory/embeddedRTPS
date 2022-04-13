@@ -22,9 +22,9 @@ This file is part of embeddedRTPS.
 Author: i11 - Embedded Software, RWTH Aachen University
 */
 
-#include "rtps/utils/Log.h"
 #include "rtps/discovery/SPDPAgent.h"
 #include "rtps/entities/Participant.h"
+#include "rtps/utils/Log.h"
 
 using rtps::ParticipantProxyData;
 
@@ -42,7 +42,8 @@ void ParticipantProxyData::reset() {
   }
 }
 
-bool ParticipantProxyData::readFromUcdrBuffer(ucdrBuffer &buffer, Participant* participant) {
+bool ParticipantProxyData::readFromUcdrBuffer(ucdrBuffer &buffer,
+                                              Participant *participant) {
   reset();
   SMElement::ParameterId pid;
   uint16_t length;
@@ -86,9 +87,9 @@ bool ParticipantProxyData::readFromUcdrBuffer(ucdrBuffer &buffer, Participant* p
                                      m_guid.entityId.entityKey.size());
       ucdr_deserialize_uint8_t(
           &buffer, reinterpret_cast<uint8_t *>(&m_guid.entityId.entityKind));
-      if(participant->findRemoteParticipant(m_guid.prefix)){
-		  SPDP_LOG("stopping deserialization early, participant is known\n");
-    	  return true;
+      if (participant->findRemoteParticipant(m_guid.prefix)) {
+        SPDP_LOG("stopping deserialization early, participant is known\n");
+        return true;
       }
       break;
     }
@@ -151,9 +152,7 @@ bool ParticipantProxyData::readFromUcdrBuffer(ucdrBuffer &buffer, Participant* p
     case ParameterId::PID_SENTINEL: {
       return true;
     }
-    default: {
-      return false;
-    }
+    default: { return false; }
     }
     // Parameter lists are 4-byte aligned
     uint32_t alignment = ucdr_buffer_alignment(&buffer, 4);
@@ -166,26 +165,35 @@ bool ParticipantProxyData::readFromUcdrBuffer(ucdrBuffer &buffer, Participant* p
 bool ParticipantProxyData::readLocatorIntoList(
     ucdrBuffer &buffer,
     std::array<LocatorIPv4, Config::SPDP_MAX_NUM_LOCATORS> &list) {
-	int valid_locators = 0;
-	FullLengthLocator full_length_locator;
+  int valid_locators = 0;
+  FullLengthLocator full_length_locator;
   for (auto &proxy_locator : list) {
     if (!proxy_locator.isValid()) {
-     	bool ret = full_length_locator.readFromUcdrBuffer(buffer);
-      if(ret && full_length_locator.isSameSubnet() || full_length_locator.isMulticastAddress()){
-    	  proxy_locator = LocatorIPv4(full_length_locator);
-    	  SPDP_LOG("Adding locator: %u %u %u %u \n", (int)proxy_locator.address[12], (int)proxy_locator.address[13], (int)proxy_locator.address[14], (int)proxy_locator.address[15]);
+      bool ret = full_length_locator.readFromUcdrBuffer(buffer);
+      if (ret && full_length_locator.isSameSubnet() ||
+          full_length_locator.isMulticastAddress()) {
+        proxy_locator = LocatorIPv4(full_length_locator);
+        SPDP_LOG("Adding locator: %u %u %u %u \n",
+                 (int)proxy_locator.address[12], (int)proxy_locator.address[13],
+                 (int)proxy_locator.address[14],
+                 (int)proxy_locator.address[15]);
         return true;
-      }else{
-    	  SPDP_LOG("Ignoring locator: %u %u %u %u \n", (int)full_length_locator.address[12], (int)full_length_locator.address[13], (int)full_length_locator.address[14], (int)full_length_locator.address[15]);
+      } else {
+        SPDP_LOG("Ignoring locator: %u %u %u %u \n",
+                 (int)full_length_locator.address[12],
+                 (int)full_length_locator.address[13],
+                 (int)full_length_locator.address[14],
+                 (int)full_length_locator.address[15]);
         return false;
       }
-    }else{
-    	valid_locators++;
-    	if(valid_locators == Config::SPDP_MAX_NUM_LOCATORS){
-        	buffer.iterator += sizeof(FullLengthLocator);
-        	SPDP_LOG("Max number of valid locators exceed, ignoring this locator as we have at least one valid locator\n");
-        	return true;
-    	}
+    } else {
+      valid_locators++;
+      if (valid_locators == Config::SPDP_MAX_NUM_LOCATORS) {
+        buffer.iterator += sizeof(FullLengthLocator);
+        SPDP_LOG("Max number of valid locators exceed, ignoring this locator "
+                 "as we have at least one valid locator\n");
+        return true;
+      }
     }
   }
   return false;

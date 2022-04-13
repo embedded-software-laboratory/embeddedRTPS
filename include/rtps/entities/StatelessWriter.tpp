@@ -280,7 +280,7 @@ void StatelessWriterT<NetworkDriver>::progress() {
 
       if (proxy.useMulticast && !m_enforceUnicast) {
         info.destAddr = proxy.remoteMulticastLocator.getIp4Address();
-        info.destPort = (Ip4Port_t) proxy.remoteMulticastLocator.port;
+        info.destPort = (Ip4Port_t)proxy.remoteMulticastLocator.port;
       } else {
         info.destAddr = proxy.remoteLocator.getIp4Address();
         info.destPort = (Ip4Port_t)proxy.remoteLocator.port;

@@ -25,10 +25,10 @@ Author: i11 - Embedded Software, RWTH Aachen University
 #ifndef RTPS_PARTICIPANTPROXYDATA_H
 #define RTPS_PARTICIPANTPROXYDATA_H
 
-#include <rtps/common/Locator.h>
 #include "rtps/config.h"
 #include "rtps/messages/MessageTypes.h"
 #include "ucdr/microcdr.h"
+#include <rtps/common/Locator.h>
 #if defined(unix) || defined(__unix__)
 #include <chrono>
 #endif
@@ -69,7 +69,7 @@ public:
 #endif
   void reset();
 
-  bool readFromUcdrBuffer(ucdrBuffer &buffer, Participant* participant);
+  bool readFromUcdrBuffer(ucdrBuffer &buffer, Participant *participant);
 
   inline bool hasParticipantWriter();
   inline bool hasParticipantReader();
@@ -83,9 +83,9 @@ public:
   inline uint32_t getAliveSignalAgeInMilliseconds();
 
 private:
-  bool
-  readLocatorIntoList(ucdrBuffer &buffer,
-                      std::array<LocatorIPv4, Config::SPDP_MAX_NUM_LOCATORS> &list);
+  bool readLocatorIntoList(
+      ucdrBuffer &buffer,
+      std::array<LocatorIPv4, Config::SPDP_MAX_NUM_LOCATORS> &list);
 
   static const BuiltinEndpointSet_t
       DISC_BUILTIN_ENDPOINT_PARTICIPANT_ANNOUNCER = 1 << 0;

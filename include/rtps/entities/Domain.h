@@ -25,7 +25,6 @@ Author: i11 - Embedded Software, RWTH Aachen University
 #ifndef RTPS_DOMAIN_H
 #define RTPS_DOMAIN_H
 
-#include <rtps/common/Locator.h>
 #include "rtps/ThreadPool.h"
 #include "rtps/config.h"
 #include "rtps/entities/Participant.h"
@@ -34,6 +33,7 @@ Author: i11 - Embedded Software, RWTH Aachen University
 #include "rtps/entities/StatelessReader.h"
 #include "rtps/entities/StatelessWriter.h"
 #include "rtps/storages/PBufWrapper.h"
+#include <rtps/common/Locator.h>
 
 namespace rtps {
 class Domain {

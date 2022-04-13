@@ -118,12 +118,13 @@ void SPDPAgent::handleSPDPPackage(const ReaderCacheChange &cacheChange) {
 
   if (cacheChange.kind == ChangeKind_t::ALIVE) {
     configureEndianessAndOptions(buffer);
-    volatile bool success = m_proxyDataBuffer.readFromUcdrBuffer(buffer, mp_participant);
+    volatile bool success =
+        m_proxyDataBuffer.readFromUcdrBuffer(buffer, mp_participant);
     if (success) {
       // TODO In case we store the history we can free the history mutex here
       processProxyData();
-    }else{
-    	SPDP_LOG("ParticipantProxyData deserializtaion failed\n");
+    } else {
+      SPDP_LOG("ParticipantProxyData deserializtaion failed\n");
     }
   } else {
     // TODO RemoveParticipant
@@ -270,7 +271,8 @@ void SPDPAgent::addParticipantParameters() {
       getUserUnicastLocator(mp_participant->m_participantId);
   const FullLengthLocator builtInUniCastLocator =
       getBuiltInUnicastLocator(mp_participant->m_participantId);
-  const FullLengthLocator builtInMultiCastLocator = getBuiltInMulticastLocator();
+  const FullLengthLocator builtInMultiCastLocator =
+      getBuiltInMulticastLocator();
 
   ucdr_serialize_array_uint8_t(&m_microbuffer,
                                rtps::SMElement::SCHEME_PL_CDR_LE.data(),

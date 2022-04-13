@@ -27,11 +27,11 @@ Author: i11 - Embedded Software, RWTH Aachen University
 
 #define SUPPRESS_UNICAST 0
 
-#include <rtps/common/Locator.h>
 #include "rtps/config.h"
 #include "rtps/utils/hash.h"
 #include "ucdr/microcdr.h"
 #include <array>
+#include <rtps/common/Locator.h>
 
 namespace rtps {
 
@@ -52,8 +52,9 @@ struct TopicData {
       : endpointGuid(GUID_UNKNOWN), typeName{'\0'}, topicName{'\0'},
         reliabilityKind(ReliabilityKind_t::BEST_EFFORT),
         durabilityKind(DurabilityKind_t::TRANSIENT_LOCAL) {
-    rtps::FullLengthLocator someLocator = rtps::FullLengthLocator::createUDPv4Locator(
-        192, 168, 0, 42, rtps::getUserUnicastPort(0));
+    rtps::FullLengthLocator someLocator =
+        rtps::FullLengthLocator::createUDPv4Locator(
+            192, 168, 0, 42, rtps::getUserUnicastPort(0));
     unicastLocator = someLocator;
     multicastLocator = FullLengthLocator();
   };
@@ -82,7 +83,8 @@ struct TopicDataCompressed {
   TopicDataCompressed() = default;
   TopicDataCompressed(const TopicData &topic_data) {
     endpointGuid = topic_data.endpointGuid;
-    topicHash = hashCharArray(topic_data.topicName, Config::MAX_TOPICNAME_LENGTH);
+    topicHash =
+        hashCharArray(topic_data.topicName, Config::MAX_TOPICNAME_LENGTH);
     typeHash = hashCharArray(topic_data.typeName, Config::MAX_TYPENAME_LENGTH);
     reliabilityKind = topic_data.reliabilityKind;
     durabilityKind = topic_data.durabilityKind;

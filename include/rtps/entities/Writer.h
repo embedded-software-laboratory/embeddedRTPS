@@ -52,7 +52,7 @@ public:
 
   bool isInitialized() { return m_is_initialized_; }
 
-  uint32_t getNumMatchedReader(){ return m_proxies.getSize();}
+  uint32_t getNumMatchedReader() { return m_proxies.getSize(); }
 
 protected:
   friend class SizeInspector;

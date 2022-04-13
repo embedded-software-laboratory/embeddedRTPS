@@ -87,7 +87,7 @@ bool UdpDriver::isSameSubnet(ip4_addr_t addr) {
                           &(netif_default->netmask)) != 0);
 }
 
-bool UdpDriver::isMulticastAddress(ip4_addr_t addr){
+bool UdpDriver::isMulticastAddress(ip4_addr_t addr) {
   return ((addr.addr >> 28) == 14);
 }
 
