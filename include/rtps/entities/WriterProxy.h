@@ -34,7 +34,7 @@ struct WriterProxy {
   SequenceNumber_t expectedSN;
   Count_t ackNackCount;
   Count_t hbCount;
-  Locator remoteLocator;
+  LocatorCompressed remoteLocator;
 
   WriterProxy() = default;
 

@@ -279,13 +279,11 @@ void StatelessWriterT<NetworkDriver>::progress() {
       // Decide which locator to be used unicast/multicast
 
       if (proxy.useMulticast && !m_enforceUnicast) {
-        const Locator &locator = proxy.remoteMulticastLocator;
-        info.destAddr = locator.getIp4Address();
-        info.destPort = (Ip4Port_t)locator.port;
+        info.destAddr = proxy.remoteMulticastLocator.getIp4Address();
+        info.destPort = (Ip4Port_t) proxy.remoteMulticastLocator.port;
       } else {
-        const Locator &locator = proxy.remoteLocator;
-        info.destAddr = locator.getIp4Address();
-        info.destPort = (Ip4Port_t)locator.port;
+        info.destAddr = proxy.remoteLocator.getIp4Address();
+        info.destPort = (Ip4Port_t)proxy.remoteLocator.port;
       }
 
       m_transport->sendPacket(info);

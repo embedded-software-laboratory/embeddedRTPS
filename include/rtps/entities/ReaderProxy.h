@@ -31,8 +31,8 @@ Author: i11 - Embedded Software, RWTH Aachen University
 namespace rtps {
 struct ReaderProxy {
   Guid_t remoteReaderGuid;
-  Locator remoteLocator;
-  Locator remoteMulticastLocator;
+  LocatorCompressed remoteLocator;
+  LocatorCompressed remoteMulticastLocator;
   bool useMulticast = false;
   bool suppressUnicast = false;
   bool unknown_eid = false;

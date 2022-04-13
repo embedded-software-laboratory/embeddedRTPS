@@ -343,7 +343,7 @@ bool StatefulWriterT<NetworkDriver>::sendData(
   MessageFactory::addSubMessageTimeStamp(info.buffer);
 
   // Just usable for IPv4
-  const Locator &locator = reader.remoteLocator;
+  const LocatorCompressed &locator = reader.remoteLocator;
 
   info.destAddr = locator.getIp4Address();
   info.destPort = (Ip4Port_t)locator.port;
@@ -380,11 +380,11 @@ bool StatefulWriterT<NetworkDriver>::sendDataWRMulticast(
 
     // Deceide whether multicast or not
     if (reader.useMulticast) {
-      const Locator &locator = reader.remoteMulticastLocator;
+      const LocatorCompressed &locator = reader.remoteMulticastLocator;
       info.destAddr = locator.getIp4Address();
       info.destPort = (Ip4Port_t)locator.port;
     } else {
-      const Locator &locator = reader.remoteLocator;
+      const LocatorCompressed &locator = reader.remoteLocator;
       info.destAddr = locator.getIp4Address();
       info.destPort = (Ip4Port_t)locator.port;
     }

@@ -136,14 +136,23 @@ inline Locator getDefaultSendMulticastLocator() {
 
 struct LocatorCompressed {
 	LocatorKind_t kind = LocatorKind_t::LOCATOR_KIND_INVALID;
-	std::array<uint8_t, 4> address;
+	std::array<uint8_t, 4> address = {0};
 	uint32_t port = LOCATOR_PORT_INVALID;
-	LocatorCompressed(Locator& locator){
+
+	LocatorCompressed() = default;
+	LocatorCompressed(const Locator& locator){
 		address[0] = locator.address[12];
 		address[1] = locator.address[13];
 		address[2] = locator.address[14];
 		address[3] = locator.address[15];
+		port = locator.port;
+		kind = locator.kind;
 	}
+
+  ip4_addr_t getIp4Address() const {
+	return transformIP4ToU32(address[0], address[1], address[2],
+							 address[3]);
+  }
 };
 
 } // namespace rtps
