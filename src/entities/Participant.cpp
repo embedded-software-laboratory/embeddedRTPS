@@ -295,8 +295,10 @@ bool Participant::checkAndResetHeartbeats() {
   Lock lock{m_mutex};
   PARTICIPANT_LOG("Have %u remote participants\n",
                   (unsigned int)m_remoteParticipants.getNumElements());
-  PARTICIPANT_LOG("Unmatched remote writers/readers, %u / %u\n", static_cast<unsigned int>(m_sedpAgent.getNumRemoteUnmatchedWriters()),
-		  static_cast<unsigned int>(m_sedpAgent.getNumRemoteUnmatchedReaders()));
+  PARTICIPANT_LOG(
+      "Unmatched remote writers/readers, %u / %u\n",
+      static_cast<unsigned int>(m_sedpAgent.getNumRemoteUnmatchedWriters()),
+      static_cast<unsigned int>(m_sedpAgent.getNumRemoteUnmatchedReaders()));
   for (auto &remote : m_remoteParticipants) {
     PARTICIPANT_LOG("remote participant age = %u\n",
                     (unsigned int)remote.getAliveSignalAgeInMilliseconds());

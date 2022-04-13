@@ -39,7 +39,7 @@ bool TopicData::readFromUcdrBuffer(ucdrBuffer &buffer) {
   while (ucdr_buffer_remaining(&buffer) >= 4) {
     ParameterId pid;
     uint16_t length;
-    Locator uLoc;
+    FullLengthLocator uLoc;
     ucdr_deserialize_uint16_t(&buffer, reinterpret_cast<uint16_t *>(&pid));
     ucdr_deserialize_uint16_t(&buffer, &length);
 
@@ -105,20 +105,20 @@ bool TopicData::serializeIntoUcdrBuffer(ucdrBuffer &buffer) const {
   if (multicastLocator.kind != LocatorKind_t::LOCATOR_KIND_UDPv4) {
 #endif
     ucdr_serialize_uint16_t(&buffer, ParameterId::PID_UNICAST_LOCATOR);
-    ucdr_serialize_uint16_t(&buffer, sizeof(Locator));
+    ucdr_serialize_uint16_t(&buffer, sizeof(FullLengthLocator));
     ucdr_serialize_array_uint8_t(
         &buffer, reinterpret_cast<const uint8_t *>(&unicastLocator),
-        sizeof(Locator));
+        sizeof(FullLengthLocator));
 #if SUPPRESS_UNICAST
   }
 #endif
 
   if (multicastLocator.kind == LocatorKind_t::LOCATOR_KIND_UDPv4) {
     ucdr_serialize_uint16_t(&buffer, ParameterId::PID_MULTICAST_LOCATOR);
-    ucdr_serialize_uint16_t(&buffer, sizeof(Locator));
+    ucdr_serialize_uint16_t(&buffer, sizeof(FullLengthLocator));
     ucdr_serialize_array_uint8_t(
         &buffer, reinterpret_cast<const uint8_t *>(&multicastLocator),
-        sizeof(Locator));
+        sizeof(FullLengthLocator));
   }
 
   // It's a 32 bit instead of 16 because it seems like the field is padded.
@@ -188,6 +188,7 @@ bool TopicData::serializeIntoUcdrBuffer(ucdrBuffer &buffer) const {
 }
 
 bool TopicDataCompressed::matchesTopicOf(const TopicData &other) const {
-  return (hashCharArray(other.topicName, sizeof(other.topicName)) == topicHash &&
-		  hashCharArray(other.typeName, sizeof(other.typeName)) == typeHash);
+  return (hashCharArray(other.topicName, sizeof(other.topicName)) ==
+              topicHash &&
+          hashCharArray(other.typeName, sizeof(other.typeName)) == typeHash);
 }

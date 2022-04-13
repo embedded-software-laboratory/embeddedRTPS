@@ -216,7 +216,7 @@ void Domain::registerPort(const Participant &part) {
   m_transport.createUdpConnection(getBuiltInUnicastPort(part.m_participantId));
 }
 
-void Domain::registerMulticastPort(Locator mcastLocator) {
+void Domain::registerMulticastPort(FullLengthLocator mcastLocator) {
   if (mcastLocator.kind == LocatorKind_t::LOCATOR_KIND_UDPv4) {
     m_transport.createUdpConnection(mcastLocator.getLocatorPort());
   }
@@ -390,7 +390,7 @@ rtps::Reader *Domain::createReader(Participant &part, const char *topicName,
   attributes.unicastLocator = getUserUnicastLocator(part.m_participantId);
   if (!isZeroAddress(mcastaddress)) {
     if (ip4_addr_ismulticast(&mcastaddress)) {
-      attributes.multicastLocator = rtps::Locator::createUDPv4Locator(
+      attributes.multicastLocator = rtps::FullLengthLocator::createUDPv4Locator(
           ip4_addr1(&mcastaddress), ip4_addr2(&mcastaddress),
           ip4_addr3(&mcastaddress), ip4_addr4(&mcastaddress),
           getUserMulticastPort());

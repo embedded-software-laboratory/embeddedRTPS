@@ -52,9 +52,10 @@ public:
 
   bool isInitialized() { return m_is_initialized_; }
 
-  uint32_t getNumMatchedReader(){ return m_proxies.getSize();}
+  uint32_t getNumMatchedReader() { return m_proxies.getSize(); }
 
 protected:
+  friend class SizeInspector;
   bool m_is_initialized_ = false;
   virtual ~Writer() = default;
   MemoryPool<ReaderProxy, Config::NUM_READER_PROXIES_PER_WRITER> m_proxies;

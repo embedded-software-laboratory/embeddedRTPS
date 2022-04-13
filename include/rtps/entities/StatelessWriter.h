@@ -62,7 +62,7 @@ private:
 
   TopicKind_t m_topicKind = TopicKind_t::NO_KEY;
   SequenceNumber_t m_nextSequenceNumberToSend = {0, 1};
-  SimpleHistoryCache m_history;
+  SimpleHistoryCache<Config::HISTORY_SIZE_STATELESS> m_history;
 
   bool isIrrelevant(ChangeKind_t kind) const;
 

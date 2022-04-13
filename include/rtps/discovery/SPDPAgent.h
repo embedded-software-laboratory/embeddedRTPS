@@ -32,6 +32,18 @@ Author: i11 - Embedded Software, RWTH Aachen University
 #include "rtps/discovery/ParticipantProxyData.h"
 #include "ucdr/microcdr.h"
 
+#if SPDP_VERBOSE && RTPS_GLOBAL_VERBOSE
+#include "rtps/utils/printutils.h"
+#define SPDP_LOG(...)                                                          \
+  if (true) {                                                                  \
+    printf("[SPDP] ");                                                         \
+    printf(__VA_ARGS__);                                                       \
+    printf("\n");                                                              \
+  }
+#else
+#define SPDP_LOG(...) //
+#endif
+
 namespace rtps {
 class Participant;
 class Writer;

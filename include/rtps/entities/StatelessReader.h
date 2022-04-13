@@ -26,7 +26,6 @@ Author: i11 - Embedded Software, RWTH Aachen University
 #define RTPS_STATELESSREADER_H
 
 #include "rtps/entities/Reader.h"
-#include "rtps/storages/HistoryCache.h"
 
 namespace rtps {
 class StatelessReader final : public Reader {

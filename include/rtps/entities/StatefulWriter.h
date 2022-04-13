@@ -60,7 +60,7 @@ private:
 
   TopicKind_t m_topicKind = TopicKind_t::NO_KEY;
   SequenceNumber_t m_nextSequenceNumberToSend = {0, 1};
-  SimpleHistoryCache m_history;
+  SimpleHistoryCache<Config::HISTORY_SIZE_STATEFUL> m_history;
   sys_thread_t m_heartbeatThread;
   Count_t m_hbCount{1};
 

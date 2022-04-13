@@ -25,8 +25,8 @@ Author: i11 - Embedded Software, RWTH Aachen University
 #ifndef RTPS_WRITERPROXY_H
 #define RTPS_WRITERPROXY_H
 
-#include "rtps/common/Locator.h"
 #include "rtps/common/types.h"
+#include <rtps/common/Locator.h>
 
 namespace rtps {
 struct WriterProxy {
@@ -34,11 +34,11 @@ struct WriterProxy {
   SequenceNumber_t expectedSN;
   Count_t ackNackCount;
   Count_t hbCount;
-  Locator remoteLocator;
+  LocatorIPv4 remoteLocator;
 
   WriterProxy() = default;
 
-  WriterProxy(const Guid_t &guid, const Locator &loc)
+  WriterProxy(const Guid_t &guid, const LocatorIPv4 &loc)
       : remoteWriterGuid(guid),
         expectedSN(SequenceNumber_t{0, 1}), ackNackCount{1}, hbCount{0},
         remoteLocator(loc) {}
