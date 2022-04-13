@@ -6,7 +6,6 @@
 namespace rtps {
 
 #define IS_LITTLE_ENDIAN 1
-#define STORE_LOCATOR_LSB_ONLY 1
 
 namespace Config {
 const VendorId_t VENDOR_ID = {13, 37};
