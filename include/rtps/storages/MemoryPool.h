@@ -133,6 +133,7 @@ public:
    */
   bool remove(bool (*jumppad)(void *, const TYPE &data),
               void *isCorrectElement) {
+    bool retcode = false;
     for (auto it = begin(); it != end(); ++it) {
       if (jumppad(isCorrectElement, *it)) {
         const uint8_t bucket = it.m_bit / uint8_t{8};
@@ -142,9 +143,10 @@ public:
                 7}; // 7 sets all bits above and including the one for 8 to 0
         m_bitMap[bucket] &= ~(static_cast<uint8_t>(1) << pos);
         --m_numElements;
+        retcode = true;
       }
     }
-    return false;
+    return retcode;
   }
 
   TYPE *find(bool (*jumppad)(void *, const TYPE &data),

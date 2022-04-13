@@ -37,16 +37,18 @@ struct UdpConnection {
   UdpConnection() = default; // Required for static allocation
 
   explicit UdpConnection(uint16_t port) : port(port) {
-    TcpipCoreLock lock;
+    LOCK_TCPIP_CORE();
     pcb = udp_new();
+    UNLOCK_TCPIP_CORE();
   }
 
   UdpConnection &operator=(UdpConnection &&other) noexcept {
     port = other.port;
 
     if (pcb != nullptr) {
-      TcpipCoreLock lock;
+      LOCK_TCPIP_CORE();
       udp_remove(pcb);
+      UNLOCK_TCPIP_CORE();
     }
     pcb = other.pcb;
     other.pcb = nullptr;
@@ -55,8 +57,9 @@ struct UdpConnection {
 
   ~UdpConnection() {
     if (pcb != nullptr) {
-      TcpipCoreLock lock;
+      LOCK_TCPIP_CORE();
       udp_remove(pcb);
+      UNLOCK_TCPIP_CORE();
       pcb = nullptr;
     }
   }
