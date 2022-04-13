@@ -77,8 +77,8 @@ struct TopicDataCompressed {
   std::size_t typeHash;
   ReliabilityKind_t reliabilityKind;
   DurabilityKind_t durabilityKind;
-  FullLengthLocator unicastLocator;
-  FullLengthLocator multicastLocator;
+  LocatorIPv4 unicastLocator;
+  LocatorIPv4 multicastLocator;
 
   TopicDataCompressed() = default;
   TopicDataCompressed(const TopicData &topic_data) {
