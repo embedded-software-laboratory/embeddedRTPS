@@ -181,12 +181,12 @@ void SPDPAgent::processProxyData() {
 
 bool SPDPAgent::addProxiesForBuiltInEndpoints() {
 
-  LocatorCompressed *locator = nullptr;
+  LocatorIPv4 *locator = nullptr;
 
   // Check if the remote participants has a locator in our subnet
   for (unsigned int i = 0;
        i < m_proxyDataBuffer.m_metatrafficUnicastLocatorList.size(); i++) {
-    LocatorCompressed *l = &(m_proxyDataBuffer.m_metatrafficUnicastLocatorList[i]);
+    LocatorIPv4 *l = &(m_proxyDataBuffer.m_metatrafficUnicastLocatorList[i]);
     if (l->isValid() && l->isSameSubnet()) {
       locator = l;
       break;
@@ -258,7 +258,7 @@ void SPDPAgent::addParticipantParameters() {
   const uint16_t protocolVersionSize =
       sizeof(PROTOCOLVERSION.major) + sizeof(PROTOCOLVERSION.minor);
   const uint16_t vendorIdSize = Config::VENDOR_ID.vendorId.size();
-  const uint16_t locatorSize = sizeof(Locator);
+  const uint16_t locatorSize = sizeof(FullLengthLocator);
   const uint16_t durationSize =
       sizeof(Duration_t::seconds) + sizeof(Duration_t::fraction);
   const uint16_t entityKeySize = 3;
@@ -266,11 +266,11 @@ void SPDPAgent::addParticipantParameters() {
   const uint16_t entityIdSize = entityKeySize + entityKindSize;
   const uint16_t guidSize = sizeof(GuidPrefix_t::id) + entityIdSize;
 
-  const Locator userUniCastLocator =
+  const FullLengthLocator userUniCastLocator =
       getUserUnicastLocator(mp_participant->m_participantId);
-  const Locator builtInUniCastLocator =
+  const FullLengthLocator builtInUniCastLocator =
       getBuiltInUnicastLocator(mp_participant->m_participantId);
-  const Locator builtInMultiCastLocator = getBuiltInMulticastLocator();
+  const FullLengthLocator builtInMultiCastLocator = getBuiltInMulticastLocator();
 
   ucdr_serialize_array_uint8_t(&m_microbuffer,
                                rtps::SMElement::SCHEME_PL_CDR_LE.data(),

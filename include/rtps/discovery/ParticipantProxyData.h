@@ -25,7 +25,7 @@ Author: i11 - Embedded Software, RWTH Aachen University
 #ifndef RTPS_PARTICIPANTPROXYDATA_H
 #define RTPS_PARTICIPANTPROXYDATA_H
 
-#include "rtps/common/Locator.h"
+#include <rtps/common/Locator.h>
 #include "rtps/config.h"
 #include "rtps/messages/MessageTypes.h"
 #include "ucdr/microcdr.h"
@@ -51,13 +51,13 @@ public:
   VendorId_t m_vendorId = VENDOR_UNKNOWN;
   bool m_expectsInlineQos = false;
   BuiltinEndpointSet_t m_availableBuiltInEndpoints;
-  std::array<LocatorCompressed, Config::SPDP_MAX_NUM_LOCATORS>
+  std::array<LocatorIPv4, Config::SPDP_MAX_NUM_LOCATORS>
       m_metatrafficUnicastLocatorList;
-  std::array<LocatorCompressed, Config::SPDP_MAX_NUM_LOCATORS>
+  std::array<LocatorIPv4, Config::SPDP_MAX_NUM_LOCATORS>
       m_metatrafficMulticastLocatorList;
-  std::array<LocatorCompressed, Config::SPDP_MAX_NUM_LOCATORS>
+  std::array<LocatorIPv4, Config::SPDP_MAX_NUM_LOCATORS>
       m_defaultUnicastLocatorList;
-  std::array<LocatorCompressed, Config::SPDP_MAX_NUM_LOCATORS>
+  std::array<LocatorIPv4, Config::SPDP_MAX_NUM_LOCATORS>
       m_defaultMulticastLocatorList;
   Count_t m_manualLivelinessCount{1};
   Duration_t m_leaseDuration = Config::SPDP_DEFAULT_REMOTE_LEASE_DURATION;
@@ -85,7 +85,7 @@ public:
 private:
   bool
   readLocatorIntoList(ucdrBuffer &buffer,
-                      std::array<LocatorCompressed, Config::SPDP_MAX_NUM_LOCATORS> &list);
+                      std::array<LocatorIPv4, Config::SPDP_MAX_NUM_LOCATORS> &list);
 
   static const BuiltinEndpointSet_t
       DISC_BUILTIN_ENDPOINT_PARTICIPANT_ANNOUNCER = 1 << 0;

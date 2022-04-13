@@ -25,8 +25,8 @@ Author: i11 - Embedded Software, RWTH Aachen University
 #ifndef RTPS_DOMAIN_H
 #define RTPS_DOMAIN_H
 
+#include <rtps/common/Locator.h>
 #include "rtps/ThreadPool.h"
-#include "rtps/common/Locator.h"
 #include "rtps/config.h"
 #include "rtps/entities/Participant.h"
 #include "rtps/entities/StatefulReader.h"
@@ -80,7 +80,7 @@ private:
   GuidPrefix_t generateGuidPrefix(ParticipantId_t id) const;
   void createBuiltinWritersAndReaders(Participant &part);
   void registerPort(const Participant &part);
-  void registerMulticastPort(Locator mcastLocator);
+  void registerMulticastPort(FullLengthLocator mcastLocator);
   static void receiveJumppad(void *callee, const PacketInfo &packet);
 };
 } // namespace rtps

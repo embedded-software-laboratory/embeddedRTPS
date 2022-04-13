@@ -27,7 +27,7 @@ Author: i11 - Embedded Software, RWTH Aachen University
 
 #define SUPPRESS_UNICAST 0
 
-#include "rtps/common/Locator.h"
+#include <rtps/common/Locator.h>
 #include "rtps/config.h"
 #include "rtps/utils/hash.h"
 #include "ucdr/microcdr.h"
@@ -45,20 +45,20 @@ struct TopicData {
   char topicName[Config::MAX_TOPICNAME_LENGTH];
   ReliabilityKind_t reliabilityKind;
   DurabilityKind_t durabilityKind;
-  Locator unicastLocator;
-  Locator multicastLocator;
+  FullLengthLocator unicastLocator;
+  FullLengthLocator multicastLocator;
 
   TopicData()
       : endpointGuid(GUID_UNKNOWN), typeName{'\0'}, topicName{'\0'},
         reliabilityKind(ReliabilityKind_t::BEST_EFFORT),
         durabilityKind(DurabilityKind_t::TRANSIENT_LOCAL) {
-    rtps::Locator someLocator = rtps::Locator::createUDPv4Locator(
+    rtps::FullLengthLocator someLocator = rtps::FullLengthLocator::createUDPv4Locator(
         192, 168, 0, 42, rtps::getUserUnicastPort(0));
     unicastLocator = someLocator;
-    multicastLocator = Locator();
+    multicastLocator = FullLengthLocator();
   };
 
-  TopicData(Guid_t guid, ReliabilityKind_t reliability, Locator loc)
+  TopicData(Guid_t guid, ReliabilityKind_t reliability, FullLengthLocator loc)
       : endpointGuid(guid), typeName{'\0'}, topicName{'\0'},
         reliabilityKind(reliability),
         durabilityKind(DurabilityKind_t::TRANSIENT_LOCAL), unicastLocator(loc) {
@@ -76,8 +76,8 @@ struct TopicDataCompressed {
   std::size_t typeHash;
   ReliabilityKind_t reliabilityKind;
   DurabilityKind_t durabilityKind;
-  Locator unicastLocator;
-  Locator multicastLocator;
+  FullLengthLocator unicastLocator;
+  FullLengthLocator multicastLocator;
 
   TopicDataCompressed() = default;
   TopicDataCompressed(const TopicData &topic_data) {

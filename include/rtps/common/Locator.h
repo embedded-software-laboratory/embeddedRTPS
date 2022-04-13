@@ -44,16 +44,19 @@ const std::array<uint8_t, 16> LOCATOR_ADDRESS_INVALID = {
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 
 
-struct Locator {
+/*
+ * This representation corresponds to the RTPS wire format
+ */
+struct FullLengthLocator {
   LocatorKind_t kind = LocatorKind_t::LOCATOR_KIND_INVALID;
   uint32_t port = LOCATOR_PORT_INVALID;
   std::array<uint8_t, 16> address =
       LOCATOR_ADDRESS_INVALID; // TODO make private such that kind and address
                                // always match?
 
-  static Locator createUDPv4Locator(uint8_t a, uint8_t b, uint8_t c, uint8_t d,
+  static FullLengthLocator createUDPv4Locator(uint8_t a, uint8_t b, uint8_t c, uint8_t d,
                                     uint32_t port) {
-    Locator locator;
+    FullLengthLocator locator;
     locator.kind = LocatorKind_t::LOCATOR_KIND_UDPv4;
     locator.address = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, a, b, c, d};
     locator.port = port;
@@ -65,21 +68,21 @@ struct Locator {
   bool isValid() const { return kind != LocatorKind_t::LOCATOR_KIND_INVALID; }
 
   bool readFromUcdrBuffer(ucdrBuffer &buffer) {
-    if (ucdr_buffer_remaining(&buffer) < sizeof(Locator)) {
+    if (ucdr_buffer_remaining(&buffer) < sizeof(FullLengthLocator)) {
       return false;
     } else {
       ucdr_deserialize_array_uint8_t(&buffer, reinterpret_cast<uint8_t *>(this),
-                                     sizeof(Locator));
+                                     sizeof(FullLengthLocator));
       return true;
     }
   }
 
   bool serializeIntoUdcrBuffer(ucdrBuffer &buffer) {
-    if (ucdr_buffer_remaining(&buffer) < sizeof(Locator)) {
+    if (ucdr_buffer_remaining(&buffer) < sizeof(FullLengthLocator)) {
       return false;
     } else {
       ucdr_serialize_array_uint8_t(&buffer, reinterpret_cast<uint8_t *>(this),
-                                   sizeof(Locator));
+                                   sizeof(FullLengthLocator));
     }
   }
 
@@ -106,41 +109,43 @@ struct Locator {
 
 } __attribute__((packed));
 
-inline Locator getBuiltInUnicastLocator(ParticipantId_t participantId) {
-  return Locator::createUDPv4Locator(
+inline FullLengthLocator getBuiltInUnicastLocator(ParticipantId_t participantId) {
+  return FullLengthLocator::createUDPv4Locator(
       Config::IP_ADDRESS[0], Config::IP_ADDRESS[1], Config::IP_ADDRESS[2],
       Config::IP_ADDRESS[3], getBuiltInUnicastPort(participantId));
 }
 
-inline Locator getBuiltInMulticastLocator() {
-  return Locator::createUDPv4Locator(239, 255, 0, 1, getBuiltInMulticastPort());
+inline FullLengthLocator getBuiltInMulticastLocator() {
+  return FullLengthLocator::createUDPv4Locator(239, 255, 0, 1, getBuiltInMulticastPort());
 }
 
-inline Locator getUserUnicastLocator(ParticipantId_t participantId) {
-  return Locator::createUDPv4Locator(
+inline FullLengthLocator getUserUnicastLocator(ParticipantId_t participantId) {
+  return FullLengthLocator::createUDPv4Locator(
       Config::IP_ADDRESS[0], Config::IP_ADDRESS[1], Config::IP_ADDRESS[2],
       Config::IP_ADDRESS[3], getUserUnicastPort(participantId));
 }
 
-inline Locator getUserMulticastLocator() { // this would be a unicastaddress, as
+inline FullLengthLocator getUserMulticastLocator() { // this would be a unicastaddress, as
                                            // defined in config
-  return Locator::createUDPv4Locator(
+  return FullLengthLocator::createUDPv4Locator(
       Config::IP_ADDRESS[0], Config::IP_ADDRESS[1], Config::IP_ADDRESS[2],
       Config::IP_ADDRESS[3], getUserMulticastPort());
 }
 
-inline Locator getDefaultSendMulticastLocator() {
-  return Locator::createUDPv4Locator(239, 255, 0, 1, getBuiltInMulticastPort());
+inline FullLengthLocator getDefaultSendMulticastLocator() {
+  return FullLengthLocator::createUDPv4Locator(239, 255, 0, 1, getBuiltInMulticastPort());
 }
 
-
-struct LocatorCompressed {
+/*
+ * This representation omits unnecessary 12 bytes of the full RTPS wire format
+ */
+struct LocatorIPv4 {
 	LocatorKind_t kind = LocatorKind_t::LOCATOR_KIND_INVALID;
 	std::array<uint8_t, 4> address = {0};
 	uint32_t port = LOCATOR_PORT_INVALID;
 
-	LocatorCompressed() = default;
-	LocatorCompressed(const Locator& locator){
+	LocatorIPv4() = default;
+	LocatorIPv4(const FullLengthLocator& locator){
 		address[0] = locator.address[12];
 		address[1] = locator.address[13];
 		address[2] = locator.address[14];
