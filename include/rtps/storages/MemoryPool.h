@@ -101,6 +101,7 @@ public:
 
   bool add(const TYPE &data) {
     if (isFull()) {
+      printf("[MemoryPool] RESSOURCE LIMIT EXCEEDED \n");
       return false;
     }
     for (uint8_t bucket = 0; bucket < sizeof(m_bitMap); ++bucket) {
