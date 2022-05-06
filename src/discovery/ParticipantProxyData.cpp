@@ -174,9 +174,9 @@ bool ParticipantProxyData::readLocatorIntoList(
           full_length_locator.isMulticastAddress()) {
         proxy_locator = LocatorIPv4(full_length_locator);
         SPDP_LOG("Adding locator: %u %u %u %u \n",
-                 (int)proxy_locator.address[12], (int)proxy_locator.address[13],
-                 (int)proxy_locator.address[14],
-                 (int)proxy_locator.address[15]);
+                 (int)proxy_locator.address[0], (int)proxy_locator.address[1],
+                 (int)proxy_locator.address[2],
+                 (int)proxy_locator.address[3]);
         return true;
       } else {
         SPDP_LOG("Ignoring locator: %u %u %u %u \n",
@@ -184,7 +184,7 @@ bool ParticipantProxyData::readLocatorIntoList(
                  (int)full_length_locator.address[13],
                  (int)full_length_locator.address[14],
                  (int)full_length_locator.address[15]);
-        return false;
+        return true;
       }
     } else {
       valid_locators++;

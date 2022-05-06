@@ -166,11 +166,6 @@ bool rtps::deserializeMessage(const MessageProcessingInfo &info,
   }
 
   if (msg.readerSNState.numBits != 0) {
-    if (4 * ((msg.readerSNState.numBits / 32) + 1) >
-        msg.readerSNState.bitMap.size()) {
-      while (1)
-        ;
-    }
     doCopyAndMoveOn(
         reinterpret_cast<uint8_t *>(msg.readerSNState.bitMap.data()),
         currentPos, 4 * ((msg.readerSNState.numBits / 32) + 1));
