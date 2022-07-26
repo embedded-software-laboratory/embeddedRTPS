@@ -81,12 +81,14 @@ class Reader {
 public:
   TopicData m_attributes;
   virtual void newChange(const ReaderCacheChange &cacheChange) = 0;
-  virtual void registerCallback(ddsReaderCallback_fp cb, void *callee) = 0;
+  virtual void registerCallback(ddsReaderCallback_fp cb, void *arg);
+  virtual void removeCallback(ddsReaderCallback_fp cb);
+
   virtual bool onNewHeartbeat(const SubmessageHeartbeat &msg,
                               const GuidPrefix_t &remotePrefix) = 0;
   virtual bool addNewMatchedWriter(const WriterProxy &newProxy) = 0;
-  virtual void removeWriter(const Guid_t &guid) = 0;
-  virtual void removeWriterOfParticipant(const GuidPrefix_t &guidPrefix) = 0;
+  virtual void removeWriter(const Guid_t &guid);
+  virtual void removeWriterOfParticipant(const GuidPrefix_t &guidPrefix);
   bool isInitialized() { return m_is_initialized_; }
 
   bool knowWriterId(const Guid_t &guid) {
@@ -101,9 +103,19 @@ public:
   uint32_t getNumMatchedWriters() { return m_proxies.getSize(); }
 
 protected:
+  void executeCallbacks(const ReaderCacheChange &cacheChange);
+
   bool m_is_initialized_ = false;
   virtual ~Reader() = default;
   MemoryPool<WriterProxy, Config::NUM_WRITER_PROXIES_PER_READER> m_proxies;
+
+  uint8_t m_callback_count = 0;
+  std::array<ddsReaderCallback_fp, Config::MAX_NUM_READER_CALLBACKS>
+      m_callbacks = {nullptr};
+  std::array<void *, Config::MAX_NUM_READER_CALLBACKS> m_callback_arg = {
+      nullptr};
+
+  sys_mutex_t m_mutex;
 };
 } // namespace rtps
 

@@ -32,17 +32,9 @@ class StatelessReader final : public Reader {
 public:
   void init(const TopicData &attributes);
   void newChange(const ReaderCacheChange &cacheChange) override;
-  void registerCallback(ddsReaderCallback_fp cb, void *callee) override;
   bool onNewHeartbeat(const SubmessageHeartbeat &msg,
                       const GuidPrefix_t &remotePrefix) override;
   bool addNewMatchedWriter(const WriterProxy &newProxy) override;
-  void removeWriter(const Guid_t &guid) override;
-  void removeWriterOfParticipant(const GuidPrefix_t &guidPrefix) override;
-
-private:
-  sys_mutex_t m_mutex;
-  ddsReaderCallback_fp m_callback = nullptr;
-  void *m_callee = nullptr;
 };
 
 } // namespace rtps

@@ -68,30 +68,18 @@ void StatefulReaderT<NetworkDriver>::init(const TopicData &attributes,
 template <class NetworkDriver>
 void StatefulReaderT<NetworkDriver>::newChange(
     const ReaderCacheChange &cacheChange) {
-  if (m_callback == nullptr) {
+  if (m_callback_count == 0) {
     return;
   }
   Lock lock{m_mutex};
   for (auto &proxy : m_proxies) {
     if (proxy.remoteWriterGuid == cacheChange.writerGuid) {
       if (proxy.expectedSN == cacheChange.sn) {
-        m_callback(m_callee, cacheChange);
+        executeCallbacks(cacheChange);
         ++proxy.expectedSN;
         return;
       }
     }
-  }
-}
-
-template <class NetworkDriver>
-void StatefulReaderT<NetworkDriver>::registerCallback(ddsReaderCallback_fp cb,
-                                                      void *callee) {
-  if (cb != nullptr) {
-    m_callback = cb;
-    m_callee = callee; // It's okay if this is null
-  } else {
-
-    SFR_LOG("Passed callback is nullptr\n");
   }
 }
 
@@ -104,33 +92,6 @@ bool StatefulReaderT<NetworkDriver>::addNewMatchedWriter(
   SFR_LOG("\n");
 #endif
   return m_proxies.add(newProxy);
-}
-
-template <class NetworkDriver>
-void StatefulReaderT<NetworkDriver>::removeWriter(const Guid_t &guid) {
-  Lock lock(m_mutex);
-  auto isElementToRemove = [&](const WriterProxy &proxy) {
-    return proxy.remoteWriterGuid == guid;
-  };
-  auto thunk = [](void *arg, const WriterProxy &value) {
-    return (*static_cast<decltype(isElementToRemove) *>(arg))(value);
-  };
-
-  m_proxies.remove(thunk, &isElementToRemove);
-}
-
-template <class NetworkDriver>
-void StatefulReaderT<NetworkDriver>::removeWriterOfParticipant(
-    const GuidPrefix_t &guidPrefix) {
-  Lock lock(m_mutex);
-  auto isElementToRemove = [&](const WriterProxy &proxy) {
-    return proxy.remoteWriterGuid.prefix == guidPrefix;
-  };
-  auto thunk = [](void *arg, const WriterProxy &value) {
-    return (*static_cast<decltype(isElementToRemove) *>(arg))(value);
-  };
-
-  m_proxies.remove(thunk, &isElementToRemove);
 }
 
 template <class NetworkDriver>
