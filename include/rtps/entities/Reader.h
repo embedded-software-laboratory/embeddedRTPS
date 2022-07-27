@@ -115,7 +115,11 @@ protected:
   std::array<void *, Config::MAX_NUM_READER_CALLBACKS> m_callback_arg = {
       nullptr};
 
-  sys_mutex_t m_mutex;
+  // Guards manipulation of the proxies array
+  sys_mutex_t m_proxies_mutex;
+
+  // Guards manipulation of callback array
+  sys_mutex_t m_callback_mutex;
 };
 } // namespace rtps
 

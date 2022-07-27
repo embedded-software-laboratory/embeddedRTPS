@@ -53,7 +53,7 @@ StatefulReaderT<NetworkDriver>::~StatefulReaderT() {
 template <class NetworkDriver>
 void StatefulReaderT<NetworkDriver>::init(const TopicData &attributes,
                                           NetworkDriver &driver) {
-  if (sys_mutex_new(&m_mutex) != ERR_OK) {
+  if (sys_mutex_new(&m_proxies_mutex) != ERR_OK || sys_mutex_new(&m_callback_mutex) != ERR_OK) {
 
     SFR_LOG("StatefulReader: Failed to create mutex.\n");
 
@@ -71,7 +71,7 @@ void StatefulReaderT<NetworkDriver>::newChange(
   if (m_callback_count == 0) {
     return;
   }
-  Lock lock{m_mutex};
+  Lock lock{m_proxies_mutex};
   for (auto &proxy : m_proxies) {
     if (proxy.remoteWriterGuid == cacheChange.writerGuid) {
       if (proxy.expectedSN == cacheChange.sn) {
@@ -97,7 +97,7 @@ bool StatefulReaderT<NetworkDriver>::addNewMatchedWriter(
 template <class NetworkDriver>
 bool StatefulReaderT<NetworkDriver>::onNewHeartbeat(
     const SubmessageHeartbeat &msg, const GuidPrefix_t &sourceGuidPrefix) {
-  Lock lock(m_mutex);
+  Lock lock(m_proxies_mutex);
   PacketInfo info;
   info.srcPort = m_packetInfo.srcPort;
   WriterProxy *writer = nullptr;

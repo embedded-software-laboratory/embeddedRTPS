@@ -6,7 +6,7 @@
 using namespace rtps;
 
 void Reader::executeCallbacks(const ReaderCacheChange &cacheChange) {
-  Lock lock(m_mutex);
+  Lock lock(m_callback_mutex);
   for (unsigned int i = 0; i < m_callbacks.size(); i++) {
     if (m_callbacks[i] != nullptr) {
       m_callbacks[i](m_callback_arg[i], cacheChange);
@@ -15,7 +15,7 @@ void Reader::executeCallbacks(const ReaderCacheChange &cacheChange) {
 }
 
 void Reader::registerCallback(ddsReaderCallback_fp cb, void *arg) {
-  Lock lock(m_mutex);
+  Lock lock(m_callback_mutex);
   if (m_callback_count == m_callbacks.size() || cb == nullptr) {
     return;
   }
@@ -31,7 +31,7 @@ void Reader::registerCallback(ddsReaderCallback_fp cb, void *arg) {
 }
 
 void Reader::removeCallback(ddsReaderCallback_fp cb) {
-  Lock lock(m_mutex);
+  Lock lock(m_callback_mutex);
   for (unsigned int i = 0; i < m_callbacks.size(); i++) {
     if (m_callbacks[i] == cb) {
       m_callbacks[i] = nullptr;
@@ -43,7 +43,7 @@ void Reader::removeCallback(ddsReaderCallback_fp cb) {
 }
 
 void Reader::removeWriterOfParticipant(const GuidPrefix_t &guidPrefix) {
-  Lock lock(m_mutex);
+  Lock lock(m_proxies_mutex);
   auto isElementToRemove = [&](const WriterProxy &proxy) {
     return proxy.remoteWriterGuid.prefix == guidPrefix;
   };
@@ -55,7 +55,7 @@ void Reader::removeWriterOfParticipant(const GuidPrefix_t &guidPrefix) {
 }
 
 void Reader::removeWriter(const Guid_t &guid) {
-  Lock lock(m_mutex);
+  Lock lock(m_proxies_mutex);
   auto isElementToRemove = [&](const WriterProxy &proxy) {
     return proxy.remoteWriterGuid == guid;
   };
@@ -67,7 +67,7 @@ void Reader::removeWriter(const Guid_t &guid) {
 }
 
 bool Reader::addNewMatchedWriter(const WriterProxy &newProxy) {
-  Lock lock(m_mutex);
+  Lock lock(m_proxies_mutex);
 #if (SFR_VERBOSE || SLR_VERBOSE) && RTPS_GLOBAL_VERBOSE
   SFR_LOG("New writer added with id: ");
   printGuid(newProxy.remoteWriterGuid);
