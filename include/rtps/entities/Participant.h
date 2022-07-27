@@ -87,6 +87,8 @@ public:
   bool addNewRemoteParticipant(const ParticipantProxyData &remotePart);
   bool removeRemoteParticipant(const GuidPrefix_t &prefix);
   void removeAllEntitiesOfParticipant(const GuidPrefix_t &prefix);
+  void removeEntityFromProxies(const Guid_t& guid);
+
   const ParticipantProxyData *findRemoteParticipant(const GuidPrefix_t &prefix);
   void refreshRemoteParticipantLiveliness(const GuidPrefix_t &prefix);
   uint32_t getRemoteParticipantCount();

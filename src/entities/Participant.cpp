@@ -240,6 +240,16 @@ void Participant::removeAllEntitiesOfParticipant(const GuidPrefix_t &prefix) {
   }
 }
 
+void Participant::removeEntityFromProxies(const Guid_t& guid){
+	for(auto i = 0; i < m_numWriters;i++){
+		m_writers[i]->removeReader(guid);
+	}
+
+	for(auto i = 0; i < m_numReaders; i++){
+		m_readers[i]->removeWriter(guid);
+	}
+}
+
 const rtps::ParticipantProxyData *
 Participant::findRemoteParticipant(const GuidPrefix_t &prefix) {
   auto isElementToFind = [&](const ParticipantProxyData &proxy) {

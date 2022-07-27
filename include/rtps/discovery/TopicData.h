@@ -48,6 +48,12 @@ struct TopicData {
   FullLengthLocator unicastLocator;
   FullLengthLocator multicastLocator;
 
+  uint8_t statusInfo;
+  bool statusInfoValid;
+  // Use Case: Remotes communicates id of deleted endpoint through key_hash parameter
+  EntityId_t entityIdFromKeyHash;
+  bool entityIdFromKeyHashValid;
+
   TopicData()
       : endpointGuid(GUID_UNKNOWN), typeName{'\0'}, topicName{'\0'},
         reliabilityKind(ReliabilityKind_t::BEST_EFFORT),
@@ -69,6 +75,10 @@ struct TopicData {
 
   bool readFromUcdrBuffer(ucdrBuffer &buffer);
   bool serializeIntoUcdrBuffer(ucdrBuffer &buffer) const;
+
+  bool isDisposedFlagSet() const;
+  bool isUnregisteredFlagSet() const;
+
 };
 
 struct TopicDataCompressed {

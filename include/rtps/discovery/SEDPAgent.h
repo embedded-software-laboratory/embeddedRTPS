@@ -45,12 +45,14 @@ public:
   void registerOnNewSubscriberMatchedCallback(void (*callback)(void *arg),
                                               void *args);
   void removeUnmatchedEntitiesOfParticipant(const GuidPrefix_t &guidPrefix);
+  void removeUnmatchedEntity(const Guid_t &guid);
+
   uint32_t getNumRemoteUnmatchedReaders();
   uint32_t getNumRemoteUnmatchedWriters();
 
 protected: // For testing purposes
-  void onNewPublisher(const TopicData &writerData);
-  void onNewSubscriber(const TopicData &writerData);
+  void handlePublisherReaderMessage(const TopicData &writerData);
+  void handleSubscriptionReaderMessage(const TopicData &writerData);
 
 private:
   Participant *m_part;
@@ -75,17 +77,19 @@ private:
   void addUnmatchedRemoteWriter(const TopicData &writerData);
   void addUnmatchedRemoteReader(const TopicData &readerData);
 
+  void handleRemoteEndpointDeletion(const TopicData &topic);
+
   void (*mfp_onNewPublisherCallback)(void *arg) = nullptr;
   void *m_onNewPublisherArgs = nullptr;
   void (*mfp_onNewSubscriberCallback)(void *arg) = nullptr;
   void *m_onNewSubscriberArgs = nullptr;
 
-  static void receiveCallbackPublisher(void *callee,
+  static void jumppadPublisherReader(void *callee,
                                        const ReaderCacheChange &cacheChange);
-  static void receiveCallbackSubscriber(void *callee,
+  static void jumppadSubscriptionReader(void *callee,
                                         const ReaderCacheChange &cacheChange);
-  void onNewPublisher(const ReaderCacheChange &change);
-  void onNewSubscriber(const ReaderCacheChange &change);
+  void handlePublisherReaderMessage(const ReaderCacheChange &change);
+  void handleSubscriptionReaderMessage(const ReaderCacheChange &change);
 };
 } // namespace rtps
 
