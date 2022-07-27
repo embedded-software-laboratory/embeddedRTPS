@@ -173,6 +173,12 @@ void SEDPAgent::handlePublisherReaderMessage(const TopicData &writerData) {
   if (!m_part->findRemoteParticipant(writerData.endpointGuid.prefix)) {
     return;
   }
+
+  if(writerData.isDisposedFlagSet() || writerData.isUnregisteredFlagSet()){
+	  handleRemoteEndpointDeletion(writerData);
+	  return;
+  }
+
 #if SEDP_VERBOSE
   SEDP_LOG("PUB T/D %s/%s", writerData.topicName, writerData.typeName);
 #endif
@@ -224,11 +230,12 @@ void SEDPAgent::handleSubscriptionReaderMessage(const ReaderCacheChange &change)
 }
 
 void SEDPAgent::handleRemoteEndpointDeletion(const TopicData &topic){
+	printf("Removing remote Endpoint!\n");
+
 	if(!topic.entityIdFromKeyHashValid){
 		return;
 	}
 
-	printf("Removing remote Endpoint!");
 
 	Guid_t guid;
 	guid.prefix = topic.endpointGuid.prefix;

@@ -71,16 +71,18 @@ void StatefulReaderT<NetworkDriver>::newChange(
   if (m_callback_count == 0) {
     return;
   }
-  Lock lock{m_proxies_mutex};
+  sys_mutex_lock(&m_proxies_mutex);
   for (auto &proxy : m_proxies) {
     if (proxy.remoteWriterGuid == cacheChange.writerGuid) {
       if (proxy.expectedSN == cacheChange.sn) {
+    	sys_mutex_unlock(&m_proxies_mutex);
         executeCallbacks(cacheChange);
         ++proxy.expectedSN;
         return;
       }
     }
   }
+  sys_mutex_unlock(&m_proxies_mutex);
 }
 
 template <class NetworkDriver>

@@ -50,8 +50,9 @@ bool TopicData::readFromUcdrBuffer(ucdrBuffer &buffer) {
 
   while (ucdr_buffer_remaining(&buffer) >= 4) {
 	if(ucdr_buffer_has_error(&buffer)){
-		while(1)
-		printf("FAILED TO DESERIALIZE TOPIC DATA\n");
+		while(1){
+			printf("FAILED TO DESERIALIZE TOPIC DATA\n");
+		}
 	}
     ParameterId pid;
     uint16_t length;
@@ -115,7 +116,7 @@ bool TopicData::readFromUcdrBuffer(ucdrBuffer &buffer) {
     case ParameterId::PID_KEY_HASH: // only use case so far is deleting remote endpoints
     {
       if(length == 16){
-        buffer.iterator += endpointGuid.prefix.id.size(); // Skip GuidPrefix_t as it is already known
+   	    ucdr_deserialize_array_uint8_t(&buffer, endpointGuid.prefix.id.data(), endpointGuid.prefix.id.size());
         ucdr_deserialize_array_uint8_t(&buffer, this->entityIdFromKeyHash.entityKey.data(), this->entityIdFromKeyHash.entityKey.size());
         ucdr_deserialize_uint8_t(&buffer, reinterpret_cast<uint8_t *>(&endpointGuid.entityId.entityKind));
         entityIdFromKeyHashValid = true;
