@@ -140,8 +140,8 @@ rtps::Participant *Domain::createParticipant() {
 
 void Domain::createBuiltinWritersAndReaders(Participant &part) {
   // SPDP
-  StatelessWriter &spdpWriter = m_statelessWriters[m_numStatelessWriters++];
-  StatelessReader &spdpReader = m_statelessReaders[m_numStatelessReaders++];
+  StatelessWriter* spdpWriter = getNextUnusedEndpoint<decltype(m_statelessWriters), StatelessWriter>(m_statelessWriters);
+  StatelessReader* spdpReader = getNextUnusedEndpoint<decltype(m_statelessReaders), StatelessReader>(m_statelessReaders);
 
   TopicData spdpWriterAttributes;
   spdpWriterAttributes.topicName[0] = '\0';
@@ -153,22 +153,18 @@ void Domain::createBuiltinWritersAndReaders(Participant &part) {
       ENTITYID_SPDP_BUILTIN_PARTICIPANT_WRITER;
   spdpWriterAttributes.unicastLocator = getBuiltInMulticastLocator();
 
-  spdpWriter.init(spdpWriterAttributes, TopicKind_t::WITH_KEY, &m_threadPool,
+  spdpWriter->init(spdpWriterAttributes, TopicKind_t::WITH_KEY, &m_threadPool,
                   m_transport);
-  spdpWriter.addNewMatchedReader(
+  spdpWriter->addNewMatchedReader(
       ReaderProxy{{part.m_guidPrefix, ENTITYID_SPDP_BUILTIN_PARTICIPANT_READER},
                   getBuiltInMulticastLocator()});
 
   TopicData spdpReaderAttributes;
   spdpReaderAttributes.endpointGuid = {
       part.m_guidPrefix, ENTITYID_SPDP_BUILTIN_PARTICIPANT_READER};
-  spdpReader.init(spdpReaderAttributes);
+  spdpReader->init(spdpReaderAttributes);
 
   // SEDP
-  StatefulReader &sedpPubReader = m_statefulReaders[m_numStatefulReaders++];
-  StatefulReader &sedpSubReader = m_statefulReaders[m_numStatefulReaders++];
-  StatefulWriter &sedpPubWriter = m_statefulWriters[m_numStatefulWriters++];
-  StatefulWriter &sedpSubWriter = m_statefulWriters[m_numStatefulWriters++];
 
   // Prepare attributes
   TopicData sedpAttributes;
@@ -181,32 +177,37 @@ void Domain::createBuiltinWritersAndReaders(Participant &part) {
       getBuiltInUnicastLocator(part.m_participantId);
 
   // READER
+  StatefulReader* sedpPubReader = getNextUnusedEndpoint<decltype(m_statefulReaders), StatefulReader>(m_statefulReaders);
   sedpAttributes.endpointGuid.entityId =
       ENTITYID_SEDP_BUILTIN_PUBLICATIONS_READER;
-  sedpPubReader.init(sedpAttributes, m_transport);
+  sedpPubReader->init(sedpAttributes, m_transport);
+
+  StatefulReader* sedpSubReader = getNextUnusedEndpoint<decltype(m_statefulReaders), StatefulReader>(m_statefulReaders);
   sedpAttributes.endpointGuid.entityId =
       ENTITYID_SEDP_BUILTIN_SUBSCRIPTIONS_READER;
-  sedpSubReader.init(sedpAttributes, m_transport);
+  sedpSubReader->init(sedpAttributes, m_transport);
 
   // WRITER
+  StatefulWriter* sedpPubWriter = getNextUnusedEndpoint<decltype(m_statefulWriters), StatefulWriter>(m_statefulWriters);
   sedpAttributes.endpointGuid.entityId =
       ENTITYID_SEDP_BUILTIN_PUBLICATIONS_WRITER;
-  sedpPubWriter.init(sedpAttributes, TopicKind_t::NO_KEY, &m_threadPool,
+  sedpPubWriter->init(sedpAttributes, TopicKind_t::NO_KEY, &m_threadPool,
                      m_transport);
 
+  StatefulWriter* sedpSubWriter = getNextUnusedEndpoint<decltype(m_statefulWriters), StatefulWriter>(m_statefulWriters);
   sedpAttributes.endpointGuid.entityId =
       ENTITYID_SEDP_BUILTIN_SUBSCRIPTIONS_WRITER;
-  sedpSubWriter.init(sedpAttributes, TopicKind_t::NO_KEY, &m_threadPool,
+  sedpSubWriter->init(sedpAttributes, TopicKind_t::NO_KEY, &m_threadPool,
                      m_transport);
 
   // COLLECT
   BuiltInEndpoints endpoints{};
-  endpoints.spdpWriter = &spdpWriter;
-  endpoints.spdpReader = &spdpReader;
-  endpoints.sedpPubReader = &sedpPubReader;
-  endpoints.sedpSubReader = &sedpSubReader;
-  endpoints.sedpPubWriter = &sedpPubWriter;
-  endpoints.sedpSubWriter = &sedpSubWriter;
+  endpoints.spdpWriter = spdpWriter;
+  endpoints.spdpReader = spdpReader;
+  endpoints.sedpPubReader = sedpPubReader;
+  endpoints.sedpSubReader = sedpSubReader;
+  endpoints.sedpPubWriter = sedpPubWriter;
+  endpoints.sedpSubWriter = sedpSubWriter;
 
   part.addBuiltInEndpoints(endpoints);
 }
@@ -225,7 +226,7 @@ void Domain::registerMulticastPort(FullLengthLocator mcastLocator) {
 rtps::Reader *Domain::readerExists(Participant &part, const char *topicName,
                                    const char *typeName, bool reliable) {
   if (reliable) {
-    for (unsigned int i = 0; i < m_numStatefulReaders; i++) {
+    for (unsigned int i = 0; i < m_statefulReaders.size(); i++) {
       if (m_statefulReaders[i].isInitialized()) {
         if (strncmp(m_statefulReaders[i].m_attributes.topicName, topicName,
                     Config::MAX_TYPENAME_LENGTH) != 0) {
@@ -244,7 +245,7 @@ rtps::Reader *Domain::readerExists(Participant &part, const char *topicName,
       }
     }
   } else {
-    for (unsigned int i = 0; i < m_numStatelessReaders; i++) {
+    for (unsigned int i = 0; i < m_statelessReaders.size(); i++) {
       if (m_statelessReaders[i].isInitialized()) {
         if (strncmp(m_statelessReaders[i].m_attributes.topicName, topicName,
                     Config::MAX_TYPENAME_LENGTH) != 0) {
@@ -269,7 +270,7 @@ rtps::Reader *Domain::readerExists(Participant &part, const char *topicName,
 rtps::Writer *Domain::writerExists(Participant &part, const char *topicName,
                                    const char *typeName, bool reliable) {
   if (reliable) {
-    for (unsigned int i = 0; i < m_numStatefulWriters; i++) {
+    for (unsigned int i = 0; i < m_statefulWriters.size(); i++) {
       if (m_statefulWriters[i].isInitialized()) {
         if (strncmp(m_statefulWriters[i].m_attributes.topicName, topicName,
                     Config::MAX_TYPENAME_LENGTH) != 0) {
@@ -287,7 +288,7 @@ rtps::Writer *Domain::writerExists(Participant &part, const char *topicName,
       }
     }
   } else {
-    for (unsigned int i = 0; i < m_numStatelessWriters; i++) {
+    for (unsigned int i = 0; i < m_statelessWriters.size(); i++) {
       if (m_statelessWriters[i].isInitialized()) {
         if (strncmp(m_statelessWriters[i].m_attributes.topicName, topicName,
                     Config::MAX_TYPENAME_LENGTH) != 0) {
@@ -309,13 +310,17 @@ rtps::Writer *Domain::writerExists(Participant &part, const char *topicName,
   return nullptr;
 }
 
+
 rtps::Writer *Domain::createWriter(Participant &part, const char *topicName,
                                    const char *typeName, bool reliable,
                                    bool enforceUnicast) {
 
-  // Check if there is enough capacity for more writers
-  if ((reliable && m_statefulWriters.size() <= m_numStatefulWriters) ||
-      (!reliable && m_statelessWriters.size() <= m_numStatelessWriters) ||
+  StatelessWriter* statelessWriter = getNextUnusedEndpoint<decltype(m_statelessWriters), StatelessWriter>(m_statelessWriters);
+  StatefulWriter* statefulWriter = getNextUnusedEndpoint<decltype(m_statefulWriters), StatefulWriter>(m_statefulWriters);
+
+    // Check if there is enough capacity for more writers
+  if ((reliable && statefulWriter == nullptr) ||
+      (!reliable && statelessWriter == nullptr) ||
       part.isWritersFull()) {
 
     DOMAIN_LOG("No Writer created. Max Number of Writers reached.\n");
@@ -344,29 +349,35 @@ rtps::Writer *Domain::createWriter(Participant &part, const char *topicName,
   if (reliable) {
     attributes.reliabilityKind = ReliabilityKind_t::RELIABLE;
 
-    StatefulWriter &writer = m_statefulWriters[m_numStatefulWriters++];
-    writer.init(attributes, TopicKind_t::NO_KEY, &m_threadPool, m_transport,
+    statefulWriter->init(attributes, TopicKind_t::NO_KEY, &m_threadPool, m_transport,
                 enforceUnicast);
 
-    part.addWriter(&writer);
-    return &writer;
+    if(!part.addWriter(statefulWriter)){
+    	return nullptr;
+    }
+    return statefulWriter;
   } else {
     attributes.reliabilityKind = ReliabilityKind_t::BEST_EFFORT;
 
-    StatelessWriter &writer = m_statelessWriters[m_numStatelessWriters++];
-    writer.init(attributes, TopicKind_t::NO_KEY, &m_threadPool, m_transport,
+    statelessWriter->init(attributes, TopicKind_t::NO_KEY, &m_threadPool, m_transport,
                 enforceUnicast);
 
-    part.addWriter(&writer);
-    return &writer;
+    if(!part.addWriter(statelessWriter)){
+    	return nullptr;
+    }
+    return statelessWriter;
   }
 }
 
 rtps::Reader *Domain::createReader(Participant &part, const char *topicName,
                                    const char *typeName, bool reliable,
                                    ip4_addr_t mcastaddress) {
-  if ((reliable && m_statefulReaders.size() <= m_numStatefulReaders) ||
-      (!reliable && m_statelessReaders.size() <= m_numStatelessReaders) ||
+
+  StatelessReader* statelessReader = getNextUnusedEndpoint<decltype(m_statelessReaders), StatelessReader>(m_statelessReaders);
+  StatefulReader* statefulReader = getNextUnusedEndpoint<decltype(m_statefulReaders), StatefulReader>(m_statefulReaders);
+
+  if ((reliable && statefulReader == nullptr) ||
+      (!reliable && statelessReader == nullptr) ||
       part.isReadersFull()) {
 
     DOMAIN_LOG("No Reader created. Max Number of Readers reached.\n");
@@ -410,33 +421,27 @@ rtps::Reader *Domain::createReader(Participant &part, const char *topicName,
   DOMAIN_LOG("Creating reader[%s, %s]\n", topicName, typeName);
 
   if (reliable) {
-    if (m_numStatefulReaders == m_statefulReaders.size()) {
-      return nullptr;
-    }
 
     attributes.reliabilityKind = ReliabilityKind_t::RELIABLE;
 
-    StatefulReader &reader = m_statefulReaders[m_numStatefulReaders++];
-    reader.init(attributes, m_transport);
+    statefulReader->init(attributes, m_transport);
 
-    if (!part.addReader(&reader)) {
+    if (!part.addReader(statefulReader)) {
+      DOMAIN_LOG("Failed to add reader to participant.\n");
+
       return nullptr;
     }
-    return &reader;
+    return statefulReader;
   } else {
-    if (m_numStatelessReaders == m_statelessReaders.size()) {
-      return nullptr;
-    }
 
     attributes.reliabilityKind = ReliabilityKind_t::BEST_EFFORT;
 
-    StatelessReader &reader = m_statelessReaders[m_numStatelessReaders++];
-    reader.init(attributes);
+    statelessReader->init(attributes);
 
-    if (!part.addReader(&reader)) {
+    if (!part.addReader(statelessReader)) {
       return nullptr;
     }
-    return &reader;
+    return statelessReader;
   }
 }
 
