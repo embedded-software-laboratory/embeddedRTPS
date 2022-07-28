@@ -144,6 +144,8 @@ void StatelessWriterT<NetworkDriver>::resetSendOptions() {
   manageSendOptions();
 }
 
+#include <rtps/utils/printutils.h>
+
 template <class NetworkDriver>
 void StatelessWriterT<NetworkDriver>::removeReader(const Guid_t &guid) {
   Lock lock(m_mutex);
@@ -154,7 +156,14 @@ void StatelessWriterT<NetworkDriver>::removeReader(const Guid_t &guid) {
     return (*static_cast<decltype(isElementToRemove) *>(arg))(value);
   };
 
-  m_proxies.remove(thunk, &isElementToRemove);
+  auto ret = m_proxies.remove(thunk, &isElementToRemove);
+  if(ret){
+	  printf("PROXY DELETED GUID = ");
+	  printGuid(guid);
+	  printf("\n");
+  }else{
+
+  }
   resetSendOptions();
 }
 

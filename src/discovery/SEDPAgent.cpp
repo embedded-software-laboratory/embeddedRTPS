@@ -236,7 +236,6 @@ void SEDPAgent::handleRemoteEndpointDeletion(const TopicData &topic){
 		return;
 	}
 
-
 	Guid_t guid;
 	guid.prefix = topic.endpointGuid.prefix;
 	guid.entityId = topic.entityIdFromKeyHash;

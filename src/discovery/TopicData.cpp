@@ -118,7 +118,7 @@ bool TopicData::readFromUcdrBuffer(ucdrBuffer &buffer) {
       if(length == 16){
    	    ucdr_deserialize_array_uint8_t(&buffer, endpointGuid.prefix.id.data(), endpointGuid.prefix.id.size());
         ucdr_deserialize_array_uint8_t(&buffer, this->entityIdFromKeyHash.entityKey.data(), this->entityIdFromKeyHash.entityKey.size());
-        ucdr_deserialize_uint8_t(&buffer, reinterpret_cast<uint8_t *>(&endpointGuid.entityId.entityKind));
+        ucdr_deserialize_uint8_t(&buffer, reinterpret_cast<uint8_t *>(&(this->entityIdFromKeyHash.entityKind)));
         entityIdFromKeyHashValid = true;
       }else{ // Ignore value
         buffer.iterator += length;
