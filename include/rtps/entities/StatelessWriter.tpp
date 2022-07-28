@@ -22,6 +22,7 @@ This file is part of embeddedRTPS.
 Author: i11 - Embedded Software, RWTH Aachen University
 */
 
+#include <rtps/entities/Writer.h>
 #include <rtps/entities/ReaderProxy.h>
 
 #include "lwip/sys.h"
@@ -62,27 +63,43 @@ bool StatelessWriterT<NetworkDriver>::init(TopicData attributes,
                                            ThreadPool *threadPool,
                                            NetworkDriver &driver,
                                            bool enfUnicast) {
-  if (sys_mutex_new(&m_mutex) != ERR_OK) {
-#if SLW_VERBOSE
-    SLW_LOG("Failed to create mutex \n");
-#endif
-    return false;
+  
+  m_attributes = attributes;
+
+  if(m_mutex == nullptr){
+    if (sys_mutex_new(&m_mutex) != ERR_OK) {
+  #if SLW_VERBOSE
+      SLW_LOG("Failed to create mutex \n");
+  #endif
+      return false;
+    }
   }
 
-  m_attributes = attributes;
-  m_packetInfo.srcPort = attributes.unicastLocator.port;
-  m_topicKind = topicKind;
   mp_threadPool = threadPool;
-  m_transport = &driver;
+  m_srcPort = attributes.unicastLocator.port;
   m_enforceUnicast = enfUnicast;
 
+  m_topicKind = topicKind;
+  m_nextSequenceNumberToSend = {0, 1};
   m_is_initialized_ = true;
+
+  m_proxies.clear();
+  m_history.clear();
+
+  m_transport = &driver;
+  
   return true;
+}
+
+template <typename NetworkDriver>
+void StatelessWriterT<NetworkDriver>::reset(){
+  m_is_initialized_ = false;
 }
 
 template <class NetworkDriver>
 bool StatelessWriterT<NetworkDriver>::addNewMatchedReader(
     const ReaderProxy &newProxy) {
+    INIT_GUARD();
 #if SLW_VERBOSE && RTPS_GLOBAL_VERBOSE
   SLW_LOG("New reader added with id: ");
   printGuid(newProxy.remoteReaderGuid);
@@ -96,6 +113,7 @@ bool StatelessWriterT<NetworkDriver>::addNewMatchedReader(
 
 template <class NetworkDriver>
 void StatelessWriterT<NetworkDriver>::manageSendOptions() {
+  INIT_GUARD();
   SLW_LOG("Search for Multicast Partners!\n");
   for (auto &proxy : m_proxies) {
     if (proxy.remoteMulticastLocator.kind ==
@@ -136,6 +154,7 @@ void StatelessWriterT<NetworkDriver>::manageSendOptions() {
 
 template <class NetworkDriver>
 void StatelessWriterT<NetworkDriver>::resetSendOptions() {
+  INIT_GUARD();
   for (auto &proxy : m_proxies) {
     proxy.suppressUnicast = false;
     proxy.useMulticast = false;
@@ -148,6 +167,7 @@ void StatelessWriterT<NetworkDriver>::resetSendOptions() {
 
 template <class NetworkDriver>
 void StatelessWriterT<NetworkDriver>::removeReader(const Guid_t &guid) {
+  INIT_GUARD();
   Lock lock(m_mutex);
   auto isElementToRemove = [&](const ReaderProxy &proxy) {
     return proxy.remoteReaderGuid == guid;
@@ -170,6 +190,7 @@ void StatelessWriterT<NetworkDriver>::removeReader(const Guid_t &guid) {
 template <class NetworkDriver>
 void StatelessWriterT<NetworkDriver>::removeReaderOfParticipant(
     const GuidPrefix_t &guidPrefix) {
+  INIT_GUARD();
   Lock lock(m_mutex);
   auto isElementToRemove = [&](const ReaderProxy &proxy) {
     return proxy.remoteReaderGuid.prefix == guidPrefix;
@@ -184,7 +205,8 @@ void StatelessWriterT<NetworkDriver>::removeReaderOfParticipant(
 
 template <typename NetworkDriver>
 const CacheChange *StatelessWriterT<NetworkDriver>::newChange(
-    rtps::ChangeKind_t kind, const uint8_t *data, DataSize_t size) {
+    rtps::ChangeKind_t kind, const uint8_t *data, DataSize_t size) {  
+  INIT_GUARD();
   if (isIrrelevant(kind)) {
     return nullptr;
   }
@@ -209,6 +231,7 @@ const CacheChange *StatelessWriterT<NetworkDriver>::newChange(
 
 template <typename NetworkDriver>
 void StatelessWriterT<NetworkDriver>::setAllChangesToUnsent() {
+  INIT_GUARD();
   Lock lock(m_mutex);
 
   m_nextSequenceNumberToSend = m_history.getSeqNumMin();
@@ -221,6 +244,7 @@ void StatelessWriterT<NetworkDriver>::setAllChangesToUnsent() {
 template <typename NetworkDriver>
 void StatelessWriterT<NetworkDriver>::onNewAckNack(
     const SubmessageAckNack & /*msg*/, const GuidPrefix_t &sourceGuidPrefix) {
+  INIT_GUARD();
   // Too lazy to respond
 }
 
@@ -234,6 +258,7 @@ bool StatelessWriterT<NetworkDriver>::isIrrelevant(ChangeKind_t kind) const {
 
 template <typename NetworkDriver>
 void StatelessWriterT<NetworkDriver>::progress() {
+  INIT_GUARD();
   // TODO smarter packaging e.g. by creating MessageStruct and serialize after
   // adjusting values Reusing the pbuf is not possible. See
   // https://www.nongnu.org/lwip/2_1_x/raw_api.html (Zero-Copy MACs)
@@ -248,7 +273,7 @@ void StatelessWriterT<NetworkDriver>::progress() {
     // Do nothing, if someone else sends for me... (Multicast)
     if (proxy.useMulticast || !proxy.suppressUnicast || m_enforceUnicast) {
       PacketInfo info;
-      info.srcPort = m_packetInfo.srcPort;
+      info.srcPort = m_srcPort;
 
       MessageFactory::addHeader(info.buffer, m_attributes.endpointGuid.prefix);
       MessageFactory::addSubMessageTimeStamp(info.buffer);

@@ -49,19 +49,14 @@ public:
   void setAllChangesToUnsent() override;
   void onNewAckNack(const SubmessageAckNack &msg,
                     const GuidPrefix_t &sourceGuidPrefix) override;
+  void reset() override;
 
 private:
-  sys_mutex_t m_mutex;
-  ThreadPool *mp_threadPool = nullptr;
 
-  PacketInfo m_packetInfo;
   NetworkDriver *m_transport;
-  bool m_enforceUnicast;
 
-  TopicKind_t m_topicKind = TopicKind_t::NO_KEY;
-  SequenceNumber_t m_nextSequenceNumberToSend = {0, 1};
   SimpleHistoryCache<Config::HISTORY_SIZE_STATEFUL> m_history;
-  sys_thread_t m_heartbeatThread;
+  sys_thread_t m_heartbeatThread = nullptr;
   Count_t m_hbCount{1};
 
   bool m_running = true;

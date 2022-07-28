@@ -35,6 +35,23 @@ Author: i11 - Embedded Software, RWTH Aachen University
 #include "rtps/storages/PBufWrapper.h"
 #include <rtps/common/Locator.h>
 
+/*
+
+
+- Creation:
+          -A Introduce init(), reset(), isInitialized() API
+          -B remove m_numStatelessWriters and co -> have to check for isInitialized()! Dont rely on count anymore to determine 
+          -C Link SEDP Sequence Number and Entity
+- Delete: 
+          - Marc Respective Element (See C) in History als Deleted
+          - Send PID_STATUS_INFO with Disposed/Unregistered 
+
+- onNewAckNack():
+          - Check if Sample in History is marked as deleted -> Send GAP just for that Sample
+          - If sample not deleted resubmit as usual
+          
+*/
+
 namespace rtps {
 class Domain {
 public:

@@ -113,6 +113,12 @@ public:
     }
   }
 
+  void clear(){
+    m_head = 0;
+    m_tail = 0;
+    m_lastUsedSequenceNumber = {0, 0};
+  }
+
 private:
   std::array<CacheChange, SIZE + 1> m_buffer{};
   uint16_t m_head = 0;

@@ -32,6 +32,14 @@ Author: i11 - Embedded Software, RWTH Aachen University
 #include "rtps/storages/MemoryPool.h"
 #include "rtps/storages/PBufWrapper.h"
 
+#define COMPILE_INIT_GUARD
+
+#ifdef COMPILE_INIT_GUARD
+#define INIT_GUARD() if(!m_is_initialized_){  while(1){  printf("using uninitalized endpoint\n;"); } }
+#else
+#define INIT_GUARD() //
+#endif
+
 namespace rtps {
 
 class Writer {
@@ -40,6 +48,7 @@ public:
   virtual bool addNewMatchedReader(const ReaderProxy &newProxy) = 0;
   virtual void removeReader(const Guid_t &guid) = 0;
   virtual void removeReaderOfParticipant(const GuidPrefix_t &guidPrefix) = 0;
+  virtual void reset() = 0;
 
   //! Executes required steps like sending packets. Intended to be called by
   //! worker threads
@@ -55,6 +64,16 @@ public:
   uint32_t getNumMatchedReader() { return m_proxies.getSize(); }
 
 protected:
+  sys_mutex_t m_mutex = nullptr;
+  ThreadPool *mp_threadPool = nullptr;
+
+  Ip4Port_t m_srcPort;
+
+  bool m_enforceUnicast;
+
+  TopicKind_t m_topicKind = TopicKind_t::NO_KEY;
+  SequenceNumber_t m_nextSequenceNumberToSend;
+
   friend class SizeInspector;
   bool m_is_initialized_ = false;
   virtual ~Writer() = default;
