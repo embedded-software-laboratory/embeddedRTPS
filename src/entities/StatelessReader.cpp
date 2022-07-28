@@ -67,4 +67,9 @@ bool StatelessReader::onNewHeartbeat(const SubmessageHeartbeat &,
   return true;
 }
 
+bool StatelessReader::onNewGapMessage(const SubmessageGap& msg, const GuidPrefix_t &remotePrefix){
+	return true;
+}
+
+
 #undef SLR_VERBOSE

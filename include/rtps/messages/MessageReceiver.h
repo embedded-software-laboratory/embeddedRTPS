@@ -60,6 +60,7 @@ private:
    * Check header for validity, modifies the state of the receiver and
    * adjusts the position of msgInfo accordingly
    */
+  bool processGapSubmessage(MessageProcessingInfo &msgInfo);
   bool processHeader(MessageProcessingInfo &msgInfo);
   bool processSubmessage(MessageProcessingInfo &msgInfo,
                          const SubmessageHeader &submsgHeader);
@@ -67,6 +68,7 @@ private:
                              const SubmessageHeader &submsgHeader);
   bool processHeartbeatSubmessage(MessageProcessingInfo &msgInfo);
   bool processAckNackSubmessage(MessageProcessingInfo &msgInfo);
+
 };
 } // namespace rtps
 

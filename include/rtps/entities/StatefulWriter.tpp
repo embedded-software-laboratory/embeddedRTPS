@@ -278,19 +278,6 @@ void StatefulWriterT<NetworkDriver>::onNewAckNack(
     return;
   }
 
-  uint8_t hash = 0;
-  for (unsigned int i = 0; i < sourceGuidPrefix.id.size(); i++) {
-    hash += sourceGuidPrefix.id.at(i);
-  }
-
-  char bfr[20];
-  size_t size = snprintf(bfr, sizeof(bfr), "%u <= %u", msg.count.value,
-                         reader->ackNackCount.value);
-  if (!(size < sizeof(bfr))) {
-    while (1)
-      ;
-  }
-
   if (msg.count.value <= reader->ackNackCount.value) {
 
     SFW_LOG("Count too small. Dropping acknack.\n");

@@ -14,6 +14,16 @@ void Reader::executeCallbacks(const ReaderCacheChange &cacheChange) {
   }
 }
 
+WriterProxy* Reader::getProxy(Guid_t guid){
+  auto isElementToFind = [&](const WriterProxy &proxy) {
+    return proxy.remoteWriterGuid == guid;
+  };
+  auto thunk = [](void *arg, const WriterProxy &value) {
+    return (*static_cast<decltype(isElementToFind) *>(arg))(value);
+  };
+  return m_proxies.find(thunk, &isElementToFind);
+}
+
 void Reader::registerCallback(ddsReaderCallback_fp cb, void *arg) {
   Lock lock(m_callback_mutex);
   if (m_callback_count == m_callbacks.size() || cb == nullptr) {

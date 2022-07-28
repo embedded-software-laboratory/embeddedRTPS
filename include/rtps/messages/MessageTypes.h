@@ -204,6 +204,19 @@ struct SubmessageInfoDST {
   }
 };
 
+struct SubmessageGap {
+  SubmessageHeader header;
+  EntityId_t readerId;
+  EntityId_t writerId;
+  SequenceNumber_t gapStart;
+  SequenceNumberSet gapList;
+
+  static uint16_t getRawSizeWithoutSNSet() {
+    return SubmessageHeader::getRawSize() + (2 * (3 + 1) + 8); // 2*EntityID +  GapStart + Count
+
+  }
+};
+
 struct SubmessageAckNack {
   SubmessageHeader header;
   EntityId_t readerId;
@@ -213,13 +226,13 @@ struct SubmessageAckNack {
   static uint16_t getRawSize(const SequenceNumberSet &set) {
     uint16_t bitMapSize = 0;
     if (set.numBits != 0) {
-      bitMapSize = 4 * ((set.numBits / 32) + 1);
+      bitMapSize = SNS_NUM_BYTES;
     }
     return getRawSizeWithoutSNSet() + sizeof(SequenceNumber_t) +
            sizeof(uint32_t) + bitMapSize; // SequenceNumberSet
   }
   static uint16_t getRawSizeWithoutSNSet() {
-    return SubmessageHeader::getRawSize() + (2 * 3 + 2 * 1) // EntityID
+    return SubmessageHeader::getRawSize() + (2 * (3 + 1))  
            + sizeof(Count_t);
   }
 };
@@ -376,6 +389,11 @@ bool deserializeMessage(const MessageProcessingInfo &info,
 
 bool deserializeMessage(const MessageProcessingInfo &info,
                         SubmessageAckNack &msg);
+
+bool deserializeMessage(const MessageProcessingInfo &info,
+                        SubmessageGap &msg);
+
+void deserializeSNS(const uint8_t* &position, SequenceNumberSet& set, size_t num_bitfields);
 
 } // namespace rtps
 

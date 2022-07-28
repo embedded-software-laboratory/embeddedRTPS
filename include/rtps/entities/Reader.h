@@ -36,6 +36,7 @@ Author: i11 - Embedded Software, RWTH Aachen University
 namespace rtps {
 
 struct SubmessageHeartbeat;
+struct SubmessageGap;
 
 class ReaderCacheChange {
 private:
@@ -86,6 +87,7 @@ public:
 
   virtual bool onNewHeartbeat(const SubmessageHeartbeat &msg,
                               const GuidPrefix_t &remotePrefix) = 0;
+  virtual bool onNewGapMessage(const SubmessageGap& msg, const GuidPrefix_t &remotePrefix) = 0;
   virtual bool addNewMatchedWriter(const WriterProxy &newProxy) = 0;
   virtual void removeWriter(const Guid_t &guid);
   virtual void removeWriterOfParticipant(const GuidPrefix_t &guidPrefix);
@@ -99,6 +101,8 @@ public:
     }
     return false;
   }
+
+  WriterProxy* getProxy(Guid_t guid);
 
   uint32_t getNumMatchedWriters() { return m_proxies.getSize(); }
 
