@@ -158,6 +158,10 @@ struct SequenceNumber_t {
     return high < other.high || (high == other.high && low < other.low);
   }
 
+  bool operator>(const SequenceNumber_t &other) const {
+    return high > other.high || (high == other.high && low > other.low);
+  }
+
   bool operator<=(const SequenceNumber_t &other) const {
     return *this == other || *this < other;
   }

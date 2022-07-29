@@ -25,6 +25,7 @@ Author: i11 - Embedded Software, RWTH Aachen University
 #include "lwip/sys.h"
 #include "rtps/entities/StatefulWriter.h"
 #include "rtps/messages/MessageFactory.h"
+#include "rtps/messages/MessageTypes.h"
 #include "rtps/utils/Log.h"
 #include <cstring>
 #include <stdio.h>
@@ -207,6 +208,8 @@ void StatefulWriterT<NetworkDriver>::onNewAckNack(
   }
 
   reader->ackNackCount = msg.count;
+  reader->finalFlag = msg.header.finalFlag();
+  reader->lastAckNackSequenceNumber = msg.readerSNState.base;
 
   // Send missing packets
   SequenceNumber_t nextSN = msg.readerSNState.base;
@@ -368,6 +371,12 @@ void StatefulWriterT<NetworkDriver>::sendHeartBeat() {
       Lock lock(m_mutex);
       firstSN = m_history.getSeqNumMin();
       lastSN = m_history.getSeqNumMax();
+
+      // Proxy has confirmed all sequence numbers and set final flag
+      if((proxy.lastAckNackSequenceNumber > lastSN) && proxy.finalFlag){
+        continue;
+      }
+
     }
     if (firstSN == SEQUENCENUMBER_UNKNOWN || lastSN == SEQUENCENUMBER_UNKNOWN) {
 
@@ -376,6 +385,7 @@ void StatefulWriterT<NetworkDriver>::sendHeartBeat() {
       }
       return;
     }
+
 
     MessageFactory::addHeartbeat(
         info.buffer, m_attributes.endpointGuid.entityId,

@@ -166,6 +166,10 @@ struct SubmessageHeader {
   static constexpr uint16_t getRawSize() {
     return sizeof(SubmessageKind) + sizeof(uint8_t) + sizeof(uint16_t);
   }
+
+  bool finalFlag() const {
+    return (flags & (SubMessageFlag::FLAG_FINAL));
+  }
 };
 
 struct SubmessageData {

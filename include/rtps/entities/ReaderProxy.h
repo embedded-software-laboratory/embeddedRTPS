@@ -37,6 +37,8 @@ struct ReaderProxy {
   bool suppressUnicast = false;
   bool unknown_eid = false;
   Count_t ackNackCount;
+  bool finalFlag = false;
+  SequenceNumber_t lastAckNackSequenceNumber = {0,1};
 
   ReaderProxy() : remoteReaderGuid({GUIDPREFIX_UNKNOWN, ENTITYID_UNKNOWN}){};
   ReaderProxy(const Guid_t &guid, const LocatorIPv4 &loc)
