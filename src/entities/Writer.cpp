@@ -117,4 +117,12 @@ bool rtps::Writer::isIrrelevant(ChangeKind_t kind) const {
 
 bool rtps::Writer::isInitialized() { return m_is_initialized_; }
 
-uint32_t rtps::Writer::getNumMatchedReader() { return m_proxies.getSize(); }
+
+void rtps::Writer::setSEDPSequenceNumber(const SequenceNumber_t& sn){
+	m_sedp_sequence_number = sn;
+}
+
+const rtps::SequenceNumber_t* rtps::Writer::getSEDPSequenceNumber(){
+	return &m_sedp_sequence_number;
+}
+

@@ -351,6 +351,13 @@ void StatefulWriterT<NetworkDriver>::sendHeartBeatLoop() {
 }
 
 template <class NetworkDriver>
+void StatefulWriterT<NetworkDriver>::setCacheChangeKind(const SequenceNumber_t& s, ChangeKind_t kind){
+  Lock lock(m_mutex);
+  m_history.setCacheChangeKind(s, kind);
+}
+
+
+template <class NetworkDriver>
 void StatefulWriterT<NetworkDriver>::sendHeartBeat() {
   INIT_GUARD()
   if (m_proxies.isEmpty() || !m_is_initialized_) {

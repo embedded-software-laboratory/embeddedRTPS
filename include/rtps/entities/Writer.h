@@ -55,6 +55,7 @@ public:
   virtual void progress() = 0;
   virtual const CacheChange *newChange(ChangeKind_t kind, const uint8_t *data,
                                        DataSize_t size) = 0;
+  virtual void setCacheChangeKind(const SequenceNumber_t& s, ChangeKind_t kind) = 0; 
   virtual void setAllChangesToUnsent() = 0;
   virtual void onNewAckNack(const SubmessageAckNack &msg,
                             const GuidPrefix_t &sourceGuidPrefix) = 0;
@@ -62,7 +63,12 @@ public:
   bool isInitialized();
   uint32_t getNumMatchedReader();
 
+  void setSEDPSequenceNumber(const SequenceNumber_t& sn);
+  const SequenceNumber_t* getSEDPSequenceNumber();
+
 protected:
+  SequenceNumber_t m_sedp_sequence_number;
+
   sys_mutex_t m_mutex = nullptr;
   ThreadPool *mp_threadPool = nullptr;
 

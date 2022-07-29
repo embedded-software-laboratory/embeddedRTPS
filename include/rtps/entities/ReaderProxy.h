@@ -36,7 +36,7 @@ struct ReaderProxy {
   bool useMulticast = false;
   bool suppressUnicast = false;
   bool unknown_eid = false;
-  Count_t ackNackCount;
+  Count_t ackNackCount = {0};
   bool finalFlag = false;
   SequenceNumber_t lastAckNackSequenceNumber = {0,1};
 

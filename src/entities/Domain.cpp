@@ -45,6 +45,7 @@ Domain::Domain()
   m_transport.createUdpConnection(getUserMulticastPort());
   m_transport.createUdpConnection(getBuiltInMulticastPort());
   m_transport.joinMultiCastGroup(transformIP4ToU32(239, 255, 0, 1));
+  sys_mutex_new(&m_mutex);
 }
 
 Domain::~Domain() { stop(); }
@@ -225,6 +226,7 @@ void Domain::registerMulticastPort(FullLengthLocator mcastLocator) {
 
 rtps::Reader *Domain::readerExists(Participant &part, const char *topicName,
                                    const char *typeName, bool reliable) {
+  Lock{m_mutex};
   if (reliable) {
     for (unsigned int i = 0; i < m_statefulReaders.size(); i++) {
       if (m_statefulReaders[i].isInitialized()) {
@@ -269,6 +271,7 @@ rtps::Reader *Domain::readerExists(Participant &part, const char *topicName,
 
 rtps::Writer *Domain::writerExists(Participant &part, const char *topicName,
                                    const char *typeName, bool reliable) {
+  Lock{m_mutex};
   if (reliable) {
     for (unsigned int i = 0; i < m_statefulWriters.size(); i++) {
       if (m_statefulWriters[i].isInitialized()) {
@@ -314,7 +317,7 @@ rtps::Writer *Domain::writerExists(Participant &part, const char *topicName,
 rtps::Writer *Domain::createWriter(Participant &part, const char *topicName,
                                    const char *typeName, bool reliable,
                                    bool enforceUnicast) {
-
+  Lock{m_mutex};
   StatelessWriter* statelessWriter = getNextUnusedEndpoint<decltype(m_statelessWriters), StatelessWriter>(m_statelessWriters);
   StatefulWriter* statefulWriter = getNextUnusedEndpoint<decltype(m_statefulWriters), StatefulWriter>(m_statefulWriters);
 
@@ -372,7 +375,7 @@ rtps::Writer *Domain::createWriter(Participant &part, const char *topicName,
 rtps::Reader *Domain::createReader(Participant &part, const char *topicName,
                                    const char *typeName, bool reliable,
                                    ip4_addr_t mcastaddress) {
-
+  Lock{m_mutex};
   StatelessReader* statelessReader = getNextUnusedEndpoint<decltype(m_statelessReaders), StatelessReader>(m_statelessReaders);
   StatefulReader* statefulReader = getNextUnusedEndpoint<decltype(m_statefulReaders), StatefulReader>(m_statefulReaders);
 
@@ -444,6 +447,27 @@ rtps::Reader *Domain::createReader(Participant &part, const char *topicName,
     return statelessReader;
   }
 }
+
+bool rtps::Domain::deleteReader(Participant &part, Reader* reader){
+   Lock{m_mutex};
+  // Marc respective Reader in SEDP History as Unregistered
+  // Move Proxies of Endpoint to unmatchedReaders/Writers
+  // Reset 
+  // Send PID_STATUS_INFO Message
+
+  // onNewAckNack
+}
+
+bool rtps::Domain::deleteWriter(Participant &part, Writer* writer){
+   Lock{m_mutex};
+  // Marc respective Reader in SEDP History as Unregistered
+  // Move Proxies of Endpoint to unmatchedReaders/Writers
+  // Reset
+  // Send PID_STATUS_INFO Message
+
+  // onNewAckNack
+}
+
 
 rtps::GuidPrefix_t Domain::generateGuidPrefix(ParticipantId_t id) const {
   GuidPrefix_t prefix = Config::BASE_GUID_PREFIX;

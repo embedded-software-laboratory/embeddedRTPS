@@ -126,3 +126,11 @@ bool Reader::addNewMatchedWriter(const WriterProxy &newProxy) {
 #endif
   return m_proxies.add(newProxy);
 }
+
+void rtps::Reader::setSEDPSequenceNumber(const SequenceNumber_t& sn){
+	m_sedp_sequence_number = sn;
+}
+const rtps::SequenceNumber_t* rtps::Reader::getSEDPSequenceNumber(){
+	return &m_sedp_sequence_number;
+}
+

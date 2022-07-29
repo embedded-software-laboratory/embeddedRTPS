@@ -77,8 +77,17 @@ public:
   }
 
   void dropOldest() { removeUntilIncl(getSeqNumMin()); }
+  
+  bool setCacheChangeKind(const SequenceNumber_t& sn, ChangeKind_t kind){
+	  CacheChange* change = getChangeBySN(sn);
+	  if(change == nullptr){
+		  return false;
+	  }
 
-  const CacheChange *getChangeBySN(SequenceNumber_t sn) const {
+	  change->kind = kind;
+  }
+
+  CacheChange *getChangeBySN(SequenceNumber_t sn) {
     SequenceNumber_t minSN = getSeqNumMin();
     if (sn < minSN || getSeqNumMax() < sn) {
       return nullptr;

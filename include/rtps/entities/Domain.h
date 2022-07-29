@@ -74,6 +74,9 @@ public:
   Reader *readerExists(Participant &part, const char *topicName,
                        const char *typeName, bool reliable);
 
+  bool deleteWriter(Participant &part, Writer* writer);
+  bool deleteReader(Participant &part, Reader* reader);
+
 private:
   friend class SizeInspector;
   ThreadPool m_threadPool;
@@ -97,6 +100,7 @@ private:
   }
 
   bool m_initComplete = false;
+  sys_mutex_t m_mutex;
 
   void receiveCallback(const PacketInfo &packet);
   GuidPrefix_t generateGuidPrefix(ParticipantId_t id) const;

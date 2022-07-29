@@ -123,6 +123,13 @@ const CacheChange *StatelessWriterT<NetworkDriver>::newChange(
 }
 
 template <typename NetworkDriver>
+void StatelessWriterT<NetworkDriver>::setCacheChangeKind(const SequenceNumber_t& s, ChangeKind_t kind){
+  Lock lock(m_mutex);
+  m_history.setCacheChangeKind(s, kind);
+}
+
+
+template <typename NetworkDriver>
 void StatelessWriterT<NetworkDriver>::setAllChangesToUnsent() {
   INIT_GUARD();
   Lock lock(m_mutex);

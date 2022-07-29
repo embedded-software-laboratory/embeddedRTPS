@@ -341,11 +341,22 @@ void SEDPAgent::addWriter(Writer &writer) {
                                rtps::SMElement::SCHEME_PL_CDR_LE.size());
   ucdr_serialize_uint16_t(&microbuffer, zero_options);
   writer.m_attributes.serializeIntoUcdrBuffer(microbuffer);
-  m_endpoints.sedpPubWriter->newChange(ChangeKind_t::ALIVE, m_buffer,
+  auto change = m_endpoints.sedpPubWriter->newChange(ChangeKind_t::ALIVE, m_buffer,
                                        ucdr_buffer_length(&microbuffer));
+  writer.setSEDPSequenceNumber(change->sequenceNumber);
 #if SEDP_VERBOSE
   SEDP_LOG("Added new change to sedpPubWriter.\n");
 #endif
+}
+
+void SEDPAgent::deleteReader(Reader* reader){
+    Lock lock{m_mutex};
+    // TODO
+}
+
+void SEDPAgent::deleteWriter(Writer* reader){
+    Lock lock{m_mutex};
+    // TODO
 }
 
 void SEDPAgent::addReader(Reader &reader) {
@@ -375,8 +386,9 @@ void SEDPAgent::addReader(Reader &reader) {
                                rtps::SMElement::SCHEME_PL_CDR_LE.size());
   ucdr_serialize_uint16_t(&microbuffer, zero_options);
   reader.m_attributes.serializeIntoUcdrBuffer(microbuffer);
-  m_endpoints.sedpSubWriter->newChange(ChangeKind_t::ALIVE, m_buffer,
+  auto change = m_endpoints.sedpSubWriter->newChange(ChangeKind_t::ALIVE, m_buffer,
                                        ucdr_buffer_length(&microbuffer));
+  reader.setSEDPSequenceNumber(change->sequenceNumber);
 #if SEDP_VERBOSE
   SEDP_LOG("Added new change to sedpSubWriter.\n");
 #endif

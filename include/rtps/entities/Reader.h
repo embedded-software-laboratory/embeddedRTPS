@@ -97,9 +97,14 @@ public:
   WriterProxy* getProxy(Guid_t guid);
   uint32_t getNumMatchedWriters() { return m_proxies.getSize(); }
 
+  void setSEDPSequenceNumber(const SequenceNumber_t& sn);
+  const SequenceNumber_t* getSEDPSequenceNumber();
+
 protected:
   void executeCallbacks(const ReaderCacheChange &cacheChange);
   bool initMutex();
+
+  SequenceNumber_t m_sedp_sequence_number;
 
   bool m_is_initialized_ = false;
   virtual ~Reader() = default;

@@ -43,6 +43,7 @@ public:
   void progress() override;
   const CacheChange *newChange(ChangeKind_t kind, const uint8_t *data,
                                DataSize_t size) override;
+  void setCacheChangeKind(const SequenceNumber_t& s, ChangeKind_t kind);
   void setAllChangesToUnsent() override;
   void onNewAckNack(const SubmessageAckNack &msg,
                     const GuidPrefix_t &sourceGuidPrefix) override;

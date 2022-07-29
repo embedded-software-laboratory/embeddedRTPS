@@ -40,6 +40,9 @@ public:
   void init(Participant &part, const BuiltInEndpoints &endpoints);
   void addWriter(Writer &writer);
   void addReader(Reader &reader);
+  void deleteReader(Reader* reader);
+  void deleteWriter(Writer* reader);
+
   void registerOnNewPublisherMatchedCallback(void (*callback)(void *arg),
                                              void *args);
   void registerOnNewSubscriberMatchedCallback(void (*callback)(void *arg),
