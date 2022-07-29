@@ -61,7 +61,7 @@ void StatefulReaderT<NetworkDriver>::init(const TopicData &attributes,
   }
   m_attributes = attributes;
   m_transport = &driver;
-  m_packetInfo.srcPort = attributes.unicastLocator.port;
+  m_srcPort = attributes.unicastLocator.port;
   m_is_initialized_ = true;
 }
 
@@ -142,7 +142,7 @@ bool StatefulReaderT<NetworkDriver>::onNewGapMessage(const SubmessageGap& msg, c
 
   // Send an ack nack message
   PacketInfo info;
-  info.srcPort = m_packetInfo.srcPort;
+  info.srcPort = m_srcPort;
   info.destAddr = writer->remoteLocator.getIp4Address();
   info.destPort = writer->remoteLocator.port;
   rtps::MessageFactory::addHeader(info.buffer,
@@ -164,7 +164,7 @@ bool StatefulReaderT<NetworkDriver>::onNewHeartbeat(
     const SubmessageHeartbeat &msg, const GuidPrefix_t &sourceGuidPrefix) {
   Lock lock(m_proxies_mutex);
   PacketInfo info;
-  info.srcPort = m_packetInfo.srcPort;
+  info.srcPort = m_srcPort;
 
   Guid_t writerProxyGuid;
   writerProxyGuid.prefix = sourceGuidPrefix;

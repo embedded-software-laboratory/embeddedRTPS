@@ -14,6 +14,15 @@ void Reader::executeCallbacks(const ReaderCacheChange &cacheChange) {
   }
 }
 
+bool Reader::isProxy(const Guid_t &guid){
+    for (const auto &proxy : m_proxies) {
+      if (proxy.remoteWriterGuid.operator==(guid)) {
+        return true;
+      }
+    }
+    return false;
+}
+
 WriterProxy* Reader::getProxy(Guid_t guid){
   auto isElementToFind = [&](const WriterProxy &proxy) {
     return proxy.remoteWriterGuid == guid;

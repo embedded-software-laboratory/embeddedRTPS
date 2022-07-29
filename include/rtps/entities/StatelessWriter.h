@@ -42,9 +42,6 @@ public:
   bool init(TopicData attributes, TopicKind_t topicKind, ThreadPool *threadPool,
             NetworkDriver &driver, bool enfUnicast = false);
 
-  bool addNewMatchedReader(const ReaderProxy &newProxy) override;
-  void removeReader(const Guid_t &guid) override;
-  void removeReaderOfParticipant(const GuidPrefix_t &guidPrefix) override;
   void progress() override;
   const CacheChange *newChange(ChangeKind_t kind, const uint8_t *data,
                                DataSize_t size) override;
@@ -57,10 +54,6 @@ private:
   NetworkDriver *m_transport;
 
   SimpleHistoryCache<Config::HISTORY_SIZE_STATELESS> m_history;
-
-  bool isIrrelevant(ChangeKind_t kind) const;
-  void manageSendOptions();
-  void resetSendOptions();
 };
 
 using StatelessWriter = StatelessWriterT<UdpDriver>;

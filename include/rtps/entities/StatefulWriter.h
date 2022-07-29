@@ -38,9 +38,6 @@ public:
   bool init(TopicData attributes, TopicKind_t topicKind, ThreadPool *threadPool,
             NetworkDriver &driver, bool enfUnicast = false);
 
-  bool addNewMatchedReader(const ReaderProxy &newProxy) override;
-  void removeReader(const Guid_t &guid) override;
-  void removeReaderOfParticipant(const GuidPrefix_t &guidPrefix) override;
   //! Executes required steps like sending packets. Intended to be called by
   //! worker threads
   void progress() override;
@@ -68,9 +65,6 @@ private:
   static void hbFunctionJumppad(void *thisPointer);
   void sendHeartBeatLoop();
   void sendHeartBeat();
-  bool isIrrelevant(ChangeKind_t kind) const;
-  void manageSendOptions();
-  void resetSendOptions();
 };
 
 using StatefulWriter = StatefulWriterT<UdpDriver>;

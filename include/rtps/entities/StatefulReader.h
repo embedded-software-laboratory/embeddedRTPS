@@ -46,8 +46,7 @@ public:
   bool onNewGapMessage(const SubmessageGap& msg, const GuidPrefix_t &remotePrefix) override;
 
 private:
-  PacketInfo
-      m_packetInfo; // TODO intended for reuse but buffer not used as such
+  Ip4Port_t m_srcPort; // TODO intended for reuse but buffer not used as such
   NetworkDriver *m_transport;
 };
 

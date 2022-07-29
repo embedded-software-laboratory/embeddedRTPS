@@ -93,14 +93,7 @@ public:
   virtual void removeWriterOfParticipant(const GuidPrefix_t &guidPrefix);
   bool isInitialized() { return m_is_initialized_; }
 
-  bool knowWriterId(const Guid_t &guid) {
-    for (const auto &proxy : m_proxies) {
-      if (proxy.remoteWriterGuid.operator==(guid)) {
-        return true;
-      }
-    }
-    return false;
-  }
+  bool isProxy(const Guid_t &guid);
 
   WriterProxy* getProxy(Guid_t guid);
 

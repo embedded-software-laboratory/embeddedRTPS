@@ -153,7 +153,7 @@ rtps::Reader *Participant::getReader(EntityId_t id) const {
 
 rtps::Reader *Participant::getReaderByWriterId(const Guid_t &guid) const {
   for (uint8_t i = 0; i < m_numReaders; ++i) {
-    if (m_readers[i]->knowWriterId(guid)) {
+    if (m_readers[i]->isProxy(guid)) {
       return m_readers[i];
     }
   }

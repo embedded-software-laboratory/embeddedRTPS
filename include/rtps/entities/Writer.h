@@ -45,11 +45,11 @@ namespace rtps {
 class Writer {
 public:
   TopicData m_attributes;
-  virtual bool addNewMatchedReader(const ReaderProxy &newProxy) = 0;
-  virtual void removeReader(const Guid_t &guid) = 0;
-  virtual void removeReaderOfParticipant(const GuidPrefix_t &guidPrefix) = 0;
+  virtual bool addNewMatchedReader(const ReaderProxy &newProxy);
+  virtual void removeReader(const Guid_t &guid);
+  virtual void removeReaderOfParticipant(const GuidPrefix_t &guidPrefix);
   virtual void reset() = 0;
-
+  
   //! Executes required steps like sending packets. Intended to be called by
   //! worker threads
   virtual void progress() = 0;
@@ -59,9 +59,8 @@ public:
   virtual void onNewAckNack(const SubmessageAckNack &msg,
                             const GuidPrefix_t &sourceGuidPrefix) = 0;
 
-  bool isInitialized() { return m_is_initialized_; }
-
-  uint32_t getNumMatchedReader() { return m_proxies.getSize(); }
+  bool isInitialized();
+  uint32_t getNumMatchedReader();
 
 protected:
   sys_mutex_t m_mutex = nullptr;
@@ -78,6 +77,10 @@ protected:
   bool m_is_initialized_ = false;
   virtual ~Writer() = default;
   MemoryPool<ReaderProxy, Config::NUM_READER_PROXIES_PER_WRITER> m_proxies;
+
+  void resetSendOptions();
+  void manageSendOptions();
+  bool isIrrelevant(ChangeKind_t kind) const;
 };
 } // namespace rtps
 
