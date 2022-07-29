@@ -92,15 +92,14 @@ public:
   virtual void removeWriter(const Guid_t &guid);
   virtual void removeWriterOfParticipant(const GuidPrefix_t &guidPrefix);
   bool isInitialized() { return m_is_initialized_; }
-
+  virtual void reset();
   bool isProxy(const Guid_t &guid);
-
   WriterProxy* getProxy(Guid_t guid);
-
   uint32_t getNumMatchedWriters() { return m_proxies.getSize(); }
 
 protected:
   void executeCallbacks(const ReaderCacheChange &cacheChange);
+  bool initMutex();
 
   bool m_is_initialized_ = false;
   virtual ~Reader() = default;
@@ -113,10 +112,10 @@ protected:
       nullptr};
 
   // Guards manipulation of the proxies array
-  sys_mutex_t m_proxies_mutex;
+  sys_mutex_t m_proxies_mutex = nullptr;
 
   // Guards manipulation of callback array
-  sys_mutex_t m_callback_mutex;
+  sys_mutex_t m_callback_mutex = nullptr;
 };
 } // namespace rtps
 

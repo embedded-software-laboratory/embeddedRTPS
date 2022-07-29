@@ -14,6 +14,38 @@ void Reader::executeCallbacks(const ReaderCacheChange &cacheChange) {
   }
 }
 
+bool Reader::initMutex(){
+    if(m_proxies_mutex == nullptr){
+    if (sys_mutex_new(&m_proxies_mutex) != ERR_OK){
+      SFR_LOG("StatefulReader: Failed to create mutex.\n");
+      return false;
+    }
+  }
+  
+  if(m_callback_mutex == nullptr){
+    if (sys_mutex_new(&m_callback_mutex) != ERR_OK){
+      SFR_LOG("StatefulReader: Failed to create mutex.\n");
+      return false;
+    }
+  }
+
+  return true;
+}
+
+void Reader::reset(){
+  Lock{m_proxies_mutex};
+  Lock{m_callback_mutex};
+
+  m_proxies.clear();
+  for(unsigned int i = 0; i < m_callbacks.size(); i++){
+    m_callbacks[i] = nullptr;
+    m_callback_arg[i] = nullptr;
+  }
+
+  m_callback_count = 0;
+  m_is_initialized_ = false;
+}
+
 bool Reader::isProxy(const Guid_t &guid){
     for (const auto &proxy : m_proxies) {
       if (proxy.remoteWriterGuid.operator==(guid)) {

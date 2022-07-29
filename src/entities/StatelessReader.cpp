@@ -40,12 +40,15 @@ using rtps::StatelessReader;
 #define SLR_LOG(...) //
 #endif
 
-void StatelessReader::init(const TopicData &attributes) {
-  if (sys_mutex_new(&m_proxies_mutex) != ERR_OK || sys_mutex_new(&m_callback_mutex) != ERR_OK) {
-    SLR_LOG("Failed to create mutex.\n");
+bool StatelessReader::init(const TopicData &attributes) {
+  if(!initMutex()){
+    return false;
   }
+  
+  m_proxies.clear();
   m_attributes = attributes;
   m_is_initialized_ = true;
+  return true;
 }
 
 void StatelessReader::newChange(const ReaderCacheChange &cacheChange) {

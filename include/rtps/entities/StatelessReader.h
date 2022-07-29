@@ -30,7 +30,7 @@ Author: i11 - Embedded Software, RWTH Aachen University
 namespace rtps {
 class StatelessReader final : public Reader {
 public:
-  void init(const TopicData &attributes);
+  bool init(const TopicData &attributes);
   void newChange(const ReaderCacheChange &cacheChange) override;
   bool onNewHeartbeat(const SubmessageHeartbeat &msg,
                       const GuidPrefix_t &remotePrefix) override;

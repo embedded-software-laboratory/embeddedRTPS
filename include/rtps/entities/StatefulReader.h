@@ -38,7 +38,7 @@ struct SubmessageHeartbeat;
 template <class NetworkDriver> class StatefulReaderT final : public Reader {
 public:
   ~StatefulReaderT() override;
-  void init(const TopicData &attributes, NetworkDriver &driver);
+  bool init(const TopicData &attributes, NetworkDriver &driver);
   void newChange(const ReaderCacheChange &cacheChange) override;
   bool addNewMatchedWriter(const WriterProxy &newProxy) override;
   bool onNewHeartbeat(const SubmessageHeartbeat &msg,

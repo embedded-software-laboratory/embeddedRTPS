@@ -51,18 +51,18 @@ StatefulReaderT<NetworkDriver>::~StatefulReaderT() {
 }
 
 template <class NetworkDriver>
-void StatefulReaderT<NetworkDriver>::init(const TopicData &attributes,
+bool StatefulReaderT<NetworkDriver>::init(const TopicData &attributes,
                                           NetworkDriver &driver) {
-  if (sys_mutex_new(&m_proxies_mutex) != ERR_OK || sys_mutex_new(&m_callback_mutex) != ERR_OK) {
-
-    SFR_LOG("StatefulReader: Failed to create mutex.\n");
-
-    return;
+  if(!initMutex()){
+    return false;
   }
+
+  m_proxies.clear();
   m_attributes = attributes;
   m_transport = &driver;
   m_srcPort = attributes.unicastLocator.port;
   m_is_initialized_ = true;
+  return true;
 }
 
 template <class NetworkDriver>

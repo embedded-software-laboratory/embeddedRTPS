@@ -96,8 +96,6 @@ void StatelessWriterT<NetworkDriver>::reset(){
   m_is_initialized_ = false;
 }
 
-
-
 template <typename NetworkDriver>
 const CacheChange *StatelessWriterT<NetworkDriver>::newChange(
     rtps::ChangeKind_t kind, const uint8_t *data, DataSize_t size) {  
