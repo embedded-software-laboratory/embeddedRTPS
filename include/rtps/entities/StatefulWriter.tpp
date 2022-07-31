@@ -63,7 +63,7 @@ bool StatefulWriterT<NetworkDriver>::init(TopicData attributes,
                                           bool enfUnicast) {
   
   if(m_mutex == nullptr){
-    if (sys_mutex_new(&m_mutex) != ERR_OK) {
+    if (createMutex(&m_mutex) != ERR_OK) {
 
       SFW_LOG("Failed to create mutex.\n");
 

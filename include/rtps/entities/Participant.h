@@ -74,15 +74,15 @@ public:
   bool isReadersFull();
 
   //! (Probably) Thread safe if writers cannot be removed
-  Writer *getWriter(EntityId_t id) const;
-  Writer *getMatchingWriter(const TopicData &topicData) const;
-  Writer *getMatchingWriter(const TopicDataCompressed &topicData) const;
+  Writer *getWriter(EntityId_t id);
+  Writer *getMatchingWriter(const TopicData &topicData);
+  Writer *getMatchingWriter(const TopicDataCompressed &topicData);
 
   //! (Probably) Thread safe if readers cannot be removed
-  Reader *getReader(EntityId_t id) const;
-  Reader *getReaderByWriterId(const Guid_t &guid) const;
-  Reader *getMatchingReader(const TopicData &topicData) const;
-  Reader *getMatchingReader(const TopicDataCompressed &topicData) const;
+  Reader *getReader(EntityId_t id);
+  Reader *getReaderByWriterId(const Guid_t &guid);
+  Reader *getMatchingReader(const TopicData &topicData);
+  Reader *getMatchingReader(const TopicDataCompressed &topicData);
 
   bool addNewRemoteParticipant(const ParticipantProxyData &remotePart);
   bool removeRemoteParticipant(const GuidPrefix_t &prefix);
@@ -108,10 +108,8 @@ private:
   MessageReceiver m_receiver;
   bool m_hasBuilInEndpoints = false;
   std::array<uint8_t, 3> m_nextUserEntityId{{0, 0, 1}};
-  std::array<Writer *, Config::NUM_WRITERS_PER_PARTICIPANT> m_writers{};
-  uint8_t m_numWriters = 0;
-  std::array<Reader *, Config::NUM_READERS_PER_PARTICIPANT> m_readers{};
-  uint8_t m_numReaders = 0;
+  std::array<Writer *, Config::NUM_WRITERS_PER_PARTICIPANT> m_writers = {nullptr};
+  std::array<Reader *, Config::NUM_READERS_PER_PARTICIPANT> m_readers = {nullptr};
 
   sys_mutex_t m_mutex;
   MemoryPool<ParticipantProxyData, Config::SPDP_MAX_NUMBER_FOUND_PARTICIPANTS>

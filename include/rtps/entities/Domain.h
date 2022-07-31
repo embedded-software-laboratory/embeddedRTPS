@@ -49,6 +49,8 @@ Author: i11 - Embedded Software, RWTH Aachen University
 - onNewAckNack():
           - Check if Sample in History is marked as deleted -> Send GAP just for that Sample
           - If sample not deleted resubmit as usual
+
+- Ensure that writer/reader can not be deleted while being used
           
 */
 
