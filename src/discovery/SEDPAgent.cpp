@@ -46,7 +46,7 @@ using rtps::SEDPAgent;
 
 void SEDPAgent::init(Participant &part, const BuiltInEndpoints &endpoints) {
   // TODO move
-  if (sys_mutex_new(&m_mutex) != ERR_OK) {
+  if (createMutex(&m_mutex) != ERR_OK) {
     SEDP_LOG("SEDPAgent failed to create mutex\n");
     return;
   }
@@ -241,7 +241,7 @@ void SEDPAgent::handleRemoteEndpointDeletion(const TopicData &topic){
 	guid.entityId = topic.entityIdFromKeyHash;
 
 	// Remove entity ID from all proxies of local endpoints
-	m_part->removeEntityFromProxies(guid);
+	m_part->removeProxyFromAllEndpoints(guid);
 
 	// Remove entity ID from unmatched endpoints
 	removeUnmatchedEntity(guid);
@@ -349,14 +349,62 @@ void SEDPAgent::addWriter(Writer &writer) {
 #endif
 }
 
-void SEDPAgent::deleteReader(Reader* reader){
-    Lock lock{m_mutex};
-    // TODO
+template<typename A>
+bool SEDPAgent::disposeEndpointInSEDPHistory(A* local_endpoint, Writer* sedp_writer){
+	return sedp_writer->setCacheChangeKind(local_endpoint->getSEDPSequenceNumber(), ChangeKind_t::NOT_ALIVE_DISPOSED);
 }
 
-void SEDPAgent::deleteWriter(Writer* reader){
-    Lock lock{m_mutex};
-    // TODO
+template<typename A>
+bool SEDPAgent::announceEndpointDeletion(A* local_endpoint, Writer* sedp_endpoint){
+	// Build message to
+	ucdrBuffer microbuffer;
+	ucdr_init_buffer(&microbuffer, m_buffer, sizeof(m_buffer) / sizeof(m_buffer[0]));
+
+
+	ucdr_serialize_uint16_t(&microbuffer, ParameterId::PID_KEY_HASH);
+	ucdr_serialize_uint16_t(&microbuffer, 16);
+	ucdr_serialize_array_uint8_t(&microbuffer,
+							   local_endpoint->m_attributes.endpointGuid.prefix.id.data(),
+							   sizeof(GuidPrefix_t::id));
+	ucdr_serialize_array_uint8_t(&microbuffer,
+								local_endpoint->m_attributes.endpointGuid.entityId.entityKey.data(),
+							   sizeof(EntityId_t::entityKey));
+	ucdr_serialize_uint8_t(
+	  &microbuffer,
+	  static_cast<uint8_t>(local_endpoint->m_attributes.endpointGuid.entityId.entityKind));
+
+	// Sentinel
+	ucdr_serialize_uint16_t(&microbuffer, ParameterId::PID_SENTINEL);
+	ucdr_serialize_uint16_t(&microbuffer, 0);
+
+	sedp_endpoint->newChange(ChangeKind_t::ALIVE, m_buffer, ucdr_buffer_length(&microbuffer), true, true);
+}
+
+
+template<typename A>
+bool SEDPAgent::deleteEndpoint(A* endpoint, Writer* sedp_endpoint){
+	// Set cache change kind in SEDP endpoint to DISPOSED
+	if(!disposeEndpointInSEDPHistory(endpoint, sedp_endpoint)){
+		return false;
+	}
+
+	// Create Deletion Mesasge [UD] and add to corret builtin endpoint
+	if(!announceEndpointDeletion(endpoint, sedp_endpoint)){
+		return false;
+	}
+
+    // In Writer: check if message is alive, if not send Gap message
+    // Copy all remote proxies to unmatched remote proxies
+}
+
+bool SEDPAgent::deleteReader(Reader* reader){
+  Lock lock{m_mutex};
+  deleteEndpoint<Reader>(reader, m_endpoints.sedpSubWriter);
+}
+
+bool SEDPAgent::deleteWriter(Writer* writer){
+  Lock lock{m_mutex};
+  deleteEndpoint<Writer>(writer, m_endpoints.sedpPubWriter);
 }
 
 void SEDPAgent::addReader(Reader &reader) {

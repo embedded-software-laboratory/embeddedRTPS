@@ -46,25 +46,25 @@ class Writer {
 public:
   TopicData m_attributes;
   virtual bool addNewMatchedReader(const ReaderProxy &newProxy);
-  virtual void removeReader(const Guid_t &guid);
-  virtual void removeReaderOfParticipant(const GuidPrefix_t &guidPrefix);
+  virtual bool removeProxy(const Guid_t &guid);
+  virtual void removeAllProxiesOfParticipant(const GuidPrefix_t &guidPrefix);
   virtual void reset() = 0;
   
   //! Executes required steps like sending packets. Intended to be called by
   //! worker threads
   virtual void progress() = 0;
   virtual const CacheChange *newChange(ChangeKind_t kind, const uint8_t *data,
-                                       DataSize_t size) = 0;
-  virtual void setCacheChangeKind(const SequenceNumber_t& s, ChangeKind_t kind) = 0; 
+                                       DataSize_t size, bool inLineQoS = false, bool markDisposedAfterWrite = false) = 0;
+  virtual bool setCacheChangeKind(const SequenceNumber_t& s, ChangeKind_t kind) = 0;
   virtual void setAllChangesToUnsent() = 0;
   virtual void onNewAckNack(const SubmessageAckNack &msg,
                             const GuidPrefix_t &sourceGuidPrefix) = 0;
 
   bool isInitialized();
-  uint32_t getNumMatchedReader();
+  uint32_t getProxiesCount();
 
   void setSEDPSequenceNumber(const SequenceNumber_t& sn);
-  const SequenceNumber_t* getSEDPSequenceNumber();
+  const SequenceNumber_t& getSEDPSequenceNumber();
 
 protected:
   SequenceNumber_t m_sedp_sequence_number;

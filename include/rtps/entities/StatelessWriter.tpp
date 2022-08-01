@@ -98,7 +98,7 @@ void StatelessWriterT<NetworkDriver>::reset(){
 
 template <typename NetworkDriver>
 const CacheChange *StatelessWriterT<NetworkDriver>::newChange(
-    rtps::ChangeKind_t kind, const uint8_t *data, DataSize_t size) {  
+    rtps::ChangeKind_t kind, const uint8_t *data, DataSize_t size, bool inLineQoS, bool markDisposedAfterWrite) {
   INIT_GUARD();
   if (isIrrelevant(kind)) {
     return nullptr;
@@ -123,7 +123,7 @@ const CacheChange *StatelessWriterT<NetworkDriver>::newChange(
 }
 
 template <typename NetworkDriver>
-void StatelessWriterT<NetworkDriver>::setCacheChangeKind(const SequenceNumber_t& s, ChangeKind_t kind){
+bool StatelessWriterT<NetworkDriver>::setCacheChangeKind(const SequenceNumber_t& s, ChangeKind_t kind){
   Lock lock(m_mutex);
   m_history.setCacheChangeKind(s, kind);
 }

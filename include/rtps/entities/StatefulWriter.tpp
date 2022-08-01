@@ -121,7 +121,7 @@ void StatefulWriterT<NetworkDriver>::reset(){
 
 template <class NetworkDriver>
 const rtps::CacheChange *StatefulWriterT<NetworkDriver>::newChange(
-    ChangeKind_t kind, const uint8_t *data, DataSize_t size) {
+    ChangeKind_t kind, const uint8_t *data, DataSize_t size, bool inLineQoS, bool markDisposedAfterWrite) {
   INIT_GUARD()
   if (isIrrelevant(kind)) {
     return nullptr;
@@ -139,7 +139,7 @@ const rtps::CacheChange *StatefulWriterT<NetworkDriver>::newChange(
     }
   }
 
-  auto *result = m_history.addChange(data, size);
+  auto *result = m_history.addChange(data, size, inLineQoS, markDisposedAfterWrite);
   if (mp_threadPool != nullptr) {
     mp_threadPool->addWorkload(this);
   }
@@ -151,6 +151,7 @@ const rtps::CacheChange *StatefulWriterT<NetworkDriver>::newChange(
 
 template <class NetworkDriver> void StatefulWriterT<NetworkDriver>::progress() {
   INIT_GUARD()
+  Lock{m_mutex};
   for (const auto &proxy : m_proxies) {
     bool success;
     if (!m_enforceUnicast) {
@@ -241,6 +242,13 @@ void StatefulWriterT<NetworkDriver>::onNewAckNack(
 }
 
 template <class NetworkDriver>
+bool rtps::StatefulWriterT<NetworkDriver>::setCacheChangeKind(const SequenceNumber_t& s, ChangeKind_t kind){
+  Lock lock{m_mutex};
+  return m_history.setCacheChangeKind(s, kind);
+}
+
+
+template <class NetworkDriver>
 bool StatefulWriterT<NetworkDriver>::sendData(
     const ReaderProxy &reader, const SequenceNumber_t &snMissing) {
   INIT_GUARD()
@@ -273,9 +281,8 @@ bool StatefulWriterT<NetworkDriver>::sendData(
     MessageFactory::addSubMessageData(
         info.buffer, next->data, false, next->sequenceNumber,
         m_attributes.endpointGuid.entityId, reader.remoteReaderGuid.entityId);
+    m_transport->sendPacket(info);
   }
-
-  m_transport->sendPacket(info);
   return true;
 }
 
@@ -348,12 +355,6 @@ void StatefulWriterT<NetworkDriver>::sendHeartBeatLoop() {
 #endif
   }
   m_thread_running = false;
-}
-
-template <class NetworkDriver>
-void StatefulWriterT<NetworkDriver>::setCacheChangeKind(const SequenceNumber_t& s, ChangeKind_t kind){
-  Lock lock(m_mutex);
-  m_history.setCacheChangeKind(s, kind);
 }
 
 

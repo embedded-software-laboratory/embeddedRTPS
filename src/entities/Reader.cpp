@@ -81,6 +81,10 @@ void Reader::registerCallback(ddsReaderCallback_fp cb, void *arg) {
   }
 }
 
+uint32_t Reader::getProxiesCount(){
+	return m_proxies.getNumElements();
+}
+
 void Reader::removeCallback(ddsReaderCallback_fp cb) {
   Lock lock(m_callback_mutex);
   for (unsigned int i = 0; i < m_callbacks.size(); i++) {
@@ -93,7 +97,7 @@ void Reader::removeCallback(ddsReaderCallback_fp cb) {
   }
 }
 
-void Reader::removeWriterOfParticipant(const GuidPrefix_t &guidPrefix) {
+void Reader::removeAllProxiesOfParticipant(const GuidPrefix_t &guidPrefix) {
   Lock lock(m_proxies_mutex);
   auto isElementToRemove = [&](const WriterProxy &proxy) {
     return proxy.remoteWriterGuid.prefix == guidPrefix;
@@ -105,7 +109,7 @@ void Reader::removeWriterOfParticipant(const GuidPrefix_t &guidPrefix) {
   m_proxies.remove(thunk, &isElementToRemove);
 }
 
-void Reader::removeWriter(const Guid_t &guid) {
+bool Reader::removeProxy(const Guid_t &guid) {
   Lock lock(m_proxies_mutex);
   auto isElementToRemove = [&](const WriterProxy &proxy) {
     return proxy.remoteWriterGuid == guid;
@@ -114,7 +118,7 @@ void Reader::removeWriter(const Guid_t &guid) {
     return (*static_cast<decltype(isElementToRemove) *>(arg))(value);
   };
 
-  m_proxies.remove(thunk, &isElementToRemove);
+  return m_proxies.remove(thunk, &isElementToRemove);
 }
 
 bool Reader::addNewMatchedWriter(const WriterProxy &newProxy) {
@@ -130,7 +134,7 @@ bool Reader::addNewMatchedWriter(const WriterProxy &newProxy) {
 void rtps::Reader::setSEDPSequenceNumber(const SequenceNumber_t& sn){
 	m_sedp_sequence_number = sn;
 }
-const rtps::SequenceNumber_t* rtps::Reader::getSEDPSequenceNumber(){
-	return &m_sedp_sequence_number;
+const rtps::SequenceNumber_t& rtps::Reader::getSEDPSequenceNumber(){
+	return m_sedp_sequence_number;
 }
 

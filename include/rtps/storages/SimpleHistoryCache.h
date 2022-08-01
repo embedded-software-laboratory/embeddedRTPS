@@ -47,9 +47,11 @@ public:
     return it == m_tail;
   }
 
-  const CacheChange *addChange(const uint8_t *data, DataSize_t size) {
+  const CacheChange* addChange(const uint8_t* data, DataSize_t size, bool inLineQoS, bool disposeAfterWrite){
     CacheChange change;
     change.kind = ChangeKind_t::ALIVE;
+    change.inLineQoS = inLineQoS;
+    change.diposeAfterWrite = disposeAfterWrite;    
     change.data.reserve(size);
     change.data.append(data, size);
     change.sequenceNumber = ++m_lastUsedSequenceNumber;
@@ -59,6 +61,10 @@ public:
 
     *place = std::move(change);
     return place;
+  }
+
+  const CacheChange *addChange(const uint8_t *data, DataSize_t size) {
+    return addChange(data, size, 0, false);
   }
 
   void removeUntilIncl(SequenceNumber_t sn) {
@@ -85,6 +91,7 @@ public:
 	  }
 
 	  change->kind = kind;
+    return true;
   }
 
   CacheChange *getChangeBySN(SequenceNumber_t sn) {

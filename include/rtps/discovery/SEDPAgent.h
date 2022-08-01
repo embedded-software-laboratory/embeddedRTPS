@@ -40,8 +40,8 @@ public:
   void init(Participant &part, const BuiltInEndpoints &endpoints);
   void addWriter(Writer &writer);
   void addReader(Reader &reader);
-  void deleteReader(Reader* reader);
-  void deleteWriter(Writer* reader);
+  bool deleteReader(Reader* reader);
+  bool deleteWriter(Writer* reader);
 
   void registerOnNewPublisherMatchedCallback(void (*callback)(void *arg),
                                              void *args);
@@ -93,6 +93,16 @@ private:
                                         const ReaderCacheChange &cacheChange);
   void handlePublisherReaderMessage(const ReaderCacheChange &change);
   void handleSubscriptionReaderMessage(const ReaderCacheChange &change);
+
+  template<typename A>
+  bool deleteEndpoint(A* endpoint, Writer* sedp_endpoint);
+
+  template<typename A>
+  bool announceEndpointDeletion(A* local_endpoint, Writer* sedp_endpoint);
+
+  template<typename A>
+  bool disposeEndpointInSEDPHistory(A* local_endpoint, Writer* sedp_writer);
+
 };
 } // namespace rtps
 

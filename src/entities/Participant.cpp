@@ -145,6 +145,19 @@ rtps::Reader *Participant::addReader(Reader *pReader) {
 	  return nullptr;
 }
 
+bool Participant::deleteReader(Reader* reader){
+  Lock{m_mutex};
+  for(unsigned int i = 0; i < m_readers.size(); i++){
+    if (m_readers[i] == reader){
+      if(m_sedpAgent.deleteReader(reader)){
+        m_readers[i] = nullptr;
+      }
+      PARTICIPANT_LOG("Found reader but SEDP deletion failed");
+    }
+  }
+  return false;
+}
+
 bool Participant::isReadersFull() {
 	Lock{m_mutex};
 	for(unsigned int i = 0; i < m_readers.size(); i++){
@@ -277,42 +290,46 @@ bool Participant::removeRemoteParticipant(const GuidPrefix_t &prefix) {
   auto thunk = [](void *arg, const ParticipantProxyData &value) {
     return (*static_cast<decltype(isElementToRemove) *>(arg))(value);
   };
-  removeAllEntitiesOfParticipant(prefix);
+  removeAllProxiesOfParticipant(prefix);
   m_sedpAgent.removeUnmatchedEntitiesOfParticipant(prefix);
   return m_remoteParticipants.remove(thunk, &isElementToRemove);
 }
 
-void Participant::removeAllEntitiesOfParticipant(const GuidPrefix_t &prefix) {
+void Participant::removeAllProxiesOfParticipant(const GuidPrefix_t &prefix) {
   Lock{m_mutex};
   for (auto i = 0; i < m_readers.size(); i++) {
 	  if(m_readers[i] == nullptr){
 		  continue;
 	  }
-    m_readers[i]->removeWriterOfParticipant(prefix);
+    m_readers[i]->removeAllProxiesOfParticipant(prefix);
   }
 
   for (auto i = 0; i < m_writers.size(); i++) {
 	  if(m_writers[i] == nullptr){
 		  continue;
 	  }
-    m_writers[i]->removeReaderOfParticipant(prefix);
+    m_writers[i]->removeAllProxiesOfParticipant(prefix);
   }
 }
 
-void Participant::removeEntityFromProxies(const Guid_t& guid){
+void Participant::removeProxyFromAllEndpoints(const Guid_t& guid){
   Lock{m_mutex};
 	for(auto i = 0; i < m_writers.size();i++){
 		if(m_writers[i] == nullptr){
 			continue;
 		}
-		m_writers[i]->removeReader(guid);
+		if(m_writers[i]->removeProxy(guid)){
+		  PARTICIPANT_LOG("Removing proxy for writer [%s, %s], proxies left = %u\n", m_writers[i]->m_attributes.topicName, m_writers[i]->m_attributes.typeName, (int)m_writers[i]->getProxiesCount());
+		}
 	}
 
 	for(auto i = 0; i < m_readers.size(); i++){
 		if(m_readers[i] == nullptr){
 			continue;
 		}
-		m_readers[i]->removeWriter(guid);
+		if(m_readers[i]->removeProxy(guid)){
+			PARTICIPANT_LOG("Removing proxy for reader [%s, %s], proxies left = %u\n", m_readers[i]->m_attributes.topicName, m_readers[i]->m_attributes.typeName, (int)m_readers[i]->getProxiesCount());
+		}
 	}
 }
 

@@ -68,10 +68,12 @@ public:
   //! Not-thread-safe function to add a writer
   Writer *addWriter(Writer *writer);
   bool isWritersFull();
+  bool deleteWriter(Writer* writer);
 
   //! Not-thread-safe function to add a reader
   Reader *addReader(Reader *reader);
   bool isReadersFull();
+  bool deleteReader(Reader* reader);
 
   //! (Probably) Thread safe if writers cannot be removed
   Writer *getWriter(EntityId_t id);
@@ -86,8 +88,8 @@ public:
 
   bool addNewRemoteParticipant(const ParticipantProxyData &remotePart);
   bool removeRemoteParticipant(const GuidPrefix_t &prefix);
-  void removeAllEntitiesOfParticipant(const GuidPrefix_t &prefix);
-  void removeEntityFromProxies(const Guid_t& guid);
+  void removeAllProxiesOfParticipant(const GuidPrefix_t &prefix);
+  void removeProxyFromAllEndpoints(const Guid_t& guid);
 
   const ParticipantProxyData *findRemoteParticipant(const GuidPrefix_t &prefix);
   void refreshRemoteParticipantLiveliness(const GuidPrefix_t &prefix);

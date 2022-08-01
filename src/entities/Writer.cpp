@@ -8,6 +8,7 @@ bool rtps::Writer::addNewMatchedReader(
   SFW_LOG("New reader added with id: ");
   printGuid(newProxy.remoteReaderGuid);
 #endif
+  Lock lock{m_mutex};
   bool success = m_proxies.add(newProxy);
   if (!m_enforceUnicast)
   {
@@ -16,10 +17,10 @@ bool rtps::Writer::addNewMatchedReader(
   return success;
 }
 
-void rtps::Writer::removeReader(const Guid_t &guid)
+bool rtps::Writer::removeProxy(const Guid_t &guid)
 {
   INIT_GUARD()
-  Lock lock(m_mutex);
+  Lock lock{m_mutex};
   auto isElementToRemove = [&](const ReaderProxy &proxy)
   {
     return proxy.remoteReaderGuid == guid;
@@ -29,8 +30,15 @@ void rtps::Writer::removeReader(const Guid_t &guid)
     return (*static_cast<decltype(isElementToRemove) *>(arg))(value);
   };
 
-  m_proxies.remove(thunk, &isElementToRemove);
+  bool ret = m_proxies.remove(thunk, &isElementToRemove);
   resetSendOptions();
+  return ret;
+}
+
+
+uint32_t rtps::Writer::getProxiesCount(){
+  Lock lock{m_mutex};
+ 	return m_proxies.getNumElements();
 }
 
 void rtps::Writer::resetSendOptions()
@@ -48,6 +56,7 @@ void rtps::Writer::resetSendOptions()
 void rtps::Writer::manageSendOptions()
 {
   INIT_GUARD();
+  Lock lock{m_mutex};
   for (auto &proxy : m_proxies)
   {
     if (proxy.remoteMulticastLocator.kind ==
@@ -93,7 +102,7 @@ void rtps::Writer::manageSendOptions()
 }
 
 
-void rtps::Writer::removeReaderOfParticipant(
+void rtps::Writer::removeAllProxiesOfParticipant(
     const GuidPrefix_t &guidPrefix) {
   INIT_GUARD();
   Lock lock(m_mutex);
@@ -122,7 +131,7 @@ void rtps::Writer::setSEDPSequenceNumber(const SequenceNumber_t& sn){
 	m_sedp_sequence_number = sn;
 }
 
-const rtps::SequenceNumber_t* rtps::Writer::getSEDPSequenceNumber(){
-	return &m_sedp_sequence_number;
+const rtps::SequenceNumber_t& rtps::Writer::getSEDPSequenceNumber(){
+	return m_sedp_sequence_number;
 }
 

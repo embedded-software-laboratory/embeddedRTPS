@@ -89,16 +89,16 @@ public:
                               const GuidPrefix_t &remotePrefix) = 0;
   virtual bool onNewGapMessage(const SubmessageGap& msg, const GuidPrefix_t &remotePrefix) = 0;
   virtual bool addNewMatchedWriter(const WriterProxy &newProxy) = 0;
-  virtual void removeWriter(const Guid_t &guid);
-  virtual void removeWriterOfParticipant(const GuidPrefix_t &guidPrefix);
+  virtual bool removeProxy(const Guid_t &guid);
+  virtual void removeAllProxiesOfParticipant(const GuidPrefix_t &guidPrefix);
   bool isInitialized() { return m_is_initialized_; }
   virtual void reset();
   bool isProxy(const Guid_t &guid);
   WriterProxy* getProxy(Guid_t guid);
-  uint32_t getNumMatchedWriters() { return m_proxies.getSize(); }
+  uint32_t getProxiesCount();
 
   void setSEDPSequenceNumber(const SequenceNumber_t& sn);
-  const SequenceNumber_t* getSEDPSequenceNumber();
+  const SequenceNumber_t& getSEDPSequenceNumber();
 
 protected:
   void executeCallbacks(const ReaderCacheChange &cacheChange);
