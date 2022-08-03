@@ -60,6 +60,11 @@ public:
   virtual void onNewAckNack(const SubmessageAckNack &msg,
                             const GuidPrefix_t &sourceGuidPrefix) = 0;
 
+  using dumpProxyCallback = void (*)(const Writer* writer, const ReaderProxy&, void* arg);
+
+  //! Dangerous, only
+  int dumpAllProxies(dumpProxyCallback target, void* arg);
+
   bool isInitialized();
   uint32_t getProxiesCount();
 

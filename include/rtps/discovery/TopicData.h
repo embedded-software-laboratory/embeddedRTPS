@@ -85,8 +85,7 @@ struct TopicDataCompressed {
   Guid_t endpointGuid;
   std::size_t topicHash;
   std::size_t typeHash;
-  ReliabilityKind_t reliabilityKind;
-  DurabilityKind_t durabilityKind;
+  bool is_reliable;
   LocatorIPv4 unicastLocator;
   LocatorIPv4 multicastLocator;
 
@@ -96,8 +95,7 @@ struct TopicDataCompressed {
     topicHash =
         hashCharArray(topic_data.topicName, Config::MAX_TOPICNAME_LENGTH);
     typeHash = hashCharArray(topic_data.typeName, Config::MAX_TYPENAME_LENGTH);
-    reliabilityKind = topic_data.reliabilityKind;
-    durabilityKind = topic_data.durabilityKind;
+    is_reliable = (topic_data.reliabilityKind == ReliabilityKind_t::RELIABLE) ? true : false;
     unicastLocator = topic_data.unicastLocator;
     multicastLocator = topic_data.multicastLocator;
   }

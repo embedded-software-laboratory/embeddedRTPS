@@ -216,8 +216,11 @@ struct SubmessageGap {
   SequenceNumberSet gapList;
 
   static uint16_t getRawSizeWithoutSNSet() {
-    return SubmessageHeader::getRawSize() + (2 * (3 + 1) + 8); // 2*EntityID +  GapStart + Count
+    return SubmessageHeader::getRawSize() + (2 * (3 + 1) + 8); // 2*EntityID +  GapStart
+  }
 
+  static uint16_t getRawSizeWithSingleElementSNSet(){
+    return SubmessageHeader::getRawSize() + (2 * (3 + 1) + 8 + 8 + 4); // 2*EntityID +  GapStart + bitmapBase + numBits
   }
 };
 
@@ -361,6 +364,40 @@ bool serializeMessage(Buffer &buffer, SubmessageAckNack &msg) {
   }
   buffer.append(reinterpret_cast<uint8_t *>(&msg.count.value),
                 sizeof(msg.count.value));
+  return true;
+}
+
+template <typename Buffer>
+bool serializeMessage(Buffer &buffer, SubmessageGap &msg) {
+  if(msg.gapList.numBits != 0){
+    return false;
+  }
+  if (!buffer.reserve(SubmessageGap::getRawSizeWithoutSNSet())) {
+    return false;
+  }
+
+  serializeMessage(buffer, msg.header);
+
+  buffer.append(msg.readerId.entityKey.data(), msg.readerId.entityKey.size());
+  buffer.append(reinterpret_cast<uint8_t *>(&msg.readerId.entityKind),
+                sizeof(EntityKind_t));
+  buffer.append(msg.writerId.entityKey.data(), msg.writerId.entityKey.size());
+  buffer.append(reinterpret_cast<uint8_t *>(&msg.writerId.entityKind),
+                sizeof(EntityKind_t));
+
+  buffer.append(reinterpret_cast<uint8_t *>(&msg.gapStart.high),
+                sizeof(msg.gapStart.high));
+  buffer.append(reinterpret_cast<uint8_t *>(&msg.gapStart.low),
+                sizeof(msg.gapStart.high));
+
+  buffer.append(reinterpret_cast<uint8_t *>(&msg.gapList.base.high),
+                sizeof(msg.gapList.base.high));
+  buffer.append(reinterpret_cast<uint8_t *>(&msg.gapList.base.low),
+                sizeof(msg.gapList.base.low));
+
+  buffer.append(reinterpret_cast<uint8_t *>(&msg.gapList.numBits),
+                sizeof(uint32_t));
+  
   return true;
 }
 

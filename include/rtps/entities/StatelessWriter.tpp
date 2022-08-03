@@ -104,6 +104,9 @@ const CacheChange *StatelessWriterT<NetworkDriver>::newChange(
     return nullptr;
   }
   Lock lock(m_mutex);
+  if(!m_is_initialized_){
+	  return nullptr;
+  }
 
   if (m_history.isFull()) {
     SequenceNumber_t newMin = ++SequenceNumber_t(m_history.getSeqNumMin());

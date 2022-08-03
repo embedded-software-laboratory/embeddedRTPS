@@ -1,4 +1,9 @@
 #include <rtps/entities/Writer.h>
+#include <rtps/storages/MemoryPool.h>
+#include <rtps/config.h>
+#include <rtps/entities/ReaderProxy.h>
+
+using namespace rtps;
 
 bool rtps::Writer::addNewMatchedReader(
     const ReaderProxy &newProxy)
@@ -135,3 +140,15 @@ const rtps::SequenceNumber_t& rtps::Writer::getSEDPSequenceNumber(){
 	return m_sedp_sequence_number;
 }
 
+
+int rtps::Writer::dumpAllProxies(dumpProxyCallback target, void* arg){
+	if(target == nullptr){
+		return 0;
+	}
+	Lock{m_mutex};
+	int dump_count = 0;
+    for (auto it = m_proxies.begin(); it != m_proxies.end(); ++it, ++dump_count) {
+      target(this, *it, arg);
+    }
+    return dump_count;
+}

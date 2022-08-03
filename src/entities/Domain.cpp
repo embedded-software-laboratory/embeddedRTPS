@@ -158,7 +158,7 @@ void Domain::createBuiltinWritersAndReaders(Participant &part) {
                   m_transport);
   spdpWriter->addNewMatchedReader(
       ReaderProxy{{part.m_guidPrefix, ENTITYID_SPDP_BUILTIN_PARTICIPANT_READER},
-                  getBuiltInMulticastLocator()});
+                  getBuiltInMulticastLocator(), false});
 
   TopicData spdpReaderAttributes;
   spdpReaderAttributes.endpointGuid = {
@@ -450,22 +450,22 @@ rtps::Reader *Domain::createReader(Participant &part, const char *topicName,
 
 bool rtps::Domain::deleteReader(Participant &part, Reader* reader){
    Lock{m_mutex};
-  // Marc respective Reader in SEDP History as Unregistered
-  // Move Proxies of Endpoint to unmatchedReaders/Writers
-  // Reset 
-  // Send PID_STATUS_INFO Message
+   if(!part.deleteReader(reader)){
+     return false;
+   }
 
-  // onNewAckNack
+   reader->reset();
+   return true;
 }
 
 bool rtps::Domain::deleteWriter(Participant &part, Writer* writer){
    Lock{m_mutex};
-  // Marc respective Reader in SEDP History as Unregistered
-  // Move Proxies of Endpoint to unmatchedReaders/Writers
-  // Reset
-  // Send PID_STATUS_INFO Message
+   if(!part.deleteWriter(writer)){
+	 return false;
+   }
 
-  // onNewAckNack
+   writer->reset();
+   return true;
 }
 
 

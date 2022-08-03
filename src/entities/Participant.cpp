@@ -158,6 +158,21 @@ bool Participant::deleteReader(Reader* reader){
   return false;
 }
 
+
+bool Participant::deleteWriter(Writer* writer){
+  Lock{m_mutex};
+  for(unsigned int i = 0; i < m_writers.size(); i++){
+    if (m_writers[i] == writer){
+      if(m_sedpAgent.deleteWriter(writer)){
+    	 m_writers[i] = nullptr;
+      }
+      PARTICIPANT_LOG("Found reader but SEDP deletion failed");
+    }
+  }
+  return false;
+}
+
+
 bool Participant::isReadersFull() {
 	Lock{m_mutex};
 	for(unsigned int i = 0; i < m_readers.size(); i++){
@@ -196,7 +211,7 @@ rtps::Reader *Participant::getReader(EntityId_t id)  {
 }
 
 rtps::Reader *Participant::getReaderByWriterId(const Guid_t &guid)  {
-	Lock lock{m_mutex};
+  Lock lock{m_mutex};
   for (uint8_t i = 0; i < m_readers.size(); ++i) {
 	  if(m_readers[i] == nullptr){
 		  continue;
@@ -250,7 +265,7 @@ rtps::Writer *Participant::getMatchingWriter(
 		  continue;
 	  }
     if (readerTopicData.matchesTopicOf(m_writers[i]->m_attributes) &&
-        (readerTopicData.reliabilityKind == ReliabilityKind_t::BEST_EFFORT ||
+        (readerTopicData.is_reliable == false ||
          m_writers[i]->m_attributes.reliabilityKind ==
              ReliabilityKind_t::RELIABLE)) {
       return m_writers[i];
@@ -267,7 +282,7 @@ rtps::Reader *Participant::getMatchingReader(
 		  continue;
 	  }
     if (writerTopicData.matchesTopicOf(m_readers[i]->m_attributes) &&
-        (writerTopicData.reliabilityKind == ReliabilityKind_t::RELIABLE ||
+    		(writerTopicData.is_reliable == true ||
          m_readers[i]->m_attributes.reliabilityKind ==
              ReliabilityKind_t::BEST_EFFORT)) {
       return m_readers[i];
@@ -381,16 +396,6 @@ uint32_t Participant::getRemoteParticipantCount() {
 }
 
 rtps::MessageReceiver *Participant::getMessageReceiver() { return &m_receiver; }
-
-void Participant::addHeartbeat(GuidPrefix_t sourceGuidPrefix) {
-  Lock{m_mutex};   
-  for (auto &remote : m_remoteParticipants) {
-    if (remote.m_guid.prefix == sourceGuidPrefix) {
-      remote.onAliveSignal();
-      break;
-    }
-  }
-}
 
 bool Participant::checkAndResetHeartbeats() {
   Lock{m_mutex};   

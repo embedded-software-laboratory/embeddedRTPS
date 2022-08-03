@@ -78,6 +78,7 @@ public:
 typedef void (*ddsReaderCallback_fp)(void *callee,
                                      const ReaderCacheChange &cacheChange);
 
+
 class Reader {
 public:
   TopicData m_attributes;
@@ -99,6 +100,11 @@ public:
 
   void setSEDPSequenceNumber(const SequenceNumber_t& sn);
   const SequenceNumber_t& getSEDPSequenceNumber();
+
+  using dumpProxyCallback = void (*)(const Reader* reader, const WriterProxy&, void* arg);
+
+  //! Dangerous, only
+  int dumpAllProxies(dumpProxyCallback target, void* arg);
 
 protected:
   void executeCallbacks(const ReaderCacheChange &cacheChange);

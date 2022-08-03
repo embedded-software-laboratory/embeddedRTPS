@@ -40,11 +40,11 @@ Author: i11 - Embedded Software, RWTH Aachen University
 
 - Creation:
           -A Introduce init(), reset(), isInitialized() API
-          -B remove m_numStatelessWriters and co -> have to check for isInitialized()! Dont rely on count anymore to determine 
+          -B remove m_numStatelessWriters and co -> have to check for isInitialized()! Don't rely on count anymore to determine
           -C Link SEDP Sequence Number and Entity
 - Delete: 
-          - Marc Respective Element (See C) in History als Deleted
-          - Send PID_STATUS_INFO with Disposed/Unregistered 
+          - Marc Respective Element (See C) in History as Deleted
+          - Send PID_STATUS_INFO with Disposed/Unregistered Flag set
 
 - onNewAckNack():
           - Check if Sample in History is marked as deleted -> Send GAP just for that Sample

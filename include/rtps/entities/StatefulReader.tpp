@@ -68,7 +68,7 @@ bool StatefulReaderT<NetworkDriver>::init(const TopicData &attributes,
 template <class NetworkDriver>
 void StatefulReaderT<NetworkDriver>::newChange(
     const ReaderCacheChange &cacheChange) {
-  if (m_callback_count == 0) {
+  if (m_callback_count == 0 || !m_is_initialized_) {
     return;
   }
   sys_mutex_lock(&m_proxies_mutex);
@@ -101,6 +101,9 @@ bool StatefulReaderT<NetworkDriver>::addNewMatchedWriter(
 template <class NetworkDriver>
 bool StatefulReaderT<NetworkDriver>::onNewGapMessage(const SubmessageGap& msg, const GuidPrefix_t &remotePrefix){
   Lock lock(m_proxies_mutex);
+  if(!m_is_initialized_){
+    return false;
+  }
 
   Guid_t writerProxyGuid;
   writerProxyGuid.prefix = remotePrefix;
@@ -163,6 +166,9 @@ template <class NetworkDriver>
 bool StatefulReaderT<NetworkDriver>::onNewHeartbeat(
     const SubmessageHeartbeat &msg, const GuidPrefix_t &sourceGuidPrefix) {
   Lock lock(m_proxies_mutex);
+  if(!m_is_initialized_){
+	  return false;
+  }
   PacketInfo info;
   info.srcPort = m_srcPort;
 

@@ -62,12 +62,13 @@ private:
   bool m_running = true;
   bool m_thread_running = false;
 
-  bool sendData(const ReaderProxy &reader, const SequenceNumber_t &sn);
+  bool sendData(const ReaderProxy &reader, const CacheChange* next);
   bool sendDataWRMulticast(const ReaderProxy &reader,
-                           const SequenceNumber_t &sn);
+                           const CacheChange* next);
   static void hbFunctionJumppad(void *thisPointer);
   void sendHeartBeatLoop();
   void sendHeartBeat();
+  void sendGap(const ReaderProxy& reader, const SequenceNumber_t& missingSN);
 };
 
 using StatefulWriter = StatefulWriterT<UdpDriver>;

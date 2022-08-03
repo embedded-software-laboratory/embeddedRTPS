@@ -79,6 +79,8 @@ private:
   void tryMatchUnmatchedEndpoints();
   void addUnmatchedRemoteWriter(const TopicData &writerData);
   void addUnmatchedRemoteReader(const TopicData &readerData);
+  void addUnmatchedRemoteWriter(const TopicDataCompressed &writerData);
+  void addUnmatchedRemoteReader(const TopicDataCompressed &readerData);
 
   void handleRemoteEndpointDeletion(const TopicData &topic);
 
@@ -91,6 +93,11 @@ private:
                                        const ReaderCacheChange &cacheChange);
   static void jumppadSubscriptionReader(void *callee,
                                         const ReaderCacheChange &cacheChange);
+
+  static void jumppadTakeProxyOfDisposedReader(const Reader* reader, const WriterProxy& proxy, void *arg);
+  static void jumppadTakeProxyOfDisposedWriter(const Writer* writer, const ReaderProxy& proxy, void *arg);
+
+
   void handlePublisherReaderMessage(const ReaderCacheChange &change);
   void handleSubscriptionReaderMessage(const ReaderCacheChange &change);
 

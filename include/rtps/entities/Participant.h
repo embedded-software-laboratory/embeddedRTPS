@@ -95,7 +95,6 @@ public:
   void refreshRemoteParticipantLiveliness(const GuidPrefix_t &prefix);
   uint32_t getRemoteParticipantCount();
   MessageReceiver *getMessageReceiver();
-  void addHeartbeat(GuidPrefix_t sourceGuidPrefix);
   bool checkAndResetHeartbeats();
 
   bool hasReaderWithMulticastLocator(ip4_addr_t address);

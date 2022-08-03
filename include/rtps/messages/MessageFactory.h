@@ -188,6 +188,28 @@ void addAckNack(Buffer &buffer, EntityId_t writerId, EntityId_t readerId,
 
   serializeMessage(buffer, subMsg);
 }
+
+template <class Buffer>
+void addSubmessageGap(Buffer &buffer, EntityId_t writerId, EntityId_t readerId,
+                SequenceNumber_t missingSN) {
+  SubmessageGap subMsg;
+  subMsg.header.submessageId = SubmessageKind::GAP;
+#if IS_LITTLE_ENDIAN
+  subMsg.header.flags = FLAG_LITTLE_ENDIAN;
+#else
+  subMsg.header.flags = FLAG_BIG_ENDIAN;
+#endif
+  subMsg.header.octetsToNextHeader =
+      SubmessageGap::getRawSizeWithoutSNSet() - numBytesUntilEndOfLength;
+
+  subMsg.writerId = writerId;
+  subMsg.readerId = readerId;
+  subMsg.gapStart = missingSN;
+  subMsg.gapList.base = missingSN++;
+  subMsg.gapList.numBits = 0;
+
+  serializeMessage(buffer, subMsg);
+}
 } // namespace MessageFactory
 } // namespace rtps
 

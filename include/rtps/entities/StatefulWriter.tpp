@@ -128,6 +128,9 @@ const rtps::CacheChange *StatefulWriterT<NetworkDriver>::newChange(
   }
 
   Lock lock{m_mutex};
+  if(!m_is_initialized_){
+	  return nullptr;
+  }
 
   if (m_history.isFull()) {
     // Right now we drop elements anyway because we cannot detect non-responding
@@ -152,17 +155,34 @@ const rtps::CacheChange *StatefulWriterT<NetworkDriver>::newChange(
 template <class NetworkDriver> void StatefulWriterT<NetworkDriver>::progress() {
   INIT_GUARD()
   Lock{m_mutex};
-  for (const auto &proxy : m_proxies) {
-    bool success;
-    if (!m_enforceUnicast) {
-      success = sendDataWRMulticast(proxy, m_nextSequenceNumberToSend);
-    } else {
-      success = sendData(proxy, m_nextSequenceNumberToSend);
+  CacheChange* next = m_history.getChangeBySN(m_nextSequenceNumberToSend);
+  if(next != nullptr){
+    for (const auto &proxy : m_proxies) {
+      bool success;
+      if (!m_enforceUnicast) {
+        success = sendDataWRMulticast(proxy, next);
+      } else {
+        success = sendData(proxy, next);
+      }
+      if (!success) {
+        continue;
+      }
     }
-    if (!success) {
-      continue;
+
+    /*
+     * Use case: deletion of local endpoints
+     * -> send Data Message with Disposed Flag set
+     * -> Set respective SEDP CacheChange as NOT_ALIVE_DISPOSED after transmission to proxies
+     * -> onAckNack will send Gap Messages to skip deleted local endpoints during SEDP
+     */
+    if(next->diposeAfterWrite){
+    	next->kind = ChangeKind_t::NOT_ALIVE_DISPOSED;
     }
+  }else{
+    SFW_LOG("Couldn't get a CacheChange with SN (%i,%u)\n", snMissing.high,
+      snMissing.low);
   }
+
   ++m_nextSequenceNumberToSend;
 }
 
@@ -183,6 +203,11 @@ template <class NetworkDriver>
 void StatefulWriterT<NetworkDriver>::onNewAckNack(
     const SubmessageAckNack &msg, const GuidPrefix_t &sourceGuidPrefix) {
   INIT_GUARD()
+  Lock lock(m_mutex);
+  if(!m_is_initialized_){
+	  return;
+  }
+
   ReaderProxy *reader = nullptr;
   for (auto &proxy : m_proxies) {
     if (proxy.remoteReaderGuid.prefix == sourceGuidPrefix &&
@@ -225,18 +250,34 @@ void StatefulWriterT<NetworkDriver>::onNewAckNack(
     if (msg.readerSNState.isSet(i)) {
 
       SFW_LOG("Send Packet on acknack.\n");
+      const CacheChange* cache = m_history.getChangeBySN(nextSN);
+      if(cache == nullptr){
+        continue;
+      }
 
-      sendData(*reader, nextSN);
+      switch(cache->kind){
+        case ChangeKind_t::ALIVE:
+          sendData(*reader, cache);
+          break;
+        case ChangeKind_t::NOT_ALIVE_DISPOSED:
+          sendGap(*reader, nextSN);
+          break;
+        default:
+          break;
+      }
+    
     }
   }
   // Check for sequence numbers after defined range
   SequenceNumber_t maxSN;
   {
-    Lock lock(m_mutex);
     maxSN = m_history.getSeqNumMax();
   }
   while (nextSN <= maxSN) {
-    sendData(*reader, nextSN);
+    const CacheChange* cache = m_history.getChangeBySN(nextSN);
+    if(cache != nullptr){
+    	sendData(*reader, cache);
+    }
     ++nextSN;
   }
 }
@@ -247,10 +288,9 @@ bool rtps::StatefulWriterT<NetworkDriver>::setCacheChangeKind(const SequenceNumb
   return m_history.setCacheChangeKind(s, kind);
 }
 
-
 template <class NetworkDriver>
 bool StatefulWriterT<NetworkDriver>::sendData(
-    const ReaderProxy &reader, const SequenceNumber_t &snMissing) {
+    const ReaderProxy &reader, const CacheChange* next) {
   INIT_GUARD()
   // TODO smarter packaging e.g. by creating MessageStruct and serialize after
   // adjusting values Reusing the pbuf is not possible. See
@@ -268,27 +308,43 @@ bool StatefulWriterT<NetworkDriver>::sendData(
   info.destAddr = locator.getIp4Address();
   info.destPort = (Ip4Port_t)locator.port;
 
-  {
-    Lock lock(m_mutex);
-    const CacheChange *next = m_history.getChangeBySN(snMissing);
-    if (next == nullptr) {
+  MessageFactory::addSubMessageData(
+      info.buffer, next->data, next->inLineQoS, next->sequenceNumber,
+      m_attributes.endpointGuid.entityId, reader.remoteReaderGuid.entityId);
+  m_transport->sendPacket(info);
 
-      SFW_LOG("Couldn't get a CacheChange with SN (%i,%u)\n", snMissing.high,
-              snMissing.low);
-
-      return false;
-    }
-    MessageFactory::addSubMessageData(
-        info.buffer, next->data, false, next->sequenceNumber,
-        m_attributes.endpointGuid.entityId, reader.remoteReaderGuid.entityId);
-    m_transport->sendPacket(info);
-  }
   return true;
 }
 
 template <class NetworkDriver>
+void StatefulWriterT<NetworkDriver>::sendGap(
+    const ReaderProxy &reader, const SequenceNumber_t& missingSN) {
+  INIT_GUARD()
+  // TODO smarter packaging e.g. by creating MessageStruct and serialize after
+  // adjusting values Reusing the pbuf is not possible. See
+  // https://www.nongnu.org/lwip/2_0_x/raw_api.html (Zero-Copy MACs)
+
+  PacketInfo info;
+  info.srcPort = m_srcPort;
+
+  MessageFactory::addHeader(info.buffer, m_attributes.endpointGuid.prefix);
+  MessageFactory::addSubMessageTimeStamp(info.buffer);
+
+  // Just usable for IPv4
+  const LocatorIPv4 &locator = reader.remoteLocator;
+
+  info.destAddr = locator.getIp4Address();
+  info.destPort = (Ip4Port_t)locator.port;
+
+  MessageFactory::addSubmessageGap(
+      info.buffer, m_attributes.endpointGuid.entityId, reader.remoteReaderGuid.entityId, missingSN);
+  m_transport->sendPacket(info);
+
+}
+
+template <class NetworkDriver>
 bool StatefulWriterT<NetworkDriver>::sendDataWRMulticast(
-    const ReaderProxy &reader, const SequenceNumber_t &snMissing) {
+    const ReaderProxy &reader, const CacheChange *next) {
   INIT_GUARD()
 
   if (reader.useMulticast || reader.suppressUnicast == false) {
@@ -309,29 +365,17 @@ bool StatefulWriterT<NetworkDriver>::sendDataWRMulticast(
       info.destPort = (Ip4Port_t)locator.port;
     }
 
-    {
-      Lock lock(m_mutex);
-      const CacheChange *next = m_history.getChangeBySN(snMissing);
-      if (next == nullptr) {
-
-        SFW_LOG("Couldn't get a CacheChange with SN (%i,%u)\n", snMissing.high,
-                snMissing.low);
-
-        return false;
-      }
-
-      EntityId_t reid;
-      if (reader.useMulticast) {
-        reid = ENTITYID_UNKNOWN;
-      } else {
-        reid = reader.remoteReaderGuid.entityId;
-      }
-
-      MessageFactory::addSubMessageData(
-          info.buffer, next->data, false, next->sequenceNumber,
-          m_attributes.endpointGuid.entityId, reid);
+    EntityId_t reid;
+    if (reader.useMulticast) {
+      reid = ENTITYID_UNKNOWN;
+    } else {
+      reid = reader.remoteReaderGuid.entityId;
     }
 
+    MessageFactory::addSubMessageData(
+        info.buffer, next->data, false, next->sequenceNumber,
+        m_attributes.endpointGuid.entityId, reid);
+    
     m_transport->sendPacket(info);
   }
   return true;

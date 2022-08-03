@@ -52,6 +52,9 @@ bool StatelessReader::init(const TopicData &attributes) {
 }
 
 void StatelessReader::newChange(const ReaderCacheChange &cacheChange) {
+  if(!m_is_initialized_){
+	  return;
+  }
   executeCallbacks(cacheChange);
 }
 

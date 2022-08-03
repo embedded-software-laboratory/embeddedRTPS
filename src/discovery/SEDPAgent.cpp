@@ -108,6 +108,14 @@ void SEDPAgent::handlePublisherReaderMessage(const ReaderCacheChange &change) {
 }
 
 void SEDPAgent::addUnmatchedRemoteWriter(const TopicData &writerData) {
+  addUnmatchedRemoteWriter(TopicDataCompressed(writerData));
+}
+
+void SEDPAgent::addUnmatchedRemoteReader(const TopicData &readerData) {
+  addUnmatchedRemoteReader(TopicDataCompressed(readerData));
+}
+
+void SEDPAgent::addUnmatchedRemoteWriter(const TopicDataCompressed &writerData){
   if (m_unmatchedRemoteWriters.isFull()) {
 #if SEDP_VERBOSE
     SEDP_LOG("List of unmatched remote writers is full.\n");
@@ -116,10 +124,10 @@ void SEDPAgent::addUnmatchedRemoteWriter(const TopicData &writerData) {
   }
   SEDP_LOG("Adding unmatched remote writer %s %s.\n", writerData.topicName,
            writerData.typeName);
-  m_unmatchedRemoteWriters.add(TopicDataCompressed(writerData));
+  m_unmatchedRemoteWriters.add(writerData);
 }
 
-void SEDPAgent::addUnmatchedRemoteReader(const TopicData &readerData) {
+void SEDPAgent::addUnmatchedRemoteReader(const TopicDataCompressed &readerData){
   if (m_unmatchedRemoteReaders.isFull()) {
 #if SEDP_VERBOSE
     SEDP_LOG("List of unmatched remote readers is full.\n");
@@ -128,7 +136,7 @@ void SEDPAgent::addUnmatchedRemoteReader(const TopicData &readerData) {
   }
   SEDP_LOG("Adding unmatched remote reader %s %s.\n", readerData.topicName,
            readerData.typeName);
-  m_unmatchedRemoteReaders.add(TopicDataCompressed(readerData));
+  m_unmatchedRemoteReaders.add(readerData);
 }
 
 void SEDPAgent::removeUnmatchedEntity(
@@ -202,7 +210,7 @@ void SEDPAgent::handlePublisherReaderMessage(const TopicData &writerData) {
   SEDP_LOG("publisher\n");
 #endif
   reader->addNewMatchedWriter(
-      WriterProxy{writerData.endpointGuid, writerData.unicastLocator});
+      WriterProxy{writerData.endpointGuid, writerData.unicastLocator, (writerData.reliabilityKind == ReliabilityKind_t::RELIABLE)});
   if (mfp_onNewPublisherCallback != nullptr) {
     mfp_onNewPublisherCallback(m_onNewPublisherArgs);
   }
@@ -284,10 +292,10 @@ void SEDPAgent::handleSubscriptionReaderMessage(const TopicData &readerData) {
       rtps::LocatorKind_t::LOCATOR_KIND_UDPv4) {
     writer->addNewMatchedReader(ReaderProxy{readerData.endpointGuid,
                                             readerData.unicastLocator,
-                                            readerData.multicastLocator});
+                                            readerData.multicastLocator, (readerData.reliabilityKind == ReliabilityKind_t::RELIABLE)});
   } else {
     writer->addNewMatchedReader(
-        ReaderProxy{readerData.endpointGuid, readerData.unicastLocator});
+        ReaderProxy{readerData.endpointGuid, readerData.unicastLocator, (readerData.reliabilityKind == ReliabilityKind_t::RELIABLE)});
   }
 
   if (mfp_onNewSubscriberCallback != nullptr) {
@@ -301,7 +309,7 @@ void SEDPAgent::tryMatchUnmatchedEndpoints() {
     auto writer = m_part->getMatchingWriter(proxy);
     if (writer != nullptr) {
       writer->addNewMatchedReader(ReaderProxy{
-          proxy.endpointGuid, proxy.unicastLocator, proxy.multicastLocator});
+          proxy.endpointGuid, proxy.unicastLocator, proxy.multicastLocator, proxy.is_reliable});
     }
   }
 
@@ -310,7 +318,7 @@ void SEDPAgent::tryMatchUnmatchedEndpoints() {
     auto reader = m_part->getMatchingReader(proxy);
     if (reader != nullptr) {
       reader->addNewMatchedWriter(
-          WriterProxy{proxy.endpointGuid, proxy.unicastLocator});
+          WriterProxy{proxy.endpointGuid, proxy.unicastLocator, proxy.is_reliable});
     }
   }
 }
@@ -356,7 +364,6 @@ bool SEDPAgent::disposeEndpointInSEDPHistory(A* local_endpoint, Writer* sedp_wri
 
 template<typename A>
 bool SEDPAgent::announceEndpointDeletion(A* local_endpoint, Writer* sedp_endpoint){
-	// Build message to
 	ucdrBuffer microbuffer;
 	ucdr_init_buffer(&microbuffer, m_buffer, sizeof(m_buffer) / sizeof(m_buffer[0]));
 
@@ -377,34 +384,63 @@ bool SEDPAgent::announceEndpointDeletion(A* local_endpoint, Writer* sedp_endpoin
 	ucdr_serialize_uint16_t(&microbuffer, ParameterId::PID_SENTINEL);
 	ucdr_serialize_uint16_t(&microbuffer, 0);
 
-	sedp_endpoint->newChange(ChangeKind_t::ALIVE, m_buffer, ucdr_buffer_length(&microbuffer), true, true);
+	auto ret = sedp_endpoint->newChange(ChangeKind_t::ALIVE, m_buffer, ucdr_buffer_length(&microbuffer), true, true);
+  return (ret != nullptr);
 }
 
 
-template<typename A>
-bool SEDPAgent::deleteEndpoint(A* endpoint, Writer* sedp_endpoint){
-	// Set cache change kind in SEDP endpoint to DISPOSED
-	if(!disposeEndpointInSEDPHistory(endpoint, sedp_endpoint)){
-		return false;
-	}
+void SEDPAgent::jumppadTakeProxyOfDisposedReader(const Reader* reader, const WriterProxy& proxy, void *arg){
+	auto agent = static_cast<SEDPAgent *>(arg);
+	TopicDataCompressed topic_data(reader->m_attributes);
+	topic_data.endpointGuid = proxy.remoteWriterGuid;
+	topic_data.is_reliable = proxy.is_reliable;
+	topic_data.multicastLocator.kind = LocatorKind_t::LOCATOR_KIND_INVALID;
+	topic_data.unicastLocator = proxy.remoteLocator;
+	agent->addUnmatchedRemoteWriter(topic_data);
+}
 
-	// Create Deletion Mesasge [UD] and add to corret builtin endpoint
-	if(!announceEndpointDeletion(endpoint, sedp_endpoint)){
-		return false;
-	}
-
-    // In Writer: check if message is alive, if not send Gap message
-    // Copy all remote proxies to unmatched remote proxies
+void SEDPAgent::jumppadTakeProxyOfDisposedWriter(const Writer* writer, const ReaderProxy& proxy, void *arg){
+	auto agent = static_cast<SEDPAgent *>(arg);
+	TopicDataCompressed topic_data(writer->m_attributes);
+	topic_data.endpointGuid = proxy.remoteReaderGuid;
+	topic_data.is_reliable = proxy.is_reliable;
+	topic_data.multicastLocator.kind = LocatorKind_t::LOCATOR_KIND_INVALID;
+	topic_data.unicastLocator = proxy.remoteLocator;
+	agent->addUnmatchedRemoteReader(topic_data);
 }
 
 bool SEDPAgent::deleteReader(Reader* reader){
   Lock lock{m_mutex};
-  deleteEndpoint<Reader>(reader, m_endpoints.sedpSubWriter);
+	// Set cache change kind in SEDP endpoint to DISPOSED
+	if(!disposeEndpointInSEDPHistory(reader,  m_endpoints.sedpSubWriter)){
+		return false;
+	}
+
+	// Create Deletion Message [UD] and add to corret builtin endpoint
+	if(!announceEndpointDeletion(reader,  m_endpoints.sedpSubWriter)){
+		return false;
+	}
+
+	reader->dumpAllProxies(SEDPAgent::jumppadTakeProxyOfDisposedReader, this);
+
+	return true;
 }
 
 bool SEDPAgent::deleteWriter(Writer* writer){
   Lock lock{m_mutex};
-  deleteEndpoint<Writer>(writer, m_endpoints.sedpPubWriter);
+	// Set cache change kind in SEDP endpoint to DISPOSED
+	if(!disposeEndpointInSEDPHistory(writer,  m_endpoints.sedpPubWriter)){
+		return false;
+	}
+
+	// Create Deletion Mesasge [UD] and add to corret builtin endpoint
+	if(!announceEndpointDeletion(writer,  m_endpoints.sedpPubWriter)){
+		return false;
+	}
+
+	writer->dumpAllProxies(SEDPAgent::jumppadTakeProxyOfDisposedWriter, this);
+
+	return true;
 }
 
 void SEDPAgent::addReader(Reader &reader) {
