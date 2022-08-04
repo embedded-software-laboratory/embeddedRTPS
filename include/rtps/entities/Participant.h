@@ -103,6 +103,9 @@ public:
   void newMessage(const uint8_t *data, DataSize_t size);
 
   SPDPAgent &getSPDPAgent();
+  
+  void printInfo();
+
 
 private:
   friend class SizeInspector;

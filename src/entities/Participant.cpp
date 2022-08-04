@@ -45,9 +45,8 @@ using rtps::Participant;
 Participant::Participant()
     : m_guidPrefix(GUIDPREFIX_UNKNOWN), m_participantId(PARTICIPANT_ID_INVALID),
       m_receiver(this) {
-  if (createMutex(&m_mutex) != ERR_OK) {
-    while (1)
-      ;
+  if (!createMutex(&m_mutex)) {
+	  std::terminate();
   }
 }
 Participant::Participant(const GuidPrefix_t &guidPrefix,
@@ -419,6 +418,48 @@ bool Participant::checkAndResetHeartbeats() {
     }
   }
   return true;
+}
+
+void Participant::printInfo(){
+  for(unsigned int i = 0; i < m_readers.size(); i++){
+    if(m_readers[i] != nullptr && m_readers[i]->isInitialized()){
+        if(m_hasBuilInEndpoints && i < 3){
+        	if(m_readers[i]->m_attributes.endpointGuid.entityId == ENTITYID_SPDP_BUILTIN_PARTICIPANT_READER){
+        		printf("Reader %u: SPDP BUILTIN READER | Remote Proxies = %u \n", i, static_cast<int>(m_readers[i]->getProxiesCount()));
+        	}
+        	if(m_readers[i]->m_attributes.endpointGuid.entityId == ENTITYID_SEDP_BUILTIN_PUBLICATIONS_READER){
+        		printf("Reader %u: SEDP PUBLICATION READER | Remote Proxies = %u \n ", i, static_cast<int>(m_readers[i]->getProxiesCount()));
+        	}
+        	if(m_readers[i]->m_attributes.endpointGuid.entityId == ENTITYID_SEDP_BUILTIN_SUBSCRIPTIONS_READER){
+        		printf("Reader %u: SEDP SUBSCRIPTION READER | Remote Proxies = %u \n", i, static_cast<int>(m_readers[i]->getProxiesCount()));
+        	}
+        	continue;
+        }
+      printf("Reader %u: Topic = %s | Type = %s | Remote Proxies = %u \n", i, m_readers[i]->m_attributes.topicName, m_readers[i]->m_attributes.typeName,  static_cast<int>(m_readers[i]->getProxiesCount()));
+    }
+  }
+
+  for(unsigned int i = 0; i < m_writers.size(); i++){
+    if(m_hasBuilInEndpoints && i < 3){
+    	if(m_writers[i]->m_attributes.endpointGuid.entityId == ENTITYID_SPDP_BUILTIN_PARTICIPANT_WRITER){
+    		printf("Writer %u: SPDP WRITER | Remote Proxies = %u \n ", i, static_cast<int>(m_writers[i]->getProxiesCount()));
+    	}
+    	if(m_writers[i]->m_attributes.endpointGuid.entityId == ENTITYID_SEDP_BUILTIN_PUBLICATIONS_WRITER){
+    		printf("Writer %u: SEDP PUBLICATION WRITER | Remote Proxies = %u  \n", i, static_cast<int>(m_writers[i]->getProxiesCount()));
+    	}
+    	if(m_writers[i]->m_attributes.endpointGuid.entityId == ENTITYID_SEDP_BUILTIN_SUBSCRIPTIONS_WRITER){
+    		printf("Writer %u: SEDP SUBSCRIPTION WRITER | Remote Proxies = %u  \n", i, static_cast<int>(m_writers[i]->getProxiesCount()));
+    	}
+    	continue;
+    }
+    if(m_writers[i] != nullptr && m_writers[i]->isInitialized()){
+   	 printf("Writer %u: Topic = %s | Type = %s | Remote Proxies = %u \n", i, m_writers[i]->m_attributes.topicName, m_writers[i]->m_attributes.typeName,  static_cast<int>(m_writers[i]->getProxiesCount()));
+    }
+  }
+
+  printf("Unmatched Remote Readers = %u\n", static_cast<int>(m_sedpAgent.getNumRemoteUnmatchedReaders()));
+  printf("Unmatched Remote Writers = %u\n", static_cast<int>(m_sedpAgent.getNumRemoteUnmatchedWriters()));
+  printf("Remote Participants = %u\n", static_cast<int>(m_remoteParticipants.getNumElements()));
 }
 
 rtps::SPDPAgent &Participant::getSPDPAgent() { return m_spdpAgent; }

@@ -468,6 +468,12 @@ bool rtps::Domain::deleteWriter(Participant &part, Writer* writer){
    return true;
 }
 
+void rtps::Domain::printInfo(){
+  for(unsigned int i= 0; i < m_participants.size(); i++){
+    printf("Participant %u\n", i);
+    m_participants[i].printInfo();
+  }
+}
 
 rtps::GuidPrefix_t Domain::generateGuidPrefix(ParticipantId_t id) const {
   GuidPrefix_t prefix = Config::BASE_GUID_PREFIX;

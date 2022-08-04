@@ -81,10 +81,14 @@ typedef void (*ddsReaderCallback_fp)(void *callee,
 
 class Reader {
 public:
+  using callbackFunction_t = void (*)(void*, const ReaderCacheChange&);
+  using callbackIdentifier_t = uint32_t;
+
   TopicData m_attributes;
   virtual void newChange(const ReaderCacheChange &cacheChange) = 0;
-  virtual void registerCallback(ddsReaderCallback_fp cb, void *arg);
-  virtual void removeCallback(ddsReaderCallback_fp cb);
+  virtual callbackIdentifier_t registerCallback(callbackFunction_t cb, void *arg);
+  virtual bool removeCallback(callbackIdentifier_t identifier);
+  uint8_t getNumCallbacks();
 
   virtual bool onNewHeartbeat(const SubmessageHeartbeat &msg,
                               const GuidPrefix_t &remotePrefix) = 0;
@@ -116,11 +120,16 @@ protected:
   virtual ~Reader() = default;
   MemoryPool<WriterProxy, Config::NUM_WRITER_PROXIES_PER_READER> m_proxies;
 
+  callbackIdentifier_t m_callback_identifier = 1;
+
   uint8_t m_callback_count = 0;
-  std::array<ddsReaderCallback_fp, Config::MAX_NUM_READER_CALLBACKS>
-      m_callbacks = {nullptr};
-  std::array<void *, Config::MAX_NUM_READER_CALLBACKS> m_callback_arg = {
-      nullptr};
+  using callbackElement_t = struct{
+	  callbackFunction_t function = nullptr;
+	  void* arg = nullptr;
+	  callbackIdentifier_t identifier;
+  };
+
+  std::array<callbackElement_t, Config::MAX_NUM_READER_CALLBACKS> m_callbacks = {nullptr};
 
   // Guards manipulation of the proxies array
   sys_mutex_t m_proxies_mutex = nullptr;

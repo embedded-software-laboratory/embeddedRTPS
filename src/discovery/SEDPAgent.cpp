@@ -46,7 +46,7 @@ using rtps::SEDPAgent;
 
 void SEDPAgent::init(Participant &part, const BuiltInEndpoints &endpoints) {
   // TODO move
-  if (createMutex(&m_mutex) != ERR_OK) {
+  if (!createMutex(&m_mutex)) {
     SEDP_LOG("SEDPAgent failed to create mutex\n");
     return;
   }

@@ -79,6 +79,8 @@ public:
   bool deleteWriter(Participant &part, Writer* writer);
   bool deleteReader(Participant &part, Reader* reader);
 
+  void printInfo();
+
 private:
   friend class SizeInspector;
   ThreadPool m_threadPool;
