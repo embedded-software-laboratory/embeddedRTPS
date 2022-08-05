@@ -199,8 +199,7 @@ void addSubmessageGap(Buffer &buffer, EntityId_t writerId, EntityId_t readerId,
 #else
   subMsg.header.flags = FLAG_BIG_ENDIAN;
 #endif
-  subMsg.header.octetsToNextHeader =
-      SubmessageGap::getRawSizeWithoutSNSet() - numBytesUntilEndOfLength;
+  subMsg.header.octetsToNextHeader = 32;
 
   subMsg.writerId = writerId;
   subMsg.readerId = readerId;

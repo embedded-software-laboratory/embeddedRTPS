@@ -164,9 +164,6 @@ template <class NetworkDriver> void StatefulWriterT<NetworkDriver>::progress() {
       } else {
         success = sendData(proxy, next);
       }
-      if (!success) {
-        continue;
-      }
     }
 
     /*
@@ -176,7 +173,7 @@ template <class NetworkDriver> void StatefulWriterT<NetworkDriver>::progress() {
      * -> onAckNack will send Gap Messages to skip deleted local endpoints during SEDP
      */
     if(next->diposeAfterWrite){
-    	next->kind = ChangeKind_t::NOT_ALIVE_DISPOSED;
+    	m_history.setCacheChangeKind(next->sequenceNumber, ChangeKind_t::NOT_ALIVE_DISPOSED);
     }
   }else{
     SFW_LOG("Couldn't get a CacheChange with SN (%i,%u)\n", snMissing.high,
@@ -373,7 +370,7 @@ bool StatefulWriterT<NetworkDriver>::sendDataWRMulticast(
     }
 
     MessageFactory::addSubMessageData(
-        info.buffer, next->data, false, next->sequenceNumber,
+        info.buffer, next->data, next->inLineQoS, next->sequenceNumber,
         m_attributes.endpointGuid.entityId, reid);
     
     m_transport->sendPacket(info);

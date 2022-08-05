@@ -31,15 +31,12 @@ Author: i11 - Embedded Software, RWTH Aachen University
 namespace rtps {
 
 /**
- * Simple version of a history cache. It sets consecutive sequence numbers
- * automatically which allows an easy and fast approach of dropping acknowledged
- * changes. Furthermore, disposing of arbitrary changes is not possible.
- * However, this is in principle easy to add by changing the ChangeKind and
- * dropping it when passing it during deleting of other sequence numbers
+ * Extension of the SimpleHistoryCache that allows for deletion operation at the cost of efficieny
+ * TODO: Replace with something better in the future
  */
-template <uint16_t SIZE> class SimpleHistoryCache {
+template <uint16_t SIZE> class StatefulWriterHistoryCache {
 public:
-  SimpleHistoryCache() = default;
+  StatefulWriterHistoryCache() = default;
 
   bool isFull() const {
     uint16_t it = m_head;

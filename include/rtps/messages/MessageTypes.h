@@ -372,7 +372,7 @@ bool serializeMessage(Buffer &buffer, SubmessageGap &msg) {
   if(msg.gapList.numBits != 0){
     return false;
   }
-  if (!buffer.reserve(SubmessageGap::getRawSizeWithoutSNSet())) {
+  if (!buffer.reserve(36)) {
     return false;
   }
 
@@ -388,7 +388,7 @@ bool serializeMessage(Buffer &buffer, SubmessageGap &msg) {
   buffer.append(reinterpret_cast<uint8_t *>(&msg.gapStart.high),
                 sizeof(msg.gapStart.high));
   buffer.append(reinterpret_cast<uint8_t *>(&msg.gapStart.low),
-                sizeof(msg.gapStart.high));
+                sizeof(msg.gapStart.low));
 
   buffer.append(reinterpret_cast<uint8_t *>(&msg.gapList.base.high),
                 sizeof(msg.gapList.base.high));
@@ -398,6 +398,9 @@ bool serializeMessage(Buffer &buffer, SubmessageGap &msg) {
   buffer.append(reinterpret_cast<uint8_t *>(&msg.gapList.numBits),
                 sizeof(uint32_t));
   
+  buffer.append(reinterpret_cast<uint8_t *>(&msg.gapList.numBits),
+                sizeof(uint32_t));
+
   return true;
 }
 

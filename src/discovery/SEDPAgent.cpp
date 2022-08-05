@@ -380,7 +380,18 @@ bool SEDPAgent::announceEndpointDeletion(A* local_endpoint, Writer* sedp_endpoin
 	  &microbuffer,
 	  static_cast<uint8_t>(local_endpoint->m_attributes.endpointGuid.entityId.entityKind));
 
-	// Sentinel
+	ucdr_serialize_uint16_t(&microbuffer, ParameterId::PID_STATUS_INFO);
+	ucdr_serialize_uint16_t(&microbuffer, static_cast<uint16_t>(4));
+	ucdr_serialize_uint8_t(&microbuffer, 0);
+	ucdr_serialize_uint8_t(&microbuffer, 0);
+	ucdr_serialize_uint8_t(&microbuffer, 0);
+	ucdr_serialize_uint8_t(&microbuffer, 3);
+
+	// Sentinel to terminate inline qos
+	ucdr_serialize_uint16_t(&microbuffer, ParameterId::PID_SENTINEL);
+	ucdr_serialize_uint16_t(&microbuffer, 0);
+
+	// Sentinel to terminate serialized data
 	ucdr_serialize_uint16_t(&microbuffer, ParameterId::PID_SENTINEL);
 	ucdr_serialize_uint16_t(&microbuffer, 0);
 
