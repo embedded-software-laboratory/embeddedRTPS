@@ -145,6 +145,7 @@ void rtps::deserializeSNS(const uint8_t* &position, SequenceNumberSet& set, size
 	  // equal to size = std::min(SNS_NUM_BYTES, num_bitfields)
 	  size_t size = num_bitfields > SNS_NUM_BYTES ? SNS_NUM_BYTES : num_bitfields;
 	  doCopyAndMoveOn(reinterpret_cast<uint8_t *>(set.bitMap.data()), position, size);
+	  position += (num_bitfields - size);
   }
 }
 
@@ -170,7 +171,7 @@ bool rtps::deserializeMessage(const MessageProcessingInfo &info,
                   msg.writerId.entityKey.size());
   msg.writerId.entityKind = static_cast<EntityKind_t>(*currentPos++);
 
-  size_t num_bitfields = remainingSizeAtBeginning  - (currentPos-info.getPointerToCurrentPos()) - sizeof(msg.count.value);
+  size_t num_bitfields = msg.header.octetsToNextHeader - 4 - 4 - 8 - 4 - 4;
   deserializeSNS(currentPos, msg.readerSNState, num_bitfields);
 
   doCopyAndMoveOn(reinterpret_cast<uint8_t *>(&msg.count.value), currentPos,

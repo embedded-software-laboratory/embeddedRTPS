@@ -150,11 +150,11 @@ bool Participant::deleteReader(Reader* reader){
     if (m_readers[i] == reader){
       if(m_sedpAgent.deleteReader(reader)){
         m_readers[i] = nullptr;
+        return true;
       }
       PARTICIPANT_LOG("Found reader but SEDP deletion failed");
     }
   }
-  return false;
 }
 
 
@@ -425,7 +425,7 @@ void Participant::printInfo(){
     if(m_readers[i] != nullptr && m_readers[i]->isInitialized()){
         if(m_hasBuilInEndpoints && i < 3){
         	if(m_readers[i]->m_attributes.endpointGuid.entityId == ENTITYID_SPDP_BUILTIN_PARTICIPANT_READER){
-        		printf("Reader %u: SPDP BUILTIN READER | Remote Proxies = %u \n", i, static_cast<int>(m_readers[i]->getProxiesCount()));
+        		printf("Reader %u: SPDP BUILTIN READER | Remote Proxies = %u \n ", i, static_cast<int>(m_readers[i]->getProxiesCount()));
         	}
         	if(m_readers[i]->m_attributes.endpointGuid.entityId == ENTITYID_SEDP_BUILTIN_PUBLICATIONS_READER){
         		printf("Reader %u: SEDP PUBLICATION READER | Remote Proxies = %u \n ", i, static_cast<int>(m_readers[i]->getProxiesCount()));
@@ -435,7 +435,8 @@ void Participant::printInfo(){
         	}
         	continue;
         }
-      printf("Reader %u: Topic = %s | Type = %s | Remote Proxies = %u \n", i, m_readers[i]->m_attributes.topicName, m_readers[i]->m_attributes.typeName,  static_cast<int>(m_readers[i]->getProxiesCount()));
+      printf("Reader %u: Topic = %s | Type = %s | Remote Proxies = %u | SEDP SN = %u  \n", i, m_readers[i]->m_attributes.topicName, m_readers[i]->m_attributes.typeName,
+    		  static_cast<int>(m_readers[i]->getProxiesCount()), static_cast<int>(m_readers[i]->getSEDPSequenceNumber().low));
     }
   }
 

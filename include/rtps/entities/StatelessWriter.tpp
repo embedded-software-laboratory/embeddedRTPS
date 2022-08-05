@@ -126,9 +126,8 @@ const CacheChange *StatelessWriterT<NetworkDriver>::newChange(
 }
 
 template <typename NetworkDriver>
-bool StatelessWriterT<NetworkDriver>::setCacheChangeKind(const SequenceNumber_t& s, ChangeKind_t kind){
-  Lock lock(m_mutex);
-  m_history.setCacheChangeKind(s, kind);
+bool StatelessWriterT<NetworkDriver>::removeFromHistory(const SequenceNumber_t& s){
+  return false; // Stateless Writers currently do not support deletion from history
 }
 
 
