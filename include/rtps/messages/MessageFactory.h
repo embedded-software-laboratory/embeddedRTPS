@@ -204,7 +204,7 @@ void addSubmessageGap(Buffer &buffer, EntityId_t writerId, EntityId_t readerId,
   subMsg.writerId = writerId;
   subMsg.readerId = readerId;
   subMsg.gapStart = missingSN;
-  subMsg.gapList.base = missingSN++;
+  subMsg.gapList.base = ++missingSN;
   subMsg.gapList.numBits = 0;
 
   serializeMessage(buffer, subMsg);

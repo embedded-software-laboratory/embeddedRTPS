@@ -359,7 +359,7 @@ void SEDPAgent::addWriter(Writer &writer) {
 
 template<typename A>
 bool SEDPAgent::disposeEndpointInSEDPHistory(A* local_endpoint, Writer* sedp_writer){
-	return sedp_writer->setCacheChangeKind(local_endpoint->getSEDPSequenceNumber(), ChangeKind_t::NOT_ALIVE_DISPOSED);
+	return sedp_writer->removeFromHistory(local_endpoint->getSEDPSequenceNumber());
 }
 
 template<typename A>
@@ -396,7 +396,7 @@ bool SEDPAgent::announceEndpointDeletion(A* local_endpoint, Writer* sedp_endpoin
 	ucdr_serialize_uint16_t(&microbuffer, 0);
 
 	auto ret = sedp_endpoint->newChange(ChangeKind_t::ALIVE, m_buffer, ucdr_buffer_length(&microbuffer), true, true);
-  return (ret != nullptr);
+    return (ret != nullptr);
 }
 
 

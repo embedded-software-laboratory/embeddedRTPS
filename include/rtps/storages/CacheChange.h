@@ -39,6 +39,13 @@ struct CacheChange {
   CacheChange() = default;
   CacheChange(ChangeKind_t kind, SequenceNumber_t sequenceNumber)
       : kind(kind), sequenceNumber(sequenceNumber){};
+
+  void reset(){
+    kind = ChangeKind_t::INVALID;
+    sequenceNumber = SEQUENCENUMBER_UNKNOWN;
+    inLineQoS = false;
+    diposeAfterWrite = false;
+  }
 };
 } // namespace rtps
 

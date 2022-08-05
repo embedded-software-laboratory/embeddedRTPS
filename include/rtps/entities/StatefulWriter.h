@@ -28,7 +28,7 @@ Author: i11 - Embedded Software, RWTH Aachen University
 #include "rtps/entities/ReaderProxy.h"
 #include "rtps/entities/Writer.h"
 #include "rtps/storages/MemoryPool.h"
-#include "rtps/storages/SimpleHistoryCache.h"
+#include "rtps/storages/HistoryCacheWithDeletion.h"
 
 namespace rtps {
 
@@ -44,7 +44,7 @@ public:
   const CacheChange *newChange(ChangeKind_t kind, const uint8_t *data,
                                DataSize_t size, bool inLineQoS = false, bool markDisposedAfterWrite = false) override;
                                                             
-  bool setCacheChangeKind(const SequenceNumber_t& s, ChangeKind_t kind);
+  bool removeFromHistory(const SequenceNumber_t& s);
   void setAllChangesToUnsent() override;
   void onNewAckNack(const SubmessageAckNack &msg,
                     const GuidPrefix_t &sourceGuidPrefix) override;
@@ -55,7 +55,7 @@ private:
 
   NetworkDriver *m_transport;
 
-  SimpleHistoryCache<Config::HISTORY_SIZE_STATEFUL> m_history;
+  HistoryCacheWithDeletion<Config::HISTORY_SIZE_STATEFUL> m_history;
   sys_thread_t m_heartbeatThread = nullptr;
   Count_t m_hbCount{1};
 

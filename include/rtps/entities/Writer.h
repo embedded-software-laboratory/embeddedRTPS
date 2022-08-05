@@ -55,7 +55,7 @@ public:
   virtual void progress() = 0;
   virtual const CacheChange *newChange(ChangeKind_t kind, const uint8_t *data,
                                        DataSize_t size, bool inLineQoS = false, bool markDisposedAfterWrite = false) = 0;
-  virtual bool setCacheChangeKind(const SequenceNumber_t& s, ChangeKind_t kind) = 0;
+  virtual bool removeFromHistory(const SequenceNumber_t& s) = 0;
   virtual void setAllChangesToUnsent() = 0;
   virtual void onNewAckNack(const SubmessageAckNack &msg,
                             const GuidPrefix_t &sourceGuidPrefix) = 0;

@@ -173,7 +173,7 @@ template <class NetworkDriver> void StatefulWriterT<NetworkDriver>::progress() {
      * -> onAckNack will send Gap Messages to skip deleted local endpoints during SEDP
      */
     if(next->diposeAfterWrite){
-    	m_history.setCacheChangeKind(next->sequenceNumber, ChangeKind_t::NOT_ALIVE_DISPOSED);
+    	m_history.dropChange(next->sequenceNumber);
     }
   }else{
     SFW_LOG("Couldn't get a CacheChange with SN (%i,%u)\n", snMissing.high,
@@ -248,19 +248,15 @@ void StatefulWriterT<NetworkDriver>::onNewAckNack(
 
       SFW_LOG("Send Packet on acknack.\n");
       const CacheChange* cache = m_history.getChangeBySN(nextSN);
-      if(cache == nullptr){
+
+      // We should have this SN -> send GAP Message
+      if(cache == nullptr && m_history.isSNInRange(nextSN)){
+        sendGap(*reader, nextSN);
         continue;
       }
 
-      switch(cache->kind){
-        case ChangeKind_t::ALIVE:
-          sendData(*reader, cache);
-          break;
-        case ChangeKind_t::NOT_ALIVE_DISPOSED:
-          sendGap(*reader, nextSN);
-          break;
-        default:
-          break;
+      if(cache != nullptr){
+         sendData(*reader, cache);
       }
     
     }
@@ -280,9 +276,9 @@ void StatefulWriterT<NetworkDriver>::onNewAckNack(
 }
 
 template <class NetworkDriver>
-bool rtps::StatefulWriterT<NetworkDriver>::setCacheChangeKind(const SequenceNumber_t& s, ChangeKind_t kind){
+bool rtps::StatefulWriterT<NetworkDriver>::removeFromHistory(const SequenceNumber_t& s){
   Lock lock{m_mutex};
-  return m_history.setCacheChangeKind(s, kind);
+  return m_history.dropChange(s);
 }
 
 template <class NetworkDriver>
