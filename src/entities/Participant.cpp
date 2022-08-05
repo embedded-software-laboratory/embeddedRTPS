@@ -147,7 +147,7 @@ rtps::Reader *Participant::addReader(Reader *pReader) {
 bool Participant::deleteReader(Reader* reader){
   Lock{m_mutex};
   for(unsigned int i = 0; i < m_readers.size(); i++){
-    if (m_readers[i] == reader){
+    if (m_readers[i]->getSEDPSequenceNumber() == reader->getSEDPSequenceNumber()){
       if(m_sedpAgent.deleteReader(reader)){
         m_readers[i] = nullptr;
         return true;
@@ -161,9 +161,10 @@ bool Participant::deleteReader(Reader* reader){
 bool Participant::deleteWriter(Writer* writer){
   Lock{m_mutex};
   for(unsigned int i = 0; i < m_writers.size(); i++){
-    if (m_writers[i] == writer){
+    if (m_writers[i]->getSEDPSequenceNumber() == writer->getSEDPSequenceNumber()){
       if(m_sedpAgent.deleteWriter(writer)){
     	 m_writers[i] = nullptr;
+    	 return true;
       }
       PARTICIPANT_LOG("Found reader but SEDP deletion failed");
     }
@@ -454,7 +455,8 @@ void Participant::printInfo(){
     	continue;
     }
     if(m_writers[i] != nullptr && m_writers[i]->isInitialized()){
-   	 printf("Writer %u: Topic = %s | Type = %s | Remote Proxies = %u \n", i, m_writers[i]->m_attributes.topicName, m_writers[i]->m_attributes.typeName,  static_cast<int>(m_writers[i]->getProxiesCount()));
+   	 printf("Writer %u: Topic = %s | Type = %s | Remote Proxies = %u | SEDP SN = %u  \n", i, m_writers[i]->m_attributes.topicName, m_writers[i]->m_attributes.typeName,  static_cast<int>(m_writers[i]->getProxiesCount()),
+   			 static_cast<int>(m_writers[i]->getSEDPSequenceNumber().low));
     }
   }
 

@@ -58,6 +58,11 @@ void rtps::Writer::resetSendOptions()
   manageSendOptions();
 }
 
+const rtps::CacheChange *rtps::Writer::newChange(ChangeKind_t kind, const uint8_t *data,
+                                     DataSize_t size){
+	return newChange(kind, data, size, false, false);
+}
+
 void rtps::Writer::manageSendOptions()
 {
   INIT_GUARD();
