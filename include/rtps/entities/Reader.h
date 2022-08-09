@@ -36,6 +36,7 @@ Author: i11 - Embedded Software, RWTH Aachen University
 namespace rtps {
 
 struct SubmessageHeartbeat;
+struct SubmessageGap;
 
 class ReaderCacheChange {
 private:
@@ -79,31 +80,65 @@ typedef void (*ddsReaderCallback_fp)(void *callee,
 
 class Reader {
 public:
+  using callbackFunction_t = void (*)(void *, const ReaderCacheChange &);
+  using callbackIdentifier_t = uint32_t;
+
   TopicData m_attributes;
   virtual void newChange(const ReaderCacheChange &cacheChange) = 0;
-  virtual void registerCallback(ddsReaderCallback_fp cb, void *callee) = 0;
+  virtual callbackIdentifier_t registerCallback(callbackFunction_t cb,
+                                                void *arg);
+  virtual bool removeCallback(callbackIdentifier_t identifier);
+  uint8_t getNumCallbacks();
+
   virtual bool onNewHeartbeat(const SubmessageHeartbeat &msg,
                               const GuidPrefix_t &remotePrefix) = 0;
+  virtual bool onNewGapMessage(const SubmessageGap &msg,
+                               const GuidPrefix_t &remotePrefix) = 0;
   virtual bool addNewMatchedWriter(const WriterProxy &newProxy) = 0;
-  virtual void removeWriter(const Guid_t &guid) = 0;
-  virtual void removeWriterOfParticipant(const GuidPrefix_t &guidPrefix) = 0;
+  virtual bool removeProxy(const Guid_t &guid);
+  virtual void removeAllProxiesOfParticipant(const GuidPrefix_t &guidPrefix);
   bool isInitialized() { return m_is_initialized_; }
+  virtual void reset();
+  bool isProxy(const Guid_t &guid);
+  WriterProxy *getProxy(Guid_t guid);
+  uint32_t getProxiesCount();
 
-  bool knowWriterId(const Guid_t &guid) {
-    for (const auto &proxy : m_proxies) {
-      if (proxy.remoteWriterGuid.operator==(guid)) {
-        return true;
-      }
-    }
-    return false;
-  }
+  void setSEDPSequenceNumber(const SequenceNumber_t &sn);
+  const SequenceNumber_t &getSEDPSequenceNumber();
 
-  uint32_t getNumMatchedWriters() { return m_proxies.getSize(); }
+  using dumpProxyCallback = void (*)(const Reader *reader, const WriterProxy &,
+                                     void *arg);
+
+  //! Dangerous, only
+  int dumpAllProxies(dumpProxyCallback target, void *arg);
 
 protected:
+  void executeCallbacks(const ReaderCacheChange &cacheChange);
+  bool initMutex();
+
+  SequenceNumber_t m_sedp_sequence_number;
+
   bool m_is_initialized_ = false;
   virtual ~Reader() = default;
   MemoryPool<WriterProxy, Config::NUM_WRITER_PROXIES_PER_READER> m_proxies;
+
+  callbackIdentifier_t m_callback_identifier = 1;
+
+  uint8_t m_callback_count = 0;
+  using callbackElement_t = struct {
+    callbackFunction_t function = nullptr;
+    void *arg = nullptr;
+    callbackIdentifier_t identifier;
+  };
+
+  std::array<callbackElement_t, Config::MAX_NUM_READER_CALLBACKS> m_callbacks =
+      {nullptr};
+
+  // Guards manipulation of the proxies array
+  sys_mutex_t m_proxies_mutex = nullptr;
+
+  // Guards manipulation of callback array
+  sys_mutex_t m_callback_mutex = nullptr;
 };
 } // namespace rtps
 

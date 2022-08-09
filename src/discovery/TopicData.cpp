@@ -29,6 +29,14 @@ using rtps::TopicData;
 using rtps::TopicDataCompressed;
 using rtps::SMElement::ParameterId;
 
+bool TopicData::isDisposedFlagSet() const {
+  return statusInfoValid && ((statusInfo & 0b1));
+}
+
+bool TopicData::isUnregisteredFlagSet() const {
+  return statusInfoValid && ((statusInfo & (0b1 << 1)) != 0);
+}
+
 bool TopicData::matchesTopicOf(const TopicData &other) {
   return strcmp(this->topicName, other.topicName) == 0 &&
          strcmp(this->typeName, other.typeName) == 0;
@@ -36,7 +44,16 @@ bool TopicData::matchesTopicOf(const TopicData &other) {
 
 bool TopicData::readFromUcdrBuffer(ucdrBuffer &buffer) {
 
+  // Reset valid flags, as the respective parameters are optional
+  statusInfoValid = false;
+  entityIdFromKeyHashValid = false;
+
   while (ucdr_buffer_remaining(&buffer) >= 4) {
+    if (ucdr_buffer_has_error(&buffer)) {
+      while (1) {
+        printf("FAILED TO DESERIALIZE TOPIC DATA\n");
+      }
+    }
     ParameterId pid;
     uint16_t length;
     FullLengthLocator uLoc;
@@ -85,6 +102,33 @@ bool TopicData::readFromUcdrBuffer(ucdrBuffer &buffer) {
     case ParameterId::PID_MULTICAST_LOCATOR:
       multicastLocator.readFromUcdrBuffer(buffer);
       break;
+    case ParameterId::PID_STATUS_INFO: {
+      if (length == 4) {
+        buffer.iterator += 3; // skip first 3 bytes of status info as they are
+                              // reserved parameters
+        ucdr_deserialize_uint8_t(&buffer, &statusInfo);
+        statusInfoValid = true;
+      } else { // Ignore Status Info
+        buffer.iterator += length;
+      }
+    } break;
+    case ParameterId::PID_KEY_HASH: // only use case so far is deleting remote
+                                    // endpoints
+    {
+      if (length == 16) {
+        ucdr_deserialize_array_uint8_t(&buffer, endpointGuid.prefix.id.data(),
+                                       endpointGuid.prefix.id.size());
+        ucdr_deserialize_array_uint8_t(
+            &buffer, this->entityIdFromKeyHash.entityKey.data(),
+            this->entityIdFromKeyHash.entityKey.size());
+        ucdr_deserialize_uint8_t(&buffer,
+                                 reinterpret_cast<uint8_t *>(
+                                     &(this->entityIdFromKeyHash.entityKind)));
+        entityIdFromKeyHashValid = true;
+      } else { // Ignore value
+        buffer.iterator += length;
+      }
+    } break;
     default:
       buffer.iterator += length;
       buffer.last_data_size = 1;

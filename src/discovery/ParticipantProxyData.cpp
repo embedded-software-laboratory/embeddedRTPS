@@ -175,8 +175,7 @@ bool ParticipantProxyData::readLocatorIntoList(
         proxy_locator = LocatorIPv4(full_length_locator);
         SPDP_LOG("Adding locator: %u %u %u %u \n",
                  (int)proxy_locator.address[0], (int)proxy_locator.address[1],
-                 (int)proxy_locator.address[2],
-                 (int)proxy_locator.address[3]);
+                 (int)proxy_locator.address[2], (int)proxy_locator.address[3]);
         return true;
       } else {
         SPDP_LOG("Ignoring locator: %u %u %u %u \n",

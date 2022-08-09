@@ -29,6 +29,8 @@ const uint8_t NUM_READER_PROXIES_PER_WRITER = 60;
 const uint8_t MAX_NUM_UNMATCHED_REMOTE_WRITERS = 150;
 const uint8_t MAX_NUM_UNMATCHED_REMOTE_READERS = 150;
 
+const uint8_t MAX_NUM_READER_CALLBACKS = 5;
+
 const uint8_t HISTORY_SIZE_STATELESS = 64;
 const uint8_t HISTORY_SIZE_STATEFUL = 64;
 
@@ -37,7 +39,7 @@ const uint8_t MAX_TOPICNAME_LENGTH = 64;
 
 const int HEARTBEAT_STACKSIZE = 1200;          // byte
 const int THREAD_POOL_WRITER_STACKSIZE = 1100; // byte
-const int THREAD_POOL_READER_STACKSIZE = 1600; // byte
+const int THREAD_POOL_READER_STACKSIZE = 3600; // byte
 const uint16_t SPDP_WRITER_STACKSIZE = 550;    // byte
 
 const uint16_t SF_WRITER_HB_PERIOD_MS = 4000;
@@ -48,8 +50,8 @@ const uint8_t SPDP_CYCLECOUNT_HEARTBEAT =
 const uint8_t SPDP_MAX_NUMBER_FOUND_PARTICIPANTS = 100;
 const uint8_t SPDP_MAX_NUM_LOCATORS = 1;
 const Duration_t SPDP_DEFAULT_REMOTE_LEASE_DURATION = {
-    100, 0}; // Default lease duration for remote participants, usually
-             // overwritten by remote info
+    5, 0}; // Default lease duration for remote participants, usually
+           // overwritten by remote info
 const Duration_t SPDP_MAX_REMOTE_LEASE_DURATION = {
     180,
     0}; // Absolute maximum lease duration, ignoring remote participant info

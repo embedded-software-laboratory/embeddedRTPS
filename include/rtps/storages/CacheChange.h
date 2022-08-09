@@ -31,12 +31,21 @@ Author: i11 - Embedded Software, RWTH Aachen University
 namespace rtps {
 struct CacheChange {
   ChangeKind_t kind = ChangeKind_t::INVALID;
+  bool inLineQoS = false;
+  bool diposeAfterWrite = false;
   SequenceNumber_t sequenceNumber = SEQUENCENUMBER_UNKNOWN;
   PBufWrapper data{};
 
   CacheChange() = default;
   CacheChange(ChangeKind_t kind, SequenceNumber_t sequenceNumber)
       : kind(kind), sequenceNumber(sequenceNumber){};
+
+  void reset() {
+    kind = ChangeKind_t::INVALID;
+    sequenceNumber = SEQUENCENUMBER_UNKNOWN;
+    inLineQoS = false;
+    diposeAfterWrite = false;
+  }
 };
 } // namespace rtps
 

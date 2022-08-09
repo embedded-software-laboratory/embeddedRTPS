@@ -116,6 +116,10 @@ bool MessageReceiver::processSubmessage(MessageProcessingInfo &msgInfo,
     RECV_LOG("Info_DST submessage not relevant.\n");
     success = true; // Not relevant
     break;
+  case SubmessageKind::GAP:
+    RECV_LOG("Processing GAP submessage\n");
+    success = processGapSubmessage(msgInfo);
+    break;
   case SubmessageKind::INFO_TS:
     RECV_LOG("Info_TS submessage not relevant.\n");
     success = true; // Not relevant now
@@ -196,7 +200,7 @@ bool MessageReceiver::processHeartbeatSubmessage(
   Reader *reader = mp_part->getReader(submsgHB.readerId);
   if (reader != nullptr) {
     reader->onNewHeartbeat(submsgHB, sourceGuidPrefix);
-    mp_part->addHeartbeat(sourceGuidPrefix);
+    mp_part->refreshRemoteParticipantLiveliness(sourceGuidPrefix);
     return true;
   } else {
     return false;
@@ -218,4 +222,18 @@ bool MessageReceiver::processAckNackSubmessage(MessageProcessingInfo &msgInfo) {
   }
 }
 
+bool MessageReceiver::processGapSubmessage(MessageProcessingInfo &msgInfo) {
+  SubmessageGap submsgGap;
+  if (!deserializeMessage(msgInfo, submsgGap)) {
+    return false;
+  }
+
+  Reader *reader = mp_part->getReader(submsgGap.readerId);
+  if (reader != nullptr) {
+    reader->onNewGapMessage(submsgGap, sourceGuidPrefix);
+    return true;
+  } else {
+    return false;
+  }
+}
 #undef RECV_VERBOSE

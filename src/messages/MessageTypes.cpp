@@ -131,6 +131,26 @@ bool rtps::deserializeMessage(const MessageProcessingInfo &info,
   return true;
 }
 
+void rtps::deserializeSNS(const uint8_t *&position, SequenceNumberSet &set,
+                          size_t num_bitfields) {
+
+  doCopyAndMoveOn(reinterpret_cast<uint8_t *>(&set.base.high), position,
+                  sizeof(SequenceNumber_t::high));
+  doCopyAndMoveOn(reinterpret_cast<uint8_t *>(&set.base.low), position,
+                  sizeof(SequenceNumber_t::low));
+  doCopyAndMoveOn(reinterpret_cast<uint8_t *>(&set.numBits), position,
+                  sizeof(uint32_t));
+
+  // Ensure that we copy not more bits than our sequence number set can hold
+  if (set.numBits != 0) {
+    // equal to size = std::min(SNS_NUM_BYTES, num_bitfields)
+    size_t size = num_bitfields > SNS_NUM_BYTES ? SNS_NUM_BYTES : num_bitfields;
+    doCopyAndMoveOn(reinterpret_cast<uint8_t *>(set.bitMap.data()), position,
+                    size);
+    position += (num_bitfields - size);
+  }
+}
+
 bool rtps::deserializeMessage(const MessageProcessingInfo &info,
                               SubmessageAckNack &msg) {
   const DataSize_t remainingSizeAtBeginning = info.getRemainingSize();
@@ -152,25 +172,46 @@ bool rtps::deserializeMessage(const MessageProcessingInfo &info,
   doCopyAndMoveOn(msg.writerId.entityKey.data(), currentPos,
                   msg.writerId.entityKey.size());
   msg.writerId.entityKind = static_cast<EntityKind_t>(*currentPos++);
-  doCopyAndMoveOn(reinterpret_cast<uint8_t *>(&msg.readerSNState.base.high),
-                  currentPos, sizeof(msg.readerSNState.base.high));
-  doCopyAndMoveOn(reinterpret_cast<uint8_t *>(&msg.readerSNState.base.low),
-                  currentPos, sizeof(msg.readerSNState.base.low));
-  doCopyAndMoveOn(reinterpret_cast<uint8_t *>(&msg.readerSNState.numBits),
-                  currentPos, sizeof(uint32_t));
 
-  // Now we can check for full size
+  size_t num_bitfields = msg.header.octetsToNextHeader - 4 - 4 - 8 - 4 - 4;
+  deserializeSNS(currentPos, msg.readerSNState, num_bitfields);
+
+  doCopyAndMoveOn(reinterpret_cast<uint8_t *>(&msg.count.value), currentPos,
+                  sizeof(msg.count.value));
+  return true;
+}
+
+bool rtps::deserializeMessage(const MessageProcessingInfo &info,
+                              SubmessageGap &msg) {
+
+  const DataSize_t remainingSizeAtBeginning = info.getRemainingSize();
   if (remainingSizeAtBeginning <
-      SubmessageAckNack::getRawSize(msg.readerSNState)) {
+      SubmessageGap::getRawSizeWithoutSNSet()) { // Size of SequenceNumberSet
+                                                 // unknown
+    return false;
+  }
+  if (!deserializeMessage(info, msg.header)) {
     return false;
   }
 
-  if (msg.readerSNState.numBits != 0) {
-    doCopyAndMoveOn(
-        reinterpret_cast<uint8_t *>(msg.readerSNState.bitMap.data()),
-        currentPos, 4 * ((msg.readerSNState.numBits / 32) + 1));
-  }
-  doCopyAndMoveOn(reinterpret_cast<uint8_t *>(&msg.count.value), currentPos,
-                  sizeof(msg.count.value));
+  const uint8_t *currentPos =
+      info.getPointerToCurrentPos() + SubmessageHeader::getRawSize();
+
+  doCopyAndMoveOn(msg.readerId.entityKey.data(), currentPos,
+                  msg.readerId.entityKey.size());
+  msg.readerId.entityKind = static_cast<EntityKind_t>(*currentPos++);
+  doCopyAndMoveOn(msg.writerId.entityKey.data(), currentPos,
+                  msg.writerId.entityKey.size());
+  msg.writerId.entityKind = static_cast<EntityKind_t>(*currentPos++);
+
+  doCopyAndMoveOn(reinterpret_cast<uint8_t *>(&msg.gapStart.high), currentPos,
+                  sizeof(msg.gapStart.high));
+  doCopyAndMoveOn(reinterpret_cast<uint8_t *>(&msg.gapStart.low), currentPos,
+                  sizeof(msg.gapStart.low));
+
+  size_t num_bitfields =
+      remainingSizeAtBeginning - (currentPos - info.getPointerToCurrentPos());
+  deserializeSNS(currentPos, msg.gapList, num_bitfields);
+
   return true;
 }

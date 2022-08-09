@@ -23,10 +23,10 @@ Author: i11 - Embedded Software, RWTH Aachen University
 */
 
 #include "rtps/entities/Participant.h"
-
 #include "rtps/entities/Reader.h"
 #include "rtps/entities/Writer.h"
 #include "rtps/messages/MessageReceiver.h"
+#include "rtps/utils/Lock.h"
 #include "rtps/utils/Log.h"
 
 #if PARTICIPANT_VERBOSE && RTPS_GLOBAL_VERBOSE
@@ -45,9 +45,8 @@ using rtps::Participant;
 Participant::Participant()
     : m_guidPrefix(GUIDPREFIX_UNKNOWN), m_participantId(PARTICIPANT_ID_INVALID),
       m_receiver(this) {
-  if (sys_mutex_new(&m_mutex) != ERR_OK) {
-    while (1)
-      ;
+  if (!createMutex(&m_mutex)) {
+    std::terminate();
   }
 }
 Participant::Participant(const GuidPrefix_t &guidPrefix,
@@ -106,35 +105,91 @@ bool Participant::registerOnNewSubscriberMatchedCallback(
 }
 
 rtps::Writer *Participant::addWriter(Writer *pWriter) {
-  if (pWriter != nullptr && m_numWriters != m_writers.size()) {
-    m_writers[m_numWriters++] = pWriter;
-    if (m_hasBuilInEndpoints) {
-      m_sedpAgent.addWriter(*pWriter);
+  Lock{m_mutex};
+  for (unsigned int i = 0; i < m_writers.size(); i++) {
+    if (m_writers[i] == nullptr) {
+      m_writers[i] = pWriter;
+      if (m_hasBuilInEndpoints) {
+        m_sedpAgent.addWriter(*pWriter);
+      }
+      return pWriter;
     }
-    return pWriter;
-  } else {
-    return nullptr;
   }
+  return nullptr;
 }
 
-bool Participant::isWritersFull() { return m_numWriters == m_writers.size(); }
+bool Participant::isWritersFull() {
+  Lock{m_mutex};
+  for (unsigned int i = 0; i < m_writers.size(); i++) {
+    if (m_writers[i] == nullptr) {
+      return false;
+    }
+  }
+
+  return true;
+}
 
 rtps::Reader *Participant::addReader(Reader *pReader) {
-  if (pReader != nullptr && m_numReaders != m_readers.size()) {
-    m_readers[m_numReaders++] = pReader;
-    if (m_hasBuilInEndpoints) {
-      m_sedpAgent.addReader(*pReader);
+  Lock{m_mutex};
+  for (unsigned int i = 0; i < m_readers.size(); i++) {
+    if (m_readers[i] == nullptr) {
+      m_readers[i] = pReader;
+      if (m_hasBuilInEndpoints) {
+        m_sedpAgent.addReader(*pReader);
+      }
+      return pReader;
     }
-    return pReader;
-  } else {
-    return nullptr;
+  }
+
+  return nullptr;
+}
+
+bool Participant::deleteReader(Reader *reader) {
+  Lock{m_mutex};
+  for (unsigned int i = 0; i < m_readers.size(); i++) {
+    if (m_readers[i]->getSEDPSequenceNumber() ==
+        reader->getSEDPSequenceNumber()) {
+      if (m_sedpAgent.deleteReader(reader)) {
+        m_readers[i] = nullptr;
+        return true;
+      }
+      PARTICIPANT_LOG("Found reader but SEDP deletion failed");
+    }
   }
 }
 
-bool Participant::isReadersFull() { return m_numReaders == m_readers.size(); }
+bool Participant::deleteWriter(Writer *writer) {
+  Lock{m_mutex};
+  for (unsigned int i = 0; i < m_writers.size(); i++) {
+    if (m_writers[i]->getSEDPSequenceNumber() ==
+        writer->getSEDPSequenceNumber()) {
+      if (m_sedpAgent.deleteWriter(writer)) {
+        m_writers[i] = nullptr;
+        return true;
+      }
+      PARTICIPANT_LOG("Found reader but SEDP deletion failed");
+    }
+  }
+  return false;
+}
 
-rtps::Writer *Participant::getWriter(EntityId_t id) const {
-  for (uint8_t i = 0; i < m_numWriters; ++i) {
+bool Participant::isReadersFull() {
+  Lock{m_mutex};
+  for (unsigned int i = 0; i < m_readers.size(); i++) {
+    if (m_readers[i] == nullptr) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
+rtps::Writer *Participant::getWriter(EntityId_t id) {
+  Lock{m_mutex};
+  for (uint8_t i = 0; i < m_writers.size(); ++i) {
+    if (m_writers[i] == nullptr) {
+      continue;
+    }
     if (m_writers[i]->m_attributes.endpointGuid.entityId == id) {
       return m_writers[i];
     }
@@ -142,8 +197,12 @@ rtps::Writer *Participant::getWriter(EntityId_t id) const {
   return nullptr;
 }
 
-rtps::Reader *Participant::getReader(EntityId_t id) const {
-  for (uint8_t i = 0; i < m_numReaders; ++i) {
+rtps::Reader *Participant::getReader(EntityId_t id) {
+  Lock{m_mutex};
+  for (uint8_t i = 0; i < m_readers.size(); ++i) {
+    if (m_readers[i] == nullptr) {
+      continue;
+    }
     if (m_readers[i]->m_attributes.endpointGuid.entityId == id) {
       return m_readers[i];
     }
@@ -151,18 +210,25 @@ rtps::Reader *Participant::getReader(EntityId_t id) const {
   return nullptr;
 }
 
-rtps::Reader *Participant::getReaderByWriterId(const Guid_t &guid) const {
-  for (uint8_t i = 0; i < m_numReaders; ++i) {
-    if (m_readers[i]->knowWriterId(guid)) {
+rtps::Reader *Participant::getReaderByWriterId(const Guid_t &guid) {
+  Lock lock{m_mutex};
+  for (uint8_t i = 0; i < m_readers.size(); ++i) {
+    if (m_readers[i] == nullptr) {
+      continue;
+    }
+    if (m_readers[i]->isProxy(guid)) {
       return m_readers[i];
     }
   }
   return nullptr;
 }
 
-rtps::Writer *
-Participant::getMatchingWriter(const TopicData &readerTopicData) const {
-  for (uint8_t i = 0; i < m_numWriters; ++i) {
+rtps::Writer *Participant::getMatchingWriter(const TopicData &readerTopicData) {
+  Lock{m_mutex};
+  for (uint8_t i = 0; i < m_writers.size(); ++i) {
+    if (m_writers[i] == nullptr) {
+      continue;
+    }
     if (m_writers[i]->m_attributes.matchesTopicOf(readerTopicData) &&
         (readerTopicData.reliabilityKind == ReliabilityKind_t::BEST_EFFORT ||
          m_writers[i]->m_attributes.reliabilityKind ==
@@ -173,9 +239,12 @@ Participant::getMatchingWriter(const TopicData &readerTopicData) const {
   return nullptr;
 }
 
-rtps::Reader *
-Participant::getMatchingReader(const TopicData &writerTopicData) const {
-  for (uint8_t i = 0; i < m_numReaders; ++i) {
+rtps::Reader *Participant::getMatchingReader(const TopicData &writerTopicData) {
+  Lock{m_mutex};
+  for (uint8_t i = 0; i < m_readers.size(); ++i) {
+    if (m_readers[i] == nullptr) {
+      continue;
+    }
     if (m_readers[i]->m_attributes.matchesTopicOf(writerTopicData) &&
         (writerTopicData.reliabilityKind == ReliabilityKind_t::RELIABLE ||
          m_readers[i]->m_attributes.reliabilityKind ==
@@ -186,11 +255,15 @@ Participant::getMatchingReader(const TopicData &writerTopicData) const {
   return nullptr;
 }
 
-rtps::Writer *Participant::getMatchingWriter(
-    const TopicDataCompressed &readerTopicData) const {
-  for (uint8_t i = 0; i < m_numWriters; ++i) {
+rtps::Writer *
+Participant::getMatchingWriter(const TopicDataCompressed &readerTopicData) {
+  Lock{m_mutex};
+  for (uint8_t i = 0; i < m_writers.size(); ++i) {
+    if (m_writers[i] == nullptr) {
+      continue;
+    }
     if (readerTopicData.matchesTopicOf(m_writers[i]->m_attributes) &&
-        (readerTopicData.reliabilityKind == ReliabilityKind_t::BEST_EFFORT ||
+        (readerTopicData.is_reliable == false ||
          m_writers[i]->m_attributes.reliabilityKind ==
              ReliabilityKind_t::RELIABLE)) {
       return m_writers[i];
@@ -199,11 +272,15 @@ rtps::Writer *Participant::getMatchingWriter(
   return nullptr;
 }
 
-rtps::Reader *Participant::getMatchingReader(
-    const TopicDataCompressed &writerTopicData) const {
-  for (uint8_t i = 0; i < m_numReaders; ++i) {
+rtps::Reader *
+Participant::getMatchingReader(const TopicDataCompressed &writerTopicData) {
+  Lock{m_mutex};
+  for (uint8_t i = 0; i < m_readers.size(); ++i) {
+    if (m_readers[i] == nullptr) {
+      continue;
+    }
     if (writerTopicData.matchesTopicOf(m_readers[i]->m_attributes) &&
-        (writerTopicData.reliabilityKind == ReliabilityKind_t::RELIABLE ||
+        (writerTopicData.is_reliable == true ||
          m_readers[i]->m_attributes.reliabilityKind ==
              ReliabilityKind_t::BEST_EFFORT)) {
       return m_readers[i];
@@ -214,59 +291,101 @@ rtps::Reader *Participant::getMatchingReader(
 
 bool Participant::addNewRemoteParticipant(
     const ParticipantProxyData &remotePart) {
-  Lock lock{m_mutex};
+  Lock{m_mutex};
   return m_remoteParticipants.add(remotePart);
 }
 
 bool Participant::removeRemoteParticipant(const GuidPrefix_t &prefix) {
+  Lock{m_mutex};
   auto isElementToRemove = [&](const ParticipantProxyData &proxy) {
     return proxy.m_guid.prefix == prefix;
   };
   auto thunk = [](void *arg, const ParticipantProxyData &value) {
     return (*static_cast<decltype(isElementToRemove) *>(arg))(value);
   };
-  removeAllEntitiesOfParticipant(prefix);
+  removeAllProxiesOfParticipant(prefix);
   m_sedpAgent.removeUnmatchedEntitiesOfParticipant(prefix);
   return m_remoteParticipants.remove(thunk, &isElementToRemove);
 }
 
-void Participant::removeAllEntitiesOfParticipant(const GuidPrefix_t &prefix) {
-  for (auto i = 0; i < m_numWriters; i++) {
-    m_writers[i]->removeReaderOfParticipant(prefix);
+void Participant::removeAllProxiesOfParticipant(const GuidPrefix_t &prefix) {
+  Lock{m_mutex};
+  for (auto i = 0; i < m_readers.size(); i++) {
+    if (m_readers[i] == nullptr) {
+      continue;
+    }
+    m_readers[i]->removeAllProxiesOfParticipant(prefix);
   }
 
-  for (auto i = 0; i < m_numReaders; i++) {
-    m_readers[i]->removeWriterOfParticipant(prefix);
+  for (auto i = 0; i < m_writers.size(); i++) {
+    if (m_writers[i] == nullptr) {
+      continue;
+    }
+    m_writers[i]->removeAllProxiesOfParticipant(prefix);
+  }
+}
+
+void Participant::removeProxyFromAllEndpoints(const Guid_t &guid) {
+  Lock{m_mutex};
+  for (auto i = 0; i < m_writers.size(); i++) {
+    if (m_writers[i] == nullptr) {
+      continue;
+    }
+    if (m_writers[i]->removeProxy(guid)) {
+      PARTICIPANT_LOG("Removing proxy for writer [%s, %s], proxies left = %u\n",
+                      m_writers[i]->m_attributes.topicName,
+                      m_writers[i]->m_attributes.typeName,
+                      (int)m_writers[i]->getProxiesCount());
+    }
+  }
+
+  for (auto i = 0; i < m_readers.size(); i++) {
+    if (m_readers[i] == nullptr) {
+      continue;
+    }
+    if (m_readers[i]->removeProxy(guid)) {
+      PARTICIPANT_LOG("Removing proxy for reader [%s, %s], proxies left = %u\n",
+                      m_readers[i]->m_attributes.topicName,
+                      m_readers[i]->m_attributes.typeName,
+                      (int)m_readers[i]->getProxiesCount());
+    }
   }
 }
 
 const rtps::ParticipantProxyData *
 Participant::findRemoteParticipant(const GuidPrefix_t &prefix) {
+  Lock{m_mutex};
   auto isElementToFind = [&](const ParticipantProxyData &proxy) {
     return proxy.m_guid.prefix == prefix;
   };
   auto thunk = [](void *arg, const ParticipantProxyData &value) {
     return (*static_cast<decltype(isElementToFind) *>(arg))(value);
   };
-  Lock lock{m_mutex};
   return m_remoteParticipants.find(thunk, &isElementToFind);
 }
 
 void Participant::refreshRemoteParticipantLiveliness(
     const GuidPrefix_t &prefix) {
+  Lock{m_mutex};
   auto isElementToFind = [&](const ParticipantProxyData &proxy) {
     return proxy.m_guid.prefix == prefix;
   };
   auto thunk = [](void *arg, const ParticipantProxyData &value) {
     return (*static_cast<decltype(isElementToFind) *>(arg))(value);
   };
-  Lock lock{m_mutex};
+
   auto remoteParticipant = m_remoteParticipants.find(thunk, &isElementToFind);
-  remoteParticipant->onAliveSignal();
+  if (remoteParticipant != nullptr) {
+    remoteParticipant->onAliveSignal();
+  }
 }
 
 bool Participant::hasReaderWithMulticastLocator(ip4_addr_t address) {
-  for (uint8_t i = 0; i < m_numReaders; i++) {
+  Lock{m_mutex};
+  for (uint8_t i = 0; i < m_readers.size(); i++) {
+    if (m_readers[i] == nullptr) {
+      continue;
+    }
     if (m_readers[i]->m_attributes.multicastLocator.isSameAddress(&address)) {
       return true;
     }
@@ -275,24 +394,14 @@ bool Participant::hasReaderWithMulticastLocator(ip4_addr_t address) {
 }
 
 uint32_t Participant::getRemoteParticipantCount() {
-  Lock lock{m_mutex};
+  Lock{m_mutex};
   return m_remoteParticipants.getNumElements();
 }
 
 rtps::MessageReceiver *Participant::getMessageReceiver() { return &m_receiver; }
 
-void Participant::addHeartbeat(GuidPrefix_t sourceGuidPrefix) {
-  Lock lock{m_mutex};
-  for (auto &remote : m_remoteParticipants) {
-    if (remote.m_guid.prefix == sourceGuidPrefix) {
-      remote.onAliveSignal();
-      break;
-    }
-  }
-}
-
 bool Participant::checkAndResetHeartbeats() {
-  Lock lock{m_mutex};
+  Lock{m_mutex};
   PARTICIPANT_LOG("Have %u remote participants\n",
                   (unsigned int)m_remoteParticipants.getNumElements());
   PARTICIPANT_LOG(
@@ -315,9 +424,77 @@ bool Participant::checkAndResetHeartbeats() {
   return true;
 }
 
+void Participant::printInfo() {
+  for (unsigned int i = 0; i < m_readers.size(); i++) {
+    if (m_readers[i] != nullptr && m_readers[i]->isInitialized()) {
+      if (m_hasBuilInEndpoints && i < 3) {
+        if (m_readers[i]->m_attributes.endpointGuid.entityId ==
+            ENTITYID_SPDP_BUILTIN_PARTICIPANT_READER) {
+          printf("Reader %u: SPDP BUILTIN READER | Remote Proxies = %u \n ", i,
+                 static_cast<int>(m_readers[i]->getProxiesCount()));
+        }
+        if (m_readers[i]->m_attributes.endpointGuid.entityId ==
+            ENTITYID_SEDP_BUILTIN_PUBLICATIONS_READER) {
+          printf("Reader %u: SEDP PUBLICATION READER | Remote Proxies = %u \n ",
+                 i, static_cast<int>(m_readers[i]->getProxiesCount()));
+        }
+        if (m_readers[i]->m_attributes.endpointGuid.entityId ==
+            ENTITYID_SEDP_BUILTIN_SUBSCRIPTIONS_READER) {
+          printf("Reader %u: SEDP SUBSCRIPTION READER | Remote Proxies = %u \n",
+                 i, static_cast<int>(m_readers[i]->getProxiesCount()));
+        }
+        continue;
+      }
+      printf("Reader %u: Topic = %s | Type = %s | Remote Proxies = %u | SEDP "
+             "SN = %u  \n",
+             i, m_readers[i]->m_attributes.topicName,
+             m_readers[i]->m_attributes.typeName,
+             static_cast<int>(m_readers[i]->getProxiesCount()),
+             static_cast<int>(m_readers[i]->getSEDPSequenceNumber().low));
+    }
+  }
+
+  for (unsigned int i = 0; i < m_writers.size(); i++) {
+    if (m_hasBuilInEndpoints && i < 3) {
+      if (m_writers[i]->m_attributes.endpointGuid.entityId ==
+          ENTITYID_SPDP_BUILTIN_PARTICIPANT_WRITER) {
+        printf("Writer %u: SPDP WRITER | Remote Proxies = %u \n ", i,
+               static_cast<int>(m_writers[i]->getProxiesCount()));
+      }
+      if (m_writers[i]->m_attributes.endpointGuid.entityId ==
+          ENTITYID_SEDP_BUILTIN_PUBLICATIONS_WRITER) {
+        printf("Writer %u: SEDP PUBLICATION WRITER | Remote Proxies = %u  \n",
+               i, static_cast<int>(m_writers[i]->getProxiesCount()));
+      }
+      if (m_writers[i]->m_attributes.endpointGuid.entityId ==
+          ENTITYID_SEDP_BUILTIN_SUBSCRIPTIONS_WRITER) {
+        printf("Writer %u: SEDP SUBSCRIPTION WRITER | Remote Proxies = %u  \n",
+               i, static_cast<int>(m_writers[i]->getProxiesCount()));
+      }
+      continue;
+    }
+    if (m_writers[i] != nullptr && m_writers[i]->isInitialized()) {
+      printf("Writer %u: Topic = %s | Type = %s | Remote Proxies = %u | SEDP "
+             "SN = %u  \n",
+             i, m_writers[i]->m_attributes.topicName,
+             m_writers[i]->m_attributes.typeName,
+             static_cast<int>(m_writers[i]->getProxiesCount()),
+             static_cast<int>(m_writers[i]->getSEDPSequenceNumber().low));
+    }
+  }
+
+  printf("Unmatched Remote Readers = %u\n",
+         static_cast<int>(m_sedpAgent.getNumRemoteUnmatchedReaders()));
+  printf("Unmatched Remote Writers = %u\n",
+         static_cast<int>(m_sedpAgent.getNumRemoteUnmatchedWriters()));
+  printf("Remote Participants = %u\n",
+         static_cast<int>(m_remoteParticipants.getNumElements()));
+}
+
 rtps::SPDPAgent &Participant::getSPDPAgent() { return m_spdpAgent; }
 
 void Participant::addBuiltInEndpoints(BuiltInEndpoints &endpoints) {
+  Lock{m_mutex};
   m_hasBuilInEndpoints = true;
   m_spdpAgent.init(*this, endpoints);
   m_sedpAgent.init(*this, endpoints);

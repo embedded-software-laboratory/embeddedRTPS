@@ -166,6 +166,8 @@ struct SubmessageHeader {
   static constexpr uint16_t getRawSize() {
     return sizeof(SubmessageKind) + sizeof(uint8_t) + sizeof(uint16_t);
   }
+
+  bool finalFlag() const { return (flags & (SubMessageFlag::FLAG_FINAL)); }
 };
 
 struct SubmessageData {
@@ -204,6 +206,25 @@ struct SubmessageInfoDST {
   }
 };
 
+struct SubmessageGap {
+  SubmessageHeader header;
+  EntityId_t readerId;
+  EntityId_t writerId;
+  SequenceNumber_t gapStart;
+  SequenceNumberSet gapList;
+
+  static uint16_t getRawSizeWithoutSNSet() {
+    return SubmessageHeader::getRawSize() +
+           (2 * (3 + 1) + 8); // 2*EntityID +  GapStart
+  }
+
+  static uint16_t getRawSizeWithSingleElementSNSet() {
+    return SubmessageHeader::getRawSize() +
+           (2 * (3 + 1) + 8 + 8 +
+            4); // 2*EntityID +  GapStart + bitmapBase + numBits
+  }
+};
+
 struct SubmessageAckNack {
   SubmessageHeader header;
   EntityId_t readerId;
@@ -213,14 +234,13 @@ struct SubmessageAckNack {
   static uint16_t getRawSize(const SequenceNumberSet &set) {
     uint16_t bitMapSize = 0;
     if (set.numBits != 0) {
-      bitMapSize = 4 * ((set.numBits / 32) + 1);
+      bitMapSize = SNS_NUM_BYTES;
     }
     return getRawSizeWithoutSNSet() + sizeof(SequenceNumber_t) +
            sizeof(uint32_t) + bitMapSize; // SequenceNumberSet
   }
   static uint16_t getRawSizeWithoutSNSet() {
-    return SubmessageHeader::getRawSize() + (2 * 3 + 2 * 1) // EntityID
-           + sizeof(Count_t);
+    return SubmessageHeader::getRawSize() + (2 * (3 + 1)) + sizeof(Count_t);
   }
 };
 
@@ -347,6 +367,43 @@ bool serializeMessage(Buffer &buffer, SubmessageAckNack &msg) {
   return true;
 }
 
+template <typename Buffer>
+bool serializeMessage(Buffer &buffer, SubmessageGap &msg) {
+  if (msg.gapList.numBits != 0) {
+    return false;
+  }
+  if (!buffer.reserve(36)) {
+    return false;
+  }
+
+  serializeMessage(buffer, msg.header);
+
+  buffer.append(msg.readerId.entityKey.data(), msg.readerId.entityKey.size());
+  buffer.append(reinterpret_cast<uint8_t *>(&msg.readerId.entityKind),
+                sizeof(EntityKind_t));
+  buffer.append(msg.writerId.entityKey.data(), msg.writerId.entityKey.size());
+  buffer.append(reinterpret_cast<uint8_t *>(&msg.writerId.entityKind),
+                sizeof(EntityKind_t));
+
+  buffer.append(reinterpret_cast<uint8_t *>(&msg.gapStart.high),
+                sizeof(msg.gapStart.high));
+  buffer.append(reinterpret_cast<uint8_t *>(&msg.gapStart.low),
+                sizeof(msg.gapStart.low));
+
+  buffer.append(reinterpret_cast<uint8_t *>(&msg.gapList.base.high),
+                sizeof(msg.gapList.base.high));
+  buffer.append(reinterpret_cast<uint8_t *>(&msg.gapList.base.low),
+                sizeof(msg.gapList.base.low));
+
+  buffer.append(reinterpret_cast<uint8_t *>(&msg.gapList.numBits),
+                sizeof(uint32_t));
+
+  buffer.append(reinterpret_cast<uint8_t *>(&msg.gapList.numBits),
+                sizeof(uint32_t));
+
+  return true;
+}
+
 struct MessageProcessingInfo {
   MessageProcessingInfo(const uint8_t *data, DataSize_t size)
       : data(data), size(size) {}
@@ -376,6 +433,11 @@ bool deserializeMessage(const MessageProcessingInfo &info,
 
 bool deserializeMessage(const MessageProcessingInfo &info,
                         SubmessageAckNack &msg);
+
+bool deserializeMessage(const MessageProcessingInfo &info, SubmessageGap &msg);
+
+void deserializeSNS(const uint8_t *&position, SequenceNumberSet &set,
+                    size_t num_bitfields);
 
 } // namespace rtps
 

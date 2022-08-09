@@ -158,6 +158,10 @@ struct SequenceNumber_t {
     return high < other.high || (high == other.high && low < other.low);
   }
 
+  bool operator>(const SequenceNumber_t &other) const {
+    return high > other.high || (high == other.high && low > other.low);
+  }
+
   bool operator<=(const SequenceNumber_t &other) const {
     return *this == other || *this < other;
   }
@@ -177,7 +181,11 @@ struct SequenceNumber_t {
   }
 };
 
-const uint32_t SNS_NUM_BITS = 32;
+#define SNS_MAX_NUM_BITS 32
+#define SNS_NUM_BYTES (SNS_MAX_NUM_BITS / 8)
+static_assert(!(SNS_MAX_NUM_BITS % 32) && SNS_MAX_NUM_BITS != 0,
+              "SNS_MAX_NUM_BITS must be multiple of 32");
+
 struct SequenceNumberSet {
 
   SequenceNumberSet() = default;
@@ -186,12 +194,12 @@ struct SequenceNumberSet {
 
   SequenceNumber_t base = {0, 0};
   // Cannot be static because of packed
-  uint32_t numBits = SNS_NUM_BITS;
-  std::array<uint32_t, 1> bitMap{};
+  uint32_t numBits = 0;
+  std::array<uint32_t, (SNS_MAX_NUM_BITS / 32)> bitMap{};
 
   // We only need 1 byte because atm we don't store packets.
   bool isSet(uint32_t bit) const {
-    if (bit >= SNS_NUM_BITS) {
+    if (bit >= SNS_MAX_NUM_BITS) {
       return true;
     }
     const auto bucket = static_cast<uint8_t>(bit / 32);
