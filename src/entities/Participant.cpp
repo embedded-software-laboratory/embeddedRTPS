@@ -423,7 +423,7 @@ bool Participant::checkAndResetHeartbeats() {
   }
   return true;
 }
-#ifdef DEBUG_BUILD
+
 void Participant::printInfo() {
   for (unsigned int i = 0; i < m_readers.size(); i++) {
     if (m_readers[i] != nullptr && m_readers[i]->isInitialized()) {
@@ -490,7 +490,6 @@ void Participant::printInfo() {
   printf("Remote Participants = %u\n",
          static_cast<int>(m_remoteParticipants.getNumElements()));
 }
-#endif
 
 rtps::SPDPAgent &Participant::getSPDPAgent() { return m_spdpAgent; }
 
