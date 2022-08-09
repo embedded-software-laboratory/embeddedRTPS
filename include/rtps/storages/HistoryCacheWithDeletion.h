@@ -85,8 +85,6 @@ public:
   void dropOldest() { removeUntilIncl(getSeqNumMin()); }
 
   bool dropChange(const SequenceNumber_t& sn){
-    printf("Deleting SN with = %u\n", (int)sn.low);
-
     uint16_t idx_to_clear;
     CacheChange* change;
     if(!getChangeBySN(sn, &change, idx_to_clear)){

@@ -310,6 +310,7 @@ void SEDPAgent::tryMatchUnmatchedEndpoints() {
     if (writer != nullptr) {
       writer->addNewMatchedReader(ReaderProxy{
           proxy.endpointGuid, proxy.unicastLocator, proxy.multicastLocator, proxy.is_reliable});
+      removeUnmatchedEntity(proxy.endpointGuid);
     }
   }
 
@@ -319,6 +320,7 @@ void SEDPAgent::tryMatchUnmatchedEndpoints() {
     if (reader != nullptr) {
       reader->addNewMatchedWriter(
           WriterProxy{proxy.endpointGuid, proxy.unicastLocator, proxy.is_reliable});
+      removeUnmatchedEntity(proxy.endpointGuid);
     }
   }
 }

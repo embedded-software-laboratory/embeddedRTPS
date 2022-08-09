@@ -154,6 +154,7 @@ public:
     for(auto i = 0; i < (SIZE / 8 + 1); i++){
       m_bitMap[i] = 0;
     }
+    m_numElements = 0;
   }
 
   TYPE *find(bool (*jumppad)(void *, const TYPE &data),
