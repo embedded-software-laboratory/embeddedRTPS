@@ -191,7 +191,7 @@ void addAckNack(Buffer &buffer, EntityId_t writerId, EntityId_t readerId,
 
 template <class Buffer>
 void addSubmessageGap(Buffer &buffer, EntityId_t writerId, EntityId_t readerId,
-                SequenceNumber_t missingSN) {
+                      SequenceNumber_t missingSN) {
   SubmessageGap subMsg;
   subMsg.header.submessageId = SubmessageKind::GAP;
 #if IS_LITTLE_ENDIAN

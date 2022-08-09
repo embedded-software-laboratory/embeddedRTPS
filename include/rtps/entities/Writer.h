@@ -32,10 +32,17 @@ Author: i11 - Embedded Software, RWTH Aachen University
 #include "rtps/storages/MemoryPool.h"
 #include "rtps/storages/PBufWrapper.h"
 
+#ifdef DEBUG_BUILD
 #define COMPILE_INIT_GUARD
+#endif
 
 #ifdef COMPILE_INIT_GUARD
-#define INIT_GUARD() if(!m_is_initialized_){  while(1){  printf("using uninitalized endpoint\n;"); } }
+#define INIT_GUARD()                                                           \
+  if (!m_is_initialized_) {                                                    \
+    while (1) {                                                                \
+      printf("using uninitalized endpoint\n;");                                \
+    }                                                                          \
+  }
 #else
 #define INIT_GUARD() //
 #endif
@@ -51,26 +58,27 @@ public:
   virtual void reset() = 0;
   virtual const CacheChange *newChange(ChangeKind_t kind, const uint8_t *data,
                                        DataSize_t size);
-  
+
   //! Executes required steps like sending packets. Intended to be called by
   //! worker threads
   virtual void progress() = 0;
 
-  virtual bool removeFromHistory(const SequenceNumber_t& s) = 0;
+  virtual bool removeFromHistory(const SequenceNumber_t &s) = 0;
   virtual void setAllChangesToUnsent() = 0;
   virtual void onNewAckNack(const SubmessageAckNack &msg,
                             const GuidPrefix_t &sourceGuidPrefix) = 0;
 
-  using dumpProxyCallback = void (*)(const Writer* writer, const ReaderProxy&, void* arg);
+  using dumpProxyCallback = void (*)(const Writer *writer, const ReaderProxy &,
+                                     void *arg);
 
   //! Dangerous, only
-  int dumpAllProxies(dumpProxyCallback target, void* arg);
+  int dumpAllProxies(dumpProxyCallback target, void *arg);
 
   bool isInitialized();
   uint32_t getProxiesCount();
 
-  void setSEDPSequenceNumber(const SequenceNumber_t& sn);
-  const SequenceNumber_t& getSEDPSequenceNumber();
+  void setSEDPSequenceNumber(const SequenceNumber_t &sn);
+  const SequenceNumber_t &getSEDPSequenceNumber();
 
 protected:
   SequenceNumber_t m_sedp_sequence_number;
@@ -87,7 +95,8 @@ protected:
 
   friend class SEDPAgent;
   virtual const CacheChange *newChange(ChangeKind_t kind, const uint8_t *data,
-                                       DataSize_t size, bool inLineQoS, bool markDisposedAfterWrite) = 0;
+                                       DataSize_t size, bool inLineQoS,
+                                       bool markDisposedAfterWrite) = 0;
 
   friend class SizeInspector;
   bool m_is_initialized_ = false;

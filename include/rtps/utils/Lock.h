@@ -25,11 +25,10 @@ Author: i11 - Embedded Software, RWTH Aachen University
 #ifndef RTPS_LOCK_H
 #define RTPS_LOCK_H
 
-#include "lwip/sys.h"
 #include "FreeRTOS.h"
+#include "lwip/sys.h"
 
 namespace rtps {
-
 
 class Lock {
 public:
@@ -43,7 +42,7 @@ private:
   sys_mutex_t m_mutex;
 };
 
-bool createMutex(sys_mutex_t* mutex);
+bool createMutex(sys_mutex_t *mutex);
 
 } // namespace rtps
 #endif // RTPS_LOCK_H

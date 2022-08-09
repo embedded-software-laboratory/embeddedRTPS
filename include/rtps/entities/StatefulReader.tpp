@@ -53,7 +53,7 @@ StatefulReaderT<NetworkDriver>::~StatefulReaderT() {
 template <class NetworkDriver>
 bool StatefulReaderT<NetworkDriver>::init(const TopicData &attributes,
                                           NetworkDriver &driver) {
-  if(!initMutex()){
+  if (!initMutex()) {
     return false;
   }
 
@@ -75,7 +75,7 @@ void StatefulReaderT<NetworkDriver>::newChange(
   for (auto &proxy : m_proxies) {
     if (proxy.remoteWriterGuid == cacheChange.writerGuid) {
       if (proxy.expectedSN == cacheChange.sn) {
-    	sys_mutex_unlock(&m_proxies_mutex);
+        sys_mutex_unlock(&m_proxies_mutex);
         executeCallbacks(cacheChange);
         ++proxy.expectedSN;
         return;
@@ -96,12 +96,11 @@ bool StatefulReaderT<NetworkDriver>::addNewMatchedWriter(
   return m_proxies.add(newProxy);
 }
 
-
-
 template <class NetworkDriver>
-bool StatefulReaderT<NetworkDriver>::onNewGapMessage(const SubmessageGap& msg, const GuidPrefix_t &remotePrefix){
+bool StatefulReaderT<NetworkDriver>::onNewGapMessage(
+    const SubmessageGap &msg, const GuidPrefix_t &remotePrefix) {
   Lock lock(m_proxies_mutex);
-  if(!m_is_initialized_){
+  if (!m_is_initialized_) {
     return false;
   }
 
@@ -109,7 +108,7 @@ bool StatefulReaderT<NetworkDriver>::onNewGapMessage(const SubmessageGap& msg, c
   writerProxyGuid.prefix = remotePrefix;
   writerProxyGuid.entityId = msg.writerId;
   WriterProxy *writer = getProxy(writerProxyGuid);
-  
+
   if (writer == nullptr) {
 
 #if SFR_VERBOSE && RTPS_GLOBAL_VERBOSE
@@ -122,22 +121,24 @@ bool StatefulReaderT<NetworkDriver>::onNewGapMessage(const SubmessageGap& msg, c
   }
 
   // We have not seen all messages leading up to gap start -> do nothing
-  if(writer->expectedSN < msg.gapStart){
-	printf("GAP: Ignoring Gap, we have not seen all messages prior to gap begin: %u < %u\n", int(writer->expectedSN.low), int(msg.gapStart.low));
+  if (writer->expectedSN < msg.gapStart) {
+    printf("GAP: Ignoring Gap, we have not seen all messages prior to gap "
+           "begin: %u < %u\n",
+           int(writer->expectedSN.low), int(msg.gapStart.low));
     return true;
   }
 
   // Start from base and search for first unset bit
   SequenceNumber_t first_valid = msg.gapList.base;
-  for(unsigned int i = 0; i < msg.gapList.numBits; i++, first_valid++){
-	  if(!msg.gapList.isSet(i)){
-		  break;
-	  }
+  for (unsigned int i = 0; i < msg.gapList.numBits; i++, first_valid++) {
+    if (!msg.gapList.isSet(i)) {
+      break;
+    }
   }
 
-  if(first_valid < writer->expectedSN){
-	  printf("GAP: Ignoring gap, we expect a message beyond the gap");
-	  return true;
+  if (first_valid < writer->expectedSN) {
+    printf("GAP: Ignoring gap, we expect a message beyond the gap");
+    return true;
   }
 
   printf("GAP: moving expected SN to %u\n", (int)first_valid.low);
@@ -154,8 +155,7 @@ bool StatefulReaderT<NetworkDriver>::onNewGapMessage(const SubmessageGap& msg, c
   set.numBits = 1;
   set.base = writer->expectedSN;
   set.bitMap[0] = uint32_t{1} << 31;
-  rtps::MessageFactory::addAckNack(info.buffer, msg.writerId, msg.readerId,
-		  	  	  	  	  	  	  set,
+  rtps::MessageFactory::addAckNack(info.buffer, msg.writerId, msg.readerId, set,
                                    writer->getNextAckNackCount(), false);
   m_transport->sendPacket(info);
 
@@ -166,8 +166,8 @@ template <class NetworkDriver>
 bool StatefulReaderT<NetworkDriver>::onNewHeartbeat(
     const SubmessageHeartbeat &msg, const GuidPrefix_t &sourceGuidPrefix) {
   Lock lock(m_proxies_mutex);
-  if(!m_is_initialized_){
-	  return false;
+  if (!m_is_initialized_) {
+    return false;
   }
   PacketInfo info;
   info.srcPort = m_srcPort;

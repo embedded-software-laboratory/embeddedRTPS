@@ -68,7 +68,6 @@ private:
                              const SubmessageHeader &submsgHeader);
   bool processHeartbeatSubmessage(MessageProcessingInfo &msgInfo);
   bool processAckNackSubmessage(MessageProcessingInfo &msgInfo);
-
 };
 } // namespace rtps
 

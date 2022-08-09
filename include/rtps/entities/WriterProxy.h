@@ -41,8 +41,8 @@ struct WriterProxy {
 
   WriterProxy(const Guid_t &guid, const LocatorIPv4 &loc, bool reliable)
       : remoteWriterGuid(guid),
-        expectedSN(SequenceNumber_t{0, 1}), ackNackCount{1}, hbCount{0}, is_reliable(reliable),
-        remoteLocator(loc) {}
+        expectedSN(SequenceNumber_t{0, 1}), ackNackCount{1}, hbCount{0},
+        is_reliable(reliable), remoteLocator(loc) {}
 
   // For now, we don't store any packets, so we just request all starting from
   // the next expected

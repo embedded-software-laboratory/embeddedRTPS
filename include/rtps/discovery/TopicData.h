@@ -50,7 +50,8 @@ struct TopicData {
 
   uint8_t statusInfo;
   bool statusInfoValid;
-  // Use Case: Remotes communicates id of deleted endpoint through key_hash parameter
+  // Use Case: Remotes communicates id of deleted endpoint through key_hash
+  // parameter
   EntityId_t entityIdFromKeyHash;
   bool entityIdFromKeyHashValid;
 
@@ -78,7 +79,6 @@ struct TopicData {
 
   bool isDisposedFlagSet() const;
   bool isUnregisteredFlagSet() const;
-
 };
 
 struct TopicDataCompressed {
@@ -95,7 +95,9 @@ struct TopicDataCompressed {
     topicHash =
         hashCharArray(topic_data.topicName, Config::MAX_TOPICNAME_LENGTH);
     typeHash = hashCharArray(topic_data.typeName, Config::MAX_TYPENAME_LENGTH);
-    is_reliable = (topic_data.reliabilityKind == ReliabilityKind_t::RELIABLE) ? true : false;
+    is_reliable = (topic_data.reliabilityKind == ReliabilityKind_t::RELIABLE)
+                      ? true
+                      : false;
     unicastLocator = topic_data.unicastLocator;
     multicastLocator = topic_data.multicastLocator;
   }

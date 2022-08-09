@@ -78,37 +78,39 @@ public:
 typedef void (*ddsReaderCallback_fp)(void *callee,
                                      const ReaderCacheChange &cacheChange);
 
-
 class Reader {
 public:
-  using callbackFunction_t = void (*)(void*, const ReaderCacheChange&);
+  using callbackFunction_t = void (*)(void *, const ReaderCacheChange &);
   using callbackIdentifier_t = uint32_t;
 
   TopicData m_attributes;
   virtual void newChange(const ReaderCacheChange &cacheChange) = 0;
-  virtual callbackIdentifier_t registerCallback(callbackFunction_t cb, void *arg);
+  virtual callbackIdentifier_t registerCallback(callbackFunction_t cb,
+                                                void *arg);
   virtual bool removeCallback(callbackIdentifier_t identifier);
   uint8_t getNumCallbacks();
 
   virtual bool onNewHeartbeat(const SubmessageHeartbeat &msg,
                               const GuidPrefix_t &remotePrefix) = 0;
-  virtual bool onNewGapMessage(const SubmessageGap& msg, const GuidPrefix_t &remotePrefix) = 0;
+  virtual bool onNewGapMessage(const SubmessageGap &msg,
+                               const GuidPrefix_t &remotePrefix) = 0;
   virtual bool addNewMatchedWriter(const WriterProxy &newProxy) = 0;
   virtual bool removeProxy(const Guid_t &guid);
   virtual void removeAllProxiesOfParticipant(const GuidPrefix_t &guidPrefix);
   bool isInitialized() { return m_is_initialized_; }
   virtual void reset();
   bool isProxy(const Guid_t &guid);
-  WriterProxy* getProxy(Guid_t guid);
+  WriterProxy *getProxy(Guid_t guid);
   uint32_t getProxiesCount();
 
-  void setSEDPSequenceNumber(const SequenceNumber_t& sn);
-  const SequenceNumber_t& getSEDPSequenceNumber();
+  void setSEDPSequenceNumber(const SequenceNumber_t &sn);
+  const SequenceNumber_t &getSEDPSequenceNumber();
 
-  using dumpProxyCallback = void (*)(const Reader* reader, const WriterProxy&, void* arg);
+  using dumpProxyCallback = void (*)(const Reader *reader, const WriterProxy &,
+                                     void *arg);
 
   //! Dangerous, only
-  int dumpAllProxies(dumpProxyCallback target, void* arg);
+  int dumpAllProxies(dumpProxyCallback target, void *arg);
 
 protected:
   void executeCallbacks(const ReaderCacheChange &cacheChange);
@@ -123,13 +125,14 @@ protected:
   callbackIdentifier_t m_callback_identifier = 1;
 
   uint8_t m_callback_count = 0;
-  using callbackElement_t = struct{
-	  callbackFunction_t function = nullptr;
-	  void* arg = nullptr;
-	  callbackIdentifier_t identifier;
+  using callbackElement_t = struct {
+    callbackFunction_t function = nullptr;
+    void *arg = nullptr;
+    callbackIdentifier_t identifier;
   };
 
-  std::array<callbackElement_t, Config::MAX_NUM_READER_CALLBACKS> m_callbacks = {nullptr};
+  std::array<callbackElement_t, Config::MAX_NUM_READER_CALLBACKS> m_callbacks =
+      {nullptr};
 
   // Guards manipulation of the proxies array
   sys_mutex_t m_proxies_mutex = nullptr;

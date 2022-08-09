@@ -40,8 +40,8 @@ public:
   void init(Participant &part, const BuiltInEndpoints &endpoints);
   void addWriter(Writer &writer);
   void addReader(Reader &reader);
-  bool deleteReader(Reader* reader);
-  bool deleteWriter(Writer* reader);
+  bool deleteReader(Reader *reader);
+  bool deleteWriter(Writer *reader);
 
   void registerOnNewPublisherMatchedCallback(void (*callback)(void *arg),
                                              void *args);
@@ -90,26 +90,27 @@ private:
   void *m_onNewSubscriberArgs = nullptr;
 
   static void jumppadPublisherReader(void *callee,
-                                       const ReaderCacheChange &cacheChange);
+                                     const ReaderCacheChange &cacheChange);
   static void jumppadSubscriptionReader(void *callee,
                                         const ReaderCacheChange &cacheChange);
 
-  static void jumppadTakeProxyOfDisposedReader(const Reader* reader, const WriterProxy& proxy, void *arg);
-  static void jumppadTakeProxyOfDisposedWriter(const Writer* writer, const ReaderProxy& proxy, void *arg);
-
+  static void jumppadTakeProxyOfDisposedReader(const Reader *reader,
+                                               const WriterProxy &proxy,
+                                               void *arg);
+  static void jumppadTakeProxyOfDisposedWriter(const Writer *writer,
+                                               const ReaderProxy &proxy,
+                                               void *arg);
 
   void handlePublisherReaderMessage(const ReaderCacheChange &change);
   void handleSubscriptionReaderMessage(const ReaderCacheChange &change);
 
-  template<typename A>
-  bool deleteEndpoint(A* endpoint, Writer* sedp_endpoint);
+  template <typename A> bool deleteEndpoint(A *endpoint, Writer *sedp_endpoint);
 
-  template<typename A>
-  bool announceEndpointDeletion(A* local_endpoint, Writer* sedp_endpoint);
+  template <typename A>
+  bool announceEndpointDeletion(A *local_endpoint, Writer *sedp_endpoint);
 
-  template<typename A>
-  bool disposeEndpointInSEDPHistory(A* local_endpoint, Writer* sedp_writer);
-
+  template <typename A>
+  bool disposeEndpointInSEDPHistory(A *local_endpoint, Writer *sedp_writer);
 };
 } // namespace rtps
 

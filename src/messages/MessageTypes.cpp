@@ -131,21 +131,23 @@ bool rtps::deserializeMessage(const MessageProcessingInfo &info,
   return true;
 }
 
-void rtps::deserializeSNS(const uint8_t* &position, SequenceNumberSet& set, size_t num_bitfields){
+void rtps::deserializeSNS(const uint8_t *&position, SequenceNumberSet &set,
+                          size_t num_bitfields) {
 
-  doCopyAndMoveOn(reinterpret_cast<uint8_t *>(&set.base.high),
-				  position, sizeof(SequenceNumber_t::high));
-  doCopyAndMoveOn(reinterpret_cast<uint8_t *>(&set.base.low),
-		  	  	  position, sizeof(SequenceNumber_t::low));
-  doCopyAndMoveOn(reinterpret_cast<uint8_t *>(&set.numBits),
-		  	  	  position, sizeof(uint32_t));
+  doCopyAndMoveOn(reinterpret_cast<uint8_t *>(&set.base.high), position,
+                  sizeof(SequenceNumber_t::high));
+  doCopyAndMoveOn(reinterpret_cast<uint8_t *>(&set.base.low), position,
+                  sizeof(SequenceNumber_t::low));
+  doCopyAndMoveOn(reinterpret_cast<uint8_t *>(&set.numBits), position,
+                  sizeof(uint32_t));
 
   // Ensure that we copy not more bits than our sequence number set can hold
-  if(set.numBits != 0){
-	  // equal to size = std::min(SNS_NUM_BYTES, num_bitfields)
-	  size_t size = num_bitfields > SNS_NUM_BYTES ? SNS_NUM_BYTES : num_bitfields;
-	  doCopyAndMoveOn(reinterpret_cast<uint8_t *>(set.bitMap.data()), position, size);
-	  position += (num_bitfields - size);
+  if (set.numBits != 0) {
+    // equal to size = std::min(SNS_NUM_BYTES, num_bitfields)
+    size_t size = num_bitfields > SNS_NUM_BYTES ? SNS_NUM_BYTES : num_bitfields;
+    doCopyAndMoveOn(reinterpret_cast<uint8_t *>(set.bitMap.data()), position,
+                    size);
+    position += (num_bitfields - size);
   }
 }
 
@@ -180,12 +182,12 @@ bool rtps::deserializeMessage(const MessageProcessingInfo &info,
 }
 
 bool rtps::deserializeMessage(const MessageProcessingInfo &info,
-                        SubmessageGap &msg){
+                              SubmessageGap &msg) {
 
   const DataSize_t remainingSizeAtBeginning = info.getRemainingSize();
   if (remainingSizeAtBeginning <
-      SubmessageGap::
-          getRawSizeWithoutSNSet()) { // Size of SequenceNumberSet unknown
+      SubmessageGap::getRawSizeWithoutSNSet()) { // Size of SequenceNumberSet
+                                                 // unknown
     return false;
   }
   if (!deserializeMessage(info, msg.header)) {
@@ -202,12 +204,13 @@ bool rtps::deserializeMessage(const MessageProcessingInfo &info,
                   msg.writerId.entityKey.size());
   msg.writerId.entityKind = static_cast<EntityKind_t>(*currentPos++);
 
-  doCopyAndMoveOn(reinterpret_cast<uint8_t *>(&msg.gapStart.high),
-                  currentPos, sizeof(msg.gapStart.high));
-  doCopyAndMoveOn(reinterpret_cast<uint8_t *>(&msg.gapStart.low),
-                  currentPos, sizeof(msg.gapStart.low));
+  doCopyAndMoveOn(reinterpret_cast<uint8_t *>(&msg.gapStart.high), currentPos,
+                  sizeof(msg.gapStart.high));
+  doCopyAndMoveOn(reinterpret_cast<uint8_t *>(&msg.gapStart.low), currentPos,
+                  sizeof(msg.gapStart.low));
 
-  size_t num_bitfields = remainingSizeAtBeginning  - (currentPos-info.getPointerToCurrentPos());
+  size_t num_bitfields =
+      remainingSizeAtBeginning - (currentPos - info.getPointerToCurrentPos());
   deserializeSNS(currentPos, msg.gapList, num_bitfields);
 
   return true;

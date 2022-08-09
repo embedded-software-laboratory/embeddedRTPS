@@ -205,28 +205,32 @@ bool SPDPAgent::addProxiesForBuiltInEndpoints() {
   if (m_proxyDataBuffer.hasPublicationWriter()) {
     const WriterProxy proxy{{m_proxyDataBuffer.m_guid.prefix,
                              ENTITYID_SEDP_BUILTIN_PUBLICATIONS_WRITER},
-                            *locator, true};
+                            *locator,
+                            true};
     m_buildInEndpoints.sedpPubReader->addNewMatchedWriter(proxy);
   }
 
   if (m_proxyDataBuffer.hasSubscriptionWriter()) {
     const WriterProxy proxy{{m_proxyDataBuffer.m_guid.prefix,
                              ENTITYID_SEDP_BUILTIN_SUBSCRIPTIONS_WRITER},
-                            *locator, true};
+                            *locator,
+                            true};
     m_buildInEndpoints.sedpSubReader->addNewMatchedWriter(proxy);
   }
 
   if (m_proxyDataBuffer.hasPublicationReader()) {
     const ReaderProxy proxy{{m_proxyDataBuffer.m_guid.prefix,
                              ENTITYID_SEDP_BUILTIN_PUBLICATIONS_READER},
-                            *locator, true};
+                            *locator,
+                            true};
     m_buildInEndpoints.sedpPubWriter->addNewMatchedReader(proxy);
   }
 
   if (m_proxyDataBuffer.hasSubscriptionReader()) {
     const ReaderProxy proxy{{m_proxyDataBuffer.m_guid.prefix,
                              ENTITYID_SEDP_BUILTIN_SUBSCRIPTIONS_READER},
-                            *locator, true};
+                            *locator,
+                            true};
     m_buildInEndpoints.sedpSubWriter->addNewMatchedReader(proxy);
   }
 

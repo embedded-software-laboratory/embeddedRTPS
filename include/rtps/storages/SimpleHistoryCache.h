@@ -47,11 +47,12 @@ public:
     return it == m_tail;
   }
 
-  const CacheChange* addChange(const uint8_t* data, DataSize_t size, bool inLineQoS, bool disposeAfterWrite){
+  const CacheChange *addChange(const uint8_t *data, DataSize_t size,
+                               bool inLineQoS, bool disposeAfterWrite) {
     CacheChange change;
     change.kind = ChangeKind_t::ALIVE;
     change.inLineQoS = inLineQoS;
-    change.diposeAfterWrite = disposeAfterWrite;    
+    change.diposeAfterWrite = disposeAfterWrite;
     change.data.reserve(size);
     change.data.append(data, size);
     change.sequenceNumber = ++m_lastUsedSequenceNumber;
@@ -83,14 +84,14 @@ public:
   }
 
   void dropOldest() { removeUntilIncl(getSeqNumMin()); }
-  
-  bool setCacheChangeKind(const SequenceNumber_t& sn, ChangeKind_t kind){
-	  CacheChange* change = getChangeBySN(sn);
-	  if(change == nullptr){
-		  return false;
-	  }
 
-	  change->kind = kind;
+  bool setCacheChangeKind(const SequenceNumber_t &sn, ChangeKind_t kind) {
+    CacheChange *change = getChangeBySN(sn);
+    if (change == nullptr) {
+      return false;
+    }
+
+    change->kind = kind;
     return true;
   }
 
@@ -129,7 +130,7 @@ public:
     }
   }
 
-  void clear(){
+  void clear() {
     m_head = 0;
     m_tail = 0;
     m_lastUsedSequenceNumber = {0, 0};

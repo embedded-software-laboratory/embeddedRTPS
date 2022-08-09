@@ -68,12 +68,12 @@ public:
   //! Not-thread-safe function to add a writer
   Writer *addWriter(Writer *writer);
   bool isWritersFull();
-  bool deleteWriter(Writer* writer);
+  bool deleteWriter(Writer *writer);
 
   //! Not-thread-safe function to add a reader
   Reader *addReader(Reader *reader);
   bool isReadersFull();
-  bool deleteReader(Reader* reader);
+  bool deleteReader(Reader *reader);
 
   //! (Probably) Thread safe if writers cannot be removed
   Writer *getWriter(EntityId_t id);
@@ -89,7 +89,7 @@ public:
   bool addNewRemoteParticipant(const ParticipantProxyData &remotePart);
   bool removeRemoteParticipant(const GuidPrefix_t &prefix);
   void removeAllProxiesOfParticipant(const GuidPrefix_t &prefix);
-  void removeProxyFromAllEndpoints(const Guid_t& guid);
+  void removeProxyFromAllEndpoints(const Guid_t &guid);
 
   const ParticipantProxyData *findRemoteParticipant(const GuidPrefix_t &prefix);
   void refreshRemoteParticipantLiveliness(const GuidPrefix_t &prefix);
@@ -103,17 +103,18 @@ public:
   void newMessage(const uint8_t *data, DataSize_t size);
 
   SPDPAgent &getSPDPAgent();
-  
-  void printInfo();
 
+  void printInfo();
 
 private:
   friend class SizeInspector;
   MessageReceiver m_receiver;
   bool m_hasBuilInEndpoints = false;
   std::array<uint8_t, 3> m_nextUserEntityId{{0, 0, 1}};
-  std::array<Writer *, Config::NUM_WRITERS_PER_PARTICIPANT> m_writers = {nullptr};
-  std::array<Reader *, Config::NUM_READERS_PER_PARTICIPANT> m_readers = {nullptr};
+  std::array<Writer *, Config::NUM_WRITERS_PER_PARTICIPANT> m_writers = {
+      nullptr};
+  std::array<Reader *, Config::NUM_READERS_PER_PARTICIPANT> m_readers = {
+      nullptr};
 
   sys_mutex_t m_mutex;
   MemoryPool<ParticipantProxyData, Config::SPDP_MAX_NUMBER_FOUND_PARTICIPANTS>

@@ -43,7 +43,8 @@ public:
   bool addNewMatchedWriter(const WriterProxy &newProxy) override;
   bool onNewHeartbeat(const SubmessageHeartbeat &msg,
                       const GuidPrefix_t &remotePrefix) override;
-  bool onNewGapMessage(const SubmessageGap& msg, const GuidPrefix_t &remotePrefix) override;
+  bool onNewGapMessage(const SubmessageGap &msg,
+                       const GuidPrefix_t &remotePrefix) override;
 
 private:
   Ip4Port_t m_srcPort; // TODO intended for reuse but buffer not used as such

@@ -167,9 +167,7 @@ struct SubmessageHeader {
     return sizeof(SubmessageKind) + sizeof(uint8_t) + sizeof(uint16_t);
   }
 
-  bool finalFlag() const {
-    return (flags & (SubMessageFlag::FLAG_FINAL));
-  }
+  bool finalFlag() const { return (flags & (SubMessageFlag::FLAG_FINAL)); }
 };
 
 struct SubmessageData {
@@ -216,11 +214,14 @@ struct SubmessageGap {
   SequenceNumberSet gapList;
 
   static uint16_t getRawSizeWithoutSNSet() {
-    return SubmessageHeader::getRawSize() + (2 * (3 + 1) + 8); // 2*EntityID +  GapStart
+    return SubmessageHeader::getRawSize() +
+           (2 * (3 + 1) + 8); // 2*EntityID +  GapStart
   }
 
-  static uint16_t getRawSizeWithSingleElementSNSet(){
-    return SubmessageHeader::getRawSize() + (2 * (3 + 1) + 8 + 8 + 4); // 2*EntityID +  GapStart + bitmapBase + numBits
+  static uint16_t getRawSizeWithSingleElementSNSet() {
+    return SubmessageHeader::getRawSize() +
+           (2 * (3 + 1) + 8 + 8 +
+            4); // 2*EntityID +  GapStart + bitmapBase + numBits
   }
 };
 
@@ -239,8 +240,7 @@ struct SubmessageAckNack {
            sizeof(uint32_t) + bitMapSize; // SequenceNumberSet
   }
   static uint16_t getRawSizeWithoutSNSet() {
-    return SubmessageHeader::getRawSize() + (2 * (3 + 1))  
-           + sizeof(Count_t);
+    return SubmessageHeader::getRawSize() + (2 * (3 + 1)) + sizeof(Count_t);
   }
 };
 
@@ -369,7 +369,7 @@ bool serializeMessage(Buffer &buffer, SubmessageAckNack &msg) {
 
 template <typename Buffer>
 bool serializeMessage(Buffer &buffer, SubmessageGap &msg) {
-  if(msg.gapList.numBits != 0){
+  if (msg.gapList.numBits != 0) {
     return false;
   }
   if (!buffer.reserve(36)) {
@@ -397,7 +397,7 @@ bool serializeMessage(Buffer &buffer, SubmessageGap &msg) {
 
   buffer.append(reinterpret_cast<uint8_t *>(&msg.gapList.numBits),
                 sizeof(uint32_t));
-  
+
   buffer.append(reinterpret_cast<uint8_t *>(&msg.gapList.numBits),
                 sizeof(uint32_t));
 
@@ -434,10 +434,10 @@ bool deserializeMessage(const MessageProcessingInfo &info,
 bool deserializeMessage(const MessageProcessingInfo &info,
                         SubmessageAckNack &msg);
 
-bool deserializeMessage(const MessageProcessingInfo &info,
-                        SubmessageGap &msg);
+bool deserializeMessage(const MessageProcessingInfo &info, SubmessageGap &msg);
 
-void deserializeSNS(const uint8_t* &position, SequenceNumberSet& set, size_t num_bitfields);
+void deserializeSNS(const uint8_t *&position, SequenceNumberSet &set,
+                    size_t num_bitfields);
 
 } // namespace rtps
 

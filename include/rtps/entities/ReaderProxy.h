@@ -39,16 +39,18 @@ struct ReaderProxy {
   bool is_reliable = false;
   Count_t ackNackCount = {0};
   bool finalFlag = false;
-  SequenceNumber_t lastAckNackSequenceNumber = {0,1};
+  SequenceNumber_t lastAckNackSequenceNumber = {0, 1};
 
-  ReaderProxy() : remoteReaderGuid({GUIDPREFIX_UNKNOWN, ENTITYID_UNKNOWN}), finalFlag(false){};
+  ReaderProxy()
+      : remoteReaderGuid({GUIDPREFIX_UNKNOWN, ENTITYID_UNKNOWN}),
+        finalFlag(false){};
   ReaderProxy(const Guid_t &guid, const LocatorIPv4 &loc, bool reliable)
-      : remoteReaderGuid(guid), remoteLocator(loc), is_reliable(reliable),
-        ackNackCount{0}, finalFlag(false) {};
+      : remoteReaderGuid(guid), remoteLocator(loc),
+        is_reliable(reliable), ackNackCount{0}, finalFlag(false){};
   ReaderProxy(const Guid_t &guid, const LocatorIPv4 &loc,
               const LocatorIPv4 &mcastloc, bool reliable)
       : remoteReaderGuid(guid), remoteLocator(loc), is_reliable(reliable),
-        remoteMulticastLocator(mcastloc), ackNackCount{0}, finalFlag(false) {};
+        remoteMulticastLocator(mcastloc), ackNackCount{0}, finalFlag(false){};
 };
 
 } // namespace rtps

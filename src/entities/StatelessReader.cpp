@@ -41,10 +41,10 @@ using rtps::StatelessReader;
 #endif
 
 bool StatelessReader::init(const TopicData &attributes) {
-  if(!initMutex()){
+  if (!initMutex()) {
     return false;
   }
-  
+
   m_proxies.clear();
   m_attributes = attributes;
   m_is_initialized_ = true;
@@ -52,8 +52,8 @@ bool StatelessReader::init(const TopicData &attributes) {
 }
 
 void StatelessReader::newChange(const ReaderCacheChange &cacheChange) {
-  if(!m_is_initialized_){
-	  return;
+  if (!m_is_initialized_) {
+    return;
   }
   executeCallbacks(cacheChange);
 }
@@ -73,9 +73,9 @@ bool StatelessReader::onNewHeartbeat(const SubmessageHeartbeat &,
   return true;
 }
 
-bool StatelessReader::onNewGapMessage(const SubmessageGap& msg, const GuidPrefix_t &remotePrefix){
-	return true;
+bool StatelessReader::onNewGapMessage(const SubmessageGap &msg,
+                                      const GuidPrefix_t &remotePrefix) {
+  return true;
 }
-
 
 #undef SLR_VERBOSE

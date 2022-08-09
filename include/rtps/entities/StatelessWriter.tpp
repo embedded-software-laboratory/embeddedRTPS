@@ -22,8 +22,8 @@ This file is part of embeddedRTPS.
 Author: i11 - Embedded Software, RWTH Aachen University
 */
 
-#include <rtps/entities/Writer.h>
 #include <rtps/entities/ReaderProxy.h>
+#include <rtps/entities/Writer.h>
 
 #include "lwip/sys.h"
 #include "lwip/tcpip.h"
@@ -63,14 +63,14 @@ bool StatelessWriterT<NetworkDriver>::init(TopicData attributes,
                                            ThreadPool *threadPool,
                                            NetworkDriver &driver,
                                            bool enfUnicast) {
-  
+
   m_attributes = attributes;
 
-  if(m_mutex == nullptr){
+  if (m_mutex == nullptr) {
     if (sys_mutex_new(&m_mutex) != ERR_OK) {
-  #if SLW_VERBOSE
+#if SLW_VERBOSE
       SLW_LOG("Failed to create mutex \n");
-  #endif
+#endif
       return false;
     }
   }
@@ -87,25 +87,26 @@ bool StatelessWriterT<NetworkDriver>::init(TopicData attributes,
   m_history.clear();
 
   m_transport = &driver;
-  
+
   return true;
 }
 
 template <typename NetworkDriver>
-void StatelessWriterT<NetworkDriver>::reset(){
+void StatelessWriterT<NetworkDriver>::reset() {
   m_is_initialized_ = false;
 }
 
 template <typename NetworkDriver>
 const CacheChange *StatelessWriterT<NetworkDriver>::newChange(
-    rtps::ChangeKind_t kind, const uint8_t *data, DataSize_t size, bool inLineQoS, bool markDisposedAfterWrite) {
+    rtps::ChangeKind_t kind, const uint8_t *data, DataSize_t size,
+    bool inLineQoS, bool markDisposedAfterWrite) {
   INIT_GUARD();
   if (isIrrelevant(kind)) {
     return nullptr;
   }
   Lock lock(m_mutex);
-  if(!m_is_initialized_){
-	  return nullptr;
+  if (!m_is_initialized_) {
+    return nullptr;
   }
 
   if (m_history.isFull()) {
@@ -126,10 +127,11 @@ const CacheChange *StatelessWriterT<NetworkDriver>::newChange(
 }
 
 template <typename NetworkDriver>
-bool StatelessWriterT<NetworkDriver>::removeFromHistory(const SequenceNumber_t& s){
-  return false; // Stateless Writers currently do not support deletion from history
+bool StatelessWriterT<NetworkDriver>::removeFromHistory(
+    const SequenceNumber_t &s) {
+  return false; // Stateless Writers currently do not support deletion from
+                // history
 }
-
 
 template <typename NetworkDriver>
 void StatelessWriterT<NetworkDriver>::setAllChangesToUnsent() {
@@ -149,7 +151,6 @@ void StatelessWriterT<NetworkDriver>::onNewAckNack(
   INIT_GUARD();
   // Too lazy to respond
 }
-
 
 template <typename NetworkDriver>
 void StatelessWriterT<NetworkDriver>::progress() {

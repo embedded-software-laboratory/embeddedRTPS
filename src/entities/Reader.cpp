@@ -14,16 +14,16 @@ void Reader::executeCallbacks(const ReaderCacheChange &cacheChange) {
   }
 }
 
-bool Reader::initMutex(){
-    if(m_proxies_mutex == nullptr){
-    if (sys_mutex_new(&m_proxies_mutex) != ERR_OK){
+bool Reader::initMutex() {
+  if (m_proxies_mutex == nullptr) {
+    if (sys_mutex_new(&m_proxies_mutex) != ERR_OK) {
       SFR_LOG("StatefulReader: Failed to create mutex.\n");
       return false;
     }
   }
-  
-  if(m_callback_mutex == nullptr){
-    if (sys_mutex_new(&m_callback_mutex) != ERR_OK){
+
+  if (m_callback_mutex == nullptr) {
+    if (sys_mutex_new(&m_callback_mutex) != ERR_OK) {
       SFR_LOG("StatefulReader: Failed to create mutex.\n");
       return false;
     }
@@ -32,12 +32,12 @@ bool Reader::initMutex(){
   return true;
 }
 
-void Reader::reset(){
+void Reader::reset() {
   Lock{m_proxies_mutex};
   Lock{m_callback_mutex};
 
   m_proxies.clear();
-  for(unsigned int i = 0; i < m_callbacks.size(); i++){
+  for (unsigned int i = 0; i < m_callbacks.size(); i++) {
     m_callbacks[i].function = nullptr;
     m_callbacks[i].arg = nullptr;
   }
@@ -46,16 +46,16 @@ void Reader::reset(){
   m_is_initialized_ = false;
 }
 
-bool Reader::isProxy(const Guid_t &guid){
-    for (const auto &proxy : m_proxies) {
-      if (proxy.remoteWriterGuid.operator==(guid)) {
-        return true;
-      }
+bool Reader::isProxy(const Guid_t &guid) {
+  for (const auto &proxy : m_proxies) {
+    if (proxy.remoteWriterGuid.operator==(guid)) {
+      return true;
     }
-    return false;
+  }
+  return false;
 }
 
-WriterProxy* Reader::getProxy(Guid_t guid){
+WriterProxy *Reader::getProxy(Guid_t guid) {
   auto isElementToFind = [&](const WriterProxy &proxy) {
     return proxy.remoteWriterGuid == guid;
   };
@@ -65,7 +65,8 @@ WriterProxy* Reader::getProxy(Guid_t guid){
   return m_proxies.find(thunk, &isElementToFind);
 }
 
-Reader::callbackIdentifier_t Reader::registerCallback(Reader::callbackFunction_t cb, void *arg) {
+Reader::callbackIdentifier_t
+Reader::registerCallback(Reader::callbackFunction_t cb, void *arg) {
   Lock lock(m_callback_mutex);
   if (m_callback_count == m_callbacks.size() || cb == nullptr) {
     return false;
@@ -77,16 +78,14 @@ Reader::callbackIdentifier_t Reader::registerCallback(Reader::callbackFunction_t
       m_callbacks[i].arg = arg;
       m_callbacks[i].identifier = m_callback_identifier++;
       m_callback_count++;
-      return m_callbacks[i].identifier ;
+      return m_callbacks[i].identifier;
     }
   }
 
   return 0;
 }
 
-uint32_t Reader::getProxiesCount(){
-	return m_proxies.getNumElements();
-}
+uint32_t Reader::getProxiesCount() { return m_proxies.getNumElements(); }
 
 bool Reader::removeCallback(Reader::callbackIdentifier_t identifier) {
   Lock lock(m_callback_mutex);
@@ -102,9 +101,7 @@ bool Reader::removeCallback(Reader::callbackIdentifier_t identifier) {
   return false;
 }
 
-uint8_t Reader::getNumCallbacks(){
-  return m_callback_count;
-}
+uint8_t Reader::getNumCallbacks() { return m_callback_count; }
 
 void Reader::removeAllProxiesOfParticipant(const GuidPrefix_t &guidPrefix) {
   Lock lock(m_proxies_mutex);
@@ -140,22 +137,21 @@ bool Reader::addNewMatchedWriter(const WriterProxy &newProxy) {
   return m_proxies.add(newProxy);
 }
 
-void rtps::Reader::setSEDPSequenceNumber(const SequenceNumber_t& sn){
-	m_sedp_sequence_number = sn;
+void rtps::Reader::setSEDPSequenceNumber(const SequenceNumber_t &sn) {
+  m_sedp_sequence_number = sn;
 }
-const rtps::SequenceNumber_t& rtps::Reader::getSEDPSequenceNumber(){
-	return m_sedp_sequence_number;
-}
-
-int rtps::Reader::dumpAllProxies(dumpProxyCallback target, void* arg){
-	if(target == nullptr){
-		return 0;
-	}
-	Lock{m_proxies_mutex};
-	int dump_count = 0;
-    for (auto it = m_proxies.begin(); it != m_proxies.end(); ++it, ++dump_count) {
-      target(this, *it, arg);
-    }
-    return dump_count;
+const rtps::SequenceNumber_t &rtps::Reader::getSEDPSequenceNumber() {
+  return m_sedp_sequence_number;
 }
 
+int rtps::Reader::dumpAllProxies(dumpProxyCallback target, void *arg) {
+  if (target == nullptr) {
+    return 0;
+  }
+  Lock{m_proxies_mutex};
+  int dump_count = 0;
+  for (auto it = m_proxies.begin(); it != m_proxies.end(); ++it, ++dump_count) {
+    target(this, *it, arg);
+  }
+  return dump_count;
+}

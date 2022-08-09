@@ -27,8 +27,8 @@ Author: i11 - Embedded Software, RWTH Aachen University
 
 #include "rtps/entities/ReaderProxy.h"
 #include "rtps/entities/Writer.h"
-#include "rtps/storages/MemoryPool.h"
 #include "rtps/storages/HistoryCacheWithDeletion.h"
+#include "rtps/storages/MemoryPool.h"
 
 namespace rtps {
 
@@ -42,17 +42,17 @@ public:
   //! worker threads
   void progress() override;
   const CacheChange *newChange(ChangeKind_t kind, const uint8_t *data,
-                               DataSize_t size, bool inLineQoS = false, bool markDisposedAfterWrite = false) override;
-                                                            
-  bool removeFromHistory(const SequenceNumber_t& s);
+                               DataSize_t size, bool inLineQoS = false,
+                               bool markDisposedAfterWrite = false) override;
+
+  bool removeFromHistory(const SequenceNumber_t &s);
   void setAllChangesToUnsent() override;
   void onNewAckNack(const SubmessageAckNack &msg,
                     const GuidPrefix_t &sourceGuidPrefix) override;
   void reset() override;
-  void updateChangeKind(SequenceNumber_t& sequence_number);
+  void updateChangeKind(SequenceNumber_t &sequence_number);
 
 private:
-
   NetworkDriver *m_transport;
 
   HistoryCacheWithDeletion<Config::HISTORY_SIZE_STATEFUL> m_history;
@@ -62,13 +62,12 @@ private:
   bool m_running = true;
   bool m_thread_running = false;
 
-  bool sendData(const ReaderProxy &reader, const CacheChange* next);
-  bool sendDataWRMulticast(const ReaderProxy &reader,
-                           const CacheChange* next);
+  bool sendData(const ReaderProxy &reader, const CacheChange *next);
+  bool sendDataWRMulticast(const ReaderProxy &reader, const CacheChange *next);
   static void hbFunctionJumppad(void *thisPointer);
   void sendHeartBeatLoop();
   void sendHeartBeat();
-  void sendGap(const ReaderProxy& reader, const SequenceNumber_t& missingSN);
+  void sendGap(const ReaderProxy &reader, const SequenceNumber_t &missingSN);
 };
 
 using StatefulWriter = StatefulWriterT<UdpDriver>;

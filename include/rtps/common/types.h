@@ -182,8 +182,9 @@ struct SequenceNumber_t {
 };
 
 #define SNS_MAX_NUM_BITS 32
-#define SNS_NUM_BYTES (SNS_MAX_NUM_BITS/8)
-static_assert(!(SNS_MAX_NUM_BITS % 32) && SNS_MAX_NUM_BITS != 0, "SNS_MAX_NUM_BITS must be multiple of 32");
+#define SNS_NUM_BYTES (SNS_MAX_NUM_BITS / 8)
+static_assert(!(SNS_MAX_NUM_BITS % 32) && SNS_MAX_NUM_BITS != 0,
+              "SNS_MAX_NUM_BITS must be multiple of 32");
 
 struct SequenceNumberSet {
 
@@ -194,7 +195,7 @@ struct SequenceNumberSet {
   SequenceNumber_t base = {0, 0};
   // Cannot be static because of packed
   uint32_t numBits = 0;
-  std::array<uint32_t, (SNS_MAX_NUM_BITS/32)> bitMap{};
+  std::array<uint32_t, (SNS_MAX_NUM_BITS / 32)> bitMap{};
 
   // We only need 1 byte because atm we don't store packets.
   bool isSet(uint32_t bit) const {

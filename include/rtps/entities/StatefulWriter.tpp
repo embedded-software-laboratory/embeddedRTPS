@@ -61,8 +61,8 @@ bool StatefulWriterT<NetworkDriver>::init(TopicData attributes,
                                           ThreadPool *threadPool,
                                           NetworkDriver &driver,
                                           bool enfUnicast) {
-  
-  if(m_mutex == nullptr){
+
+  if (m_mutex == nullptr) {
     if (!createMutex(&m_mutex)) {
 
       SFW_LOG("Failed to create mutex.\n");
@@ -70,7 +70,7 @@ bool StatefulWriterT<NetworkDriver>::init(TopicData attributes,
       return false;
     }
   }
-  
+
   m_attributes = attributes;
 
   mp_threadPool = threadPool;
@@ -87,8 +87,8 @@ bool StatefulWriterT<NetworkDriver>::init(TopicData attributes,
 
   // Thread already exists, do not create new one (reusing slot case)
   m_is_initialized_ = true;
-  
-  if(m_heartbeatThread == nullptr || !m_thread_running){
+
+  if (m_heartbeatThread == nullptr || !m_thread_running) {
 
     m_running = true;
     m_thread_running = false;
@@ -96,40 +96,40 @@ bool StatefulWriterT<NetworkDriver>::init(TopicData attributes,
     if (m_attributes.endpointGuid.entityId ==
         ENTITYID_SEDP_BUILTIN_PUBLICATIONS_WRITER) {
       m_heartbeatThread = sys_thread_new("HBThreadPub", hbFunctionJumppad, this,
-                                        Config::HEARTBEAT_STACKSIZE,
-                                        Config::THREAD_POOL_WRITER_PRIO);
+                                         Config::HEARTBEAT_STACKSIZE,
+                                         Config::THREAD_POOL_WRITER_PRIO);
     } else if (m_attributes.endpointGuid.entityId ==
-              ENTITYID_SEDP_BUILTIN_SUBSCRIPTIONS_WRITER) {
+               ENTITYID_SEDP_BUILTIN_SUBSCRIPTIONS_WRITER) {
       m_heartbeatThread = sys_thread_new("HBThreadSub", hbFunctionJumppad, this,
-                                        Config::HEARTBEAT_STACKSIZE,
-                                        Config::THREAD_POOL_WRITER_PRIO);
+                                         Config::HEARTBEAT_STACKSIZE,
+                                         Config::THREAD_POOL_WRITER_PRIO);
     } else {
       m_heartbeatThread = sys_thread_new("HBThread", hbFunctionJumppad, this,
-                                        Config::HEARTBEAT_STACKSIZE,
-                                        Config::THREAD_POOL_WRITER_PRIO);
+                                         Config::HEARTBEAT_STACKSIZE,
+                                         Config::THREAD_POOL_WRITER_PRIO);
     }
   }
 
   return true;
 }
 
-template <class NetworkDriver>
-void StatefulWriterT<NetworkDriver>::reset(){
+template <class NetworkDriver> void StatefulWriterT<NetworkDriver>::reset() {
   m_is_initialized_ = false;
-	// TODO
+  // TODO
 }
 
 template <class NetworkDriver>
 const rtps::CacheChange *StatefulWriterT<NetworkDriver>::newChange(
-    ChangeKind_t kind, const uint8_t *data, DataSize_t size, bool inLineQoS, bool markDisposedAfterWrite) {
+    ChangeKind_t kind, const uint8_t *data, DataSize_t size, bool inLineQoS,
+    bool markDisposedAfterWrite) {
   INIT_GUARD()
   if (isIrrelevant(kind)) {
     return nullptr;
   }
 
   Lock lock{m_mutex};
-  if(!m_is_initialized_){
-	  return nullptr;
+  if (!m_is_initialized_) {
+    return nullptr;
   }
 
   if (m_history.isFull()) {
@@ -142,7 +142,8 @@ const rtps::CacheChange *StatefulWriterT<NetworkDriver>::newChange(
     }
   }
 
-  auto *result = m_history.addChange(data, size, inLineQoS, markDisposedAfterWrite);
+  auto *result =
+      m_history.addChange(data, size, inLineQoS, markDisposedAfterWrite);
   if (mp_threadPool != nullptr) {
     mp_threadPool->addWorkload(this);
   }
@@ -155,8 +156,8 @@ const rtps::CacheChange *StatefulWriterT<NetworkDriver>::newChange(
 template <class NetworkDriver> void StatefulWriterT<NetworkDriver>::progress() {
   INIT_GUARD()
   Lock{m_mutex};
-  CacheChange* next = m_history.getChangeBySN(m_nextSequenceNumberToSend);
-  if(next != nullptr){
+  CacheChange *next = m_history.getChangeBySN(m_nextSequenceNumberToSend);
+  if (next != nullptr) {
     for (const auto &proxy : m_proxies) {
       bool success;
       if (!m_enforceUnicast) {
@@ -169,20 +170,21 @@ template <class NetworkDriver> void StatefulWriterT<NetworkDriver>::progress() {
     /*
      * Use case: deletion of local endpoints
      * -> send Data Message with Disposed Flag set
-     * -> Set respective SEDP CacheChange as NOT_ALIVE_DISPOSED after transmission to proxies
-     * -> onAckNack will send Gap Messages to skip deleted local endpoints during SEDP
+     * -> Set respective SEDP CacheChange as NOT_ALIVE_DISPOSED after
+     * transmission to proxies
+     * -> onAckNack will send Gap Messages to skip deleted local endpoints
+     * during SEDP
      */
-    if(next->diposeAfterWrite){
-    	m_history.dropChange(next->sequenceNumber);
+    if (next->diposeAfterWrite) {
+      m_history.dropChange(next->sequenceNumber);
     }
-  }else{
+  } else {
     SFW_LOG("Couldn't get a CacheChange with SN (%i,%u)\n", snMissing.high,
-      snMissing.low);
+            snMissing.low);
   }
 
   ++m_nextSequenceNumberToSend;
 }
-
 
 template <class NetworkDriver>
 void StatefulWriterT<NetworkDriver>::setAllChangesToUnsent() {
@@ -201,8 +203,8 @@ void StatefulWriterT<NetworkDriver>::onNewAckNack(
     const SubmessageAckNack &msg, const GuidPrefix_t &sourceGuidPrefix) {
   INIT_GUARD()
   Lock lock(m_mutex);
-  if(!m_is_initialized_){
-	  return;
+  if (!m_is_initialized_) {
+    return;
   }
 
   ReaderProxy *reader = nullptr;
@@ -247,43 +249,41 @@ void StatefulWriterT<NetworkDriver>::onNewAckNack(
     if (msg.readerSNState.isSet(i)) {
 
       SFW_LOG("Send Packet on acknack.\n");
-      const CacheChange* cache = m_history.getChangeBySN(nextSN);
+      const CacheChange *cache = m_history.getChangeBySN(nextSN);
 
       // We should have this SN -> send GAP Message
-      if(cache == nullptr && m_history.isSNInRange(nextSN)){
+      if (cache == nullptr && m_history.isSNInRange(nextSN)) {
         sendGap(*reader, nextSN);
         continue;
       }
 
-      if(cache != nullptr){
-         sendData(*reader, cache);
+      if (cache != nullptr) {
+        sendData(*reader, cache);
       }
-    
     }
   }
   // Check for sequence numbers after defined range
   SequenceNumber_t maxSN;
-  {
-    maxSN = m_history.getSeqNumMax();
-  }
+  { maxSN = m_history.getSeqNumMax(); }
   while (nextSN <= maxSN) {
-    const CacheChange* cache = m_history.getChangeBySN(nextSN);
-    if(cache != nullptr){
-    	sendData(*reader, cache);
+    const CacheChange *cache = m_history.getChangeBySN(nextSN);
+    if (cache != nullptr) {
+      sendData(*reader, cache);
     }
     ++nextSN;
   }
 }
 
 template <class NetworkDriver>
-bool rtps::StatefulWriterT<NetworkDriver>::removeFromHistory(const SequenceNumber_t& s){
+bool rtps::StatefulWriterT<NetworkDriver>::removeFromHistory(
+    const SequenceNumber_t &s) {
   Lock lock{m_mutex};
   return m_history.dropChange(s);
 }
 
 template <class NetworkDriver>
-bool StatefulWriterT<NetworkDriver>::sendData(
-    const ReaderProxy &reader, const CacheChange* next) {
+bool StatefulWriterT<NetworkDriver>::sendData(const ReaderProxy &reader,
+                                              const CacheChange *next) {
   INIT_GUARD()
   // TODO smarter packaging e.g. by creating MessageStruct and serialize after
   // adjusting values Reusing the pbuf is not possible. See
@@ -311,7 +311,7 @@ bool StatefulWriterT<NetworkDriver>::sendData(
 
 template <class NetworkDriver>
 void StatefulWriterT<NetworkDriver>::sendGap(
-    const ReaderProxy &reader, const SequenceNumber_t& missingSN) {
+    const ReaderProxy &reader, const SequenceNumber_t &missingSN) {
   INIT_GUARD()
   // TODO smarter packaging e.g. by creating MessageStruct and serialize after
   // adjusting values Reusing the pbuf is not possible. See
@@ -329,10 +329,10 @@ void StatefulWriterT<NetworkDriver>::sendGap(
   info.destAddr = locator.getIp4Address();
   info.destPort = (Ip4Port_t)locator.port;
 
-  MessageFactory::addSubmessageGap(
-      info.buffer, m_attributes.endpointGuid.entityId, reader.remoteReaderGuid.entityId, missingSN);
+  MessageFactory::addSubmessageGap(info.buffer,
+                                   m_attributes.endpointGuid.entityId,
+                                   reader.remoteReaderGuid.entityId, missingSN);
   m_transport->sendPacket(info);
-
 }
 
 template <class NetworkDriver>
@@ -365,10 +365,10 @@ bool StatefulWriterT<NetworkDriver>::sendDataWRMulticast(
       reid = reader.remoteReaderGuid.entityId;
     }
 
-    MessageFactory::addSubMessageData(
-        info.buffer, next->data, next->inLineQoS, next->sequenceNumber,
-        m_attributes.endpointGuid.entityId, reid);
-    
+    MessageFactory::addSubMessageData(info.buffer, next->data, next->inLineQoS,
+                                      next->sequenceNumber,
+                                      m_attributes.endpointGuid.entityId, reid);
+
     m_transport->sendPacket(info);
   }
   return true;
@@ -394,7 +394,6 @@ void StatefulWriterT<NetworkDriver>::sendHeartBeatLoop() {
   m_thread_running = false;
 }
 
-
 template <class NetworkDriver>
 void StatefulWriterT<NetworkDriver>::sendHeartBeat() {
   INIT_GUARD()
@@ -418,10 +417,9 @@ void StatefulWriterT<NetworkDriver>::sendHeartBeat() {
       lastSN = m_history.getSeqNumMax();
 
       // Proxy has confirmed all sequence numbers and set final flag
-      if((proxy.lastAckNackSequenceNumber > lastSN) && proxy.finalFlag){
+      if ((proxy.lastAckNackSequenceNumber > lastSN) && proxy.finalFlag) {
         continue;
       }
-
     }
     if (firstSN == SEQUENCENUMBER_UNKNOWN || lastSN == SEQUENCENUMBER_UNKNOWN) {
 
@@ -430,7 +428,6 @@ void StatefulWriterT<NetworkDriver>::sendHeartBeat() {
       }
       return;
     }
-
 
     MessageFactory::addHeartbeat(
         info.buffer, m_attributes.endpointGuid.entityId,

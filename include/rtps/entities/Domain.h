@@ -35,25 +35,6 @@ Author: i11 - Embedded Software, RWTH Aachen University
 #include "rtps/storages/PBufWrapper.h"
 #include <rtps/common/Locator.h>
 
-/*
-
-
-- Creation:
-          -A Introduce init(), reset(), isInitialized() API
-          -B remove m_numStatelessWriters and co -> have to check for isInitialized()! Don't rely on count anymore to determine
-          -C Link SEDP Sequence Number and Entity
-- Delete: 
-          - Marc Respective Element (See C) in History as Deleted
-          - Send PID_STATUS_INFO with Disposed/Unregistered Flag set
-
-- onNewAckNack():
-          - Check if Sample in History is marked as deleted -> Send GAP just for that Sample
-          - If sample not deleted resubmit as usual
-
-- Ensure that writer/reader can not be deleted while being used
-          
-*/
-
 namespace rtps {
 class Domain {
 public:
@@ -76,8 +57,8 @@ public:
   Reader *readerExists(Participant &part, const char *topicName,
                        const char *typeName, bool reliable);
 
-  bool deleteWriter(Participant &part, Writer* writer);
-  bool deleteReader(Participant &part, Reader* reader);
+  bool deleteWriter(Participant &part, Writer *writer);
+  bool deleteReader(Participant &part, Reader *reader);
 
   void printInfo();
 
@@ -93,14 +74,13 @@ private:
   std::array<StatelessReader, Config::NUM_STATELESS_READERS> m_statelessReaders;
   std::array<StatefulReader, Config::NUM_STATEFUL_READERS> m_statefulReaders;
   std::array<StatefulWriter, Config::NUM_STATEFUL_WRITERS> m_statefulWriters;
-  template<typename A, typename B>
-  B* getNextUnusedEndpoint(A& a){
-	  for(unsigned int i = 0; i < a.size(); i++){
-		  if(!a[i].isInitialized()){
-			  return &(a[i]);
-		  }
-	  }
-	  return nullptr;
+  template <typename A, typename B> B *getNextUnusedEndpoint(A &a) {
+    for (unsigned int i = 0; i < a.size(); i++) {
+      if (!a[i].isInitialized()) {
+        return &(a[i]);
+      }
+    }
+    return nullptr;
   }
 
   bool m_initComplete = false;

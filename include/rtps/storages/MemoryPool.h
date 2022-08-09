@@ -150,8 +150,8 @@ public:
     return retcode;
   }
 
-  void clear(){
-    for(auto i = 0; i < (SIZE / 8 + 1); i++){
+  void clear() {
+    for (auto i = 0; i < (SIZE / 8 + 1); i++) {
       m_bitMap[i] = 0;
     }
     m_numElements = 0;
