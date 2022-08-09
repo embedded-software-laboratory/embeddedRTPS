@@ -57,6 +57,11 @@ public:
   Reader *readerExists(Participant &part, const char *topicName,
                        const char *typeName, bool reliable);
 
+  bool deleteWriter(Participant &part, Writer *writer);
+  bool deleteReader(Participant &part, Reader *reader);
+
+  void printInfo();
+
 private:
   friend class SizeInspector;
   ThreadPool m_threadPool;
@@ -67,14 +72,19 @@ private:
 
   std::array<StatelessWriter, Config::NUM_STATELESS_WRITERS> m_statelessWriters;
   std::array<StatelessReader, Config::NUM_STATELESS_READERS> m_statelessReaders;
-  uint8_t m_numStatelessWriters = 0;
-  uint8_t m_numStatelessReaders = 0;
   std::array<StatefulReader, Config::NUM_STATEFUL_READERS> m_statefulReaders;
-  uint8_t m_numStatefulReaders = 0;
   std::array<StatefulWriter, Config::NUM_STATEFUL_WRITERS> m_statefulWriters;
-  uint8_t m_numStatefulWriters = 0;
+  template <typename A, typename B> B *getNextUnusedEndpoint(A &a) {
+    for (unsigned int i = 0; i < a.size(); i++) {
+      if (!a[i].isInitialized()) {
+        return &(a[i]);
+      }
+    }
+    return nullptr;
+  }
 
   bool m_initComplete = false;
+  sys_mutex_t m_mutex;
 
   void receiveCallback(const PacketInfo &packet);
   GuidPrefix_t generateGuidPrefix(ParticipantId_t id) const;

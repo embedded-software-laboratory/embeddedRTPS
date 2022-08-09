@@ -40,29 +40,22 @@ using rtps::StatelessReader;
 #define SLR_LOG(...) //
 #endif
 
-void StatelessReader::init(const TopicData &attributes) {
+bool StatelessReader::init(const TopicData &attributes) {
+  if (!initMutex()) {
+    return false;
+  }
+
+  m_proxies.clear();
   m_attributes = attributes;
   m_is_initialized_ = true;
-  if (sys_mutex_new(&m_mutex) != ERR_OK) {
-    SLR_LOG("Failed to create mutex.\n");
-  }
+  return true;
 }
 
 void StatelessReader::newChange(const ReaderCacheChange &cacheChange) {
-  if (m_callback != nullptr) {
-    m_callback(m_callee, cacheChange);
+  if (!m_is_initialized_) {
+    return;
   }
-}
-
-void StatelessReader::registerCallback(ddsReaderCallback_fp cb, void *callee) {
-  if (cb != nullptr) {
-    m_callback = cb;
-    m_callee = callee; // It's okay if this is null
-  } else {
-#if (SLR_VERBOSE && RTPS_GLOBAL_VERBOSE)
-    SLR_LOG("Passed callback is nullptr\n");
-#endif
-  }
+  executeCallbacks(cacheChange);
 }
 
 bool StatelessReader::addNewMatchedWriter(const WriterProxy &newProxy) {
@@ -74,34 +67,14 @@ bool StatelessReader::addNewMatchedWriter(const WriterProxy &newProxy) {
   return m_proxies.add(newProxy);
 }
 
-void StatelessReader::removeWriter(const Guid_t &guid) {
-  Lock lock(m_mutex);
-  auto isElementToRemove = [&](const WriterProxy &proxy) {
-    return proxy.remoteWriterGuid == guid;
-  };
-  auto thunk = [](void *arg, const WriterProxy &value) {
-    return (*static_cast<decltype(isElementToRemove) *>(arg))(value);
-  };
-
-  m_proxies.remove(thunk, &isElementToRemove);
-}
-
-void StatelessReader::removeWriterOfParticipant(
-    const GuidPrefix_t &guidPrefix) {
-  Lock lock(m_mutex);
-  auto isElementToRemove = [&](const WriterProxy &proxy) {
-    return proxy.remoteWriterGuid.prefix == guidPrefix;
-  };
-  auto thunk = [](void *arg, const WriterProxy &value) {
-    return (*static_cast<decltype(isElementToRemove) *>(arg))(value);
-  };
-
-  m_proxies.remove(thunk, &isElementToRemove);
-}
-
 bool StatelessReader::onNewHeartbeat(const SubmessageHeartbeat &,
                                      const GuidPrefix_t &) {
   // nothing to do
+  return true;
+}
+
+bool StatelessReader::onNewGapMessage(const SubmessageGap &msg,
+                                      const GuidPrefix_t &remotePrefix) {
   return true;
 }
 

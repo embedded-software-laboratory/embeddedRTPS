@@ -22,24 +22,23 @@ This file is part of embeddedRTPS.
 Author: i11 - Embedded Software, RWTH Aachen University
 */
 
-#ifndef PROJECT_SIMPLEHISTORYCACHE_H
-#define PROJECT_SIMPLEHISTORYCACHE_H
+#ifndef HISTORYCACHEWITHDELETION_H
+#define HISTORYCACHEWITHDELETION_H
 
-#include "rtps/config.h"
-#include "rtps/storages/CacheChange.h"
+#include <array>
+#include <stdint.h>
 
 namespace rtps {
 
 /**
- * Simple version of a history cache. It sets consecutive sequence numbers
- * automatically which allows an easy and fast approach of dropping acknowledged
- * changes. Furthermore, disposing of arbitrary changes is not possible.
- * However, this is in principle easy to add by changing the ChangeKind and
- * dropping it when passing it during deleting of other sequence numbers
+ * Extension of the SimpleHistoryCache that allows for deletion operation at the
+ * cost of efficieny
+ * TODO: Replace with something better in the future!
+ * Likely only used for SEDP
  */
-template <uint16_t SIZE> class SimpleHistoryCache {
+template <uint16_t SIZE> class HistoryCacheWithDeletion {
 public:
-  SimpleHistoryCache() = default;
+  HistoryCacheWithDeletion() = default;
 
   bool isFull() const {
     uint16_t it = m_head;
@@ -85,6 +84,37 @@ public:
 
   void dropOldest() { removeUntilIncl(getSeqNumMin()); }
 
+  bool dropChange(const SequenceNumber_t &sn) {
+    uint16_t idx_to_clear;
+    CacheChange *change;
+    if (!getChangeBySN(sn, &change, idx_to_clear)) {
+      printf("History: couldn't find SN with = %u\n", (int)sn.low);
+      return false; // sn does not exist, nothing to do
+    }
+
+    if (idx_to_clear == m_tail) {
+      m_buffer[m_tail].reset();
+      incrementTail();
+      return true;
+    }
+
+    uint16_t prev = idx_to_clear;
+    do {
+      prev = idx_to_clear - 1;
+      if (prev >= m_buffer.size()) {
+        prev = m_buffer.size() - 1;
+      }
+
+      m_buffer[idx_to_clear] = m_buffer[prev];
+      idx_to_clear = prev;
+
+    } while (prev != m_tail);
+
+    incrementTail();
+
+    return true;
+  }
+
   bool setCacheChangeKind(const SequenceNumber_t &sn, ChangeKind_t kind) {
     CacheChange *change = getChangeBySN(sn);
     if (change == nullptr) {
@@ -96,22 +126,13 @@ public:
   }
 
   CacheChange *getChangeBySN(SequenceNumber_t sn) {
-    SequenceNumber_t minSN = getSeqNumMin();
-    if (sn < minSN || getSeqNumMax() < sn) {
+    CacheChange *change;
+    uint16_t position;
+    if (getChangeBySN(sn, &change, position)) {
+      return change;
+    } else {
       return nullptr;
     }
-    static_assert(std::is_unsigned<decltype(sn.low)>::value,
-                  "Underflow well defined");
-    static_assert(sizeof(m_tail) <= sizeof(uint16_t), "Cast ist well defined");
-    // We don't overtake head, therefore difference of sn is within same range
-    // as iterators
-    uint16_t pos = m_tail + static_cast<uint16_t>(sn.low - minSN.low);
-
-    // Diff is smaller than the size of the array -> max one overflow
-    if (pos >= m_buffer.size()) {
-      pos -= m_buffer.size();
-    }
-    return &m_buffer[pos];
   }
 
   const SequenceNumber_t &getSeqNumMin() const {
@@ -135,6 +156,39 @@ public:
     m_tail = 0;
     m_lastUsedSequenceNumber = {0, 0};
   }
+#ifdef DEBUG_HISTORY_CACHE_WITH_DELETION
+  void print() {
+    for (unsigned int i = 0; i < m_buffer.size(); i++) {
+      std::cout << "[" << i << "] "
+                << " SN = " << m_buffer[i].sequenceNumber.low;
+      switch (m_buffer[i].kind) {
+      case ChangeKind_t::ALIVE:
+        std::cout << " Type = ALIVE";
+        break;
+      case ChangeKind_t::INVALID:
+        std::cout << " Type = INVALID";
+        break;
+      case ChangeKind_t::NOT_ALIVE_DISPOSED:
+        std::cout << " Type = DISPOSED";
+        break;
+      }
+      if (m_head == i) {
+        std::cout << " <- HEAD";
+      }
+      if (m_tail == i) {
+        std::cout << " <- TAIL";
+      }
+      std::cout << std::endl;
+    }
+  }
+#endif
+  bool isSNInRange(const SequenceNumber_t &sn) {
+    SequenceNumber_t minSN = getSeqNumMin();
+    if (sn < minSN || getSeqNumMax() < sn) {
+      return false;
+    }
+    return true;
+  }
 
 private:
   std::array<CacheChange, SIZE + 1> m_buffer{};
@@ -144,6 +198,39 @@ private:
                 "Iterator is large enough for given size");
 
   SequenceNumber_t m_lastUsedSequenceNumber{0, 0};
+
+  bool getChangeBySN(const SequenceNumber_t &sn, CacheChange **out_change,
+                     uint16_t &out_buffer_position) {
+    SequenceNumber_t minSN = getSeqNumMin();
+    if (!isSNInRange(sn)) {
+      return false;
+    }
+    static_assert(std::is_unsigned<decltype(sn.low)>::value,
+                  "Underflow well defined");
+    static_assert(sizeof(m_tail) <= sizeof(uint16_t), "Cast ist well defined");
+
+    int cur_idx = m_tail;
+    while (cur_idx != m_head) {
+      if (m_buffer[cur_idx].sequenceNumber == sn) {
+        *out_change = &m_buffer[cur_idx];
+        out_buffer_position = cur_idx;
+        return true;
+      }
+      // Sequence numbers are consecutive
+      if (m_buffer[cur_idx].sequenceNumber > sn) {
+        *out_change = nullptr;
+        return false;
+      }
+
+      cur_idx++;
+      if (cur_idx >= m_buffer.size()) {
+        cur_idx -= m_buffer.size();
+      }
+    }
+
+    *out_change = nullptr;
+    return false;
+  }
 
   inline void incrementHead() {
     incrementIterator(m_head);
@@ -162,17 +249,18 @@ private:
 
   inline void incrementTail() {
     if (m_head != m_tail) {
+      m_buffer[m_tail].reset();
       incrementIterator(m_tail);
     }
   }
 
 protected:
   // This constructor was created for unit testing
-  explicit SimpleHistoryCache(SequenceNumber_t lastUsed)
-      : SimpleHistoryCache() {
+  explicit HistoryCacheWithDeletion(SequenceNumber_t lastUsed)
+      : HistoryCacheWithDeletion() {
     m_lastUsedSequenceNumber = lastUsed;
   }
 };
 } // namespace rtps
 
-#endif // PROJECT_SIMPLEHISTORYCACHE_H
+#endif // HISTORYCACHEWITHDELETION_H

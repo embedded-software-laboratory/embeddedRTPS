@@ -35,13 +35,14 @@ struct WriterProxy {
   Count_t ackNackCount;
   Count_t hbCount;
   LocatorIPv4 remoteLocator;
+  bool is_reliable;
 
   WriterProxy() = default;
 
-  WriterProxy(const Guid_t &guid, const LocatorIPv4 &loc)
+  WriterProxy(const Guid_t &guid, const LocatorIPv4 &loc, bool reliable)
       : remoteWriterGuid(guid),
         expectedSN(SequenceNumber_t{0, 1}), ackNackCount{1}, hbCount{0},
-        remoteLocator(loc) {}
+        is_reliable(reliable), remoteLocator(loc) {}
 
   // For now, we don't store any packets, so we just request all starting from
   // the next expected

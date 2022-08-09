@@ -25,6 +25,7 @@ Author: i11 - Embedded Software, RWTH Aachen University
 #ifndef RTPS_LOCK_H
 #define RTPS_LOCK_H
 
+#include "FreeRTOS.h"
 #include "lwip/sys.h"
 
 namespace rtps {
@@ -32,13 +33,16 @@ namespace rtps {
 class Lock {
 public:
   explicit Lock(sys_mutex_t &passedMutex) : m_mutex(passedMutex) {
-    sys_mutex_lock(&m_mutex);
+    xSemaphoreTakeRecursive(m_mutex, portMAX_DELAY);
   };
 
-  ~Lock() { sys_mutex_unlock(&m_mutex); };
+  ~Lock() { xSemaphoreGiveRecursive(m_mutex); };
 
 private:
-  sys_mutex_t &m_mutex;
+  sys_mutex_t m_mutex;
 };
+
+bool createMutex(sys_mutex_t *mutex);
+
 } // namespace rtps
 #endif // RTPS_LOCK_H

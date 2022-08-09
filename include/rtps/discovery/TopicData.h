@@ -48,6 +48,13 @@ struct TopicData {
   FullLengthLocator unicastLocator;
   FullLengthLocator multicastLocator;
 
+  uint8_t statusInfo;
+  bool statusInfoValid;
+  // Use Case: Remotes communicates id of deleted endpoint through key_hash
+  // parameter
+  EntityId_t entityIdFromKeyHash;
+  bool entityIdFromKeyHashValid;
+
   TopicData()
       : endpointGuid(GUID_UNKNOWN), typeName{'\0'}, topicName{'\0'},
         reliabilityKind(ReliabilityKind_t::BEST_EFFORT),
@@ -69,14 +76,16 @@ struct TopicData {
 
   bool readFromUcdrBuffer(ucdrBuffer &buffer);
   bool serializeIntoUcdrBuffer(ucdrBuffer &buffer) const;
+
+  bool isDisposedFlagSet() const;
+  bool isUnregisteredFlagSet() const;
 };
 
 struct TopicDataCompressed {
   Guid_t endpointGuid;
   std::size_t topicHash;
   std::size_t typeHash;
-  ReliabilityKind_t reliabilityKind;
-  DurabilityKind_t durabilityKind;
+  bool is_reliable;
   LocatorIPv4 unicastLocator;
   LocatorIPv4 multicastLocator;
 
@@ -86,8 +95,9 @@ struct TopicDataCompressed {
     topicHash =
         hashCharArray(topic_data.topicName, Config::MAX_TOPICNAME_LENGTH);
     typeHash = hashCharArray(topic_data.typeName, Config::MAX_TYPENAME_LENGTH);
-    reliabilityKind = topic_data.reliabilityKind;
-    durabilityKind = topic_data.durabilityKind;
+    is_reliable = (topic_data.reliabilityKind == ReliabilityKind_t::RELIABLE)
+                      ? true
+                      : false;
     unicastLocator = topic_data.unicastLocator;
     multicastLocator = topic_data.multicastLocator;
   }

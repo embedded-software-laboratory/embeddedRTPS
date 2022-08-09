@@ -40,17 +40,22 @@ public:
   void init(Participant &part, const BuiltInEndpoints &endpoints);
   void addWriter(Writer &writer);
   void addReader(Reader &reader);
+  bool deleteReader(Reader *reader);
+  bool deleteWriter(Writer *reader);
+
   void registerOnNewPublisherMatchedCallback(void (*callback)(void *arg),
                                              void *args);
   void registerOnNewSubscriberMatchedCallback(void (*callback)(void *arg),
                                               void *args);
   void removeUnmatchedEntitiesOfParticipant(const GuidPrefix_t &guidPrefix);
+  void removeUnmatchedEntity(const Guid_t &guid);
+
   uint32_t getNumRemoteUnmatchedReaders();
   uint32_t getNumRemoteUnmatchedWriters();
 
 protected: // For testing purposes
-  void onNewPublisher(const TopicData &writerData);
-  void onNewSubscriber(const TopicData &writerData);
+  void handlePublisherReaderMessage(const TopicData &writerData);
+  void handleSubscriptionReaderMessage(const TopicData &writerData);
 
 private:
   Participant *m_part;
@@ -74,18 +79,38 @@ private:
   void tryMatchUnmatchedEndpoints();
   void addUnmatchedRemoteWriter(const TopicData &writerData);
   void addUnmatchedRemoteReader(const TopicData &readerData);
+  void addUnmatchedRemoteWriter(const TopicDataCompressed &writerData);
+  void addUnmatchedRemoteReader(const TopicDataCompressed &readerData);
+
+  void handleRemoteEndpointDeletion(const TopicData &topic);
 
   void (*mfp_onNewPublisherCallback)(void *arg) = nullptr;
   void *m_onNewPublisherArgs = nullptr;
   void (*mfp_onNewSubscriberCallback)(void *arg) = nullptr;
   void *m_onNewSubscriberArgs = nullptr;
 
-  static void receiveCallbackPublisher(void *callee,
-                                       const ReaderCacheChange &cacheChange);
-  static void receiveCallbackSubscriber(void *callee,
+  static void jumppadPublisherReader(void *callee,
+                                     const ReaderCacheChange &cacheChange);
+  static void jumppadSubscriptionReader(void *callee,
                                         const ReaderCacheChange &cacheChange);
-  void onNewPublisher(const ReaderCacheChange &change);
-  void onNewSubscriber(const ReaderCacheChange &change);
+
+  static void jumppadTakeProxyOfDisposedReader(const Reader *reader,
+                                               const WriterProxy &proxy,
+                                               void *arg);
+  static void jumppadTakeProxyOfDisposedWriter(const Writer *writer,
+                                               const ReaderProxy &proxy,
+                                               void *arg);
+
+  void handlePublisherReaderMessage(const ReaderCacheChange &change);
+  void handleSubscriptionReaderMessage(const ReaderCacheChange &change);
+
+  template <typename A> bool deleteEndpoint(A *endpoint, Writer *sedp_endpoint);
+
+  template <typename A>
+  bool announceEndpointDeletion(A *local_endpoint, Writer *sedp_endpoint);
+
+  template <typename A>
+  bool disposeEndpointInSEDPHistory(A *local_endpoint, Writer *sedp_writer);
 };
 } // namespace rtps
 

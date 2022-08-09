@@ -25,6 +25,7 @@ Author: i11 - Embedded Software, RWTH Aachen University
 #include "lwip/sys.h"
 #include "rtps/entities/StatefulWriter.h"
 #include "rtps/messages/MessageFactory.h"
+#include "rtps/messages/MessageTypes.h"
 #include "rtps/utils/Log.h"
 #include <cstring>
 #include <stdio.h>
@@ -60,147 +61,76 @@ bool StatefulWriterT<NetworkDriver>::init(TopicData attributes,
                                           ThreadPool *threadPool,
                                           NetworkDriver &driver,
                                           bool enfUnicast) {
-  if (sys_mutex_new(&m_mutex) != ERR_OK) {
 
-    SFW_LOG("Failed to create mutex.\n");
+  if (m_mutex == nullptr) {
+    if (!createMutex(&m_mutex)) {
 
-    return false;
+      SFW_LOG("Failed to create mutex.\n");
+
+      return false;
+    }
   }
+
+  m_attributes = attributes;
+
+  mp_threadPool = threadPool;
+  m_srcPort = attributes.unicastLocator.port;
+  m_enforceUnicast = enfUnicast;
+  m_topicKind = topicKind;
+
+  m_nextSequenceNumberToSend = {0, 1};
+  m_proxies.clear();
 
   m_transport = &driver;
-  m_attributes = attributes;
-  m_topicKind = topicKind;
-  m_packetInfo.srcPort = attributes.unicastLocator.port;
-  m_enforceUnicast = enfUnicast;
-  mp_threadPool = threadPool;
-  if (m_attributes.endpointGuid.entityId ==
-      ENTITYID_SEDP_BUILTIN_PUBLICATIONS_WRITER) {
-    m_heartbeatThread = sys_thread_new("HBThreadPub", hbFunctionJumppad, this,
-                                       Config::HEARTBEAT_STACKSIZE,
-                                       Config::THREAD_POOL_WRITER_PRIO);
-  } else if (m_attributes.endpointGuid.entityId ==
-             ENTITYID_SEDP_BUILTIN_SUBSCRIPTIONS_WRITER) {
-    m_heartbeatThread = sys_thread_new("HBThreadSub", hbFunctionJumppad, this,
-                                       Config::HEARTBEAT_STACKSIZE,
-                                       Config::THREAD_POOL_WRITER_PRIO);
-  } else {
-    m_heartbeatThread = sys_thread_new("HBThread", hbFunctionJumppad, this,
-                                       Config::HEARTBEAT_STACKSIZE,
-                                       Config::THREAD_POOL_WRITER_PRIO);
+  m_history.clear();
+  m_hbCount = {1};
+
+  // Thread already exists, do not create new one (reusing slot case)
+  m_is_initialized_ = true;
+
+  if (m_heartbeatThread == nullptr || !m_thread_running) {
+
+    m_running = true;
+    m_thread_running = false;
+
+    if (m_attributes.endpointGuid.entityId ==
+        ENTITYID_SEDP_BUILTIN_PUBLICATIONS_WRITER) {
+      m_heartbeatThread = sys_thread_new("HBThreadPub", hbFunctionJumppad, this,
+                                         Config::HEARTBEAT_STACKSIZE,
+                                         Config::THREAD_POOL_WRITER_PRIO);
+    } else if (m_attributes.endpointGuid.entityId ==
+               ENTITYID_SEDP_BUILTIN_SUBSCRIPTIONS_WRITER) {
+      m_heartbeatThread = sys_thread_new("HBThreadSub", hbFunctionJumppad, this,
+                                         Config::HEARTBEAT_STACKSIZE,
+                                         Config::THREAD_POOL_WRITER_PRIO);
+    } else {
+      m_heartbeatThread = sys_thread_new("HBThread", hbFunctionJumppad, this,
+                                         Config::HEARTBEAT_STACKSIZE,
+                                         Config::THREAD_POOL_WRITER_PRIO);
+    }
   }
 
-  m_is_initialized_ = true;
   return true;
 }
 
-template <class NetworkDriver>
-bool StatefulWriterT<NetworkDriver>::addNewMatchedReader(
-    const ReaderProxy &newProxy) {
-#if SFW_VERBOSE && RTPS_GLOBAL_VERBOSE
-  SFW_LOG("New reader added with id: ");
-  printGuid(newProxy.remoteReaderGuid);
-#endif
-
-  bool success = m_proxies.add(newProxy);
-  if (!m_enforceUnicast) {
-    manageSendOptions();
-  }
-  return success;
-}
-
-template <class NetworkDriver>
-void StatefulWriterT<NetworkDriver>::manageSendOptions() {
-
-  SFW_LOG("Search for Multicast Partners!\n");
-
-  for (auto &proxy : m_proxies) {
-    if (proxy.remoteMulticastLocator.kind ==
-        LocatorKind_t::LOCATOR_KIND_INVALID) {
-      proxy.suppressUnicast = false;
-      proxy.useMulticast = false;
-    } else {
-      bool found = false;
-      for (auto &avproxy : m_proxies) {
-        if (avproxy.remoteMulticastLocator.kind ==
-                LocatorKind_t::LOCATOR_KIND_UDPv4 &&
-            avproxy.remoteMulticastLocator.getIp4Address().addr ==
-                proxy.remoteMulticastLocator.getIp4Address().addr &&
-            avproxy.remoteLocator.getIp4Address().addr !=
-                proxy.remoteLocator.getIp4Address().addr) {
-          if (avproxy.suppressUnicast == false) {
-            avproxy.useMulticast = false;
-            avproxy.suppressUnicast = true;
-            proxy.useMulticast = true;
-            proxy.suppressUnicast = true;
-
-            SFW_LOG("Found Multicast Partner!\n");
-
-            if (avproxy.remoteReaderGuid.entityId !=
-                proxy.remoteReaderGuid.entityId) {
-              proxy.unknown_eid = true;
-
-              SFW_LOG("Found different EntityIds, using UNKNOWN_ENTITYID\n");
-            }
-          }
-          found = true;
-        }
-      }
-      if (!found) {
-        proxy.useMulticast = false;
-        proxy.suppressUnicast = false;
-      }
-    }
-  }
-}
-
-template <class NetworkDriver>
-void StatefulWriterT<NetworkDriver>::resetSendOptions() {
-  for (auto &proxy : m_proxies) {
-    proxy.suppressUnicast = false;
-    proxy.useMulticast = false;
-    proxy.unknown_eid = false;
-  }
-  manageSendOptions();
-}
-
-// TODO: manage Multicast Options again...
-template <class NetworkDriver>
-void StatefulWriterT<NetworkDriver>::removeReader(const Guid_t &guid) {
-  Lock lock(m_mutex);
-  auto isElementToRemove = [&](const ReaderProxy &proxy) {
-    return proxy.remoteReaderGuid == guid;
-  };
-  auto thunk = [](void *arg, const ReaderProxy &value) {
-    return (*static_cast<decltype(isElementToRemove) *>(arg))(value);
-  };
-
-  m_proxies.remove(thunk, &isElementToRemove);
-  resetSendOptions();
-}
-
-template <class NetworkDriver>
-void StatefulWriterT<NetworkDriver>::removeReaderOfParticipant(
-    const GuidPrefix_t &guidPrefix) {
-  Lock lock(m_mutex);
-  auto isElementToRemove = [&](const ReaderProxy &proxy) {
-    return proxy.remoteReaderGuid.prefix == guidPrefix;
-  };
-  auto thunk = [](void *arg, const ReaderProxy &value) {
-    return (*static_cast<decltype(isElementToRemove) *>(arg))(value);
-  };
-
-  m_proxies.remove(thunk, &isElementToRemove);
-  resetSendOptions();
+template <class NetworkDriver> void StatefulWriterT<NetworkDriver>::reset() {
+  m_is_initialized_ = false;
+  // TODO
 }
 
 template <class NetworkDriver>
 const rtps::CacheChange *StatefulWriterT<NetworkDriver>::newChange(
-    ChangeKind_t kind, const uint8_t *data, DataSize_t size) {
+    ChangeKind_t kind, const uint8_t *data, DataSize_t size, bool inLineQoS,
+    bool markDisposedAfterWrite) {
+  INIT_GUARD()
   if (isIrrelevant(kind)) {
     return nullptr;
   }
 
   Lock lock{m_mutex};
+  if (!m_is_initialized_) {
+    return nullptr;
+  }
 
   if (m_history.isFull()) {
     // Right now we drop elements anyway because we cannot detect non-responding
@@ -212,7 +142,8 @@ const rtps::CacheChange *StatefulWriterT<NetworkDriver>::newChange(
     }
   }
 
-  auto *result = m_history.addChange(data, size);
+  auto *result =
+      m_history.addChange(data, size, inLineQoS, markDisposedAfterWrite);
   if (mp_threadPool != nullptr) {
     mp_threadPool->addWorkload(this);
   }
@@ -223,31 +154,41 @@ const rtps::CacheChange *StatefulWriterT<NetworkDriver>::newChange(
 }
 
 template <class NetworkDriver> void StatefulWriterT<NetworkDriver>::progress() {
+  INIT_GUARD()
+  Lock{m_mutex};
+  CacheChange *next = m_history.getChangeBySN(m_nextSequenceNumberToSend);
+  if (next != nullptr) {
+    for (const auto &proxy : m_proxies) {
+      bool success;
+      if (!m_enforceUnicast) {
+        success = sendDataWRMulticast(proxy, next);
+      } else {
+        success = sendData(proxy, next);
+      }
+    }
 
-  for (const auto &proxy : m_proxies) {
-    bool success;
-    if (!m_enforceUnicast) {
-      success = sendDataWRMulticast(proxy, m_nextSequenceNumberToSend);
-    } else {
-      success = sendData(proxy, m_nextSequenceNumberToSend);
+    /*
+     * Use case: deletion of local endpoints
+     * -> send Data Message with Disposed Flag set
+     * -> Set respective SEDP CacheChange as NOT_ALIVE_DISPOSED after
+     * transmission to proxies
+     * -> onAckNack will send Gap Messages to skip deleted local endpoints
+     * during SEDP
+     */
+    if (next->diposeAfterWrite) {
+      m_history.dropChange(next->sequenceNumber);
     }
-    if (!success) {
-      continue;
-    }
+  } else {
+    SFW_LOG("Couldn't get a CacheChange with SN (%i,%u)\n", snMissing.high,
+            snMissing.low);
   }
-  ++m_nextSequenceNumberToSend;
-}
 
-template <typename NetworkDriver>
-bool StatefulWriterT<NetworkDriver>::isIrrelevant(ChangeKind_t kind) const {
-  // Right now we only allow alive changes
-  // return kind == ChangeKind_t::INVALID || (m_topicKind == TopicKind_t::NO_KEY
-  // && kind != ChangeKind_t::ALIVE);
-  return kind != ChangeKind_t::ALIVE;
+  ++m_nextSequenceNumberToSend;
 }
 
 template <class NetworkDriver>
 void StatefulWriterT<NetworkDriver>::setAllChangesToUnsent() {
+  INIT_GUARD()
   Lock lock(m_mutex);
 
   m_nextSequenceNumberToSend = m_history.getSeqNumMin();
@@ -260,6 +201,12 @@ void StatefulWriterT<NetworkDriver>::setAllChangesToUnsent() {
 template <class NetworkDriver>
 void StatefulWriterT<NetworkDriver>::onNewAckNack(
     const SubmessageAckNack &msg, const GuidPrefix_t &sourceGuidPrefix) {
+  INIT_GUARD()
+  Lock lock(m_mutex);
+  if (!m_is_initialized_) {
+    return;
+  }
+
   ReaderProxy *reader = nullptr;
   for (auto &proxy : m_proxies) {
     if (proxy.remoteReaderGuid.prefix == sourceGuidPrefix &&
@@ -278,19 +225,6 @@ void StatefulWriterT<NetworkDriver>::onNewAckNack(
     return;
   }
 
-  uint8_t hash = 0;
-  for (unsigned int i = 0; i < sourceGuidPrefix.id.size(); i++) {
-    hash += sourceGuidPrefix.id.at(i);
-  }
-
-  char bfr[20];
-  size_t size = snprintf(bfr, sizeof(bfr), "%u <= %u", msg.count.value,
-                         reader->ackNackCount.value);
-  if (!(size < sizeof(bfr))) {
-    while (1)
-      ;
-  }
-
   if (msg.count.value <= reader->ackNackCount.value) {
 
     SFW_LOG("Count too small. Dropping acknack.\n");
@@ -299,6 +233,8 @@ void StatefulWriterT<NetworkDriver>::onNewAckNack(
   }
 
   reader->ackNackCount = msg.count;
+  reader->finalFlag = msg.header.finalFlag();
+  reader->lastAckNackSequenceNumber = msg.readerSNState.base;
 
   // Send missing packets
   SequenceNumber_t nextSN = msg.readerSNState.base;
@@ -313,31 +249,48 @@ void StatefulWriterT<NetworkDriver>::onNewAckNack(
     if (msg.readerSNState.isSet(i)) {
 
       SFW_LOG("Send Packet on acknack.\n");
+      const CacheChange *cache = m_history.getChangeBySN(nextSN);
 
-      sendData(*reader, nextSN);
+      // We should have this SN -> send GAP Message
+      if (cache == nullptr && m_history.isSNInRange(nextSN)) {
+        sendGap(*reader, nextSN);
+        continue;
+      }
+
+      if (cache != nullptr) {
+        sendData(*reader, cache);
+      }
     }
   }
   // Check for sequence numbers after defined range
   SequenceNumber_t maxSN;
-  {
-    Lock lock(m_mutex);
-    maxSN = m_history.getSeqNumMax();
-  }
+  { maxSN = m_history.getSeqNumMax(); }
   while (nextSN <= maxSN) {
-    sendData(*reader, nextSN);
+    const CacheChange *cache = m_history.getChangeBySN(nextSN);
+    if (cache != nullptr) {
+      sendData(*reader, cache);
+    }
     ++nextSN;
   }
 }
 
 template <class NetworkDriver>
-bool StatefulWriterT<NetworkDriver>::sendData(
-    const ReaderProxy &reader, const SequenceNumber_t &snMissing) {
+bool rtps::StatefulWriterT<NetworkDriver>::removeFromHistory(
+    const SequenceNumber_t &s) {
+  Lock lock{m_mutex};
+  return m_history.dropChange(s);
+}
+
+template <class NetworkDriver>
+bool StatefulWriterT<NetworkDriver>::sendData(const ReaderProxy &reader,
+                                              const CacheChange *next) {
+  INIT_GUARD()
   // TODO smarter packaging e.g. by creating MessageStruct and serialize after
   // adjusting values Reusing the pbuf is not possible. See
   // https://www.nongnu.org/lwip/2_0_x/raw_api.html (Zero-Copy MACs)
 
   PacketInfo info;
-  info.srcPort = m_packetInfo.srcPort;
+  info.srcPort = m_srcPort;
 
   MessageFactory::addHeader(info.buffer, m_attributes.endpointGuid.prefix);
   MessageFactory::addSubMessageTimeStamp(info.buffer);
@@ -348,32 +301,48 @@ bool StatefulWriterT<NetworkDriver>::sendData(
   info.destAddr = locator.getIp4Address();
   info.destPort = (Ip4Port_t)locator.port;
 
-  {
-    Lock lock(m_mutex);
-    const CacheChange *next = m_history.getChangeBySN(snMissing);
-    if (next == nullptr) {
-
-      SFW_LOG("Couldn't get a CacheChange with SN (%i,%u)\n", snMissing.high,
-              snMissing.low);
-
-      return false;
-    }
-    MessageFactory::addSubMessageData(
-        info.buffer, next->data, false, next->sequenceNumber,
-        m_attributes.endpointGuid.entityId, reader.remoteReaderGuid.entityId);
-  }
-
+  MessageFactory::addSubMessageData(
+      info.buffer, next->data, next->inLineQoS, next->sequenceNumber,
+      m_attributes.endpointGuid.entityId, reader.remoteReaderGuid.entityId);
   m_transport->sendPacket(info);
+
   return true;
 }
 
 template <class NetworkDriver>
+void StatefulWriterT<NetworkDriver>::sendGap(
+    const ReaderProxy &reader, const SequenceNumber_t &missingSN) {
+  INIT_GUARD()
+  // TODO smarter packaging e.g. by creating MessageStruct and serialize after
+  // adjusting values Reusing the pbuf is not possible. See
+  // https://www.nongnu.org/lwip/2_0_x/raw_api.html (Zero-Copy MACs)
+
+  PacketInfo info;
+  info.srcPort = m_srcPort;
+
+  MessageFactory::addHeader(info.buffer, m_attributes.endpointGuid.prefix);
+  MessageFactory::addSubMessageTimeStamp(info.buffer);
+
+  // Just usable for IPv4
+  const LocatorIPv4 &locator = reader.remoteLocator;
+
+  info.destAddr = locator.getIp4Address();
+  info.destPort = (Ip4Port_t)locator.port;
+
+  MessageFactory::addSubmessageGap(info.buffer,
+                                   m_attributes.endpointGuid.entityId,
+                                   reader.remoteReaderGuid.entityId, missingSN);
+  m_transport->sendPacket(info);
+}
+
+template <class NetworkDriver>
 bool StatefulWriterT<NetworkDriver>::sendDataWRMulticast(
-    const ReaderProxy &reader, const SequenceNumber_t &snMissing) {
+    const ReaderProxy &reader, const CacheChange *next) {
+  INIT_GUARD()
 
   if (reader.useMulticast || reader.suppressUnicast == false) {
     PacketInfo info;
-    info.srcPort = m_packetInfo.srcPort;
+    info.srcPort = m_srcPort;
 
     MessageFactory::addHeader(info.buffer, m_attributes.endpointGuid.prefix);
     MessageFactory::addSubMessageTimeStamp(info.buffer);
@@ -389,28 +358,16 @@ bool StatefulWriterT<NetworkDriver>::sendDataWRMulticast(
       info.destPort = (Ip4Port_t)locator.port;
     }
 
-    {
-      Lock lock(m_mutex);
-      const CacheChange *next = m_history.getChangeBySN(snMissing);
-      if (next == nullptr) {
-
-        SFW_LOG("Couldn't get a CacheChange with SN (%i,%u)\n", snMissing.high,
-                snMissing.low);
-
-        return false;
-      }
-
-      EntityId_t reid;
-      if (reader.useMulticast) {
-        reid = ENTITYID_UNKNOWN;
-      } else {
-        reid = reader.remoteReaderGuid.entityId;
-      }
-
-      MessageFactory::addSubMessageData(
-          info.buffer, next->data, false, next->sequenceNumber,
-          m_attributes.endpointGuid.entityId, reid);
+    EntityId_t reid;
+    if (reader.useMulticast) {
+      reid = ENTITYID_UNKNOWN;
+    } else {
+      reid = reader.remoteReaderGuid.entityId;
     }
+
+    MessageFactory::addSubMessageData(info.buffer, next->data, next->inLineQoS,
+                                      next->sequenceNumber,
+                                      m_attributes.endpointGuid.entityId, reid);
 
     m_transport->sendPacket(info);
   }
@@ -439,7 +396,8 @@ void StatefulWriterT<NetworkDriver>::sendHeartBeatLoop() {
 
 template <class NetworkDriver>
 void StatefulWriterT<NetworkDriver>::sendHeartBeat() {
-  if (m_proxies.isEmpty()) {
+  INIT_GUARD()
+  if (m_proxies.isEmpty() || !m_is_initialized_) {
 
     SFW_LOG("Skipping heartbeat. No proxies.\n");
     return;
@@ -448,7 +406,7 @@ void StatefulWriterT<NetworkDriver>::sendHeartBeat() {
   for (auto &proxy : m_proxies) {
 
     PacketInfo info;
-    info.srcPort = m_packetInfo.srcPort;
+    info.srcPort = m_srcPort;
 
     SequenceNumber_t firstSN;
     SequenceNumber_t lastSN;
@@ -457,6 +415,11 @@ void StatefulWriterT<NetworkDriver>::sendHeartBeat() {
       Lock lock(m_mutex);
       firstSN = m_history.getSeqNumMin();
       lastSN = m_history.getSeqNumMax();
+
+      // Proxy has confirmed all sequence numbers and set final flag
+      if ((proxy.lastAckNackSequenceNumber > lastSN) && proxy.finalFlag) {
+        continue;
+      }
     }
     if (firstSN == SEQUENCENUMBER_UNKNOWN || lastSN == SEQUENCENUMBER_UNKNOWN) {
 
