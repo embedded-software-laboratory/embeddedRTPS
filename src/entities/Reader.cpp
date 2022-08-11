@@ -5,6 +5,8 @@
 
 using namespace rtps;
 
+Reader::Reader() { m_callbacks.fill({nullptr, nullptr, 0}); }
+
 void Reader::executeCallbacks(const ReaderCacheChange &cacheChange) {
   Lock lock(m_callback_mutex);
   for (unsigned int i = 0; i < m_callbacks.size(); i++) {

@@ -32,11 +32,11 @@ namespace rtps {
 struct ReaderProxy {
   Guid_t remoteReaderGuid;
   LocatorIPv4 remoteLocator;
+  bool is_reliable = false;
   LocatorIPv4 remoteMulticastLocator;
   bool useMulticast = false;
   bool suppressUnicast = false;
   bool unknown_eid = false;
-  bool is_reliable = false;
   Count_t ackNackCount = {0};
   bool finalFlag = false;
   SequenceNumber_t lastAckNackSequenceNumber = {0, 1};

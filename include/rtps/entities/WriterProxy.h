@@ -34,8 +34,8 @@ struct WriterProxy {
   SequenceNumber_t expectedSN;
   Count_t ackNackCount;
   Count_t hbCount;
-  LocatorIPv4 remoteLocator;
   bool is_reliable;
+  LocatorIPv4 remoteLocator;
 
   WriterProxy() = default;
 

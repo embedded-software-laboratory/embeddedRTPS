@@ -159,11 +159,10 @@ template <class NetworkDriver> void StatefulWriterT<NetworkDriver>::progress() {
   CacheChange *next = m_history.getChangeBySN(m_nextSequenceNumberToSend);
   if (next != nullptr) {
     for (const auto &proxy : m_proxies) {
-      bool success;
       if (!m_enforceUnicast) {
-        success = sendDataWRMulticast(proxy, next);
+        sendDataWRMulticast(proxy, next);
       } else {
-        success = sendData(proxy, next);
+        sendData(proxy, next);
       }
     }
 
@@ -417,7 +416,8 @@ void StatefulWriterT<NetworkDriver>::sendHeartBeat() {
       lastSN = m_history.getSeqNumMax();
 
       // Proxy has confirmed all sequence numbers and set final flag
-      if ((proxy.lastAckNackSequenceNumber > lastSN) && proxy.finalFlag) {
+      if ((proxy.lastAckNackSequenceNumber > lastSN) && proxy.finalFlag &&
+          proxy.ackNackCount.value > 0) {
         continue;
       }
     }

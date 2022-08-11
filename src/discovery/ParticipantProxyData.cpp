@@ -170,7 +170,7 @@ bool ParticipantProxyData::readLocatorIntoList(
   for (auto &proxy_locator : list) {
     if (!proxy_locator.isValid()) {
       bool ret = full_length_locator.readFromUcdrBuffer(buffer);
-      if (ret && full_length_locator.isSameSubnet() ||
+      if ((ret && full_length_locator.isSameSubnet()) ||
           full_length_locator.isMulticastAddress()) {
         proxy_locator = LocatorIPv4(full_length_locator);
         SPDP_LOG("Adding locator: %u %u %u %u \n",

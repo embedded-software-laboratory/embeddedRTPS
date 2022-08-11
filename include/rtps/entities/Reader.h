@@ -119,6 +119,7 @@ protected:
   SequenceNumber_t m_sedp_sequence_number;
 
   bool m_is_initialized_ = false;
+  Reader();
   virtual ~Reader() = default;
   MemoryPool<WriterProxy, Config::NUM_WRITER_PROXIES_PER_READER> m_proxies;
 
@@ -126,13 +127,12 @@ protected:
 
   uint8_t m_callback_count = 0;
   using callbackElement_t = struct {
-    callbackFunction_t function = nullptr;
-    void *arg = nullptr;
+    callbackFunction_t function;
+    void *arg;
     callbackIdentifier_t identifier;
   };
 
-  std::array<callbackElement_t, Config::MAX_NUM_READER_CALLBACKS> m_callbacks =
-      {nullptr};
+  std::array<callbackElement_t, Config::MAX_NUM_READER_CALLBACKS> m_callbacks;
 
   // Guards manipulation of the proxies array
   sys_mutex_t m_proxies_mutex = nullptr;

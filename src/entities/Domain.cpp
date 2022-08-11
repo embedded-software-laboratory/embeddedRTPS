@@ -495,7 +495,7 @@ void rtps::Domain::printInfo() {
 
 rtps::GuidPrefix_t Domain::generateGuidPrefix(ParticipantId_t id) const {
   GuidPrefix_t prefix = Config::BASE_GUID_PREFIX;
-  for (auto i = 0; i < rtps::Config::BASE_GUID_PREFIX.id.size(); i++) {
+  for (unsigned int i = 0; i < rtps::Config::BASE_GUID_PREFIX.id.size(); i++) {
     prefix.id[i] = rtps::Config::BASE_GUID_PREFIX.id[i];
   }
   return prefix;

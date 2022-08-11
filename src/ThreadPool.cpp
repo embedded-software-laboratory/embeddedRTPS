@@ -102,10 +102,12 @@ void ThreadPool::stopThreads() {
   // This should call all the semaphores for each thread once, so they don't
   // stuck before ended.
   for (auto &thread : m_writers) {
+    (void)thread;
     sys_sem_signal(&m_writerNotificationSem);
     sys_msleep(10);
   }
   for (auto &thread : m_readers) {
+    (void)thread;
     sys_sem_signal(&m_readerNotificationSem);
     sys_msleep(10);
   }

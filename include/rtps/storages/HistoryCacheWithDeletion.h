@@ -201,7 +201,6 @@ private:
 
   bool getChangeBySN(const SequenceNumber_t &sn, CacheChange **out_change,
                      uint16_t &out_buffer_position) {
-    SequenceNumber_t minSN = getSeqNumMin();
     if (!isSNInRange(sn)) {
       return false;
     }
@@ -209,7 +208,7 @@ private:
                   "Underflow well defined");
     static_assert(sizeof(m_tail) <= sizeof(uint16_t), "Cast ist well defined");
 
-    int cur_idx = m_tail;
+    unsigned int cur_idx = m_tail;
     while (cur_idx != m_head) {
       if (m_buffer[cur_idx].sequenceNumber == sn) {
         *out_change = &m_buffer[cur_idx];

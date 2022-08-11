@@ -156,6 +156,7 @@ bool Participant::deleteReader(Reader *reader) {
       PARTICIPANT_LOG("Found reader but SEDP deletion failed");
     }
   }
+  return false;
 }
 
 bool Participant::deleteWriter(Writer *writer) {
@@ -310,14 +311,14 @@ bool Participant::removeRemoteParticipant(const GuidPrefix_t &prefix) {
 
 void Participant::removeAllProxiesOfParticipant(const GuidPrefix_t &prefix) {
   Lock{m_mutex};
-  for (auto i = 0; i < m_readers.size(); i++) {
+  for (unsigned int i = 0; i < m_readers.size(); i++) {
     if (m_readers[i] == nullptr) {
       continue;
     }
     m_readers[i]->removeAllProxiesOfParticipant(prefix);
   }
 
-  for (auto i = 0; i < m_writers.size(); i++) {
+  for (unsigned int i = 0; i < m_writers.size(); i++) {
     if (m_writers[i] == nullptr) {
       continue;
     }
@@ -327,7 +328,7 @@ void Participant::removeAllProxiesOfParticipant(const GuidPrefix_t &prefix) {
 
 void Participant::removeProxyFromAllEndpoints(const Guid_t &guid) {
   Lock{m_mutex};
-  for (auto i = 0; i < m_writers.size(); i++) {
+  for (unsigned int i = 0; i < m_writers.size(); i++) {
     if (m_writers[i] == nullptr) {
       continue;
     }
@@ -339,7 +340,7 @@ void Participant::removeProxyFromAllEndpoints(const Guid_t &guid) {
     }
   }
 
-  for (auto i = 0; i < m_readers.size(); i++) {
+  for (unsigned int i = 0; i < m_readers.size(); i++) {
     if (m_readers[i] == nullptr) {
       continue;
     }
