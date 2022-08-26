@@ -105,7 +105,7 @@ public:
       return false;
     }
     for (uint8_t bucket = 0; bucket < sizeof(m_bitMap); ++bucket) {
-      if (bucket != 0xFF) {
+      if (m_bitMap[bucket] != 0xFF) {
         uint8_t byte = m_bitMap[bucket];
         for (uint8_t bit = 0; bit < 8; ++bit) {
           if (!(byte & 1)) {
