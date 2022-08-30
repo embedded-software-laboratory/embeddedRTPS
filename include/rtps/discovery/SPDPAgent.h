@@ -52,7 +52,6 @@ class ReaderCacheChange;
 
 class SPDPAgent {
 public:
-  ~SPDPAgent();
   void init(Participant &participant, BuiltInEndpoints &endpoints);
   void start();
   void stop();
@@ -67,7 +66,7 @@ private:
   ucdrBuffer m_microbuffer{};
   uint8_t m_cycleHB = 0;
 
-  sys_mutex_t m_mutex;
+  SemaphoreHandle_t m_mutex;
   bool initialized = false;
   static void receiveCallback(void *callee,
                               const ReaderCacheChange &cacheChange);

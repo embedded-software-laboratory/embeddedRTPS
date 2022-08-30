@@ -36,14 +36,8 @@ using rtps::SPDPAgent;
 using rtps::SMElement::BuildInEndpointSet;
 using rtps::SMElement::ParameterId;
 
-SPDPAgent::~SPDPAgent() {
-  if (initialized) {
-    sys_mutex_free(&m_mutex);
-  }
-}
-
 void SPDPAgent::init(Participant &participant, BuiltInEndpoints &endpoints) {
-  if (sys_mutex_new(&m_mutex) != ERR_OK) {
+  if (!createMutex(&m_mutex)) {
     SPDP_LOG("Could not alloc mutex");
     return;
   }

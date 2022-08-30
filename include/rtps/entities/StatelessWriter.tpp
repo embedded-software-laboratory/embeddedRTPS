@@ -67,7 +67,7 @@ bool StatelessWriterT<NetworkDriver>::init(TopicData attributes,
   m_attributes = attributes;
 
   if (m_mutex == nullptr) {
-    if (sys_mutex_new(&m_mutex) != ERR_OK) {
+    if (!createMutex(&m_mutex)) {
 #if SLW_VERBOSE
       SLW_LOG("Failed to create mutex \n");
 #endif

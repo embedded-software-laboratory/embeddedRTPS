@@ -18,14 +18,14 @@ void Reader::executeCallbacks(const ReaderCacheChange &cacheChange) {
 
 bool Reader::initMutex() {
   if (m_proxies_mutex == nullptr) {
-    if (sys_mutex_new(&m_proxies_mutex) != ERR_OK) {
+    if (!createMutex(&m_proxies_mutex)) {
       SFR_LOG("StatefulReader: Failed to create mutex.\n");
       return false;
     }
   }
 
   if (m_callback_mutex == nullptr) {
-    if (sys_mutex_new(&m_callback_mutex) != ERR_OK) {
+    if (!createMutex(&m_callback_mutex)) {
       SFR_LOG("StatefulReader: Failed to create mutex.\n");
       return false;
     }
