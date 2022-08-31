@@ -53,7 +53,7 @@ Participant::Participant(const GuidPrefix_t &guidPrefix,
                          ParticipantId_t participantId)
     : m_guidPrefix(guidPrefix), m_participantId(participantId),
       m_receiver(this) {
-  if (sys_mutex_new(&m_mutex) != ERR_OK) {
+  if (!createMutex(&m_mutex)) {
     while (1)
       ;
   }

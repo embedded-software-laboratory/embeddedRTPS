@@ -45,7 +45,7 @@ Domain::Domain()
   m_transport.createUdpConnection(getUserMulticastPort());
   m_transport.createUdpConnection(getBuiltInMulticastPort());
   m_transport.joinMultiCastGroup(transformIP4ToU32(239, 255, 0, 1));
-  sys_mutex_new(&m_mutex);
+  createMutex(&m_mutex);
 }
 
 Domain::~Domain() { stop(); }

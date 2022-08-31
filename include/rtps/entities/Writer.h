@@ -82,7 +82,7 @@ public:
 protected:
   SequenceNumber_t m_sedp_sequence_number;
 
-  sys_mutex_t m_mutex = nullptr;
+  SemaphoreHandle_t m_mutex = nullptr;
   ThreadPool *mp_threadPool = nullptr;
 
   Ip4Port_t m_srcPort;

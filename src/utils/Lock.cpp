@@ -2,7 +2,7 @@
 
 namespace rtps {
 
-bool createMutex(sys_mutex_t *mutex) {
+bool createMutex(SemaphoreHandle_t *mutex) {
   *mutex = xSemaphoreCreateRecursiveMutex();
   if (*mutex != NULL) {
     return true;

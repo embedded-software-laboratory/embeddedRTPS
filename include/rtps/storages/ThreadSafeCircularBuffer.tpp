@@ -23,7 +23,7 @@ bool ThreadSafeCircularBuffer<T, SIZE>::init() {
   if (m_initialized) {
     return true;
   }
-  if (sys_mutex_new(&m_mutex) != ERR_OK) {
+  if (!createMutex(&m_mutex)) {
     TSCB_LOG("Failed to create mutex \n");
     return false;
   } else {
@@ -31,13 +31,6 @@ bool ThreadSafeCircularBuffer<T, SIZE>::init() {
              static_cast<void *>(&m_mutex));
     m_initialized = true;
     return true;
-  }
-}
-
-template <typename T, uint16_t SIZE>
-ThreadSafeCircularBuffer<T, SIZE>::~ThreadSafeCircularBuffer() {
-  if (m_initialized) {
-    sys_mutex_free(&m_mutex);
   }
 }
 

@@ -27,22 +27,23 @@ Author: i11 - Embedded Software, RWTH Aachen University
 
 #include "FreeRTOS.h"
 #include "lwip/sys.h"
+#include "semphr.h"
 
 namespace rtps {
 
 class Lock {
 public:
-  explicit Lock(sys_mutex_t &passedMutex) : m_mutex(passedMutex) {
+  explicit Lock(SemaphoreHandle_t &mutex) : m_mutex(mutex) {
     xSemaphoreTakeRecursive(m_mutex, portMAX_DELAY);
   };
 
   ~Lock() { xSemaphoreGiveRecursive(m_mutex); };
 
 private:
-  sys_mutex_t m_mutex;
+  SemaphoreHandle_t m_mutex;
 };
 
-bool createMutex(sys_mutex_t *mutex);
+bool createMutex(SemaphoreHandle_t *mutex);
 
 } // namespace rtps
 #endif // RTPS_LOCK_H
