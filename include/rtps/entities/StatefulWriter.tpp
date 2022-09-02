@@ -88,7 +88,7 @@ bool StatefulWriterT<NetworkDriver>::init(TopicData attributes,
   // Thread already exists, do not create new one (reusing slot case)
   m_is_initialized_ = true;
 
-  if (m_heartbeatThread == nullptr || !m_thread_running) {
+  if (!m_thread_running) {
 
     m_running = true;
     m_thread_running = false;
