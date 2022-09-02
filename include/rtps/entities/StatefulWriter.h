@@ -56,7 +56,8 @@ private:
   NetworkDriver *m_transport;
 
   HistoryCacheWithDeletion<Config::HISTORY_SIZE_STATEFUL> m_history;
-  sys_thread_t m_heartbeatThread = nullptr;
+  sys_thread_t m_heartbeatThread;
+
   Count_t m_hbCount{1};
 
   bool m_running = true;
