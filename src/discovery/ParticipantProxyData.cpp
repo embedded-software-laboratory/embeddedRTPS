@@ -171,7 +171,7 @@ bool ParticipantProxyData::readLocatorIntoList(
     if (!proxy_locator.isValid()) {
       bool ret = full_length_locator.readFromUcdrBuffer(buffer);
       if (ret && (full_length_locator.isSameSubnet() ||
-          full_length_locator.isMulticastAddress())) {
+                  full_length_locator.isMulticastAddress())) {
         proxy_locator = LocatorIPv4(full_length_locator);
         SPDP_LOG("Adding locator: %u %u %u %u \n",
                  (int)proxy_locator.address[0], (int)proxy_locator.address[1],
