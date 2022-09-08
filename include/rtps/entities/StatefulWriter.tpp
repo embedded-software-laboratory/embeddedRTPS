@@ -179,7 +179,7 @@ template <class NetworkDriver> void StatefulWriterT<NetworkDriver>::progress() {
     }
   } else {
     SFW_LOG("Couldn't get a CacheChange with SN (%i,%u)\n",
-        m_nextSequenceNumberToSend.high, m_nextSequenceNumberToSend.low);
+            m_nextSequenceNumberToSend.high, m_nextSequenceNumberToSend.low);
   }
 
   ++m_nextSequenceNumberToSend;
