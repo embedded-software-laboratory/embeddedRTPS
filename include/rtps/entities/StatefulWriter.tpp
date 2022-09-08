@@ -439,5 +439,3 @@ void StatefulWriterT<NetworkDriver>::sendHeartBeat() {
   }
   m_hbCount.value++;
 }
-
-#undef SFW_VERBOSE

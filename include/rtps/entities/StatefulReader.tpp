@@ -200,5 +200,3 @@ bool StatefulReaderT<NetworkDriver>::onNewHeartbeat(
   m_transport->sendPacket(info);
   return true;
 }
-
-#undef SFR_VERBOSE
