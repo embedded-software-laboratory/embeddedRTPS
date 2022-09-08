@@ -1,7 +1,9 @@
 #include <rtps/config.h>
+#include <rtps/entities/StatefulWriter.h>
 #include <rtps/entities/ReaderProxy.h>
 #include <rtps/entities/Writer.h>
 #include <rtps/storages/MemoryPool.h>
+#include "rtps/utils/Log.h"
 
 using namespace rtps;
 

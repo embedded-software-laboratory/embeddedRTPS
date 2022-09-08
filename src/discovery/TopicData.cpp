@@ -24,6 +24,7 @@ Author: i11 - Embedded Software, RWTH Aachen University
 #include "rtps/discovery/TopicData.h"
 #include "rtps/messages/MessageTypes.h"
 #include <cstring>
+#include <cstdio>
 
 using rtps::TopicData;
 using rtps::TopicDataCompressed;

@@ -2,6 +2,7 @@
 #include <rtps/entities/StatefulReader.h>
 #include <rtps/entities/StatelessReader.h>
 #include <rtps/utils/Lock.h>
+#include <rtps/utils/Log.h>
 
 using namespace rtps;
 
