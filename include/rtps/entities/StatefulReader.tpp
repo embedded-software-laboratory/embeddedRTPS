@@ -27,6 +27,7 @@ Author: i11 - Embedded Software, RWTH Aachen University
 #include "rtps/entities/StatefulReader.h"
 #include "rtps/messages/MessageFactory.h"
 #include "rtps/utils/Lock.h"
+#include "rtps/utils/Log.h"
 
 #if SFR_VERBOSE && RTPS_GLOBAL_VERBOSE
 #include "rtps/utils/printutils.h"
@@ -200,5 +201,3 @@ bool StatefulReaderT<NetworkDriver>::onNewHeartbeat(
   m_transport->sendPacket(info);
   return true;
 }
-
-#undef SFR_VERBOSE

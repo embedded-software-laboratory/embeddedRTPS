@@ -123,8 +123,8 @@ void SEDPAgent::addUnmatchedRemoteWriter(
 #endif
     return;
   }
-  SEDP_LOG("Adding unmatched remote writer %s %s.\n", writerData.topicName,
-           writerData.typeName);
+  SEDP_LOG("Adding unmatched remote writer %zx %zx.\n", writerData.topicHash,
+           writerData.typeHash);
   m_unmatchedRemoteWriters.add(writerData);
 }
 
@@ -136,8 +136,8 @@ void SEDPAgent::addUnmatchedRemoteReader(
 #endif
     return;
   }
-  SEDP_LOG("Adding unmatched remote reader %s %s.\n", readerData.topicName,
-           readerData.typeName);
+  SEDP_LOG("Adding unmatched remote reader %zx %zx.\n", readerData.topicHash,
+           readerData.typeHash);
   m_unmatchedRemoteReaders.add(readerData);
 }
 

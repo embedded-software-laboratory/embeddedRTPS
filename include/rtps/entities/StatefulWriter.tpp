@@ -178,8 +178,8 @@ template <class NetworkDriver> void StatefulWriterT<NetworkDriver>::progress() {
       m_history.dropChange(next->sequenceNumber);
     }
   } else {
-    SFW_LOG("Couldn't get a CacheChange with SN (%i,%u)\n", snMissing.high,
-            snMissing.low);
+    SFW_LOG("Couldn't get a CacheChange with SN (%i,%u)\n",
+            m_nextSequenceNumberToSend.high, m_nextSequenceNumberToSend.low);
   }
 
   ++m_nextSequenceNumberToSend;
@@ -439,5 +439,3 @@ void StatefulWriterT<NetworkDriver>::sendHeartBeat() {
   }
   m_hbCount.value++;
 }
-
-#undef SFW_VERBOSE

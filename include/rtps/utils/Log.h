@@ -42,5 +42,6 @@ Author: i11 - Embedded Software, RWTH Aachen University
 #define SLW_VERBOSE 0
 #define SFR_VERBOSE 0
 #define SLR_VERBOSE 0
+#define THREAD_POOL_VERBOSE 0
 
 #endif // RTPS_LOG_H

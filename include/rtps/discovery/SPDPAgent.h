@@ -30,6 +30,7 @@ Author: i11 - Embedded Software, RWTH Aachen University
 #include "rtps/config.h"
 #include "rtps/discovery/BuiltInEndpoints.h"
 #include "rtps/discovery/ParticipantProxyData.h"
+#include "rtps/utils/Log.h"
 #include "ucdr/microcdr.h"
 
 #if SPDP_VERBOSE && RTPS_GLOBAL_VERBOSE

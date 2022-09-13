@@ -23,6 +23,7 @@ Author: i11 - Embedded Software, RWTH Aachen University
 */
 #include "rtps/discovery/TopicData.h"
 #include "rtps/messages/MessageTypes.h"
+#include <cstdio>
 #include <cstring>
 
 using rtps::TopicData;
