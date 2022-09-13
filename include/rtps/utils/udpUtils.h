@@ -41,8 +41,7 @@ const uint16_t D3 = 11; // User unicast
 
 constexpr ip4_addr transformIP4ToU32(uint8_t MSB, uint8_t p2, uint8_t p1,
                                      uint8_t LSB) {
-  return {((uint32_t)(LSB << 24)) | ((uint32_t)(p1 << 16)) |
-          ((uint32_t)(p2 << 8)) | MSB};
+  return ip4_addr{PP_HTONL(LWIP_MAKEU32(MSB, p2, p1, LSB))};
 }
 
 constexpr Ip4Port_t getBuiltInUnicastPort(ParticipantId_t participantId) {

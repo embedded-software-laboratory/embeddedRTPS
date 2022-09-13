@@ -88,7 +88,11 @@ bool UdpDriver::isSameSubnet(ip4_addr_t addr) {
 }
 
 bool UdpDriver::isMulticastAddress(ip4_addr_t addr) {
-  return ((addr.addr >> 28) == 14);
+#if IS_LITTLE_ENDIAN
+  return (addr.addr & 0xF0) == 0xE0;
+#else
+  return (addr.addr >> 28) == 14;
+#endif
 }
 
 bool UdpDriver::joinMultiCastGroup(ip4_addr_t addr) const {
