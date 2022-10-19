@@ -241,8 +241,6 @@ void SEDPAgent::handleSubscriptionReaderMessage(
 }
 
 void SEDPAgent::handleRemoteEndpointDeletion(const TopicData &topic) {
-  printf("Removing remote Endpoint!\n");
-
   if (!topic.entityIdFromKeyHashValid) {
     return;
   }
