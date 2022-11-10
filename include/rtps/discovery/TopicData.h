@@ -41,8 +41,8 @@ struct BuiltInTopicKey {
 
 struct TopicData {
   Guid_t endpointGuid;
-  char typeName[Config::MAX_TYPENAME_LENGTH];
-  char topicName[Config::MAX_TOPICNAME_LENGTH];
+  std::array<char, Config::MAX_TYPENAME_LENGTH> typeName;
+  std::array<char, Config::MAX_TOPICNAME_LENGTH> topicName;
   ReliabilityKind_t reliabilityKind;
   DurabilityKind_t durabilityKind;
   FullLengthLocator unicastLocator;
@@ -93,8 +93,8 @@ struct TopicDataCompressed {
   TopicDataCompressed(const TopicData &topic_data) {
     endpointGuid = topic_data.endpointGuid;
     topicHash =
-        hashCharArray(topic_data.topicName, Config::MAX_TOPICNAME_LENGTH);
-    typeHash = hashCharArray(topic_data.typeName, Config::MAX_TYPENAME_LENGTH);
+        hashCharArray(topic_data.topicName.data(), topic_data.topicName.size());
+    typeHash = hashCharArray(topic_data.typeName.data(),topic_data.typeName.size());
     is_reliable = (topic_data.reliabilityKind == ReliabilityKind_t::RELIABLE)
                       ? true
                       : false;

@@ -160,8 +160,8 @@ public:
   void print() {
     for (unsigned int i = 0; i < m_buffer.size(); i++) {
       std::cout << "[" << i << "] "
-                << " SN = " << m_buffer[i].sequenceNumber.low;
-      switch (m_buffer[i].kind) {
+                << " SN = " << m_buffer.at(i).sequenceNumber.low;
+      switch (m_buffer.at(i).kind) {
       case ChangeKind_t::ALIVE:
         std::cout << " Type = ALIVE";
         break;

@@ -42,7 +42,7 @@ using rtps::StatelessWriterT;
 #include "rtps/utils/printutils.h"
 #define SLW_LOG(...)                                                           \
   if (true) {                                                                  \
-    printf("[StatelessWriter %s] ", &this->m_attributes.topicName[0]);         \
+    printf("[StatelessWriter %s] ", &this->m_attributes.topicName.at(0));         \
     printf(__VA_ARGS__);                                                       \
     printf("\n");                                                              \
   }
