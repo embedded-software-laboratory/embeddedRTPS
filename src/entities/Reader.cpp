@@ -11,8 +11,8 @@ Reader::Reader() { m_callbacks.fill({nullptr, nullptr, 0}); }
 void Reader::executeCallbacks(const ReaderCacheChange &cacheChange) {
   Lock lock(m_callback_mutex);
   for (unsigned int i = 0; i < m_callbacks.size(); i++) {
-    if (m_callbacks[i].function != nullptr) {
-      m_callbacks[i].function(m_callbacks[i].arg, cacheChange);
+    if (m_callbacks.at(i).function != nullptr) {
+      m_callbacks.at(i).function(m_callbacks.at(i).arg, cacheChange);
     }
   }
 }
@@ -41,8 +41,8 @@ void Reader::reset() {
 
   m_proxies.clear();
   for (unsigned int i = 0; i < m_callbacks.size(); i++) {
-    m_callbacks[i].function = nullptr;
-    m_callbacks[i].arg = nullptr;
+    m_callbacks.at(i).function = nullptr;
+    m_callbacks.at(i).arg = nullptr;
   }
 
   m_callback_count = 0;
@@ -76,12 +76,12 @@ Reader::registerCallback(Reader::callbackFunction_t cb, void *arg) {
   }
 
   for (unsigned int i = 0; i < m_callbacks.size(); i++) {
-    if (m_callbacks[i].function == nullptr) {
-      m_callbacks[i].function = cb;
-      m_callbacks[i].arg = arg;
-      m_callbacks[i].identifier = m_callback_identifier++;
+    if (m_callbacks.at(i).function == nullptr) {
+      m_callbacks.at(i).function = cb;
+      m_callbacks.at(i).arg = arg;
+      m_callbacks.at(i).identifier = m_callback_identifier++;
       m_callback_count++;
-      return m_callbacks[i].identifier;
+      return m_callbacks.at(i).identifier;
     }
   }
 
@@ -93,9 +93,9 @@ uint32_t Reader::getProxiesCount() { return m_proxies.getNumElements(); }
 bool Reader::removeCallback(Reader::callbackIdentifier_t identifier) {
   Lock lock(m_callback_mutex);
   for (unsigned int i = 0; i < m_callbacks.size(); i++) {
-    if (m_callbacks[i].identifier == identifier) {
-      m_callbacks[i].function = nullptr;
-      m_callbacks[i].arg = nullptr;
+    if (m_callbacks.at(i).identifier == identifier) {
+      m_callbacks.at(i).function = nullptr;
+      m_callbacks.at(i).arg = nullptr;
       m_callback_count--;
       return true;
     }

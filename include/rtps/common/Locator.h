@@ -110,8 +110,8 @@ struct FullLengthLocator {
 inline FullLengthLocator
 getBuiltInUnicastLocator(ParticipantId_t participantId) {
   return FullLengthLocator::createUDPv4Locator(
-      Config::IP_ADDRESS[0], Config::IP_ADDRESS[1], Config::IP_ADDRESS[2],
-      Config::IP_ADDRESS[3], getBuiltInUnicastPort(participantId));
+      Config::IP_ADDRESS.at(0), Config::IP_ADDRESS.at(1), Config::IP_ADDRESS.at(2),
+      Config::IP_ADDRESS.at(3), getBuiltInUnicastPort(participantId));
 }
 
 inline FullLengthLocator getBuiltInMulticastLocator() {
@@ -121,16 +121,16 @@ inline FullLengthLocator getBuiltInMulticastLocator() {
 
 inline FullLengthLocator getUserUnicastLocator(ParticipantId_t participantId) {
   return FullLengthLocator::createUDPv4Locator(
-      Config::IP_ADDRESS[0], Config::IP_ADDRESS[1], Config::IP_ADDRESS[2],
-      Config::IP_ADDRESS[3], getUserUnicastPort(participantId));
+      Config::IP_ADDRESS.at(0), Config::IP_ADDRESS.at(1), Config::IP_ADDRESS.at(2),
+      Config::IP_ADDRESS.at(3), getUserUnicastPort(participantId));
 }
 
 inline FullLengthLocator
 getUserMulticastLocator() { // this would be a unicastaddress, as
                             // defined in config
   return FullLengthLocator::createUDPv4Locator(
-      Config::IP_ADDRESS[0], Config::IP_ADDRESS[1], Config::IP_ADDRESS[2],
-      Config::IP_ADDRESS[3], getUserMulticastPort());
+      Config::IP_ADDRESS.at(0), Config::IP_ADDRESS.at(1), Config::IP_ADDRESS.at(2),
+      Config::IP_ADDRESS.at(3), getUserMulticastPort());
 }
 
 inline FullLengthLocator getDefaultSendMulticastLocator() {
@@ -148,16 +148,16 @@ struct LocatorIPv4 {
 
   LocatorIPv4() = default;
   LocatorIPv4(const FullLengthLocator &locator) {
-    address[0] = locator.address[12];
-    address[1] = locator.address[13];
-    address[2] = locator.address[14];
-    address[3] = locator.address[15];
+    address.at(0) = locator.address[12];
+    address.at(1) = locator.address[13];
+    address.at(2) = locator.address[14];
+    address.at(3) = locator.address[15];
     port = locator.port;
     kind = locator.kind;
   }
 
   ip4_addr_t getIp4Address() const {
-    return transformIP4ToU32(address[0], address[1], address[2], address[3]);
+    return transformIP4ToU32(address.at(0), address.at(1), address.at(2), address.at(3));
   }
 
   void setInvalid() { kind = LocatorKind_t::LOCATOR_KIND_INVALID; }

@@ -35,10 +35,10 @@ void ParticipantProxyData::reset() {
   m_manualLivelinessCount = Count_t{1};
   m_expectsInlineQos = false;
   for (int i = 0; i < Config::SPDP_MAX_NUM_LOCATORS; ++i) {
-    m_metatrafficUnicastLocatorList[i].setInvalid();
-    m_metatrafficMulticastLocatorList[i].setInvalid();
-    m_defaultUnicastLocatorList[i].setInvalid();
-    m_defaultMulticastLocatorList[i].setInvalid();
+    m_metatrafficUnicastLocatorList.at(i).setInvalid();
+    m_metatrafficMulticastLocatorList.at(i).setInvalid();
+    m_defaultUnicastLocatorList.at(i).setInvalid();
+    m_defaultMulticastLocatorList.at(i).setInvalid();
   }
 }
 
@@ -174,8 +174,8 @@ bool ParticipantProxyData::readLocatorIntoList(
                   full_length_locator.isMulticastAddress())) {
         proxy_locator = LocatorIPv4(full_length_locator);
         SPDP_LOG("Adding locator: %u %u %u %u \n",
-                 (int)proxy_locator.address[0], (int)proxy_locator.address[1],
-                 (int)proxy_locator.address[2], (int)proxy_locator.address[3]);
+                 (int)proxy_locator.address.at(0), (int)proxy_locator.address.at(1),
+                 (int)proxy_locator.address.at(2), (int)proxy_locator.address.at(3));
         return true;
       } else {
         SPDP_LOG("Ignoring locator: %u %u %u %u \n",
