@@ -84,7 +84,7 @@ private:
   }
 
   bool m_initComplete = false;
-  SemaphoreHandle_t m_mutex;
+  Lock_t m_mutex;
 
   void receiveCallback(const PacketInfo &packet);
   GuidPrefix_t generateGuidPrefix(ParticipantId_t id) const;

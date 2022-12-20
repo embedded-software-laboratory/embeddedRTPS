@@ -31,7 +31,7 @@ Author: i11 - Embedded Software, RWTH Aachen University
 #include "rtps/entities/WriterProxy.h"
 #include "rtps/storages/MemoryPool.h"
 #include "rtps/storages/PBufWrapper.h"
-#include "semphr.h"
+#include "rtps/utils/Lock.h"
 #include <cstring>
 
 namespace rtps {
@@ -136,10 +136,10 @@ protected:
   std::array<callbackElement_t, Config::MAX_NUM_READER_CALLBACKS> m_callbacks;
 
   // Guards manipulation of the proxies array
-  SemaphoreHandle_t m_proxies_mutex = nullptr;
+  Lock_t m_proxies_mutex = nullptr;
 
   // Guards manipulation of callback array
-  SemaphoreHandle_t m_callback_mutex = nullptr;
+  Lock_t m_callback_mutex = nullptr;
 };
 } // namespace rtps
 

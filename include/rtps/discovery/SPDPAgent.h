@@ -67,7 +67,7 @@ private:
   ucdrBuffer m_microbuffer{};
   uint8_t m_cycleHB = 0;
 
-  SemaphoreHandle_t m_mutex;
+  Lock_t m_mutex;
   bool initialized = false;
   static void receiveCallback(void *callee,
                               const ReaderCacheChange &cacheChange);

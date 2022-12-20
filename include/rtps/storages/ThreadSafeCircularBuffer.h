@@ -26,7 +26,8 @@ Author: i11 - Embedded Software, RWTH Aachen University
 #define RTPS_THREADSAFEQUEUE_H
 
 #include "lwip/sys.h"
-#include "semphr.h"
+#include <rtps/utils/Lock.h>
+
 
 #include <array>
 #include <limits>
@@ -56,7 +57,7 @@ private:
   static_assert(SIZE + 1 < std::numeric_limits<decltype(m_head)>::max(),
                 "Iterator is large enough for given size");
 
-  SemaphoreHandle_t m_mutex;
+  Lock_t m_mutex;
   bool m_initialized = false;
 
   inline bool isFull();

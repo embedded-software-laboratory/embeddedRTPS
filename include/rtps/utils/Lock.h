@@ -25,25 +25,41 @@ Author: i11 - Embedded Software, RWTH Aachen University
 #ifndef RTPS_LOCK_H
 #define RTPS_LOCK_H
 
+#if defined(POSIX)
+#include <mutex>
+typedef std::recursive_mutex* Lock_t;
+#else
 #include "FreeRTOS.h"
-#include "lwip/sys.h"
 #include "semphr.h"
+typedef SemaphoreHandle_t Lock_t
+#endif
+
 
 namespace rtps {
 
 class Lock {
 public:
-  explicit Lock(SemaphoreHandle_t &mutex) : m_mutex(mutex) {
+  explicit Lock(Lock_t &mutex) : m_mutex(mutex) {
+#if defined(POSIX)
+    m_mutex->lock();
+#else
     xSemaphoreTakeRecursive(m_mutex, portMAX_DELAY);
+#endif
   };
 
-  ~Lock() { xSemaphoreGiveRecursive(m_mutex); };
+  ~Lock() {
+#if defined(POSIX)
+    m_mutex->unlock();
+#else
+    xSemaphoreGiveRecursive(m_mutex); 
+#endif
+    };
 
 private:
-  SemaphoreHandle_t m_mutex;
+  Lock_t m_mutex;
 };
 
-bool createMutex(SemaphoreHandle_t *mutex);
+bool createMutex(Lock_t *mutex);
 
 } // namespace rtps
 #endif // RTPS_LOCK_H
