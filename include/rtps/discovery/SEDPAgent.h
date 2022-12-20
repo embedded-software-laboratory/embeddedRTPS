@@ -59,13 +59,8 @@ protected: // For testing purposes
 
 private:
   Participant *m_part;
-<<<<<<< HEAD
   Lock_t m_mutex;
-  uint8_t m_buffer[600]; // TODO check size, currently changed from 300 to 600
-=======
-  SemaphoreHandle_t m_mutex;
   std::array<uint8_t, 600> m_buffer; // TODO check size, currently changed from 300 to 600
->>>>>>> master
                          // (FastDDS gives too many options)
   BuiltInEndpoints m_endpoints;
   /*
