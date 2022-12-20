@@ -92,14 +92,14 @@ void SEDPAgent::handlePublisherReaderMessage(const ReaderCacheChange &change) {
   SEDP_LOG("New publisher\n");
 #endif
 
-  if (!change.copyInto(m_buffer, sizeof(m_buffer) / sizeof(m_buffer[0]))) {
+  if (!change.copyInto(m_buffer.data(), m_buffer.size())) {
 #if SEDP_VERBOSE
-    SEDP_LOG("EDPAgent: Buffer too small.\n");
+    SEDP_LOG("SEDPAgent: Buffer too small.\n");
 #endif
     return;
   }
   ucdrBuffer cdrBuffer;
-  ucdr_init_buffer(&cdrBuffer, m_buffer, sizeof(m_buffer));
+  ucdr_init_buffer(&cdrBuffer, m_buffer.data(), m_buffer.size());
 
   TopicData topicData;
   if (topicData.readFromUcdrBuffer(cdrBuffer)) {
@@ -189,13 +189,13 @@ void SEDPAgent::handlePublisherReaderMessage(const TopicData &writerData) {
   }
 
 #if SEDP_VERBOSE
-  SEDP_LOG("PUB T/D %s/%s", writerData.topicName, writerData.typeName);
+  SEDP_LOG("PUB T/D %s/%s", writerData.topicName.data(), writerData.typeName.data());
 #endif
   Reader *reader = m_part->getMatchingReader(writerData);
   if (reader == nullptr) {
 #if SEDP_VERBOSE
     SEDP_LOG("SEDPAgent: Couldn't find reader for new Publisher[%s, %s] \n",
-             writerData.topicName, writerData.typeName);
+             writerData.topicName.data(), writerData.typeName.data());
 #endif
     addUnmatchedRemoteWriter(writerData);
     return;
@@ -225,14 +225,14 @@ void SEDPAgent::handleSubscriptionReaderMessage(
   SEDP_LOG("New subscriber\n");
 #endif
 
-  if (!change.copyInto(m_buffer, sizeof(m_buffer) / sizeof(m_buffer[0]))) {
+  if (!change.copyInto(m_buffer.data(), m_buffer.size())) {
 #if SEDP_VERBOSE
     SEDP_LOG("SEDPAgent: Buffer too small.");
 #endif
     return;
   }
   ucdrBuffer cdrBuffer;
-  ucdr_init_buffer(&cdrBuffer, m_buffer, sizeof(m_buffer));
+  ucdr_init_buffer(&cdrBuffer, m_buffer.data(), m_buffer.size());
 
   TopicData topicData;
   if (topicData.readFromUcdrBuffer(cdrBuffer)) {
@@ -268,12 +268,12 @@ void SEDPAgent::handleSubscriptionReaderMessage(const TopicData &readerData) {
 
   Writer *writer = m_part->getMatchingWriter(readerData);
 #if SEDP_VERBOSE
-  SEDP_LOG("SUB T/D %s/%s", readerData.topicName, readerData.typeName);
+  SEDP_LOG("SUB T/D %s/%s", readerData.topicName.data(), readerData.typeName.data());
 #endif
   if (writer == nullptr) {
 #if SEDP_VERBOSE
     SEDP_LOG("SEDPAgent: Couldn't find writer for new subscriber[%s, %s]\n",
-             readerData.topicName, readerData.typeName);
+             readerData.topicName.data(), readerData.typeName.data());
 #endif
     addUnmatchedRemoteReader(readerData);
     return;
@@ -346,8 +346,7 @@ void SEDPAgent::addWriter(Writer &writer) {
   tryMatchUnmatchedEndpoints();
 
   ucdrBuffer microbuffer;
-  ucdr_init_buffer(&microbuffer, m_buffer,
-                   sizeof(m_buffer) / sizeof(m_buffer[0]));
+  ucdr_init_buffer(&microbuffer, m_buffer.data(), m_buffer.size());
   const uint16_t zero_options = 0;
 
   ucdr_serialize_array_uint8_t(&microbuffer,
@@ -356,7 +355,7 @@ void SEDPAgent::addWriter(Writer &writer) {
   ucdr_serialize_uint16_t(&microbuffer, zero_options);
   writer.m_attributes.serializeIntoUcdrBuffer(microbuffer);
   auto change = m_endpoints.sedpPubWriter->newChange(
-      ChangeKind_t::ALIVE, m_buffer, ucdr_buffer_length(&microbuffer));
+      ChangeKind_t::ALIVE, m_buffer.data(), ucdr_buffer_length(&microbuffer));
   writer.setSEDPSequenceNumber(change->sequenceNumber);
 #if SEDP_VERBOSE
   SEDP_LOG("Added new change to sedpPubWriter.\n");
@@ -374,8 +373,8 @@ template <typename A>
 bool SEDPAgent::announceEndpointDeletion(A *local_endpoint,
                                          Writer *sedp_endpoint) {
   ucdrBuffer microbuffer;
-  ucdr_init_buffer(&microbuffer, m_buffer,
-                   sizeof(m_buffer) / sizeof(m_buffer[0]));
+  ucdr_init_buffer(&microbuffer, m_buffer.data(),
+                   m_buffer.size());
 
   ucdr_serialize_uint16_t(&microbuffer, ParameterId::PID_KEY_HASH);
   ucdr_serialize_uint16_t(&microbuffer, 16);
@@ -407,7 +406,7 @@ bool SEDPAgent::announceEndpointDeletion(A *local_endpoint,
   ucdr_serialize_uint16_t(&microbuffer, 0);
 
   auto ret =
-      sedp_endpoint->newChange(ChangeKind_t::ALIVE, m_buffer,
+      sedp_endpoint->newChange(ChangeKind_t::ALIVE, m_buffer.data(),
                                ucdr_buffer_length(&microbuffer), true, true);
   return (ret != nullptr);
 }
@@ -488,8 +487,8 @@ void SEDPAgent::addReader(Reader &reader) {
   tryMatchUnmatchedEndpoints();
 
   ucdrBuffer microbuffer;
-  ucdr_init_buffer(&microbuffer, m_buffer,
-                   sizeof(m_buffer) / sizeof(m_buffer[0]));
+  ucdr_init_buffer(&microbuffer, m_buffer.data(),
+                   m_buffer.size());
   const uint16_t zero_options = 0;
 
   ucdr_serialize_array_uint8_t(&microbuffer,
@@ -498,7 +497,7 @@ void SEDPAgent::addReader(Reader &reader) {
   ucdr_serialize_uint16_t(&microbuffer, zero_options);
   reader.m_attributes.serializeIntoUcdrBuffer(microbuffer);
   auto change = m_endpoints.sedpSubWriter->newChange(
-      ChangeKind_t::ALIVE, m_buffer, ucdr_buffer_length(&microbuffer));
+      ChangeKind_t::ALIVE, m_buffer.data(), ucdr_buffer_length(&microbuffer));
   reader.setSEDPSequenceNumber(change->sequenceNumber);
 #if SEDP_VERBOSE
   SEDP_LOG("Added new change to sedpSubWriter.\n");
