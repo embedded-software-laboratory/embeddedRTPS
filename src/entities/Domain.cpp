@@ -494,9 +494,15 @@ void rtps::Domain::printInfo() {
 }
 
 rtps::GuidPrefix_t Domain::generateGuidPrefix(ParticipantId_t id) const {
-  GuidPrefix_t prefix = Config::BASE_GUID_PREFIX;
-  for (unsigned int i = 0; i < rtps::Config::BASE_GUID_PREFIX.id.size(); i++) {
-    prefix.id[i] = rtps::Config::BASE_GUID_PREFIX.id[i];
+  GuidPrefix_t prefix;
+  if(Config::BASE_GUID_PREFIX == GUID_RANDOM){
+	  for (unsigned int i = 0; i < rtps::Config::BASE_GUID_PREFIX.id.size(); i++) {
+		prefix.id[i] = rand();
+	  }
+  }else{
+	  for (unsigned int i = 0; i < rtps::Config::BASE_GUID_PREFIX.id.size(); i++) {
+		prefix.id[i] = Config::BASE_GUID_PREFIX.id[i];
+	  }
   }
   return prefix;
 }

@@ -58,7 +58,7 @@ struct TopicData {
   TopicData()
       : endpointGuid(GUID_UNKNOWN), typeName{'\0'}, topicName{'\0'},
         reliabilityKind(ReliabilityKind_t::BEST_EFFORT),
-        durabilityKind(DurabilityKind_t::TRANSIENT_LOCAL) {
+        durabilityKind(DurabilityKind_t::VOLATILE) {
     rtps::FullLengthLocator someLocator =
         rtps::FullLengthLocator::createUDPv4Locator(
             192, 168, 0, 42, rtps::getUserUnicastPort(0));
@@ -69,7 +69,7 @@ struct TopicData {
   TopicData(Guid_t guid, ReliabilityKind_t reliability, FullLengthLocator loc)
       : endpointGuid(guid), typeName{'\0'}, topicName{'\0'},
         reliabilityKind(reliability),
-        durabilityKind(DurabilityKind_t::TRANSIENT_LOCAL), unicastLocator(loc) {
+        durabilityKind(DurabilityKind_t::VOLATILE), unicastLocator(loc) {
   }
 
   bool matchesTopicOf(const TopicData &other);
