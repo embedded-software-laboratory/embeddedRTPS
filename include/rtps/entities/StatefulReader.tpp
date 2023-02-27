@@ -116,9 +116,6 @@ bool StatefulReaderT<NetworkDriver>::onNewGapMessage(
 
   // We have not seen all messages leading up to gap start -> do nothing
   if (writer->expectedSN < msg.gapStart) {
-    printf("GAP: Ignoring Gap, we have not seen all messages prior to gap "
-           "begin: %u < %u\n",
-           int(writer->expectedSN.low), int(msg.gapStart.low));
     return true;
   }
 

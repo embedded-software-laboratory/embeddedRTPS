@@ -66,7 +66,7 @@ public:
       uint32_t bucket;
       do {
         ++m_bit;
-        bucket = m_bit / static_cast<uint8_t>(8);
+        bucket = m_bit / static_cast<uint32_t>(8);
       } while (!(m_bitMap[bucket] & (1 << (m_bit % 8))) && m_bit < SIZE);
 
       return *this;
@@ -83,7 +83,7 @@ public:
     friend class MemoryPool;
     MemoryPool<TYPE, SIZE> &m_pool;
     uint8_t m_bitMap[SIZE / 8 + 1];
-    uint8_t m_bit = 0;
+    uint32_t m_bit = 0;
   };
 
   typedef MemoryPoolIterator<TYPE> MemPoolIter;
@@ -104,7 +104,7 @@ public:
       printf("[MemoryPool] RESSOURCE LIMIT EXCEEDED \n");
       return false;
     }
-    for (uint8_t bucket = 0; bucket < sizeof(m_bitMap); ++bucket) {
+    for (uint32_t bucket = 0; bucket < sizeof(m_bitMap); ++bucket) {
       if (m_bitMap[bucket] != 0xFF) {
         uint8_t byte = m_bitMap[bucket];
         for (uint8_t bit = 0; bit < 8; ++bit) {
@@ -137,10 +137,10 @@ public:
     bool retcode = false;
     for (auto it = begin(); it != end(); ++it) {
       if (jumppad(isCorrectElement, *it)) {
-        const uint8_t bucket = it.m_bit / uint8_t{8};
-        const uint8_t pos =
+        const uint8_t bucket = it.m_bit / uint32_t{8};
+        const uint32_t pos =
             it.m_bit &
-            uint8_t{
+            uint32_t{
                 7}; // 7 sets all bits above and including the one for 8 to 0
         m_bitMap[bucket] &= ~(static_cast<uint8_t>(1) << pos);
         --m_numElements;
