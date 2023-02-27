@@ -55,7 +55,7 @@ struct WriterProxy {
     } else {
       set.numBits = 1;
       set.base = expectedSN;
-      set.bitMap[0] = uint32_t{1} << 31;
+      set.bitMap.at(0) = uint32_t{1} << 31;
     }
 
     return set;
