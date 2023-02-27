@@ -32,7 +32,7 @@ using rtps::StatelessReader;
 #include "rtps/utils/printutils.h"
 #define SLR_LOG(...)                                                           \
   if (true) {                                                                  \
-    printf("[StatelessReader %s] ", &m_attributes.topicName.at(0));               \
+    printf("[StatelessReader %s] ", &m_attributes.topicName[0]);               \
     printf(__VA_ARGS__);                                                       \
     printf("\n");                                                              \
   }

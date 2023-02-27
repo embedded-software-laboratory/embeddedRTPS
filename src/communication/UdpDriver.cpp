@@ -50,8 +50,8 @@ UdpDriver::UdpDriver(rtps::UdpDriver::udpRxFunc_fp callback, void *args)
 const rtps::UdpConnection *
 UdpDriver::createUdpConnection(Ip4Port_t receivePort) {
   for (uint8_t i = 0; i < m_numConns; ++i) {
-    if (m_conns.at(i).port == receivePort) {
-      return &m_conns.at(i);
+    if (m_conns[i].port == receivePort) {
+      return &m_conns[i];
     }
   }
 

@@ -36,7 +36,7 @@ using rtps::StatefulWriterT;
 #include "rtps/utils/printutils.h"
 #define SFW_LOG(...)                                                           \
   if (true) {                                                                  \
-    printf("[Stateful Writer %s] ", this->m_attributes.topicName.data());             \
+    printf("[Stateful Writer %s] ", this->m_attributes.topicName);             \
     printf(__VA_ARGS__);                                                       \
     printf("\n");                                                              \
   }
@@ -423,7 +423,7 @@ void StatefulWriterT<NetworkDriver>::sendHeartBeat() {
     }
     if (firstSN == SEQUENCENUMBER_UNKNOWN || lastSN == SEQUENCENUMBER_UNKNOWN) {
 
-      if (strlen(&this->m_attributes.typeName.at(0)) != 0) {
+      if (strlen(&this->m_attributes.typeName[0]) != 0) {
         SFW_LOG("Skipping heartbeat. No data.\n");
       }
       return;

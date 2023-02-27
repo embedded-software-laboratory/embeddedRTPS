@@ -76,8 +76,8 @@ private:
   std::array<StatefulWriter, Config::NUM_STATEFUL_WRITERS> m_statefulWriters;
   template <typename A, typename B> B *getNextUnusedEndpoint(A &a) {
     for (unsigned int i = 0; i < a.size(); i++) {
-      if (!a.at(i).isInitialized()) {
-        return &(a.at(i));
+      if (!a[i].isInitialized()) {
+        return &(a[i]);
       }
     }
     return nullptr;

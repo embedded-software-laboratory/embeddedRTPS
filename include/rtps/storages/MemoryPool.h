@@ -37,11 +37,12 @@ public:
   public:
     using iterator_category = std::input_iterator_tag;
     using value_type = IT_TYPE;
+    using difference_type = uint8_t;
     using pointer = IT_TYPE *;
     using reference = IT_TYPE &;
 
     explicit MemoryPoolIterator(MemoryPool<TYPE, SIZE> &pool) : m_pool(pool) {
-      memcpy(m_bitMap.data(), m_pool.m_bitMap.data(), m_bitMap.size());
+      memcpy(m_bitMap, m_pool.m_bitMap, sizeof(m_bitMap));
     }
 
     // bool operator==(const MemoryPoolIterator& other) const{
@@ -81,8 +82,8 @@ public:
   private:
     friend class MemoryPool;
     MemoryPool<TYPE, SIZE> &m_pool;
-    std::array<uint8_t, SIZE / 8 + 1> m_bitMap;
-    uint32_t m_bit = 0;
+    uint8_t m_bitMap[SIZE / 8 + 1];
+    uint8_t m_bit = 0;
   };
 
   typedef MemoryPoolIterator<TYPE> MemPoolIter;
@@ -103,7 +104,7 @@ public:
       printf("[MemoryPool] RESSOURCE LIMIT EXCEEDED \n");
       return false;
     }
-    for (uint32_t bucket = 0; bucket < m_bitMap.size(); ++bucket) {
+    for (uint8_t bucket = 0; bucket < sizeof(m_bitMap); ++bucket) {
       if (m_bitMap[bucket] != 0xFF) {
         uint8_t byte = m_bitMap[bucket];
         for (uint8_t bit = 0; bit < 8; ++bit) {
@@ -136,7 +137,7 @@ public:
     bool retcode = false;
     for (auto it = begin(); it != end(); ++it) {
       if (jumppad(isCorrectElement, *it)) {
-        const uint32_t bucket = it.m_bit / uint8_t{8};
+        const uint8_t bucket = it.m_bit / uint8_t{8};
         const uint8_t pos =
             it.m_bit &
             uint8_t{
@@ -151,7 +152,7 @@ public:
 
   void clear() {
     for (unsigned int i = 0; i < (SIZE / 8 + 1); i++) {
-      m_bitMap.at(i) = 0;
+      m_bitMap[i] = 0;
     }
     m_numElements = 0;
   }
@@ -168,7 +169,7 @@ public:
 
   MemPoolIter begin() {
     MemPoolIter it(*this);
-    if (!(m_bitMap.at(0) & 1)) {
+    if (!(m_bitMap[0] & 1)) {
       ++it;
     }
     return it;
@@ -181,7 +182,7 @@ public:
   }
 
 private:
-  std::array<uint8_t, SIZE / 8 + 1> m_bitMap;
+  uint8_t m_bitMap[SIZE / 8 + 1]{};
   uint32_t m_numElements = 0;
   TYPE m_data[SIZE];
 };

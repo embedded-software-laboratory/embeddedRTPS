@@ -33,7 +33,7 @@ Author: i11 - Embedded Software, RWTH Aachen University
 #include "rtps/utils/printutils.h"
 #define SFR_LOG(...)                                                           \
   if (true) {                                                                  \
-    printf("[StatefulReader %s] ", m_attributes.topicName.data());                \
+    printf("[StatefulReader %s] ", &m_attributes.topicName[0]);                \
     printf(__VA_ARGS__);                                                       \
     printf("\n");                                                              \
   }
@@ -148,7 +148,7 @@ bool StatefulReaderT<NetworkDriver>::onNewGapMessage(
   SequenceNumberSet set;
   set.numBits = 1;
   set.base = writer->expectedSN;
-  set.bitMap.at(0) = uint32_t{1} << 31;
+  set.bitMap[0] = uint32_t{1} << 31;
   rtps::MessageFactory::addAckNack(info.buffer, msg.writerId, msg.readerId, set,
                                    writer->getNextAckNackCount(), false);
   m_transport->sendPacket(info);

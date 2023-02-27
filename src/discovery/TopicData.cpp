@@ -39,8 +39,8 @@ bool TopicData::isUnregisteredFlagSet() const {
 }
 
 bool TopicData::matchesTopicOf(const TopicData &other) {
-  return strcmp(this->topicName.data(), other.topicName.data()) == 0 &&
-         strcmp(this->typeName.data(), other.typeName.data()) == 0;
+  return strcmp(this->topicName, other.topicName) == 0 &&
+         strcmp(this->typeName, other.typeName) == 0;
 }
 
 bool TopicData::readFromUcdrBuffer(ucdrBuffer &buffer) {
@@ -86,12 +86,12 @@ bool TopicData::readFromUcdrBuffer(ucdrBuffer &buffer) {
     case ParameterId::PID_TOPIC_NAME:
       uint32_t topicNameLength;
       ucdr_deserialize_uint32_t(&buffer, &topicNameLength);
-      ucdr_deserialize_array_char(&buffer, topicName.data(), topicNameLength);
+      ucdr_deserialize_array_char(&buffer, topicName, topicNameLength);
       break;
     case ParameterId::PID_TYPE_NAME:
       uint32_t typeNameLength;
       ucdr_deserialize_uint32_t(&buffer, &typeNameLength);
-      ucdr_deserialize_array_char(&buffer, typeName.data(), typeNameLength);
+      ucdr_deserialize_array_char(&buffer, typeName, typeNameLength);
       break;
     case ParameterId::PID_UNICAST_LOCATOR:
       uLoc.readFromUcdrBuffer(buffer);
@@ -168,7 +168,7 @@ bool TopicData::serializeIntoUcdrBuffer(ucdrBuffer &buffer) const {
 
   // It's a 32 bit instead of 16 because it seems like the field is padded.
   const auto lenTopicName =
-      static_cast<uint32_t>(strlen(topicName.data()) + 1); // + \0
+      static_cast<uint32_t>(strlen(topicName) + 1); // + \0
   uint16_t topicAlignment = 0;
   if (lenTopicName % 4 != 0) {
     topicAlignment = static_cast<uint8_t>(4 - (lenTopicName % 4));
@@ -178,11 +178,11 @@ bool TopicData::serializeIntoUcdrBuffer(ucdrBuffer &buffer) const {
   ucdr_serialize_uint16_t(&buffer, ParameterId::PID_TOPIC_NAME);
   ucdr_serialize_uint16_t(&buffer, totalLengthTopicNameField);
   ucdr_serialize_uint32_t(&buffer, lenTopicName);
-  ucdr_serialize_array_char(&buffer, topicName.data(), lenTopicName);
+  ucdr_serialize_array_char(&buffer, topicName, lenTopicName);
   ucdr_align_to(&buffer, 4);
 
   // It's a 32 bit instead of 16 because it seems like the field is padded.
-  const auto lenTypeName = static_cast<uint32_t>(strlen(typeName.data()) + 1); // + \0
+  const auto lenTypeName = static_cast<uint32_t>(strlen(typeName) + 1); // + \0
   uint16_t typeAlignment = 0;
   if (lenTypeName % 4 != 0) {
     typeAlignment = static_cast<uint8_t>(4 - (lenTypeName % 4));
@@ -193,7 +193,7 @@ bool TopicData::serializeIntoUcdrBuffer(ucdrBuffer &buffer) const {
   ucdr_serialize_uint16_t(&buffer, ParameterId::PID_TYPE_NAME);
   ucdr_serialize_uint16_t(&buffer, totalLengthTypeNameField);
   ucdr_serialize_uint32_t(&buffer, lenTypeName);
-  ucdr_serialize_array_char(&buffer, typeName.data(), lenTypeName);
+  ucdr_serialize_array_char(&buffer, typeName, lenTypeName);
   ucdr_align_to(&buffer, 4);
 
   ucdr_serialize_uint16_t(&buffer, ParameterId::PID_KEY_HASH);
@@ -233,7 +233,7 @@ bool TopicData::serializeIntoUcdrBuffer(ucdrBuffer &buffer) const {
 }
 
 bool TopicDataCompressed::matchesTopicOf(const TopicData &other) const {
-  return (hashCharArray(other.topicName.data(), other.topicName.size()) ==
+  return (hashCharArray(other.topicName, sizeof(other.topicName)) ==
               topicHash &&
-          hashCharArray(other.typeName.data(), other.typeName.size()) == typeHash);
+          hashCharArray(other.typeName, sizeof(other.typeName)) == typeHash);
 }
