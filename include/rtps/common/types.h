@@ -30,6 +30,7 @@ Author: i11 - Embedded Software, RWTH Aachen University
 #include <array>
 #include <cstdint>
 #include <initializer_list>
+#include <limits>
 
 // TODO subnamespaces
 namespace rtps {
@@ -174,6 +175,17 @@ struct SequenceNumber_t {
     return *this;
   }
 
+  SequenceNumber_t &operator--(){
+	  if(low == 0){
+		  --high;
+		  low = std::numeric_limits<decltype(low)>::max();
+	  }else{
+		  --low;
+	  }
+
+	  return *this;
+  }
+
   SequenceNumber_t operator++(int) {
     SequenceNumber_t tmp(*this);
     ++*this;
@@ -267,6 +279,7 @@ const EntityId_t ENTITYID_P2P_BUILTIN_PARTICIPANT_MESSAGE_READER = {
 
 const GuidPrefix_t GUIDPREFIX_UNKNOWN{};
 const Guid_t GUID_UNKNOWN{};
+const GuidPrefix_t GUID_RANDOM{9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9};
 
 const ParticipantId_t PARTICIPANT_ID_INVALID = -1;
 

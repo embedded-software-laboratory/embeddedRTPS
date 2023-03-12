@@ -176,7 +176,7 @@ void addAckNack(Buffer &buffer, EntityId_t writerId, EntityId_t readerId,
   if (final_flag) {
     subMsg.header.flags |= FLAG_FINAL; // For now, we don't want any response
   } else {
-    subMsg.header.flags &= ~FLAG_FINAL; // For now, we don't want any response
+    subMsg.header.flags &= ~FLAG_FINAL; // Send future heartbeats, even if no change occured
   }
   subMsg.header.octetsToNextHeader =
       SubmessageAckNack::getRawSize(readerSNState) - numBytesUntilEndOfLength;
@@ -191,7 +191,7 @@ void addAckNack(Buffer &buffer, EntityId_t writerId, EntityId_t readerId,
 
 template <class Buffer>
 void addSubmessageGap(Buffer &buffer, EntityId_t writerId, EntityId_t readerId,
-                      SequenceNumber_t missingSN) {
+                      const SequenceNumber_t& firstMissing, const SequenceNumber_t& nextValid) {
   SubmessageGap subMsg;
   subMsg.header.submessageId = SubmessageKind::GAP;
 #if IS_LITTLE_ENDIAN
@@ -203,8 +203,8 @@ void addSubmessageGap(Buffer &buffer, EntityId_t writerId, EntityId_t readerId,
 
   subMsg.writerId = writerId;
   subMsg.readerId = readerId;
-  subMsg.gapStart = missingSN;
-  subMsg.gapList.base = ++missingSN;
+  subMsg.gapStart = firstMissing;
+  subMsg.gapList.base = nextValid;
   subMsg.gapList.numBits = 0;
 
   serializeMessage(buffer, subMsg);

@@ -38,7 +38,7 @@ using rtps::SEDPAgent;
   if (true) {                                                                  \
     printf("[SEDP] ");                                                         \
     printf(__VA_ARGS__);                                                       \
-    printf("\n");                                                              \
+    printf("\r\n");                                                              \
   }
 #else
 #define SEDP_LOG(...) //
@@ -103,7 +103,7 @@ void SEDPAgent::handlePublisherReaderMessage(const ReaderCacheChange &change) {
 
   TopicData topicData;
   if (topicData.readFromUcdrBuffer(cdrBuffer)) {
-    handlePublisherReaderMessage(topicData);
+    handlePublisherReaderMessage(topicData, change);
   }
 }
 
@@ -176,7 +176,7 @@ uint32_t SEDPAgent::getNumRemoteUnmatchedWriters() {
   return m_unmatchedRemoteWriters.getNumElements();
 }
 
-void SEDPAgent::handlePublisherReaderMessage(const TopicData &writerData) {
+void SEDPAgent::handlePublisherReaderMessage(const TopicData &writerData, const ReaderCacheChange& change) {
   // TODO Is it okay to add Endpoint if the respective participant is unknown
   // participant?
   if (!m_part->findRemoteParticipant(writerData.endpointGuid.prefix)) {
@@ -184,7 +184,7 @@ void SEDPAgent::handlePublisherReaderMessage(const TopicData &writerData) {
   }
 
   if (writerData.isDisposedFlagSet() || writerData.isUnregisteredFlagSet()) {
-    handleRemoteEndpointDeletion(writerData);
+    handleRemoteEndpointDeletion(writerData, change);
     return;
   }
 
@@ -236,11 +236,15 @@ void SEDPAgent::handleSubscriptionReaderMessage(
 
   TopicData topicData;
   if (topicData.readFromUcdrBuffer(cdrBuffer)) {
-    handleSubscriptionReaderMessage(topicData);
+    handleSubscriptionReaderMessage(topicData, change);
   }
 }
 
-void SEDPAgent::handleRemoteEndpointDeletion(const TopicData &topic) {
+void SEDPAgent::handleRemoteEndpointDeletion(const TopicData &topic, const ReaderCacheChange& change) {
+  SEDP_LOG("Endpoint deletion message SN %u.%u GUID %u %u %u %u \r\n", (int)change.sn.high, (int)change.sn.low, change.writerGuid.prefix.id[0],
+		  change.writerGuid.prefix.id[1],
+		  change.writerGuid.prefix.id[2],
+		  change.writerGuid.prefix.id[3]);
   if (!topic.entityIdFromKeyHashValid) {
     return;
   }
@@ -256,13 +260,13 @@ void SEDPAgent::handleRemoteEndpointDeletion(const TopicData &topic) {
   removeUnmatchedEntity(guid);
 }
 
-void SEDPAgent::handleSubscriptionReaderMessage(const TopicData &readerData) {
+void SEDPAgent::handleSubscriptionReaderMessage(const TopicData &readerData, const ReaderCacheChange& change) {
   if (!m_part->findRemoteParticipant(readerData.endpointGuid.prefix)) {
     return;
   }
 
   if (readerData.isDisposedFlagSet() || readerData.isUnregisteredFlagSet()) {
-    handleRemoteEndpointDeletion(readerData);
+    handleRemoteEndpointDeletion(readerData, change);
     return;
   }
 
@@ -409,6 +413,7 @@ bool SEDPAgent::announceEndpointDeletion(A *local_endpoint,
   auto ret =
       sedp_endpoint->newChange(ChangeKind_t::ALIVE, m_buffer,
                                ucdr_buffer_length(&microbuffer), true, true);
+  SEDP_LOG("Annoucing endpoint delete, SN = %u.%u\r\n", (int)ret->sequenceNumber.low, (int)ret->sequenceNumber.high);
   return (ret != nullptr);
 }
 
@@ -448,6 +453,7 @@ bool SEDPAgent::deleteReader(Reader *reader) {
     return false;
   }
 
+  // Move all matched proxies of this endpoint to the list of unmatched endpoints
   reader->dumpAllProxies(SEDPAgent::jumppadTakeProxyOfDisposedReader, this);
 
   return true;
@@ -465,6 +471,7 @@ bool SEDPAgent::deleteWriter(Writer *writer) {
     return false;
   }
 
+  // Move all matched proxies of this endpoint to the list of unmatched endpoints
   writer->dumpAllProxies(SEDPAgent::jumppadTakeProxyOfDisposedWriter, this);
 
   return true;

@@ -28,6 +28,7 @@ Author: i11 - Embedded Software, RWTH Aachen University
 #include "rtps/messages/MessageFactory.h"
 #include "rtps/utils/Lock.h"
 #include "rtps/utils/Log.h"
+#include "rtps/utils/Diagnostics.h"
 
 #if SFR_VERBOSE && RTPS_GLOBAL_VERBOSE
 #include "rtps/utils/printutils.h"
@@ -35,7 +36,7 @@ Author: i11 - Embedded Software, RWTH Aachen University
   if (true) {                                                                  \
     printf("[StatefulReader %s] ", &m_attributes.topicName[0]);                \
     printf(__VA_ARGS__);                                                       \
-    printf("\n");                                                              \
+    printf("\r\n");                                                              \
   }
 #else
 #define SFR_LOG(...) //
@@ -71,9 +72,16 @@ void StatefulReaderT<NetworkDriver>::newChange(
   for (auto &proxy : m_proxies) {
     if (proxy.remoteWriterGuid == cacheChange.writerGuid) {
       if (proxy.expectedSN == cacheChange.sn) {
+    	SFR_LOG("Delivering SN %u.%u | ! GUID %u %u %u %u \r\n", (int)cacheChange.sn.high, (int)cacheChange.sn.low, cacheChange.writerGuid.prefix.id[0], cacheChange.writerGuid.prefix.id[1],cacheChange.writerGuid.prefix.id[2],cacheChange.writerGuid.prefix.id[3]);
         executeCallbacks(cacheChange);
         ++proxy.expectedSN;
+        printf("Done processing SN %u.%u\r\n", (int)cacheChange.sn.high, (int)cacheChange.sn.low );
         return;
+      }else{
+    	  Diagnostics::StatefulReader::sfr_unexpected_sn++;
+    	  SFR_LOG("Unexpected SN %u.%u != %u.%u, dropping! GUID %u %u %u %u | \r\n", (int)proxy.expectedSN.high,(int)proxy.expectedSN.low, (int)cacheChange.sn.high, (int)cacheChange.sn.low,
+    			  cacheChange.writerGuid.prefix.id[0], cacheChange.writerGuid.prefix.id[1],cacheChange.writerGuid.prefix.id[2],cacheChange.writerGuid.prefix.id[3]);
+
       }
     }
   }
@@ -97,6 +105,7 @@ bool StatefulReaderT<NetworkDriver>::onNewGapMessage(
   if (!m_is_initialized_) {
     return false;
   }
+  SFR_LOG("Processing gap message %u %u", msg.gapStart, msg.gapList.base);
 
   Guid_t writerProxyGuid;
   writerProxyGuid.prefix = remotePrefix;
@@ -114,46 +123,40 @@ bool StatefulReaderT<NetworkDriver>::onNewGapMessage(
     return false;
   }
 
-  // We have not seen all messages leading up to gap start -> do nothing
-  if (writer->expectedSN < msg.gapStart) {
-    printf("GAP: Ignoring Gap, we have not seen all messages prior to gap "
-           "begin: %u < %u\n",
-           int(writer->expectedSN.low), int(msg.gapStart.low));
-    return true;
+  // Case 1: We are still waiting for messages before gapStart
+  if(writer->expectedSN < msg.gapStart){
+	  PacketInfo info;
+	  info.srcPort = m_srcPort;
+	  info.destAddr = writer->remoteLocator.getIp4Address();
+	  info.destPort = writer->remoteLocator.port;
+	  rtps::MessageFactory::addHeader(info.buffer,
+									   m_attributes.endpointGuid.prefix);
+	  SequenceNumber_t last_valid = msg.gapStart;
+	  --last_valid;
+	  auto missing_sns = writer->getMissing(writer->expectedSN, last_valid);
+	  rtps::MessageFactory::addAckNack(info.buffer, msg.writerId, msg.readerId, missing_sns                                   ,
+										writer->getNextAckNackCount(), false);
+	  m_transport->sendPacket(info);
+      return true;
   }
 
-  // Start from base and search for first unset bit
-  SequenceNumber_t first_valid = msg.gapList.base;
-  for (unsigned int i = 0; i < msg.gapList.numBits; i++, first_valid++) {
-    if (!msg.gapList.isSet(i)) {
-      break;
-    }
+  // Case 2: We are expecting a message between [gapStart; gapList.base -1]
+  // Advance expectedSN beyond gapList.base
+  if(writer->expectedSN < msg.gapList.base){
+	  auto before = writer->expectedSN;
+	  writer->expectedSN = msg.gapList.base;
+
+	  //writer->expectedSN++;
+
+	  // Advance expectedSN to first unset bit
+      for(uint32_t bit = 0; bit < SNS_MAX_NUM_BITS; writer->expectedSN++, bit++){
+    	  if(!msg.gapList.isSet(bit)){
+    		  break;
+    	  }
+      }
   }
 
-  if (first_valid < writer->expectedSN) {
-    SFR_LOG("GAP: Ignoring gap, we expect a message beyond the gap");
-    return true;
-  }
-
-  SFR_LOG("GAP: moving expected SN to %u\n", (int)first_valid.low);
-  writer->expectedSN = first_valid;
-
-  // Send an ack nack message
-  PacketInfo info;
-  info.srcPort = m_srcPort;
-  info.destAddr = writer->remoteLocator.getIp4Address();
-  info.destPort = writer->remoteLocator.port;
-  rtps::MessageFactory::addHeader(info.buffer,
-                                  m_attributes.endpointGuid.prefix);
-  SequenceNumberSet set;
-  set.numBits = 1;
-  set.base = writer->expectedSN;
-  set.bitMap[0] = uint32_t{1} << 31;
-  rtps::MessageFactory::addAckNack(info.buffer, msg.writerId, msg.readerId, set,
-                                   writer->getNextAckNackCount(), false);
-  m_transport->sendPacket(info);
-
-  return false;
+  return true;
 }
 
 template <class NetworkDriver>
@@ -182,10 +185,9 @@ bool StatefulReaderT<NetworkDriver>::onNewHeartbeat(
     return false;
   }
 
-  if (msg.count.value <= writer->hbCount.value) {
-
-    SFR_LOG("Ignore heartbeat. Count too low.\n");
-    return false;
+  if(writer->expectedSN < msg.firstSN){
+	  SFR_LOG("expectedSN < firstSN, advancing expectedSN");
+	  writer->expectedSN = msg.firstSN;
   }
 
   writer->hbCount.value = msg.count.value;
@@ -193,11 +195,37 @@ bool StatefulReaderT<NetworkDriver>::onNewHeartbeat(
   info.destPort = writer->remoteLocator.port;
   rtps::MessageFactory::addHeader(info.buffer,
                                   m_attributes.endpointGuid.prefix);
-  rtps::MessageFactory::addAckNack(info.buffer, msg.writerId, msg.readerId,
-                                   writer->getMissing(msg.firstSN, msg.lastSN),
-                                   writer->getNextAckNackCount(), false);
+  auto missing_sns = writer->getMissing(msg.firstSN, msg.lastSN);
+  bool final_flag = (missing_sns.numBits == 0);
+  rtps::MessageFactory::addAckNack(info.buffer, msg.writerId, msg.readerId, missing_sns                                   ,
+                                   writer->getNextAckNackCount(), final_flag);
 
-  SFR_LOG("Sending acknack.\n");
+  SFR_LOG("Sending acknack base %u bits %u .\n", (int)missing_sns.base.low, (int)missing_sns.numBits);
+  m_transport->sendPacket(info);
+  return true;
+}
+
+template <class NetworkDriver>
+bool StatefulReaderT<NetworkDriver>::sendPreemptiveAckNack(
+    const WriterProxy &writer){
+  Lock lock(m_proxies_mutex);
+  if (!m_is_initialized_) {
+    return false;
+  }
+
+  PacketInfo info;
+  info.srcPort = m_attributes.unicastLocator.port;
+  info.destAddr = writer.remoteLocator.getIp4Address();
+  info.destPort = writer.remoteLocator.port;
+  rtps::MessageFactory::addHeader(info.buffer,
+                                  m_attributes.endpointGuid.prefix);
+  SequenceNumberSet number_set;
+  number_set.base.high = 0;
+  number_set.base.low = 0;
+  number_set.numBits = 0;
+  rtps::MessageFactory::addAckNack(info.buffer, writer.remoteWriterGuid.entityId, m_attributes.endpointGuid.entityId, number_set, Count_t{1}, false);
+
+  SFR_LOG("Sending preemptive acknack.\n");
   m_transport->sendPacket(info);
   return true;
 }

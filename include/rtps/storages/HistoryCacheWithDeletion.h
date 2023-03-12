@@ -40,6 +40,8 @@ template <uint16_t SIZE> class HistoryCacheWithDeletion {
 public:
   HistoryCacheWithDeletion() = default;
 
+  uint32_t m_dispose_after_write_cnt = 0;
+
   bool isFull() const {
     uint16_t it = m_head;
     incrementIterator(it);
@@ -51,10 +53,14 @@ public:
     CacheChange change;
     change.kind = ChangeKind_t::ALIVE;
     change.inLineQoS = inLineQoS;
-    change.diposeAfterWrite = disposeAfterWrite;
+    change.disposeAfterWrite = disposeAfterWrite;
     change.data.reserve(size);
     change.data.append(data, size);
     change.sequenceNumber = ++m_lastUsedSequenceNumber;
+
+    if(disposeAfterWrite){
+    	m_dispose_after_write_cnt++;
+    }
 
     CacheChange *place = &m_buffer[m_head];
     incrementHead();
@@ -72,7 +78,7 @@ public:
       return;
     }
 
-    if (getSeqNumMax() <= sn) { // We won't overrun head
+    if (getCurrentSeqNumMax() <= sn) { // We won't overrun head
       m_head = m_tail;
       return;
     }
@@ -82,13 +88,12 @@ public:
     }
   }
 
-  void dropOldest() { removeUntilIncl(getSeqNumMin()); }
+  void dropOldest() { removeUntilIncl(getCurrentSeqNumMin()); }
 
   bool dropChange(const SequenceNumber_t &sn) {
     uint16_t idx_to_clear;
     CacheChange *change;
     if (!getChangeBySN(sn, &change, idx_to_clear)) {
-      printf("History: couldn't find SN with = %u\n", (int)sn.low);
       return false; // sn does not exist, nothing to do
     }
 
@@ -135,7 +140,11 @@ public:
     }
   }
 
-  const SequenceNumber_t &getSeqNumMin() const {
+  bool isEmpty(){
+	 return (m_head == m_tail);
+  }
+
+  const SequenceNumber_t &getCurrentSeqNumMin() const {
     if (m_head == m_tail) {
       return SEQUENCENUMBER_UNKNOWN;
     } else {
@@ -143,12 +152,16 @@ public:
     }
   }
 
-  const SequenceNumber_t &getSeqNumMax() const {
+  const SequenceNumber_t &getCurrentSeqNumMax() const {
     if (m_head == m_tail) {
       return SEQUENCENUMBER_UNKNOWN;
     } else {
       return m_lastUsedSequenceNumber;
     }
+  }
+
+  const SequenceNumber_t &getLastUsedSequenceNumber(){
+	  return m_lastUsedSequenceNumber;
   }
 
   void clear() {
@@ -183,8 +196,11 @@ public:
   }
 #endif
   bool isSNInRange(const SequenceNumber_t &sn) {
-    SequenceNumber_t minSN = getSeqNumMin();
-    if (sn < minSN || getSeqNumMax() < sn) {
+	if(isEmpty()){
+	  return false;
+	}
+    SequenceNumber_t minSN = getCurrentSeqNumMin();
+    if (sn < minSN || getCurrentSeqNumMax() < sn) {
       return false;
     }
     return true;
@@ -247,6 +263,9 @@ private:
   }
 
   inline void incrementTail() {
+	if(m_buffer[m_tail].disposeAfterWrite){
+		m_dispose_after_write_cnt--;
+	}
     if (m_head != m_tail) {
       m_buffer[m_tail].reset();
       incrementIterator(m_tail);

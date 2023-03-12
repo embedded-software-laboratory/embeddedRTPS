@@ -39,6 +39,8 @@ public:
   bool init();
 
   bool moveElementIntoBuffer(T &&elem);
+  bool copyElementIntoBuffer(const T& elem);
+
 
   /**
    * Removes the first into the given hull. Also moves responsibility for
@@ -46,6 +48,10 @@ public:
    * @return true if element was injected. False if no element was present.
    */
   bool moveFirstInto(T &hull);
+  bool peakFirst(T &hull);
+
+  uint32_t numElements();
+  uint32_t insertionFailures();
 
   void clear();
 
@@ -53,6 +59,8 @@ private:
   std::array<T, SIZE + 1> m_buffer{};
   uint16_t m_head = 0;
   uint16_t m_tail = 0;
+  uint32_t m_num_elements = 0;
+  uint32_t m_insertion_failures = 0;
   static_assert(SIZE + 1 < std::numeric_limits<decltype(m_head)>::max(),
                 "Iterator is large enough for given size");
 

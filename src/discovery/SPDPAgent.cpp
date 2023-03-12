@@ -57,8 +57,13 @@ void SPDPAgent::start() {
     return;
   }
   m_running = true;
-  sys_thread_new("SPDPThread", runBroadcast, this,
+  auto t = sys_thread_new("SPDPThread", runBroadcast, this,
                  Config::SPDP_WRITER_STACKSIZE, Config::SPDP_WRITER_PRIO);
+  if(t == nullptr){
+	  while(1){
+		  SPDP_LOG("Failed to create SPDP thread\r\n");
+	  }
+  }
 }
 
 void SPDPAgent::stop() { m_running = false; }
@@ -198,22 +203,6 @@ bool SPDPAgent::addProxiesForBuiltInEndpoints() {
 #endif
   SPDP_LOG("Adding IPv4 Locator %s\n", addr);
 
-  if (m_proxyDataBuffer.hasPublicationWriter()) {
-    const WriterProxy proxy{{m_proxyDataBuffer.m_guid.prefix,
-                             ENTITYID_SEDP_BUILTIN_PUBLICATIONS_WRITER},
-                            *locator,
-                            true};
-    m_buildInEndpoints.sedpPubReader->addNewMatchedWriter(proxy);
-  }
-
-  if (m_proxyDataBuffer.hasSubscriptionWriter()) {
-    const WriterProxy proxy{{m_proxyDataBuffer.m_guid.prefix,
-                             ENTITYID_SEDP_BUILTIN_SUBSCRIPTIONS_WRITER},
-                            *locator,
-                            true};
-    m_buildInEndpoints.sedpSubReader->addNewMatchedWriter(proxy);
-  }
-
   if (m_proxyDataBuffer.hasPublicationReader()) {
     const ReaderProxy proxy{{m_proxyDataBuffer.m_guid.prefix,
                              ENTITYID_SEDP_BUILTIN_PUBLICATIONS_READER},
@@ -228,6 +217,24 @@ bool SPDPAgent::addProxiesForBuiltInEndpoints() {
                             *locator,
                             true};
     m_buildInEndpoints.sedpSubWriter->addNewMatchedReader(proxy);
+  }
+
+  if (m_proxyDataBuffer.hasPublicationWriter()) {
+    const WriterProxy proxy{{m_proxyDataBuffer.m_guid.prefix,
+                             ENTITYID_SEDP_BUILTIN_PUBLICATIONS_WRITER},
+                            *locator,
+                            true};
+    m_buildInEndpoints.sedpPubReader->addNewMatchedWriter(proxy);
+    m_buildInEndpoints.sedpPubReader->sendPreemptiveAckNack(proxy);
+  }
+
+  if (m_proxyDataBuffer.hasSubscriptionWriter()) {
+    const WriterProxy proxy{{m_proxyDataBuffer.m_guid.prefix,
+                             ENTITYID_SEDP_BUILTIN_SUBSCRIPTIONS_WRITER},
+                            *locator,
+                            true};
+    m_buildInEndpoints.sedpSubReader->addNewMatchedWriter(proxy);
+    m_buildInEndpoints.sedpPubReader->sendPreemptiveAckNack(proxy);
   }
 
   return true;

@@ -38,7 +38,7 @@ using rtps::UdpDriver;
   if (true) {                                                                  \
     printf("[UDP Driver] ");                                                   \
     printf(__VA_ARGS__);                                                       \
-    printf("\n");                                                              \
+    printf("\r\n");                                                              \
   }
 #else
 #define UDP_DRIVER_LOG(...) //

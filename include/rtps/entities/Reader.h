@@ -110,8 +110,10 @@ public:
   using dumpProxyCallback = void (*)(const Reader *reader, const WriterProxy &,
                                      void *arg);
 
-  //! Dangerous, only
+
   int dumpAllProxies(dumpProxyCallback target, void *arg);
+
+  virtual bool sendPreemptiveAckNack(const WriterProxy &writer);
 
 protected:
   void executeCallbacks(const ReaderCacheChange &cacheChange);
