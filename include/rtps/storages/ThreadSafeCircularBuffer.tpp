@@ -48,7 +48,7 @@ bool ThreadSafeCircularBuffer<T, SIZE>::moveElementIntoBuffer(T &&elem) {
 }
 
 template <typename T, uint16_t SIZE>
-bool ThreadSafeCircularBuffer<T, SIZE>::copyElementIntoBuffer(const T& elem) {
+bool ThreadSafeCircularBuffer<T, SIZE>::copyElementIntoBuffer(const T &elem) {
   Lock lock(m_mutex);
   if (!isFull()) {
     m_buffer[m_head] = elem;
@@ -59,7 +59,6 @@ bool ThreadSafeCircularBuffer<T, SIZE>::copyElementIntoBuffer(const T& elem) {
     return false;
   }
 }
-
 
 template <typename T, uint16_t SIZE>
 bool ThreadSafeCircularBuffer<T, SIZE>::moveFirstInto(T &hull) {
@@ -89,8 +88,6 @@ uint32_t ThreadSafeCircularBuffer<T, SIZE>::numElements() {
   return m_num_elements;
 }
 
-
-
 template <typename T, uint16_t SIZE>
 void ThreadSafeCircularBuffer<T, SIZE>::clear() {
   Lock lock(m_mutex);
@@ -118,7 +115,6 @@ template <typename T, uint16_t SIZE>
 inline void ThreadSafeCircularBuffer<T, SIZE>::incrementTail() {
   incrementIterator(m_tail);
   m_num_elements--;
-
 }
 
 template <typename T, uint16_t SIZE>

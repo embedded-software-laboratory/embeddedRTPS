@@ -54,8 +54,10 @@ public:
   uint32_t getNumRemoteUnmatchedWriters();
 
 protected: // For testing purposes
-  void handlePublisherReaderMessage(const TopicData &writerData, const ReaderCacheChange& change);
-  void handleSubscriptionReaderMessage(const TopicData &writerData, const ReaderCacheChange& change);
+  void handlePublisherReaderMessage(const TopicData &writerData,
+                                    const ReaderCacheChange &change);
+  void handleSubscriptionReaderMessage(const TopicData &writerData,
+                                       const ReaderCacheChange &change);
 
 private:
   Participant *m_part;
@@ -82,7 +84,8 @@ private:
   void addUnmatchedRemoteWriter(const TopicDataCompressed &writerData);
   void addUnmatchedRemoteReader(const TopicDataCompressed &readerData);
 
-  void handleRemoteEndpointDeletion(const TopicData &topic, const ReaderCacheChange& change);
+  void handleRemoteEndpointDeletion(const TopicData &topic,
+                                    const ReaderCacheChange &change);
 
   void (*mfp_onNewPublisherCallback)(void *arg) = nullptr;
   void *m_onNewPublisherArgs = nullptr;

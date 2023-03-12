@@ -175,15 +175,15 @@ struct SequenceNumber_t {
     return *this;
   }
 
-  SequenceNumber_t &operator--(){
-	  if(low == 0){
-		  --high;
-		  low = std::numeric_limits<decltype(low)>::max();
-	  }else{
-		  --low;
-	  }
+  SequenceNumber_t &operator--() {
+    if (low == 0) {
+      --high;
+      low = std::numeric_limits<decltype(low)>::max();
+    } else {
+      --low;
+    }
 
-	  return *this;
+    return *this;
   }
 
   SequenceNumber_t operator++(int) {

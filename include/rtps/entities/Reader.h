@@ -110,7 +110,6 @@ public:
   using dumpProxyCallback = void (*)(const Reader *reader, const WriterProxy &,
                                      void *arg);
 
-
   int dumpAllProxies(dumpProxyCallback target, void *arg);
 
   virtual bool sendPreemptiveAckNack(const WriterProxy &writer);

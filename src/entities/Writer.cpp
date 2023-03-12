@@ -110,9 +110,11 @@ void rtps::Writer::removeAllProxiesOfParticipant(
   resetSendOptions();
 }
 
-bool rtps::Writer::isBuiltinEndpoint(){
-	return !(m_attributes.endpointGuid.entityId.entityKind == EntityKind_t::USER_DEFINED_WRITER_WITHOUT_KEY ||
-			m_attributes.endpointGuid.entityId.entityKind == EntityKind_t::USER_DEFINED_WRITER_WITH_KEY);
+bool rtps::Writer::isBuiltinEndpoint() {
+  return !(m_attributes.endpointGuid.entityId.entityKind ==
+               EntityKind_t::USER_DEFINED_WRITER_WITHOUT_KEY ||
+           m_attributes.endpointGuid.entityId.entityKind ==
+               EntityKind_t::USER_DEFINED_WRITER_WITH_KEY);
 }
 
 bool rtps::Writer::isIrrelevant(ChangeKind_t kind) const {

@@ -34,7 +34,7 @@ Author: i11 - Embedded Software, RWTH Aachen University
   if (true) {                                                                  \
     printf("[Participant] ");                                                  \
     printf(__VA_ARGS__);                                                       \
-    printf("\r\n");                                                              \
+    printf("\r\n");                                                            \
   }
 #else
 #define PARTICIPANT_LOG(...) //
@@ -427,32 +427,34 @@ bool Participant::checkAndResetHeartbeats() {
 
 void Participant::printInfo() {
 
-	uint32_t max_reader_proxies = 0;
-	for (unsigned int i = 0; i < m_readers.size(); i++) {
+  uint32_t max_reader_proxies = 0;
+  for (unsigned int i = 0; i < m_readers.size(); i++) {
     if (m_readers[i] != nullptr && m_readers[i]->isInitialized()) {
       if (m_hasBuilInEndpoints && i < 3) {
 #ifdef PARTICIPANT_PRINTINFO_LONG
         if (m_readers[i]->m_attributes.endpointGuid.entityId ==
             ENTITYID_SPDP_BUILTIN_PARTICIPANT_READER) {
-          printf("Reader %u: SPDP BUILTIN READER | Remote Proxies = %u \r\n ", i,
-                 static_cast<int>(m_readers[i]->getProxiesCount()));
+          printf("Reader %u: SPDP BUILTIN READER | Remote Proxies = %u \r\n ",
+                 i, static_cast<int>(m_readers[i]->getProxiesCount()));
         }
         if (m_readers[i]->m_attributes.endpointGuid.entityId ==
             ENTITYID_SEDP_BUILTIN_PUBLICATIONS_READER) {
-          printf("Reader %u: SEDP PUBLICATION READER | Remote Proxies = %u \r\n ",
-                 i, static_cast<int>(m_readers[i]->getProxiesCount()));
+          printf(
+              "Reader %u: SEDP PUBLICATION READER | Remote Proxies = %u \r\n ",
+              i, static_cast<int>(m_readers[i]->getProxiesCount()));
         }
         if (m_readers[i]->m_attributes.endpointGuid.entityId ==
             ENTITYID_SEDP_BUILTIN_SUBSCRIPTIONS_READER) {
-          printf("Reader %u: SEDP SUBSCRIPTION READER | Remote Proxies = %u \r\n",
-                 i, static_cast<int>(m_readers[i]->getProxiesCount()));
+          printf(
+              "Reader %u: SEDP SUBSCRIPTION READER | Remote Proxies = %u \r\n",
+              i, static_cast<int>(m_readers[i]->getProxiesCount()));
         }
 #endif
         continue;
       }
 
-
-      max_reader_proxies = std::max(max_reader_proxies, m_readers[i]->getProxiesCount());
+      max_reader_proxies =
+          std::max(max_reader_proxies, m_readers[i]->getProxiesCount());
 #ifdef PARTICIPANT_PRINTINFO_LONG
       printf("Reader %u: Topic = %s | Type = %s | Remote Proxies = %u | SEDP "
              "SN = %u   \r\n ",
@@ -476,20 +478,23 @@ void Participant::printInfo() {
       }
       if (m_writers[i]->m_attributes.endpointGuid.entityId ==
           ENTITYID_SEDP_BUILTIN_PUBLICATIONS_WRITER) {
-        printf("Writer %u: SEDP PUBLICATION WRITER | Remote Proxies = %u   \r\n ",
-               i, static_cast<int>(m_writers[i]->getProxiesCount()));
+        printf(
+            "Writer %u: SEDP PUBLICATION WRITER | Remote Proxies = %u   \r\n ",
+            i, static_cast<int>(m_writers[i]->getProxiesCount()));
       }
       if (m_writers[i]->m_attributes.endpointGuid.entityId ==
           ENTITYID_SEDP_BUILTIN_SUBSCRIPTIONS_WRITER) {
-        printf("Writer %u: SEDP SUBSCRIPTION WRITER | Remote Proxies = %u   \r\n ",
-               i, static_cast<int>(m_writers[i]->getProxiesCount()));
+        printf(
+            "Writer %u: SEDP SUBSCRIPTION WRITER | Remote Proxies = %u   \r\n ",
+            i, static_cast<int>(m_writers[i]->getProxiesCount()));
       }
 #endif
       continue;
     }
 
     if (m_writers[i] != nullptr && m_writers[i]->isInitialized()) {
-  	  max_writer_proxies = std::max(max_writer_proxies, m_writers[i]->getProxiesCount());
+      max_writer_proxies =
+          std::max(max_writer_proxies, m_writers[i]->getProxiesCount());
 #ifdef PARTICIPANT_PRINTINFO_LONG
       printf("Writer %u: Topic = %s | Type = %s | Remote Proxies = %u | SEDP "
              "SN = %u   \r\n ",
@@ -499,8 +504,6 @@ void Participant::printInfo() {
              static_cast<int>(m_writers[i]->getSEDPSequenceNumber().low));
 #endif
     }
-
-
   }
 
   printf("Max Writer Proxies %u \r\n ", max_writer_proxies);
@@ -531,7 +534,7 @@ void Participant::addBuiltInEndpoints(BuiltInEndpoints &endpoints) {
 }
 
 void Participant::newMessage(const uint8_t *data, DataSize_t size) {
-  if(!m_receiver.processMessage(data, size)){
-	  PARTICIPANT_LOG("MESSAGE PROCESSING FAILE \r\n");
+  if (!m_receiver.processMessage(data, size)) {
+    PARTICIPANT_LOG("MESSAGE PROCESSING FAILE \r\n");
   }
 }

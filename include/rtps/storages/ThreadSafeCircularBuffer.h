@@ -39,8 +39,7 @@ public:
   bool init();
 
   bool moveElementIntoBuffer(T &&elem);
-  bool copyElementIntoBuffer(const T& elem);
-
+  bool copyElementIntoBuffer(const T &elem);
 
   /**
    * Removes the first into the given hull. Also moves responsibility for

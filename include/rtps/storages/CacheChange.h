@@ -49,9 +49,7 @@ struct CacheChange {
     sentTickCount = 0;
   }
 
-  bool isInitialized(){
-	  return (kind != ChangeKind_t::INVALID);
-  }
+  bool isInitialized() { return (kind != ChangeKind_t::INVALID); }
 };
 } // namespace rtps
 

@@ -25,11 +25,11 @@ Author: i11 - Embedded Software, RWTH Aachen University
 #include "rtps/ThreadPool.h"
 
 #include "lwip/tcpip.h"
+#include "rtps/entities/Domain.h"
 #include "rtps/entities/Writer.h"
+#include "rtps/utils/Diagnostics.h"
 #include "rtps/utils/Log.h"
 #include "rtps/utils/udpUtils.h"
-#include "rtps/utils/Diagnostics.h"
-#include "rtps/entities/Domain.h"
 
 using rtps::ThreadPool;
 
@@ -39,7 +39,7 @@ using rtps::ThreadPool;
   if (true) {                                                                  \
     printf("[ThreadPool] ");                                                   \
     printf(__VA_ARGS__);                                                       \
-    printf("\r\n");                                                              \
+    printf("\r\n");                                                            \
   }
 #else
 #define THREAD_POOL_LOG(...) //
@@ -48,8 +48,8 @@ using rtps::ThreadPool;
 ThreadPool::ThreadPool(receiveJumppad_fp receiveCallback, void *callee)
     : m_receiveJumppad(receiveCallback), m_callee(callee) {
 
-  if (!m_outgoingMetaTraffic.init() || !m_outgoingUserTraffic.init()
-		  || !m_incomingMetaTraffic.init() || !m_incomingUserTraffic.init()) {
+  if (!m_outgoingMetaTraffic.init() || !m_outgoingUserTraffic.init() ||
+      !m_incomingMetaTraffic.init() || !m_incomingUserTraffic.init()) {
     return;
   }
   err_t inputErr = sys_sem_new(&m_readerNotificationSem, 0);
@@ -74,15 +74,27 @@ ThreadPool::~ThreadPool() {
   }
 }
 
-void ThreadPool::updateDiagnostics(){
+void ThreadPool::updateDiagnostics() {
 
-  rtps::Diagnostics::ThreadPool::max_ever_elements_incoming_usertraffic_queue = std::max(rtps::Diagnostics::ThreadPool::max_ever_elements_incoming_usertraffic_queue, m_incomingUserTraffic.numElements());
+  rtps::Diagnostics::ThreadPool::max_ever_elements_incoming_usertraffic_queue =
+      std::max(rtps::Diagnostics::ThreadPool::
+                   max_ever_elements_incoming_usertraffic_queue,
+               m_incomingUserTraffic.numElements());
 
-  rtps::Diagnostics::ThreadPool::max_ever_elements_outgoing_usertraffic_queue = std::max(rtps::Diagnostics::ThreadPool::max_ever_elements_outgoing_usertraffic_queue, m_outgoingUserTraffic.numElements());
+  rtps::Diagnostics::ThreadPool::max_ever_elements_outgoing_usertraffic_queue =
+      std::max(rtps::Diagnostics::ThreadPool::
+                   max_ever_elements_outgoing_usertraffic_queue,
+               m_outgoingUserTraffic.numElements());
 
-  rtps::Diagnostics::ThreadPool::max_ever_elements_incoming_metatraffic_queue = std::max(rtps::Diagnostics::ThreadPool::max_ever_elements_incoming_metatraffic_queue, m_incomingMetaTraffic.numElements());
+  rtps::Diagnostics::ThreadPool::max_ever_elements_incoming_metatraffic_queue =
+      std::max(rtps::Diagnostics::ThreadPool::
+                   max_ever_elements_incoming_metatraffic_queue,
+               m_incomingMetaTraffic.numElements());
 
-  rtps::Diagnostics::ThreadPool::max_ever_elements_outgoing_metatraffic_queue = std::max(rtps::Diagnostics::ThreadPool::max_ever_elements_outgoing_metatraffic_queue, m_outgoingMetaTraffic.numElements());
+  rtps::Diagnostics::ThreadPool::max_ever_elements_outgoing_metatraffic_queue =
+      std::max(rtps::Diagnostics::ThreadPool::
+                   max_ever_elements_outgoing_metatraffic_queue,
+               m_outgoingMetaTraffic.numElements());
 }
 
 bool ThreadPool::startThreads() {
@@ -131,66 +143,66 @@ void ThreadPool::stopThreads() {
 }
 
 void ThreadPool::clearQueues() {
-	m_outgoingMetaTraffic.clear();
-	m_outgoingUserTraffic.clear();
-	m_incomingMetaTraffic.clear();
-	m_incomingUserTraffic.clear();
+  m_outgoingMetaTraffic.clear();
+  m_outgoingUserTraffic.clear();
+  m_incomingMetaTraffic.clear();
+  m_incomingUserTraffic.clear();
 }
-
 
 bool ThreadPool::addWorkload(Writer *workload) {
   bool res = false;
-  if(workload->isBuiltinEndpoint()){
+  if (workload->isBuiltinEndpoint()) {
     res = m_outgoingMetaTraffic.moveElementIntoBuffer(std::move(workload));
-  }else{
+  } else {
     res = m_outgoingUserTraffic.moveElementIntoBuffer(std::move(workload));
   }
   if (res) {
     sys_sem_signal(&m_writerNotificationSem);
-  }else{
-	THREAD_POOL_LOG("Failed to enqueue outgoing packet.");
+  } else {
+    THREAD_POOL_LOG("Failed to enqueue outgoing packet.");
   }
 
   return res;
 }
 
-bool ThreadPool::addBuiltinPort(const Ip4Port_t& port){
-	if(m_builtinPortsIdx == m_builtinPorts.size()){
-		return false;
-	}
+bool ThreadPool::addBuiltinPort(const Ip4Port_t &port) {
+  if (m_builtinPortsIdx == m_builtinPorts.size()) {
+    return false;
+  }
 
-	// TODO: Does not allow for participant deletion!
-	m_builtinPorts[m_builtinPortsIdx] = port;
-	m_builtinPortsIdx++;
+  // TODO: Does not allow for participant deletion!
+  m_builtinPorts[m_builtinPortsIdx] = port;
+  m_builtinPortsIdx++;
 
-	return true;
+  return true;
 }
 
-bool ThreadPool::isBuiltinPort(const Ip4Port_t& port){
-	if(getBuiltInMulticastLocator().port == port){
-		return true;
-	}
+bool ThreadPool::isBuiltinPort(const Ip4Port_t &port) {
+  if (getBuiltInMulticastLocator().port == port) {
+    return true;
+  }
 
-	for(unsigned int i = 0; i < m_builtinPortsIdx; i++){
-		if(m_builtinPorts[i] == port){
-			return true;
-		}
-	}
+  for (unsigned int i = 0; i < m_builtinPortsIdx; i++) {
+    if (m_builtinPorts[i] == port) {
+      return true;
+    }
+  }
 
-	return false;
+  return false;
 }
 
 bool ThreadPool::addNewPacket(PacketInfo &&packet) {
   bool res = false;
-  if(isBuiltinPort(packet.destPort)){
-	  res = m_incomingMetaTraffic.moveElementIntoBuffer(std::move(packet));
-  }else{
-	  res = m_incomingUserTraffic.moveElementIntoBuffer(std::move(packet));
+  if (isBuiltinPort(packet.destPort)) {
+    res = m_incomingMetaTraffic.moveElementIntoBuffer(std::move(packet));
+  } else {
+    res = m_incomingUserTraffic.moveElementIntoBuffer(std::move(packet));
   }
   if (res) {
     sys_sem_signal(&m_readerNotificationSem);
-  }else{
-	  THREAD_POOL_LOG("failed to enqueue packet for port %u", static_cast<unsigned int>(packet.destPort));
+  } else {
+    THREAD_POOL_LOG("failed to enqueue packet for port %u",
+                    static_cast<unsigned int>(packet.destPort));
   }
   return res;
 }
@@ -212,21 +224,23 @@ void ThreadPool::doWriterWork() {
   uint32_t usertraffic = 0;
   while (m_running) {
     Writer *workload_usertraffic = nullptr;
-    if(m_outgoingUserTraffic.moveFirstInto(workload_usertraffic)){
-    	workload_usertraffic->progress();
-    	usertraffic++;
+    if (m_outgoingUserTraffic.moveFirstInto(workload_usertraffic)) {
+      workload_usertraffic->progress();
+      usertraffic++;
     }
 
     Writer *workload_metatraffic = nullptr;
-    if(m_outgoingMetaTraffic.moveFirstInto(workload_metatraffic)){
-    	workload_metatraffic->progress();
-    	metatraffic++;
+    if (m_outgoingMetaTraffic.moveFirstInto(workload_metatraffic)) {
+      workload_metatraffic->progress();
+      metatraffic++;
     }
 
-    if(workload_usertraffic != nullptr || workload_metatraffic != nullptr){
-    	continue;
-    }else{
-    	THREAD_POOL_LOG("WriterWorker | User = %u, Meta = %u\r\n", static_cast<unsigned int>(usertraffic), static_cast<unsigned int>(metatraffic));
+    if (workload_usertraffic != nullptr || workload_metatraffic != nullptr) {
+      continue;
+    } else {
+      THREAD_POOL_LOG("WriterWorker | User = %u, Meta = %u\r\n",
+                      static_cast<unsigned int>(usertraffic),
+                      static_cast<unsigned int>(metatraffic));
       updateDiagnostics();
       sys_sem_wait(&m_writerNotificationSem);
     }
@@ -234,7 +248,7 @@ void ThreadPool::doWriterWork() {
 }
 
 void ThreadPool::readCallback(void *args, udp_pcb *target, pbuf *pbuf,
-                              const ip_addr_t * addr, Ip4Port_t port) {
+                              const ip_addr_t *addr, Ip4Port_t port) {
   auto &pool = *static_cast<ThreadPool *>(args);
 
   PacketInfo packet;
@@ -255,11 +269,11 @@ void ThreadPool::readCallback(void *args, udp_pcb *target, pbuf *pbuf,
 
   if (!pool.addNewPacket(std::move(packet))) {
     THREAD_POOL_LOG("ThreadPool: dropped packet\n");
-    if(pool.isBuiltinPort(port)){
-        rtps::Diagnostics::ThreadPool::dropped_packets_metatraffic++;
-    }else{
-        rtps::Diagnostics::ThreadPool::dropped_packets_usertraffic++;
-   	}
+    if (pool.isBuiltinPort(port)) {
+      rtps::Diagnostics::ThreadPool::dropped_packets_metatraffic++;
+    } else {
+      rtps::Diagnostics::ThreadPool::dropped_packets_usertraffic++;
+    }
   }
 }
 
@@ -280,22 +294,24 @@ void ThreadPool::doReaderWork() {
   while (m_running) {
     PacketInfo packet_user;
     auto isUserWorkToDo = m_incomingUserTraffic.moveFirstInto(packet_user);
-    if(isUserWorkToDo){
-    	usertraffic++;
-        m_receiveJumppad(m_callee, const_cast<const PacketInfo &>(packet_user));
+    if (isUserWorkToDo) {
+      usertraffic++;
+      m_receiveJumppad(m_callee, const_cast<const PacketInfo &>(packet_user));
     }
 
     PacketInfo packet_meta;
     auto isMetaWorkToDo = m_incomingMetaTraffic.moveFirstInto(packet_meta);
-    if(isMetaWorkToDo){
-    	metatraffic++;
-        m_receiveJumppad(m_callee, const_cast<const PacketInfo &>(packet_meta));
+    if (isMetaWorkToDo) {
+      metatraffic++;
+      m_receiveJumppad(m_callee, const_cast<const PacketInfo &>(packet_meta));
     }
 
-    if(isUserWorkToDo || isMetaWorkToDo){
-    	continue;
+    if (isUserWorkToDo || isMetaWorkToDo) {
+      continue;
     }
-    THREAD_POOL_LOG("ReaderWorker | User = %u, Meta = %u\r\n", static_cast<unsigned int>(usertraffic), static_cast<unsigned int>(metatraffic));
+    THREAD_POOL_LOG("ReaderWorker | User = %u, Meta = %u\r\n",
+                    static_cast<unsigned int>(usertraffic),
+                    static_cast<unsigned int>(metatraffic));
     updateDiagnostics();
     sys_sem_wait(&m_readerNotificationSem);
   }

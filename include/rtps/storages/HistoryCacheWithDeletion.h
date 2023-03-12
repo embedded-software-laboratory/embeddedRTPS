@@ -58,8 +58,8 @@ public:
     change.data.append(data, size);
     change.sequenceNumber = ++m_lastUsedSequenceNumber;
 
-    if(disposeAfterWrite){
-    	m_dispose_after_write_cnt++;
+    if (disposeAfterWrite) {
+      m_dispose_after_write_cnt++;
     }
 
     CacheChange *place = &m_buffer[m_head];
@@ -140,9 +140,7 @@ public:
     }
   }
 
-  bool isEmpty(){
-	 return (m_head == m_tail);
-  }
+  bool isEmpty() { return (m_head == m_tail); }
 
   const SequenceNumber_t &getCurrentSeqNumMin() const {
     if (m_head == m_tail) {
@@ -160,8 +158,8 @@ public:
     }
   }
 
-  const SequenceNumber_t &getLastUsedSequenceNumber(){
-	  return m_lastUsedSequenceNumber;
+  const SequenceNumber_t &getLastUsedSequenceNumber() {
+    return m_lastUsedSequenceNumber;
   }
 
   void clear() {
@@ -196,9 +194,9 @@ public:
   }
 #endif
   bool isSNInRange(const SequenceNumber_t &sn) {
-	if(isEmpty()){
-	  return false;
-	}
+    if (isEmpty()) {
+      return false;
+    }
     SequenceNumber_t minSN = getCurrentSeqNumMin();
     if (sn < minSN || getCurrentSeqNumMax() < sn) {
       return false;
@@ -263,9 +261,9 @@ private:
   }
 
   inline void incrementTail() {
-	if(m_buffer[m_tail].disposeAfterWrite){
-		m_dispose_after_write_cnt--;
-	}
+    if (m_buffer[m_tail].disposeAfterWrite) {
+      m_dispose_after_write_cnt--;
+    }
     if (m_head != m_tail) {
       m_buffer[m_tail].reset();
       incrementIterator(m_tail);

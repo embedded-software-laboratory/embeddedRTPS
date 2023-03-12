@@ -46,7 +46,7 @@ struct WriterProxy {
 
   // For now, we don't store any packets, so we just request all starting from
   // the next expected
-  SequenceNumberSet getMissing(const SequenceNumber_t & firstAvail,
+  SequenceNumberSet getMissing(const SequenceNumber_t &firstAvail,
                                const SequenceNumber_t &lastAvail) {
     SequenceNumberSet set;
     if (lastAvail < expectedSN) {
@@ -56,8 +56,9 @@ struct WriterProxy {
       set.base = expectedSN;
       SequenceNumber_t i;
       uint32_t bit;
-      for(bit = 0, i = expectedSN; i <= lastAvail && bit < SNS_MAX_NUM_BITS; i++, bit++){
-        set.bitMap[0] |= uint32_t{1} << (31-bit);
+      for (bit = 0, i = expectedSN; i <= lastAvail && bit < SNS_MAX_NUM_BITS;
+           i++, bit++) {
+        set.bitMap[0] |= uint32_t{1} << (31 - bit);
         set.numBits++;
       }
     }

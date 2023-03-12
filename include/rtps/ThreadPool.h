@@ -56,7 +56,7 @@ public:
   static void readCallback(void *arg, udp_pcb *pcb, pbuf *p,
                            const ip_addr_t *addr, Ip4Port_t port);
 
-  bool addBuiltinPort(const Ip4Port_t& port);
+  bool addBuiltinPort(const Ip4Port_t &port);
 
 private:
   receiveJumppad_fp m_receiveJumppad;
@@ -65,7 +65,7 @@ private:
   std::array<sys_thread_t, Config::THREAD_POOL_NUM_WRITERS> m_writers;
   std::array<sys_thread_t, Config::THREAD_POOL_NUM_READERS> m_readers;
 
-  std::array<Ip4Port_t, 2*Config::MAX_NUM_PARTICIPANTS> m_builtinPorts;
+  std::array<Ip4Port_t, 2 * Config::MAX_NUM_PARTICIPANTS> m_builtinPorts;
   size_t m_builtinPortsIdx = 0;
 
   sys_sem_t m_readerNotificationSem;
@@ -73,10 +73,14 @@ private:
 
   void updateDiagnostics();
 
-  using BufferUsertrafficOutgoing = ThreadSafeCircularBuffer<Writer *, Config::THREAD_POOL_WORKLOAD_QUEUE_LENGTH_USERTRAFFIC>;
-  using BufferMetatrafficOutgoing = ThreadSafeCircularBuffer<Writer *, Config::THREAD_POOL_WORKLOAD_QUEUE_LENGTH_METATRAFFIC>;
-  using BufferUsertrafficIncoming = ThreadSafeCircularBuffer<PacketInfo, Config::THREAD_POOL_WORKLOAD_QUEUE_LENGTH_USERTRAFFIC>;
-  using BufferMetatrafficIncoming = ThreadSafeCircularBuffer<PacketInfo, Config::THREAD_POOL_WORKLOAD_QUEUE_LENGTH_METATRAFFIC>;
+  using BufferUsertrafficOutgoing = ThreadSafeCircularBuffer<
+      Writer *, Config::THREAD_POOL_WORKLOAD_QUEUE_LENGTH_USERTRAFFIC>;
+  using BufferMetatrafficOutgoing = ThreadSafeCircularBuffer<
+      Writer *, Config::THREAD_POOL_WORKLOAD_QUEUE_LENGTH_METATRAFFIC>;
+  using BufferUsertrafficIncoming = ThreadSafeCircularBuffer<
+      PacketInfo, Config::THREAD_POOL_WORKLOAD_QUEUE_LENGTH_USERTRAFFIC>;
+  using BufferMetatrafficIncoming = ThreadSafeCircularBuffer<
+      PacketInfo, Config::THREAD_POOL_WORKLOAD_QUEUE_LENGTH_METATRAFFIC>;
 
   BufferUsertrafficOutgoing m_outgoingUserTraffic;
   BufferMetatrafficOutgoing m_outgoingMetaTraffic;
@@ -84,7 +88,7 @@ private:
   BufferUsertrafficIncoming m_incomingUserTraffic;
   BufferMetatrafficIncoming m_incomingMetaTraffic;
 
-  bool isBuiltinPort(const Ip4Port_t& port);
+  bool isBuiltinPort(const Ip4Port_t &port);
   static void writerThreadFunction(void *arg);
   static void readerThreadFunction(void *arg);
   void doWriterWork();

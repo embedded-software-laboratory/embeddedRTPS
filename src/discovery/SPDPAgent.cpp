@@ -57,12 +57,13 @@ void SPDPAgent::start() {
     return;
   }
   m_running = true;
-  auto t = sys_thread_new("SPDPThread", runBroadcast, this,
-                 Config::SPDP_WRITER_STACKSIZE, Config::SPDP_WRITER_PRIO);
-  if(t == nullptr){
-	  while(1){
-		  SPDP_LOG("Failed to create SPDP thread\r\n");
-	  }
+  auto t =
+      sys_thread_new("SPDPThread", runBroadcast, this,
+                     Config::SPDP_WRITER_STACKSIZE, Config::SPDP_WRITER_PRIO);
+  if (t == nullptr) {
+    while (1) {
+      SPDP_LOG("Failed to create SPDP thread\r\n");
+    }
   }
 }
 

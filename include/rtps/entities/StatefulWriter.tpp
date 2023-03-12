@@ -38,7 +38,7 @@ using rtps::StatefulWriterT;
   if (true) {                                                                  \
     printf("[Stateful Writer %s] ", this->m_attributes.topicName);             \
     printf(__VA_ARGS__);                                                       \
-    printf("\r\n");                                                              \
+    printf("\r\n");                                                            \
   }
 #else
 #define SFW_LOG(...) //
@@ -137,7 +137,8 @@ const rtps::CacheChange *StatefulWriterT<NetworkDriver>::newChange(
   if (m_history.isFull()) {
     // Right now we drop elements anyway because we cannot detect non-responding
     // readers yet. return nullptr;
-    SequenceNumber_t newMin = ++SequenceNumber_t(m_history.getCurrentSeqNumMin());
+    SequenceNumber_t newMin =
+        ++SequenceNumber_t(m_history.getCurrentSeqNumMin());
     if (m_nextSequenceNumberToSend < newMin) {
       m_nextSequenceNumberToSend =
           newMin; // Make sure we have the correct sn to send
@@ -161,20 +162,21 @@ template <class NetworkDriver> void StatefulWriterT<NetworkDriver>::progress() {
   Lock{m_mutex};
   CacheChange *next = m_history.getChangeBySN(m_nextSequenceNumberToSend);
   if (next != nullptr) {
-	uint32_t i = 0;
+    uint32_t i = 0;
     for (const auto &proxy : m_proxies) {
       if (!m_enforceUnicast) {
         sendDataWRMulticast(proxy, next);
       } else {
-    	  i++;
+        i++;
         sendData(proxy, next);
       }
     }
 
-    SFW_LOG("Sending data with SN %u.%u", (int)m_nextSequenceNumberToSend.low, (int)m_nextSequenceNumberToSend.high);
+    SFW_LOG("Sending data with SN %u.%u", (int)m_nextSequenceNumberToSend.low,
+            (int)m_nextSequenceNumberToSend.high);
 
-    if(next->disposeAfterWrite){
-    	SFW_LOG("Dispose after write msg sent to %u proxies\r\n", (int)i);
+    if (next->disposeAfterWrite) {
+      SFW_LOG("Dispose after write msg sent to %u proxies\r\n", (int)i);
     }
 
     /*
@@ -187,11 +189,12 @@ template <class NetworkDriver> void StatefulWriterT<NetworkDriver>::progress() {
      */
     if (next->disposeAfterWrite) {
       next->sentTickCount = xTaskGetTickCount();
-      if(!m_disposeWithDelay.copyElementIntoBuffer(next->sequenceNumber)){
-    	  SFW_LOG("Failed to enqueue dispose after write!");
-    	  m_history.dropChange(next->sequenceNumber);
-      }else{
-          SFW_LOG("Delayed dispose scheduled for sn %u %u\r\n",  (int)next->sequenceNumber.high, (int)next->sequenceNumber.low);
+      if (!m_disposeWithDelay.copyElementIntoBuffer(next->sequenceNumber)) {
+        SFW_LOG("Failed to enqueue dispose after write!");
+        m_history.dropChange(next->sequenceNumber);
+      } else {
+        SFW_LOG("Delayed dispose scheduled for sn %u %u\r\n",
+                (int)next->sequenceNumber.high, (int)next->sequenceNumber.low);
       }
     }
 
@@ -202,8 +205,6 @@ template <class NetworkDriver> void StatefulWriterT<NetworkDriver>::progress() {
     SFW_LOG("Couldn't get a CacheChange with SN (%i,%u)\n",
             m_nextSequenceNumberToSend.high, m_nextSequenceNumberToSend.low);
   }
-
-
 }
 
 template <class NetworkDriver>
@@ -249,22 +250,21 @@ void StatefulWriterT<NetworkDriver>::onNewAckNack(
   reader->finalFlag = msg.header.finalFlag();
   reader->lastAckNackSequenceNumber = msg.readerSNState.base;
 
-
   rtps::SequenceNumber_t nextSN = msg.readerSNState.base;
 
   // Preemptive ack nack
-  if (nextSN.low == 0 && nextSN.high == 0)
-  {
+  if (nextSN.low == 0 && nextSN.high == 0) {
     sendHeartBeat();
     return;
   }
 
-  if(m_history.isEmpty()){
+  if (m_history.isEmpty()) {
     // We have never sent anything -> heartbeat
-    if(m_history.getLastUsedSequenceNumber() == rtps::SequenceNumber_t{0,0}){
+    if (m_history.getLastUsedSequenceNumber() == rtps::SequenceNumber_t{0, 0}) {
       sendHeartBeat();
-    }else{
-      // No data but we have sent something in the past -> GapStart = readerSNState.base, NextValid = lastUsedSequenceNumber+1
+    } else {
+      // No data but we have sent something in the past -> GapStart =
+      // readerSNState.base, NextValid = lastUsedSequenceNumber+1
       rtps::SequenceNumber_t nextValid = m_history.getLastUsedSequenceNumber();
       ++nextValid;
       sendGap(*reader, msg.readerSNState.base, nextValid);
@@ -274,63 +274,55 @@ void StatefulWriterT<NetworkDriver>::onNewAckNack(
   }
 
   // Requesting smaller SN than minimum sequence number -> sendGap
-  if (msg.readerSNState.base < m_history.getCurrentSeqNumMin())
-  {
+  if (msg.readerSNState.base < m_history.getCurrentSeqNumMin()) {
     sendGap(*reader, msg.readerSNState.base, m_history.getCurrentSeqNumMin());
     return;
   }
 
-  SFW_LOG("Received non-preemptive acknack with %u bits set.\r\n", msg.readerSNState.numBits);
-  for (uint32_t i = 0; i < msg.readerSNState.numBits && nextSN <= m_history.getLastUsedSequenceNumber(); ++i, ++nextSN)
-   {
+  SFW_LOG("Received non-preemptive acknack with %u bits set.\r\n",
+          msg.readerSNState.numBits);
+  for (uint32_t i = 0; i < msg.readerSNState.numBits &&
+                       nextSN <= m_history.getLastUsedSequenceNumber();
+       ++i, ++nextSN) {
 
-     if (msg.readerSNState.isSet(i))
-     {
+    if (msg.readerSNState.isSet(i)) {
 
-       SFW_LOG("Looking for change %u | Bit %u", nextSN.low, i);
-       const rtps::CacheChange *cache = m_history.getChangeBySN(nextSN);
+      SFW_LOG("Looking for change %u | Bit %u", nextSN.low, i);
+      const rtps::CacheChange *cache = m_history.getChangeBySN(nextSN);
 
-       // We still have the cache, send DATA
-       if (cache != nullptr)
-       {
-         if (cache->disposeAfterWrite)
-         {
-           SFW_LOG("SERVING FROM DISPOSE AFTER WRITE CACHE\r\n");
-         }
-         sendData(*reader, cache);
-       }
-       else
-       {
-        SFW_LOG("> Change not found, search for next valid SN %u \r\n", nextSN.low);
-         // Cache not found, look for next valid SN
-         rtps::SequenceNumber_t gapBegin = nextSN;
-         rtps::CacheChange *nextValidChange = nullptr;
-         uint32_t j = i+1;
-         for (++nextSN; nextSN <= m_history.getLastUsedSequenceNumber(); ++nextSN, ++j)
-         {
-           nextValidChange = m_history.getChangeBySN(nextSN);
-           if (nextValidChange != nullptr)
-           {
-             break;
-           }
-         }
-         if (nextValidChange == nullptr)
-         {
-           sendGap(*reader, gapBegin, nextSN);
-           return;
-         }
-         else
-         {
-           sendGap(*reader, gapBegin, nextValidChange->sequenceNumber);
-         }
-         //sendData(nullptr, nextValidChange);
-         nextSN = nextValidChange->sequenceNumber;
-         --nextSN;
-         i = --j;
-       }
-     }
-   }
-
+      // We still have the cache, send DATA
+      if (cache != nullptr) {
+        if (cache->disposeAfterWrite) {
+          SFW_LOG("SERVING FROM DISPOSE AFTER WRITE CACHE\r\n");
+        }
+        sendData(*reader, cache);
+      } else {
+        SFW_LOG("> Change not found, search for next valid SN %u \r\n",
+                nextSN.low);
+        // Cache not found, look for next valid SN
+        rtps::SequenceNumber_t gapBegin = nextSN;
+        rtps::CacheChange *nextValidChange = nullptr;
+        uint32_t j = i + 1;
+        for (++nextSN; nextSN <= m_history.getLastUsedSequenceNumber();
+             ++nextSN, ++j) {
+          nextValidChange = m_history.getChangeBySN(nextSN);
+          if (nextValidChange != nullptr) {
+            break;
+          }
+        }
+        if (nextValidChange == nullptr) {
+          sendGap(*reader, gapBegin, nextSN);
+          return;
+        } else {
+          sendGap(*reader, gapBegin, nextValidChange->sequenceNumber);
+        }
+        // sendData(nullptr, nextValidChange);
+        nextSN = nextValidChange->sequenceNumber;
+        --nextSN;
+        i = --j;
+      }
+    }
+  }
 }
 
 template <class NetworkDriver>
@@ -370,7 +362,8 @@ bool StatefulWriterT<NetworkDriver>::sendData(const ReaderProxy &reader,
 
 template <class NetworkDriver>
 void StatefulWriterT<NetworkDriver>::sendGap(
-    const ReaderProxy &reader, const SequenceNumber_t& firstMissing, const SequenceNumber_t& nextValid) {
+    const ReaderProxy &reader, const SequenceNumber_t &firstMissing,
+    const SequenceNumber_t &nextValid) {
   INIT_GUARD()
   // TODO smarter packaging e.g. by creating MessageStruct and serialize after
   // adjusting values Reusing the pbuf is not possible. See
@@ -388,9 +381,9 @@ void StatefulWriterT<NetworkDriver>::sendGap(
   info.destAddr = locator.getIp4Address();
   info.destPort = (Ip4Port_t)locator.port;
 
-  MessageFactory::addSubmessageGap(info.buffer,
-                                   m_attributes.endpointGuid.entityId,
-                                   reader.remoteReaderGuid.entityId, firstMissing, nextValid);
+  MessageFactory::addSubmessageGap(
+      info.buffer, m_attributes.endpointGuid.entityId,
+      reader.remoteReaderGuid.entityId, firstMissing, nextValid);
   m_transport->sendPacket(info);
 }
 
@@ -446,25 +439,25 @@ void StatefulWriterT<NetworkDriver>::sendHeartBeatLoop() {
     sendHeartBeat();
     dropDisposeAfterWriteChanges();
     bool unconfirmed_changes = false;
-    for(auto it : m_proxies){
-    	if(it.lastAckNackSequenceNumber < m_nextSequenceNumberToSend){
-    		unconfirmed_changes = true;
-    		break;
-    	}
+    for (auto it : m_proxies) {
+      if (it.lastAckNackSequenceNumber < m_nextSequenceNumberToSend) {
+        unconfirmed_changes = true;
+        break;
+      }
     }
 
     // Temporarily increase HB frequency if there are unconfirmed remote changes
-    if(unconfirmed_changes){
-    	SFW_LOG("HB SPEEDUP!\r\n");
+    if (unconfirmed_changes) {
+      SFW_LOG("HB SPEEDUP!\r\n");
 #ifdef OS_IS_FREERTOS
-    	vTaskDelay(pdMS_TO_TICKS(Config::SF_WRITER_HB_PERIOD_MS/4));
-    }else{
+      vTaskDelay(pdMS_TO_TICKS(Config::SF_WRITER_HB_PERIOD_MS / 4));
+    } else {
       vTaskDelay(pdMS_TO_TICKS(Config::SF_WRITER_HB_PERIOD_MS));
     }
 #else
-    	sys_msleep(Config::SF_WRITER_HB_PERIOD_MS/4);
-    }else{
-    	sys_msleep(Config::SF_WRITER_HB_PERIOD_MS);
+      sys_msleep(Config::SF_WRITER_HB_PERIOD_MS / 4);
+    } else {
+      sys_msleep(Config::SF_WRITER_HB_PERIOD_MS);
     }
 #endif
   }
@@ -473,31 +466,30 @@ void StatefulWriterT<NetworkDriver>::sendHeartBeatLoop() {
 
 template <class NetworkDriver>
 void StatefulWriterT<NetworkDriver>::dropDisposeAfterWriteChanges() {
-	SequenceNumber_t oldest_retained;
-	while(m_disposeWithDelay.peakFirst(oldest_retained)){
+  SequenceNumber_t oldest_retained;
+  while (m_disposeWithDelay.peakFirst(oldest_retained)) {
 
-		CacheChange* change = m_history.getChangeBySN(oldest_retained);
-		if(change == nullptr || !change->disposeAfterWrite){
-			// Not in history anymore, drop
-			m_disposeWithDelay.moveFirstInto(oldest_retained);
-			return;
-		}
+    CacheChange *change = m_history.getChangeBySN(oldest_retained);
+    if (change == nullptr || !change->disposeAfterWrite) {
+      // Not in history anymore, drop
+      m_disposeWithDelay.moveFirstInto(oldest_retained);
+      return;
+    }
 
-		auto age = (xTaskGetTickCount() - change->sentTickCount);
-		if(age > pdMS_TO_TICKS(4000)){
-			m_history.dropChange(change->sequenceNumber);
-			SFW_LOG("Removing SN %u %u for good\r\n", static_cast<unsigned int>(oldest_retained.low),
-					static_cast<unsigned int>(oldest_retained.high));
-			SequenceNumber_t tmp;
-			m_disposeWithDelay.moveFirstInto(tmp);
+    auto age = (xTaskGetTickCount() - change->sentTickCount);
+    if (age > pdMS_TO_TICKS(4000)) {
+      m_history.dropChange(change->sequenceNumber);
+      SFW_LOG("Removing SN %u %u for good\r\n",
+              static_cast<unsigned int>(oldest_retained.low),
+              static_cast<unsigned int>(oldest_retained.high));
+      SequenceNumber_t tmp;
+      m_disposeWithDelay.moveFirstInto(tmp);
 
-			continue;
-		}else{
-			return;
-		}
-
-	}
-
+      continue;
+    } else {
+      return;
+    }
+  }
 }
 
 template <class NetworkDriver>
@@ -517,38 +509,40 @@ void StatefulWriterT<NetworkDriver>::sendHeartBeat() {
     SequenceNumber_t firstSN;
     SequenceNumber_t lastSN;
 
-
     MessageFactory::addHeader(info.buffer, m_attributes.endpointGuid.prefix);
 
     {
       Lock lock(m_mutex);
 
-      if(!m_history.isEmpty()){
-			firstSN = m_history.getCurrentSeqNumMin();
-			lastSN = m_history.getCurrentSeqNumMax();
+      if (!m_history.isEmpty()) {
+        firstSN = m_history.getCurrentSeqNumMin();
+        lastSN = m_history.getCurrentSeqNumMax();
 
+        // Otherwise we may announce changes that have not been sent at least
+        // once!
+        if (lastSN > m_nextSequenceNumberToSend ||
+            lastSN == m_nextSequenceNumberToSend) {
+          lastSN = m_nextSequenceNumberToSend;
+          --lastSN;
+        }
 
-			// Otherwise we may announce changes that have not been sent at least once!
-			if(lastSN > m_nextSequenceNumberToSend || lastSN == m_nextSequenceNumberToSend){
-			  lastSN = m_nextSequenceNumberToSend;
-			  --lastSN;
-			}
-
-			// Proxy has confirmed all sequence numbers and set final flag
-			if ((proxy.lastAckNackSequenceNumber > lastSN) && proxy.finalFlag &&
-			  proxy.ackNackCount.value > 0) {
-			  continue;
-			}
-      }else if(m_history.getLastUsedSequenceNumber() == SequenceNumber_t{0,0}){
-    	  firstSN = SequenceNumber_t{0,1};
-    	  lastSN = SequenceNumber_t{0,0};
-      }else{
-    	  firstSN = SequenceNumber_t{0,1};
-    	  lastSN = m_history.getLastUsedSequenceNumber();
+        // Proxy has confirmed all sequence numbers and set final flag
+        if ((proxy.lastAckNackSequenceNumber > lastSN) && proxy.finalFlag &&
+            proxy.ackNackCount.value > 0) {
+          continue;
+        }
+      } else if (m_history.getLastUsedSequenceNumber() ==
+                 SequenceNumber_t{0, 0}) {
+        firstSN = SequenceNumber_t{0, 1};
+        lastSN = SequenceNumber_t{0, 0};
+      } else {
+        firstSN = SequenceNumber_t{0, 1};
+        lastSN = m_history.getLastUsedSequenceNumber();
       }
     }
 
-    SFW_LOG("Sending HB with SN range [%u.%u;%u.%u]",firstSN.low, firstSN.high, lastSN.low, lastSN.high);
+    SFW_LOG("Sending HB with SN range [%u.%u;%u.%u]", firstSN.low, firstSN.high,
+            lastSN.low, lastSN.high);
 
     MessageFactory::addHeartbeat(
         info.buffer, m_attributes.endpointGuid.entityId,

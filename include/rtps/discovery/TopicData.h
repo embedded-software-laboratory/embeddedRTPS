@@ -69,8 +69,7 @@ struct TopicData {
   TopicData(Guid_t guid, ReliabilityKind_t reliability, FullLengthLocator loc)
       : endpointGuid(guid), typeName{'\0'}, topicName{'\0'},
         reliabilityKind(reliability),
-        durabilityKind(DurabilityKind_t::VOLATILE), unicastLocator(loc) {
-  }
+        durabilityKind(DurabilityKind_t::VOLATILE), unicastLocator(loc) {}
 
   bool matchesTopicOf(const TopicData &other);
 

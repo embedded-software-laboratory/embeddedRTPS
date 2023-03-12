@@ -58,14 +58,15 @@ private:
   HistoryCacheWithDeletion<Config::HISTORY_SIZE_STATEFUL> m_history;
 
   /*
-   * Cache changes marked as disposeAfterWrite are retained for a short amount in case of retransmission
-   * The whole 'disposeAfterWrite' mechanisms only exists to allow for repeated creation and deletion of endpoints during operation.
-   * Otherwise the history will quickly reach its limits.
-   * Will be replaced with something more elegant in the future.
+   * Cache changes marked as disposeAfterWrite are retained for a short amount
+   * in case of retransmission The whole 'disposeAfterWrite' mechanisms only
+   * exists to allow for repeated creation and deletion of endpoints during
+   * operation. Otherwise the history will quickly reach its limits. Will be
+   * replaced with something more elegant in the future.
    */
   ThreadSafeCircularBuffer<SequenceNumber_t, 10> m_disposeWithDelay;
   void dropDisposeAfterWriteChanges();
-  
+
   sys_thread_t m_heartbeatThread;
 
   Count_t m_hbCount{1};
@@ -78,7 +79,8 @@ private:
   static void hbFunctionJumppad(void *thisPointer);
   void sendHeartBeatLoop();
   void sendHeartBeat();
-  void sendGap(const ReaderProxy &reader, const SequenceNumber_t& firstMissing, const SequenceNumber_t& nextValid);
+  void sendGap(const ReaderProxy &reader, const SequenceNumber_t &firstMissing,
+               const SequenceNumber_t &nextValid);
 };
 
 using StatefulWriter = StatefulWriterT<UdpDriver>;
