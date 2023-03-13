@@ -80,7 +80,7 @@ void StatefulReaderT<NetworkDriver>::newChange(
                 cacheChange.writerGuid.prefix.id[3]);
         executeCallbacks(cacheChange);
         ++proxy.expectedSN;
-        printf("Done processing SN %u.%u\r\n", (int)cacheChange.sn.high,
+        SFR_LOG("Done processing SN %u.%u\r\n", (int)cacheChange.sn.high,
                (int)cacheChange.sn.low);
         return;
       } else {
