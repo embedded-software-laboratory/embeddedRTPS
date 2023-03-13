@@ -71,6 +71,7 @@ struct TopicData {
         reliabilityKind(reliability),
         durabilityKind(DurabilityKind_t::VOLATILE), unicastLocator(loc) {}
 
+
   bool matchesTopicOf(const TopicData &other);
 
   bool readFromUcdrBuffer(ucdrBuffer &buffer);
