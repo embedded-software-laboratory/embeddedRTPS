@@ -403,23 +403,25 @@ rtps::MessageReceiver *Participant::getMessageReceiver() { return &m_receiver; }
 
 bool Participant::checkAndResetHeartbeats() {
   Lock{m_mutex};
-  PARTICIPANT_LOG("Have %u remote participants\n",
+  Lock{m_spdpAgent.m_mutex};
+  PARTICIPANT_LOG("Have %u remote participants",
                   (unsigned int)m_remoteParticipants.getNumElements());
   PARTICIPANT_LOG(
-      "Unmatched remote writers/readers, %u / %u\n",
+      "Unmatched remote writers/readers, %u / %u",
       static_cast<unsigned int>(m_sedpAgent.getNumRemoteUnmatchedWriters()),
       static_cast<unsigned int>(m_sedpAgent.getNumRemoteUnmatchedReaders()));
   for (auto &remote : m_remoteParticipants) {
-    PARTICIPANT_LOG("remote participant age = %u\n",
-                    (unsigned int)remote.getAliveSignalAgeInMilliseconds());
+    PARTICIPANT_LOG("Remote GUID = %u %u %u %u | Age = %u [ms]",
+                    remote.m_guid.prefix.id[4], remote.m_guid.prefix.id[5], remote.m_guid.prefix.id[6], remote.m_guid.prefix.id[7], (unsigned int)remote.getAliveSignalAgeInMilliseconds() );
     if (remote.isAlive()) {
-      PARTICIPANT_LOG("remote participant is alive\n");
       continue;
     }
-    PARTICIPANT_LOG("removing remote participant\n");
+    PARTICIPANT_LOG("removing remote participant");
     bool success = removeRemoteParticipant(remote.m_guid.prefix);
     if (!success) {
       return false;
+    }else{
+    	return true;
     }
   }
   return true;

@@ -156,6 +156,7 @@ void SEDPAgent::removeUnmatchedEntity(const Guid_t &guid) {
 
 void SEDPAgent::removeUnmatchedEntitiesOfParticipant(
     const GuidPrefix_t &guidPrefix) {
+  Lock{m_mutex};
   auto isElementToRemove = [&](const TopicDataCompressed &topicData) {
     return topicData.endpointGuid.prefix == guidPrefix;
   };

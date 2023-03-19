@@ -151,12 +151,12 @@ void SPDPAgent::processProxyData() {
     return; // Our own packet
   }
 
+  SPDP_LOG("Message from GUID = %u %u %u %u", m_proxyDataBuffer.m_guid.prefix.id[4], m_proxyDataBuffer.m_guid.prefix.id[5], m_proxyDataBuffer.m_guid.prefix.id[6], m_proxyDataBuffer.m_guid.prefix.id[7]);
   const rtps::ParticipantProxyData *remote_part;
   remote_part =
       mp_participant->findRemoteParticipant(m_proxyDataBuffer.m_guid.prefix);
   if (remote_part != nullptr) {
-    SPDP_LOG("Not adding remote participant guid.prefix = %u \n",
-             (unsigned int)Guid_t::sum(remote_part->m_guid));
+    SPDP_LOG("Not adding this participant");
     mp_participant->refreshRemoteParticipantLiveliness(
         m_proxyDataBuffer.m_guid.prefix);
     return; // Already in our list
@@ -202,7 +202,6 @@ bool SPDPAgent::addProxiesForBuiltInEndpoints() {
   ip4_addr_t ip4addr = locator->getIp4Address();
   const char *addr = ip4addr_ntoa(&ip4addr);
 #endif
-  SPDP_LOG("Adding IPv4 Locator %s\n", addr);
 
   if (m_proxyDataBuffer.hasPublicationReader()) {
     const ReaderProxy proxy{{m_proxyDataBuffer.m_guid.prefix,

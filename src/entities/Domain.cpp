@@ -469,6 +469,9 @@ rtps::Reader *Domain::createReader(Participant &part, const char *topicName,
 
 bool rtps::Domain::deleteReader(Participant &part, Reader *reader) {
   Lock{m_mutex};
+  if(reader == nullptr || !reader->isInitialized()){
+	  return false;
+  }
   if (!part.deleteReader(reader)) {
     return false;
   }
@@ -479,6 +482,9 @@ bool rtps::Domain::deleteReader(Participant &part, Reader *reader) {
 
 bool rtps::Domain::deleteWriter(Participant &part, Writer *writer) {
   Lock{m_mutex};
+  if(writer == nullptr || !writer->isInitialized()){
+	  return false;
+  }
   if (!part.deleteWriter(writer)) {
     return false;
   }

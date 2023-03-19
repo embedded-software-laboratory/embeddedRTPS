@@ -137,7 +137,7 @@ public:
     bool retcode = false;
     for (auto it = begin(); it != end(); ++it) {
       if (jumppad(isCorrectElement, *it)) {
-        const uint8_t bucket = it.m_bit / uint32_t{8};
+        const uint32_t bucket = it.m_bit / uint32_t{8};
         const uint32_t pos =
             it.m_bit &
             uint32_t{

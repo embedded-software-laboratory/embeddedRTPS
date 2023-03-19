@@ -34,6 +34,7 @@ void ParticipantProxyData::reset() {
   m_guid = Guid_t{GUIDPREFIX_UNKNOWN, ENTITYID_UNKNOWN};
   m_manualLivelinessCount = Count_t{1};
   m_expectsInlineQos = false;
+  onAliveSignal();
   for (int i = 0; i < Config::SPDP_MAX_NUM_LOCATORS; ++i) {
     m_metatrafficUnicastLocatorList[i].setInvalid();
     m_metatrafficMulticastLocatorList[i].setInvalid();
@@ -173,12 +174,12 @@ bool ParticipantProxyData::readLocatorIntoList(
       if (ret && (full_length_locator.isSameSubnet() ||
                   full_length_locator.isMulticastAddress())) {
         proxy_locator = LocatorIPv4(full_length_locator);
-        SPDP_LOG("Adding locator: %u %u %u %u \n",
+        SPDP_LOG("Adding locator: %u %u %u %u",
                  (int)proxy_locator.address[0], (int)proxy_locator.address[1],
                  (int)proxy_locator.address[2], (int)proxy_locator.address[3]);
         return true;
       } else {
-        SPDP_LOG("Ignoring locator: %u %u %u %u \n",
+        SPDP_LOG("Ignoring locator: %u %u %u %u",
                  (int)full_length_locator.address[12],
                  (int)full_length_locator.address[13],
                  (int)full_length_locator.address[14],
