@@ -60,11 +60,6 @@ void SPDPAgent::start() {
   auto t =
       sys_thread_new("SPDPThread", runBroadcast, this,
                      Config::SPDP_WRITER_STACKSIZE, Config::SPDP_WRITER_PRIO);
-  if (t == nullptr) {
-    while (1) {
-      SPDP_LOG("Failed to create SPDP thread\r\n");
-    }
-  }
 }
 
 void SPDPAgent::stop() { m_running = false; }
