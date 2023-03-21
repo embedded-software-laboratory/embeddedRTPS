@@ -169,6 +169,10 @@ void Domain::createBuiltinWritersAndReaders(Participant &part) {
   spdpReaderAttributes.endpointGuid = {
       part.m_guidPrefix, ENTITYID_SPDP_BUILTIN_PARTICIPANT_READER};
   spdpReader->init(spdpReaderAttributes);
+	  spdpReader->addNewMatchedWriter(
+  ReaderProxy{{part.m_guidPrefix, ENTITYID_SPDP_BUILTIN_PARTICIPANT_WRITER},
+              getBuiltInMulticastLocator(),
+               false});
 
   // SEDP
 
