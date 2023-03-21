@@ -390,14 +390,8 @@ bool SEDPAgent::announceEndpointDeletion(A *local_endpoint,
   ucdr_serialize_array_uint8_t(
       &microbuffer, local_endpoint->m_attributes.endpointGuid.prefix.id.data(),
       sizeof(GuidPrefix_t::id));
-  ucdr_serialize_array_uint8_t(
-      &microbuffer,
-      local_endpoint->m_attributes.endpointGuid.entityId.entityKey.data(),
-      sizeof(EntityId_t::entityKey));
-  ucdr_serialize_uint8_t(
-      &microbuffer,
-      static_cast<uint8_t>(
-          local_endpoint->m_attributes.endpointGuid.entityId.entityKind));
+  ucdr_serialize_array_uint8_t(&microbuffer, local_endpoint->m_attributes.endpointGuid.entityId.entityKey.data(), 3);
+  ucdr_serialize_uint8_t(&microbuffer, static_cast<uint8_t>(local_endpoint->m_attributes.endpointGuid.entityId.entityKind));
 
   ucdr_serialize_uint16_t(&microbuffer, ParameterId::PID_STATUS_INFO);
   ucdr_serialize_uint16_t(&microbuffer, static_cast<uint16_t>(4));
