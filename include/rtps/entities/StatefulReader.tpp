@@ -167,9 +167,43 @@ bool StatefulReaderT<NetworkDriver>::onNewGapMessage(
         break;
       }
     }
-  }
 
-  return true;
+    return true;
+
+  }else{
+
+	  // Case 3: We are expecting a sequence number beyond gap list base,
+	  // check if we need to update expectedSN
+	  auto i = msg.gapList.base;
+	  for(uint32_t bit = 0; bit < SNS_MAX_NUM_BITS; i++, bit++){
+		if(i < writer->expectedSN){
+			continue;
+		}
+
+		if(msg.gapList.isSet(bit)){
+			writer->expectedSN++;
+		}else{
+		  PacketInfo info;
+		  info.srcPort = m_srcPort;
+		  info.destAddr = writer->remoteLocator.getIp4Address();
+		  info.destPort = writer->remoteLocator.port;
+		  rtps::MessageFactory::addHeader(info.buffer,
+											m_attributes.endpointGuid.prefix);
+		  SequenceNumberSet set;
+		  set.base = writer->expectedSN;
+		  set.numBits = 1;
+		  set.bitMap[0] = set.bitMap[0] |= uint32_t{1} << 31;
+		  rtps::MessageFactory::addAckNack(info.buffer, msg.writerId, msg.readerId,
+											 set, writer->getNextAckNackCount(),
+											 false);
+		  m_transport->sendPacket(info);
+
+		  return true;
+		}
+	  }
+
+
+  }
 }
 
 template <class NetworkDriver>

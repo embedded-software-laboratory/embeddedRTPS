@@ -193,7 +193,7 @@ struct SequenceNumber_t {
   }
 };
 
-#define SNS_MAX_NUM_BITS 32
+#define SNS_MAX_NUM_BITS 256
 #define SNS_NUM_BYTES (SNS_MAX_NUM_BITS / 8)
 static_assert(!(SNS_MAX_NUM_BITS % 32) && SNS_MAX_NUM_BITS != 0,
               "SNS_MAX_NUM_BITS must be multiple of 32");
