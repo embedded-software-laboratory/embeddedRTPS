@@ -22,6 +22,9 @@ This file is part of embeddedRTPS.
 Author: i11 - Embedded Software, RWTH Aachen University
 */
 
+// Copyright 2023 Apex.AI, Inc.
+// All rights reserved.
+
 #ifndef RTPS_PACKETINFO_H
 #define RTPS_PACKETINFO_H
 
@@ -45,11 +48,7 @@ struct PacketInfo {
   PacketInfo() = default;
   ~PacketInfo() = default;
 
-  PacketInfo &operator=(const PacketInfo &other) {
-    copyTriviallyCopyable(other);
-    this->buffer = other.buffer;
-    return *this;
-  }
+  PacketInfo &operator=(const PacketInfo &other) = delete;
 
   PacketInfo &operator=(PacketInfo &&other) noexcept {
     copyTriviallyCopyable(other);
