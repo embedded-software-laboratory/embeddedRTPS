@@ -78,7 +78,7 @@ public:
       return;
     }
 
-    while (m_buffer[m_tail].sequenceNumber <= sn) {
+    while (m_buffer[m_tail].sequenceNumber <= sn && (m_head != m_tail)) {
       incrementTail();
     }
   }

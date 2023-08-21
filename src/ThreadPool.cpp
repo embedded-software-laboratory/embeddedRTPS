@@ -159,6 +159,11 @@ bool ThreadPool::addWorkload(Writer *workload) {
   if (res) {
     sys_sem_signal(&m_writerNotificationSem);
   } else {
+	if(workload->isBuiltinEndpoint()){
+		rtps::Diagnostics::ThreadPool::dropped_outgoing_packets_metatraffic++;
+	}else{
+		rtps::Diagnostics::ThreadPool::dropped_outgoing_packets_usertraffic++;
+	}
     THREAD_POOL_LOG("Failed to enqueue outgoing packet.");
   }
 
@@ -220,27 +225,27 @@ void ThreadPool::writerThreadFunction(void *arg) {
 }
 
 void ThreadPool::doWriterWork() {
-  uint32_t metatraffic = 0;
-  uint32_t usertraffic = 0;
   while (m_running) {
     Writer *workload_usertraffic = nullptr;
-    if (m_outgoingUserTraffic.moveFirstInto(workload_usertraffic)) {
+    bool workload_usertraffic_available = m_outgoingUserTraffic.moveFirstInto(workload_usertraffic);
+    if (workload_usertraffic_available) {
       workload_usertraffic->progress();
-      usertraffic++;
+      Diagnostics::ThreadPool::processed_outgoing_usertraffic++;
     }
 
     Writer *workload_metatraffic = nullptr;
-    if (m_outgoingMetaTraffic.moveFirstInto(workload_metatraffic)) {
+    bool workload_metatraffic_available = m_outgoingMetaTraffic.moveFirstInto(workload_metatraffic);
+    if (workload_metatraffic_available) {
       workload_metatraffic->progress();
-      metatraffic++;
+      Diagnostics::ThreadPool::processed_outgoing_metatraffic++;
     }
 
-    if (workload_usertraffic != nullptr || workload_metatraffic != nullptr) {
+    if (workload_usertraffic_available || workload_metatraffic_available) {
       continue;
     } else {
       THREAD_POOL_LOG("WriterWorker | User = %u, Meta = %u\r\n",
-                      static_cast<unsigned int>(usertraffic),
-                      static_cast<unsigned int>(metatraffic));
+                      static_cast<unsigned int>(Diagnostics::ThreadPool::processed_outgoing_usertraffic),
+                      static_cast<unsigned int>(Diagnostics::ThreadPool::processed_outgoing_metatraffic));
       updateDiagnostics();
       sys_sem_wait(&m_writerNotificationSem);
     }
@@ -270,9 +275,9 @@ void ThreadPool::readCallback(void *args, udp_pcb *target, pbuf *pbuf,
   if (!pool.addNewPacket(std::move(packet))) {
     THREAD_POOL_LOG("ThreadPool: dropped packet\n");
     if (pool.isBuiltinPort(port)) {
-      rtps::Diagnostics::ThreadPool::dropped_packets_metatraffic++;
+      rtps::Diagnostics::ThreadPool::dropped_incoming_packets_metatraffic++;
     } else {
-      rtps::Diagnostics::ThreadPool::dropped_packets_usertraffic++;
+      rtps::Diagnostics::ThreadPool::dropped_incoming_packets_usertraffic++;
     }
   }
 }
@@ -295,14 +300,14 @@ void ThreadPool::doReaderWork() {
     PacketInfo packet_user;
     auto isUserWorkToDo = m_incomingUserTraffic.moveFirstInto(packet_user);
     if (isUserWorkToDo) {
-      usertraffic++;
+      Diagnostics::ThreadPool::processed_incoming_usertraffic++;
       m_receiveJumppad(m_callee, const_cast<const PacketInfo &>(packet_user));
     }
 
     PacketInfo packet_meta;
     auto isMetaWorkToDo = m_incomingMetaTraffic.moveFirstInto(packet_meta);
     if (isMetaWorkToDo) {
-      metatraffic++;
+      Diagnostics::ThreadPool::processed_incoming_metatraffic++;
       m_receiveJumppad(m_callee, const_cast<const PacketInfo &>(packet_meta));
     }
 

@@ -337,15 +337,15 @@ void SEDPAgent::tryMatchUnmatchedEndpoints() {
   }
 }
 
-void SEDPAgent::addWriter(Writer &writer) {
+bool SEDPAgent::addWriter(Writer &writer) {
   if (m_endpoints.sedpPubWriter == nullptr) {
-    return;
+    return true;
   }
   EntityKind_t writerKind =
       writer.m_attributes.endpointGuid.entityId.entityKind;
   if (writerKind == EntityKind_t::BUILD_IN_WRITER_WITH_KEY ||
       writerKind == EntityKind_t::BUILD_IN_WRITER_WITHOUT_KEY) {
-    return; // No need to announce builtin endpoints
+    return true; // No need to announce builtin endpoints
   }
 
   Lock lock{m_mutex};
@@ -366,6 +366,7 @@ void SEDPAgent::addWriter(Writer &writer) {
   auto change = m_endpoints.sedpPubWriter->newChange(
       ChangeKind_t::ALIVE, m_buffer, ucdr_buffer_length(&microbuffer));
   writer.setSEDPSequenceNumber(change->sequenceNumber);
+  return (change != nullptr);
 #if SEDP_VERBOSE
   SEDP_LOG("Added new change to sedpPubWriter.\n");
 #endif
@@ -478,16 +479,16 @@ bool SEDPAgent::deleteWriter(Writer *writer) {
   return true;
 }
 
-void SEDPAgent::addReader(Reader &reader) {
+bool SEDPAgent::addReader(Reader &reader) {
   if (m_endpoints.sedpSubWriter == nullptr) {
-    return;
+    return true;
   }
 
   EntityKind_t readerKind =
       reader.m_attributes.endpointGuid.entityId.entityKind;
   if (readerKind == EntityKind_t::BUILD_IN_READER_WITH_KEY ||
       readerKind == EntityKind_t::BUILD_IN_READER_WITHOUT_KEY) {
-    return; // No need to announce builtin endpoints
+    return true; // No need to announce builtin endpoints
   }
 
   Lock lock{m_mutex};
@@ -508,6 +509,7 @@ void SEDPAgent::addReader(Reader &reader) {
   auto change = m_endpoints.sedpSubWriter->newChange(
       ChangeKind_t::ALIVE, m_buffer, ucdr_buffer_length(&microbuffer));
   reader.setSEDPSequenceNumber(change->sequenceNumber);
+  return (change != nullptr);
 #if SEDP_VERBOSE
   SEDP_LOG("Added new change to sedpSubWriter.\n");
 #endif

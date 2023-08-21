@@ -38,8 +38,8 @@ class Reader;
 class SEDPAgent {
 public:
   void init(Participant &part, const BuiltInEndpoints &endpoints);
-  void addWriter(Writer &writer);
-  void addReader(Reader &reader);
+  bool addWriter(Writer &writer);
+  bool addReader(Reader &reader);
   bool deleteReader(Reader *reader);
   bool deleteWriter(Writer *reader);
 

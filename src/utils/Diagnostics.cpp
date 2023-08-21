@@ -4,8 +4,16 @@ namespace rtps {
 namespace Diagnostics {
 
 namespace ThreadPool {
-uint32_t dropped_packets_usertraffic;
-uint32_t dropped_packets_metatraffic;
+uint32_t dropped_incoming_packets_usertraffic = 0;
+uint32_t dropped_incoming_packets_metatraffic = 0;
+
+uint32_t dropped_outgoing_packets_usertraffic = 0;
+uint32_t dropped_outgoing_packets_metatraffic = 0;
+
+uint32_t processed_incoming_metatraffic = 0;
+uint32_t processed_outgoing_metatraffic = 0;
+uint32_t processed_incoming_usertraffic = 0;
+uint32_t processed_outgoing_usertraffic = 0;
 
 uint32_t max_ever_elements_outgoing_usertraffic_queue;
 uint32_t max_ever_elements_incoming_usertraffic_queue;

@@ -115,6 +115,7 @@ const CacheChange *StatelessWriterT<NetworkDriver>::newChange(
       m_nextSequenceNumberToSend =
           newMin; // Make sure we have the correct sn to send
     }
+    SLW_LOG("History is full, dropping oldest %s\r\n", this->m_attributes.topicName);
   }
 
   auto *result = m_history.addChange(data, size);
@@ -215,10 +216,11 @@ void StatelessWriterT<NetworkDriver>::progress() {
         info.destAddr = proxy.remoteLocator.getIp4Address();
         info.destPort = (Ip4Port_t)proxy.remoteLocator.port;
       }
-
+      
       m_transport->sendPacket(info);
     }
   }
 
+  m_history.removeUntilIncl(m_nextSequenceNumberToSend);
   ++m_nextSequenceNumberToSend;
 }

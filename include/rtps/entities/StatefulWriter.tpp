@@ -143,7 +143,7 @@ const rtps::CacheChange *StatefulWriterT<NetworkDriver>::newChange(
       m_nextSequenceNumberToSend =
           newMin; // Make sure we have the correct sn to send
     }
-    SFW_LOG("History full! Dropping changes.\r\n");
+    SFW_LOG("History full! Dropping changes %s.\r\n", this->m_attributes.topicName);
   }
 
   auto *result =
