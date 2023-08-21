@@ -30,6 +30,7 @@ Author: i11 - Embedded Software, RWTH Aachen University
 #include <array>
 #include <cstdint>
 #include <initializer_list>
+#include <limits>
 
 // TODO subnamespaces
 namespace rtps {
@@ -174,6 +175,17 @@ struct SequenceNumber_t {
     return *this;
   }
 
+  SequenceNumber_t &operator--() {
+    if (low == 0) {
+      --high;
+      low = std::numeric_limits<decltype(low)>::max();
+    } else {
+      --low;
+    }
+
+    return *this;
+  }
+
   SequenceNumber_t operator++(int) {
     SequenceNumber_t tmp(*this);
     ++*this;
@@ -181,7 +193,7 @@ struct SequenceNumber_t {
   }
 };
 
-#define SNS_MAX_NUM_BITS 32
+#define SNS_MAX_NUM_BITS 256
 #define SNS_NUM_BYTES (SNS_MAX_NUM_BITS / 8)
 static_assert(!(SNS_MAX_NUM_BITS % 32) && SNS_MAX_NUM_BITS != 0,
               "SNS_MAX_NUM_BITS must be multiple of 32");

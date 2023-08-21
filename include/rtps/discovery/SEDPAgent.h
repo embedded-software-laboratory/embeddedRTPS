@@ -38,8 +38,8 @@ class Reader;
 class SEDPAgent {
 public:
   void init(Participant &part, const BuiltInEndpoints &endpoints);
-  void addWriter(Writer &writer);
-  void addReader(Reader &reader);
+  bool addWriter(Writer &writer);
+  bool addReader(Reader &reader);
   bool deleteReader(Reader *reader);
   bool deleteWriter(Writer *reader);
 
@@ -54,8 +54,10 @@ public:
   uint32_t getNumRemoteUnmatchedWriters();
 
 protected: // For testing purposes
-  void handlePublisherReaderMessage(const TopicData &writerData);
-  void handleSubscriptionReaderMessage(const TopicData &writerData);
+  void handlePublisherReaderMessage(const TopicData &writerData,
+                                    const ReaderCacheChange &change);
+  void handleSubscriptionReaderMessage(const TopicData &writerData,
+                                       const ReaderCacheChange &change);
 
 private:
   Participant *m_part;
@@ -82,7 +84,8 @@ private:
   void addUnmatchedRemoteWriter(const TopicDataCompressed &writerData);
   void addUnmatchedRemoteReader(const TopicDataCompressed &readerData);
 
-  void handleRemoteEndpointDeletion(const TopicData &topic);
+  void handleRemoteEndpointDeletion(const TopicData &topic,
+                                    const ReaderCacheChange &change);
 
   void (*mfp_onNewPublisherCallback)(void *arg) = nullptr;
   void *m_onNewPublisherArgs = nullptr;

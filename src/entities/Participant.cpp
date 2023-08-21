@@ -34,7 +34,7 @@ Author: i11 - Embedded Software, RWTH Aachen University
   if (true) {                                                                  \
     printf("[Participant] ");                                                  \
     printf(__VA_ARGS__);                                                       \
-    printf("\n");                                                              \
+    printf("\r\n");                                                            \
   }
 #else
 #define PARTICIPANT_LOG(...) //
@@ -403,92 +403,118 @@ rtps::MessageReceiver *Participant::getMessageReceiver() { return &m_receiver; }
 
 bool Participant::checkAndResetHeartbeats() {
   Lock{m_mutex};
-  PARTICIPANT_LOG("Have %u remote participants\n",
+  Lock{m_spdpAgent.m_mutex};
+  PARTICIPANT_LOG("Have %u remote participants",
                   (unsigned int)m_remoteParticipants.getNumElements());
   PARTICIPANT_LOG(
-      "Unmatched remote writers/readers, %u / %u\n",
+      "Unmatched remote writers/readers, %u / %u",
       static_cast<unsigned int>(m_sedpAgent.getNumRemoteUnmatchedWriters()),
       static_cast<unsigned int>(m_sedpAgent.getNumRemoteUnmatchedReaders()));
   for (auto &remote : m_remoteParticipants) {
-    PARTICIPANT_LOG("remote participant age = %u\n",
-                    (unsigned int)remote.getAliveSignalAgeInMilliseconds());
+    PARTICIPANT_LOG("Remote GUID = %u %u %u %u | Age = %u [ms]",
+                    remote.m_guid.prefix.id[4], remote.m_guid.prefix.id[5], remote.m_guid.prefix.id[6], remote.m_guid.prefix.id[7], (unsigned int)remote.getAliveSignalAgeInMilliseconds() );
     if (remote.isAlive()) {
-      PARTICIPANT_LOG("remote participant is alive\n");
       continue;
     }
-    PARTICIPANT_LOG("removing remote participant\n");
+    PARTICIPANT_LOG("removing remote participant");
     bool success = removeRemoteParticipant(remote.m_guid.prefix);
     if (!success) {
       return false;
+    }else{
+    	return true;
     }
   }
   return true;
 }
 
 void Participant::printInfo() {
+
+  uint32_t max_reader_proxies = 0;
   for (unsigned int i = 0; i < m_readers.size(); i++) {
     if (m_readers[i] != nullptr && m_readers[i]->isInitialized()) {
       if (m_hasBuilInEndpoints && i < 3) {
+#ifdef PARTICIPANT_PRINTINFO_LONG
         if (m_readers[i]->m_attributes.endpointGuid.entityId ==
             ENTITYID_SPDP_BUILTIN_PARTICIPANT_READER) {
-          printf("Reader %u: SPDP BUILTIN READER | Remote Proxies = %u \n ", i,
-                 static_cast<int>(m_readers[i]->getProxiesCount()));
+          printf("Reader %u: SPDP BUILTIN READER | Remote Proxies = %u \r\n ",
+                 i, static_cast<int>(m_readers[i]->getProxiesCount()));
         }
         if (m_readers[i]->m_attributes.endpointGuid.entityId ==
             ENTITYID_SEDP_BUILTIN_PUBLICATIONS_READER) {
-          printf("Reader %u: SEDP PUBLICATION READER | Remote Proxies = %u \n ",
-                 i, static_cast<int>(m_readers[i]->getProxiesCount()));
+          printf(
+              "Reader %u: SEDP PUBLICATION READER | Remote Proxies = %u \r\n ",
+              i, static_cast<int>(m_readers[i]->getProxiesCount()));
         }
         if (m_readers[i]->m_attributes.endpointGuid.entityId ==
             ENTITYID_SEDP_BUILTIN_SUBSCRIPTIONS_READER) {
-          printf("Reader %u: SEDP SUBSCRIPTION READER | Remote Proxies = %u \n",
-                 i, static_cast<int>(m_readers[i]->getProxiesCount()));
+          printf(
+              "Reader %u: SEDP SUBSCRIPTION READER | Remote Proxies = %u \r\n",
+              i, static_cast<int>(m_readers[i]->getProxiesCount()));
         }
+#endif
         continue;
       }
+
+      max_reader_proxies =
+          std::max(max_reader_proxies, m_readers[i]->getProxiesCount());
+#ifdef PARTICIPANT_PRINTINFO_LONG
       printf("Reader %u: Topic = %s | Type = %s | Remote Proxies = %u | SEDP "
-             "SN = %u  \n",
+             "SN = %u   \r\n ",
              i, m_readers[i]->m_attributes.topicName,
              m_readers[i]->m_attributes.typeName,
              static_cast<int>(m_readers[i]->getProxiesCount()),
              static_cast<int>(m_readers[i]->getSEDPSequenceNumber().low));
+#endif
     }
   }
 
+  uint32_t max_writer_proxies = 0;
   for (unsigned int i = 0; i < m_writers.size(); i++) {
+
     if (m_hasBuilInEndpoints && i < 3) {
+#ifdef PARTICIPANT_PRINTINFO_LONG
       if (m_writers[i]->m_attributes.endpointGuid.entityId ==
           ENTITYID_SPDP_BUILTIN_PARTICIPANT_WRITER) {
-        printf("Writer %u: SPDP WRITER | Remote Proxies = %u \n ", i,
+        printf("Writer %u: SPDP WRITER | Remote Proxies = %u  \r\n  ", i,
                static_cast<int>(m_writers[i]->getProxiesCount()));
       }
       if (m_writers[i]->m_attributes.endpointGuid.entityId ==
           ENTITYID_SEDP_BUILTIN_PUBLICATIONS_WRITER) {
-        printf("Writer %u: SEDP PUBLICATION WRITER | Remote Proxies = %u  \n",
-               i, static_cast<int>(m_writers[i]->getProxiesCount()));
+        printf(
+            "Writer %u: SEDP PUBLICATION WRITER | Remote Proxies = %u   \r\n ",
+            i, static_cast<int>(m_writers[i]->getProxiesCount()));
       }
       if (m_writers[i]->m_attributes.endpointGuid.entityId ==
           ENTITYID_SEDP_BUILTIN_SUBSCRIPTIONS_WRITER) {
-        printf("Writer %u: SEDP SUBSCRIPTION WRITER | Remote Proxies = %u  \n",
-               i, static_cast<int>(m_writers[i]->getProxiesCount()));
+        printf(
+            "Writer %u: SEDP SUBSCRIPTION WRITER | Remote Proxies = %u   \r\n ",
+            i, static_cast<int>(m_writers[i]->getProxiesCount()));
       }
+#endif
       continue;
     }
+
     if (m_writers[i] != nullptr && m_writers[i]->isInitialized()) {
+      max_writer_proxies =
+          std::max(max_writer_proxies, m_writers[i]->getProxiesCount());
+#ifdef PARTICIPANT_PRINTINFO_LONG
       printf("Writer %u: Topic = %s | Type = %s | Remote Proxies = %u | SEDP "
-             "SN = %u  \n",
+             "SN = %u   \r\n ",
              i, m_writers[i]->m_attributes.topicName,
              m_writers[i]->m_attributes.typeName,
              static_cast<int>(m_writers[i]->getProxiesCount()),
              static_cast<int>(m_writers[i]->getSEDPSequenceNumber().low));
+#endif
     }
   }
 
-  printf("Unmatched Remote Readers = %u\n",
+  printf("Max Writer Proxies %u \r\n ", max_writer_proxies);
+  printf("Max Reader Proxies %u \r\n ", max_reader_proxies);
+  printf("Unmatched Remote Readers = %u\r\n",
          static_cast<int>(m_sedpAgent.getNumRemoteUnmatchedReaders()));
-  printf("Unmatched Remote Writers = %u\n",
+  printf("Unmatched Remote Writers = %u \r\n ",
          static_cast<int>(m_sedpAgent.getNumRemoteUnmatchedWriters()));
-  printf("Remote Participants = %u\n",
+  printf("Remote Participants = %u \r\n ",
          static_cast<int>(m_remoteParticipants.getNumElements()));
 }
 
@@ -510,5 +536,7 @@ void Participant::addBuiltInEndpoints(BuiltInEndpoints &endpoints) {
 }
 
 void Participant::newMessage(const uint8_t *data, DataSize_t size) {
-  m_receiver.processMessage(data, size);
+  if (!m_receiver.processMessage(data, size)) {
+    PARTICIPANT_LOG("MESSAGE PROCESSING FAILE \r\n");
+  }
 }

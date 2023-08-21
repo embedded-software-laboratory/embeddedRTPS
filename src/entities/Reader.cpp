@@ -158,3 +158,7 @@ int rtps::Reader::dumpAllProxies(dumpProxyCallback target, void *arg) {
   }
   return dump_count;
 }
+
+bool rtps::Reader::sendPreemptiveAckNack(const WriterProxy &writer) {
+  return true;
+}

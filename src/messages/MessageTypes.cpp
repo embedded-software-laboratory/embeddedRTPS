@@ -209,7 +209,7 @@ bool rtps::deserializeMessage(const MessageProcessingInfo &info,
   doCopyAndMoveOn(reinterpret_cast<uint8_t *>(&msg.gapStart.low), currentPos,
                   sizeof(msg.gapStart.low));
 
-  size_t num_bitfields =
+  size_t num_bitfields = msg.header.octetsToNextHeader - 4 - 4 - 8 - 8 - 4;
       remainingSizeAtBeginning - (currentPos - info.getPointerToCurrentPos());
   deserializeSNS(currentPos, msg.gapList, num_bitfields);
 

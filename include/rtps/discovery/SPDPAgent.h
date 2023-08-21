@@ -39,7 +39,7 @@ Author: i11 - Embedded Software, RWTH Aachen University
   if (true) {                                                                  \
     printf("[SPDP] ");                                                         \
     printf(__VA_ARGS__);                                                       \
-    printf("\n");                                                              \
+    printf("\r\n");                                                              \
   }
 #else
 #define SPDP_LOG(...) //
@@ -56,6 +56,7 @@ public:
   void init(Participant &participant, BuiltInEndpoints &endpoints);
   void start();
   void stop();
+  SemaphoreHandle_t m_mutex;
 
 private:
   Participant *mp_participant = nullptr;
@@ -67,7 +68,6 @@ private:
   ucdrBuffer m_microbuffer{};
   uint8_t m_cycleHB = 0;
 
-  SemaphoreHandle_t m_mutex;
   bool initialized = false;
   static void receiveCallback(void *callee,
                               const ReaderCacheChange &cacheChange);

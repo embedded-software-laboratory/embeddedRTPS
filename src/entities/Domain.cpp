@@ -229,6 +229,7 @@ void Domain::createBuiltinWritersAndReaders(Participant &part) {
 void Domain::registerPort(const Participant &part) {
   m_transport.createUdpConnection(getUserUnicastPort(part.m_participantId));
   m_transport.createUdpConnection(getBuiltInUnicastPort(part.m_participantId));
+  m_threadPool.addBuiltinPort(getBuiltInUnicastPort(part.m_participantId));
 }
 
 void Domain::registerMulticastPort(FullLengthLocator mcastLocator) {
@@ -468,6 +469,9 @@ rtps::Reader *Domain::createReader(Participant &part, const char *topicName,
 
 bool rtps::Domain::deleteReader(Participant &part, Reader *reader) {
   Lock{m_mutex};
+  if(reader == nullptr || !reader->isInitialized()){
+	  return false;
+  }
   if (!part.deleteReader(reader)) {
     return false;
   }
@@ -478,6 +482,9 @@ bool rtps::Domain::deleteReader(Participant &part, Reader *reader) {
 
 bool rtps::Domain::deleteWriter(Participant &part, Writer *writer) {
   Lock{m_mutex};
+  if(writer == nullptr || !writer->isInitialized()){
+	  return false;
+  }
   if (!part.deleteWriter(writer)) {
     return false;
   }
@@ -488,21 +495,23 @@ bool rtps::Domain::deleteWriter(Participant &part, Writer *writer) {
 
 void rtps::Domain::printInfo() {
   for (unsigned int i = 0; i < m_participants.size(); i++) {
-    printf("Participant %u\n", i);
+    DOMAIN_LOG("Participant %u\r\n", i);
     m_participants[i].printInfo();
   }
 }
 
 rtps::GuidPrefix_t Domain::generateGuidPrefix(ParticipantId_t id) const {
   GuidPrefix_t prefix;
-  if(Config::BASE_GUID_PREFIX == GUID_RANDOM){
-	  for (unsigned int i = 0; i < rtps::Config::BASE_GUID_PREFIX.id.size(); i++) {
-		prefix.id[i] = rand();
-	  }
-  }else{
-	  for (unsigned int i = 0; i < rtps::Config::BASE_GUID_PREFIX.id.size(); i++) {
-		prefix.id[i] = Config::BASE_GUID_PREFIX.id[i];
-	  }
+  if (Config::BASE_GUID_PREFIX == GUID_RANDOM) {
+    for (unsigned int i = 0; i < rtps::Config::BASE_GUID_PREFIX.id.size();
+         i++) {
+      prefix.id[i] = rand();
+    }
+  } else {
+    for (unsigned int i = 0; i < rtps::Config::BASE_GUID_PREFIX.id.size();
+         i++) {
+      prefix.id[i] = Config::BASE_GUID_PREFIX.id[i];
+    }
   }
   return prefix;
 }

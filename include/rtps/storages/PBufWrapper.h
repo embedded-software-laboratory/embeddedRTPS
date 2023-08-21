@@ -22,6 +22,9 @@ This file is part of embeddedRTPS.
 Author: i11 - Embedded Software, RWTH Aachen University
 */
 
+// Copyright 2023 Apex.AI, Inc.
+// All rights reserved.
+
 #ifndef RTPS_PBUFWRAPPER_H
 #define RTPS_PBUFWRAPPER_H
 
@@ -38,17 +41,13 @@ struct PBufWrapper {
   explicit PBufWrapper(pbuf *bufferToWrap);
   explicit PBufWrapper(DataSize_t length);
 
-  // Shallow Copy. No copying of the underlying pbuf. Just another reference
-  // like a shared pointer.
-  PBufWrapper(const PBufWrapper &other);
-  PBufWrapper &operator=(const PBufWrapper &other);
+  PBufWrapper(const PBufWrapper &other) = delete;
+  PBufWrapper &operator=(const PBufWrapper &other) = delete;
 
   PBufWrapper(PBufWrapper &&other) noexcept;
   PBufWrapper &operator=(PBufWrapper &&other) noexcept;
 
   ~PBufWrapper();
-
-  PBufWrapper deepCopy() const;
 
   bool isValid() const;
 
@@ -56,9 +55,11 @@ struct PBufWrapper {
 
   /// Note that unused reserved memory is now part of the wrapper. New calls to
   /// append(uint8_t*[...]) will continue behind the appended wrapper
-  void append(PBufWrapper &&other);
+  void append(const PBufWrapper &other);
 
   bool reserve(DataSize_t length);
+
+  void destroy();
 
   /// After calling this function, data is added starting from the beginning
   /// again. It does not revert reserve.
