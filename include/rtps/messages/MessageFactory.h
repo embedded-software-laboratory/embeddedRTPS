@@ -22,6 +22,9 @@ This file is part of embeddedRTPS.
 Author: i11 - Embedded Software, RWTH Aachen University
 */
 
+// Copyright 2023 Apex.AI, Inc.
+// All rights reserved.
+
 #ifndef RTPS_MESSAGEFACTORY_H
 #define RTPS_MESSAGEFACTORY_H
 
@@ -133,8 +136,7 @@ void addSubMessageData(Buffer &buffer, const Buffer &filledPayload,
   serializeMessage(buffer, msg);
 
   if (filledPayload.isValid()) {
-    Buffer shallowCopy = filledPayload;
-    buffer.append(std::move(shallowCopy));
+    buffer.append(filledPayload);
   }
 }
 

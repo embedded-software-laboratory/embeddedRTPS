@@ -22,6 +22,9 @@ This file is part of embeddedRTPS.
 Author: i11 - Embedded Software, RWTH Aachen University
 */
 
+// Copyright 2023 Apex.AI, Inc.
+// All rights reserved.
+
 #include "rtps/storages/PBufWrapper.h"
 #include "rtps/utils/Log.h"
 
@@ -51,22 +54,9 @@ PBufWrapper::PBufWrapper(DataSize_t length)
   }
 }
 
-// TODO: Uses copy assignment. Improvement possible
-PBufWrapper::PBufWrapper(const PBufWrapper &other) { *this = other; }
-
 // TODO: Uses move assignment. Improvement possible
 PBufWrapper::PBufWrapper(PBufWrapper &&other) noexcept {
   *this = std::move(other);
-}
-
-PBufWrapper &PBufWrapper::operator=(const PBufWrapper &other) {
-  copySimpleMembersAndResetBuffer(other);
-
-  if (other.firstElement != nullptr) {
-    pbuf_ref(other.firstElement);
-  }
-  firstElement = other.firstElement;
-  return *this;
 }
 
 PBufWrapper &PBufWrapper::operator=(PBufWrapper &&other) noexcept {
@@ -88,26 +78,17 @@ void PBufWrapper::copySimpleMembersAndResetBuffer(const PBufWrapper &other) {
   }
 }
 
-PBufWrapper::~PBufWrapper() {
+void PBufWrapper::destroy()
+{
   if (firstElement != nullptr) {
     pbuf_free(firstElement);
+    firstElement = nullptr;
   }
+  m_freeSpace = 0;
 }
 
-PBufWrapper PBufWrapper::deepCopy() const {
-  PBufWrapper clone;
-  clone.copySimpleMembersAndResetBuffer(*this);
-
-  // Decided not to use pbuf_clone because it prevents const
-  clone.firstElement = pbuf_alloc(m_layer, this->firstElement->tot_len, m_type);
-  if (clone.firstElement != nullptr) {
-    if (pbuf_copy(clone.firstElement, this->firstElement) != ERR_OK) {
-      PBUF_WRAP_LOG("PBufWrapper::deepCopy: Copy of pbuf failed");
-    }
-  } else {
-    clone.m_freeSpace = 0;
-  }
-  return clone;
+PBufWrapper::~PBufWrapper() {
+  destroy();
 }
 
 bool PBufWrapper::isValid() const { return firstElement != nullptr; }
@@ -131,29 +112,24 @@ bool PBufWrapper::append(const uint8_t *data, DataSize_t length) {
   if (err != ERR_OK) {
     return false;
   }
-
   m_freeSpace -= length;
   return true;
 }
 
-void PBufWrapper::append(PBufWrapper &&other) {
-  if (this == &other) {
-    return;
-  }
+void PBufWrapper::append(const PBufWrapper &other) {
   if (this->firstElement == nullptr) {
-    *this = std::move(other);
+    m_freeSpace = other.m_freeSpace;
+    this->firstElement = other.firstElement;
+    pbuf_ref(this->firstElement);
     return;
   }
 
-  m_freeSpace = other.m_freeSpace;
-  pbuf *const newElement = other.firstElement;
-  pbuf_cat(this->firstElement, newElement);
-
-  other.firstElement = nullptr;
+  m_freeSpace += other.m_freeSpace;
+  pbuf_chain(this->firstElement, other.firstElement);
 }
 
 bool PBufWrapper::reserve(DataSize_t length) {
-  auto additionalAllocation = length - m_freeSpace;
+  int16_t additionalAllocation = length - m_freeSpace;
   if (additionalAllocation <= 0) {
     return true;
   }
