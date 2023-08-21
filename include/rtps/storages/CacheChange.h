@@ -35,7 +35,18 @@ struct CacheChange {
   bool disposeAfterWrite = false;
   TickType_t sentTickCount = 0;
   SequenceNumber_t sequenceNumber = SEQUENCENUMBER_UNKNOWN;
-  PBufWrapper data{};
+  PBufWrapper data;
+
+  CacheChange &operator=(const CacheChange &other) = delete;
+
+  CacheChange &operator=(CacheChange &&other) noexcept {
+	  kind = other.kind;
+	  inLineQoS = other.inLineQoS;
+	  disposeAfterWrite = other.disposeAfterWrite;
+	  sentTickCount = other.sentTickCount;
+	  sequenceNumber = other.sequenceNumber;
+	  data = std::move(other.data);
+  }
 
   CacheChange() = default;
   CacheChange(ChangeKind_t kind, SequenceNumber_t sequenceNumber)
