@@ -110,7 +110,7 @@ public:
         prev = m_buffer.size() - 1;
       }
 
-      m_buffer[idx_to_clear] = m_buffer[prev];
+      m_buffer[idx_to_clear] = std::move(m_buffer[prev]);
       idx_to_clear = prev;
 
     } while (prev != m_tail);
