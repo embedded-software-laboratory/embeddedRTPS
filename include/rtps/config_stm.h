@@ -37,8 +37,8 @@ namespace rtps {
 namespace Config {
 const VendorId_t VENDOR_ID = {13, 37};
 const std::array<uint8_t, 4> IP_ADDRESS = {
-    192, 168, 127, 103}; // Needs to be set in lwipcfg.h too.
-const GuidPrefix_t BASE_GUID_PREFIX{1, 33, 63, 84,15, 36, 68, 3, 34, 41, 1};
+    192, 168, 1, 103}; // Needs to be set in lwipcfg.h too.
+const GuidPrefix_t BASE_GUID_PREFIX{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 13};
 
 const uint8_t DOMAIN_ID = 0; // 230 possible with UDP
 const uint8_t NUM_STATELESS_WRITERS = 5;
@@ -64,11 +64,11 @@ const uint8_t MAX_TYPENAME_LENGTH = 64;
 const uint8_t MAX_TOPICNAME_LENGTH = 64;
 
 const int HEARTBEAT_STACKSIZE = 1200;          // byte
-const int THREAD_POOL_WRITER_STACKSIZE = 3*1100; // byte
-const int THREAD_POOL_READER_STACKSIZE = 3*1600; // byte
-const uint16_t SPDP_WRITER_STACKSIZE = 3*550;    // byte
+const int THREAD_POOL_WRITER_STACKSIZE = 1100; // byte
+const int THREAD_POOL_READER_STACKSIZE = 3000; // byte
+const uint16_t SPDP_WRITER_STACKSIZE = 1000;    // byte
 
-const uint16_t SF_WRITER_HB_PERIOD_MS = 2000;
+const uint16_t SF_WRITER_HB_PERIOD_MS = 4000;
 const uint16_t SPDP_RESEND_PERIOD_MS = 1000;
 const uint8_t SPDP_CYCLECOUNT_HEARTBEAT =
     2; // skip x SPDP rounds before checking liveliness
@@ -92,7 +92,6 @@ const int THREAD_POOL_WRITER_PRIO = 24;
 const int THREAD_POOL_READER_PRIO = 24;
 const int THREAD_POOL_WORKLOAD_QUEUE_LENGTH_USERTRAFFIC = 60;
 const int THREAD_POOL_WORKLOAD_QUEUE_LENGTH_METATRAFFIC = 60;
-
 
 constexpr int OVERALL_HEAP_SIZE =
     THREAD_POOL_NUM_WRITERS * THREAD_POOL_WRITER_STACKSIZE +
