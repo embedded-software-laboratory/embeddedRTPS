@@ -68,7 +68,7 @@ void StatefulReaderT<NetworkDriver>::newChange(
   if (m_callback_count == 0 || !m_is_initialized_) {
     return;
   }
-  Lock{m_proxies_mutex};
+  Lock lock{m_proxies_mutex};
   for (auto &proxy : m_proxies) {
     if (proxy.remoteWriterGuid == cacheChange.writerGuid) {
       if (proxy.expectedSN == cacheChange.sn) {
@@ -112,7 +112,7 @@ bool StatefulReaderT<NetworkDriver>::addNewMatchedWriter(
 template <class NetworkDriver>
 bool StatefulReaderT<NetworkDriver>::onNewGapMessage(
     const SubmessageGap &msg, const GuidPrefix_t &remotePrefix) {
-  Lock lock(m_proxies_mutex);
+  Lock lock{m_proxies_mutex};
   if (!m_is_initialized_) {
     return false;
   }
@@ -209,7 +209,7 @@ bool StatefulReaderT<NetworkDriver>::onNewGapMessage(
 template <class NetworkDriver>
 bool StatefulReaderT<NetworkDriver>::onNewHeartbeat(
     const SubmessageHeartbeat &msg, const GuidPrefix_t &sourceGuidPrefix) {
-  Lock lock(m_proxies_mutex);
+  Lock lock{m_proxies_mutex};
   if (!m_is_initialized_) {
     return false;
   }
@@ -257,7 +257,7 @@ bool StatefulReaderT<NetworkDriver>::onNewHeartbeat(
 template <class NetworkDriver>
 bool StatefulReaderT<NetworkDriver>::sendPreemptiveAckNack(
     const WriterProxy &writer) {
-  Lock lock(m_proxies_mutex);
+  Lock lock{m_proxies_mutex};
   if (!m_is_initialized_) {
     return false;
   }

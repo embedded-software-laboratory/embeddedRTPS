@@ -98,7 +98,7 @@ void rtps::Writer::manageSendOptions() {
 void rtps::Writer::removeAllProxiesOfParticipant(
     const GuidPrefix_t &guidPrefix) {
   INIT_GUARD();
-  Lock lock(m_mutex);
+  Lock lock{m_mutex};
   auto isElementToRemove = [&](const ReaderProxy &proxy) {
     return proxy.remoteReaderGuid.prefix == guidPrefix;
   };
@@ -138,7 +138,7 @@ int rtps::Writer::dumpAllProxies(dumpProxyCallback target, void *arg) {
   if (target == nullptr) {
     return 0;
   }
-  Lock{m_mutex};
+  Lock lock{m_mutex};
   int dump_count = 0;
   for (auto it = m_proxies.begin(); it != m_proxies.end(); ++it, ++dump_count) {
     target(this, *it, arg);
