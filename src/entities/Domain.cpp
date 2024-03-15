@@ -240,7 +240,7 @@ void Domain::registerMulticastPort(FullLengthLocator mcastLocator) {
 
 rtps::Reader *Domain::readerExists(Participant &part, const char *topicName,
                                    const char *typeName, bool reliable) {
-  Lock{m_mutex};
+  Lock lock{m_mutex};
   if (reliable) {
     for (unsigned int i = 0; i < m_statefulReaders.size(); i++) {
       if (m_statefulReaders[i].isInitialized()) {
@@ -285,7 +285,7 @@ rtps::Reader *Domain::readerExists(Participant &part, const char *topicName,
 
 rtps::Writer *Domain::writerExists(Participant &part, const char *topicName,
                                    const char *typeName, bool reliable) {
-  Lock{m_mutex};
+  Lock lock{m_mutex};
   if (reliable) {
     for (unsigned int i = 0; i < m_statefulWriters.size(); i++) {
       if (m_statefulWriters[i].isInitialized()) {
@@ -330,7 +330,7 @@ rtps::Writer *Domain::writerExists(Participant &part, const char *topicName,
 rtps::Writer *Domain::createWriter(Participant &part, const char *topicName,
                                    const char *typeName, bool reliable,
                                    bool enforceUnicast) {
-  Lock{m_mutex};
+  Lock lock{m_mutex};
   StatelessWriter *statelessWriter =
       getNextUnusedEndpoint<decltype(m_statelessWriters), StatelessWriter>(
           m_statelessWriters);
@@ -391,7 +391,7 @@ rtps::Writer *Domain::createWriter(Participant &part, const char *topicName,
 rtps::Reader *Domain::createReader(Participant &part, const char *topicName,
                                    const char *typeName, bool reliable,
                                    ip4_addr_t mcastaddress) {
-  Lock{m_mutex};
+  Lock lock{m_mutex};
   StatelessReader *statelessReader =
       getNextUnusedEndpoint<decltype(m_statelessReaders), StatelessReader>(
           m_statelessReaders);
@@ -468,7 +468,7 @@ rtps::Reader *Domain::createReader(Participant &part, const char *topicName,
 }
 
 bool rtps::Domain::deleteReader(Participant &part, Reader *reader) {
-  Lock{m_mutex};
+  Lock lock{m_mutex};
   if(reader == nullptr || !reader->isInitialized()){
 	  return false;
   }
@@ -481,7 +481,7 @@ bool rtps::Domain::deleteReader(Participant &part, Reader *reader) {
 }
 
 bool rtps::Domain::deleteWriter(Participant &part, Writer *writer) {
-  Lock{m_mutex};
+  Lock lock{m_mutex};
   if(writer == nullptr || !writer->isInitialized()){
 	  return false;
   }

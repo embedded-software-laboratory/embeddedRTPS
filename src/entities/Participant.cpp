@@ -105,7 +105,7 @@ bool Participant::registerOnNewSubscriberMatchedCallback(
 }
 
 rtps::Writer *Participant::addWriter(Writer *pWriter) {
-  Lock{m_mutex};
+  Lock lock{m_mutex};
   for (unsigned int i = 0; i < m_writers.size(); i++) {
     if (m_writers[i] == nullptr) {
       m_writers[i] = pWriter;
@@ -119,7 +119,7 @@ rtps::Writer *Participant::addWriter(Writer *pWriter) {
 }
 
 bool Participant::isWritersFull() {
-  Lock{m_mutex};
+  Lock lock{m_mutex};
   for (unsigned int i = 0; i < m_writers.size(); i++) {
     if (m_writers[i] == nullptr) {
       return false;
@@ -130,7 +130,7 @@ bool Participant::isWritersFull() {
 }
 
 rtps::Reader *Participant::addReader(Reader *pReader) {
-  Lock{m_mutex};
+  Lock lock{m_mutex};
   for (unsigned int i = 0; i < m_readers.size(); i++) {
     if (m_readers[i] == nullptr) {
       m_readers[i] = pReader;
@@ -145,7 +145,7 @@ rtps::Reader *Participant::addReader(Reader *pReader) {
 }
 
 bool Participant::deleteReader(Reader *reader) {
-  Lock{m_mutex};
+  Lock lock{m_mutex};
   for (unsigned int i = 0; i < m_readers.size(); i++) {
     if (m_readers[i]->getSEDPSequenceNumber() ==
         reader->getSEDPSequenceNumber()) {
@@ -160,7 +160,7 @@ bool Participant::deleteReader(Reader *reader) {
 }
 
 bool Participant::deleteWriter(Writer *writer) {
-  Lock{m_mutex};
+  Lock lock{m_mutex};
   for (unsigned int i = 0; i < m_writers.size(); i++) {
     if (m_writers[i]->getSEDPSequenceNumber() ==
         writer->getSEDPSequenceNumber()) {
@@ -175,7 +175,7 @@ bool Participant::deleteWriter(Writer *writer) {
 }
 
 bool Participant::isReadersFull() {
-  Lock{m_mutex};
+  Lock lock{m_mutex};
   for (unsigned int i = 0; i < m_readers.size(); i++) {
     if (m_readers[i] == nullptr) {
       return false;
@@ -186,7 +186,7 @@ bool Participant::isReadersFull() {
 }
 
 rtps::Writer *Participant::getWriter(EntityId_t id) {
-  Lock{m_mutex};
+  Lock lock{m_mutex};
   for (uint8_t i = 0; i < m_writers.size(); ++i) {
     if (m_writers[i] == nullptr) {
       continue;
@@ -199,7 +199,7 @@ rtps::Writer *Participant::getWriter(EntityId_t id) {
 }
 
 rtps::Reader *Participant::getReader(EntityId_t id) {
-  Lock{m_mutex};
+  Lock lock{m_mutex};
   for (uint8_t i = 0; i < m_readers.size(); ++i) {
     if (m_readers[i] == nullptr) {
       continue;
@@ -225,7 +225,7 @@ rtps::Reader *Participant::getReaderByWriterId(const Guid_t &guid) {
 }
 
 rtps::Writer *Participant::getMatchingWriter(const TopicData &readerTopicData) {
-  Lock{m_mutex};
+  Lock lock{m_mutex};
   for (uint8_t i = 0; i < m_writers.size(); ++i) {
     if (m_writers[i] == nullptr) {
       continue;
@@ -241,7 +241,7 @@ rtps::Writer *Participant::getMatchingWriter(const TopicData &readerTopicData) {
 }
 
 rtps::Reader *Participant::getMatchingReader(const TopicData &writerTopicData) {
-  Lock{m_mutex};
+  Lock lock{m_mutex};
   for (uint8_t i = 0; i < m_readers.size(); ++i) {
     if (m_readers[i] == nullptr) {
       continue;
@@ -258,7 +258,7 @@ rtps::Reader *Participant::getMatchingReader(const TopicData &writerTopicData) {
 
 rtps::Writer *
 Participant::getMatchingWriter(const TopicDataCompressed &readerTopicData) {
-  Lock{m_mutex};
+  Lock lock{m_mutex};
   for (uint8_t i = 0; i < m_writers.size(); ++i) {
     if (m_writers[i] == nullptr) {
       continue;
@@ -275,7 +275,7 @@ Participant::getMatchingWriter(const TopicDataCompressed &readerTopicData) {
 
 rtps::Reader *
 Participant::getMatchingReader(const TopicDataCompressed &writerTopicData) {
-  Lock{m_mutex};
+  Lock lock{m_mutex};
   for (uint8_t i = 0; i < m_readers.size(); ++i) {
     if (m_readers[i] == nullptr) {
       continue;
@@ -292,12 +292,12 @@ Participant::getMatchingReader(const TopicDataCompressed &writerTopicData) {
 
 bool Participant::addNewRemoteParticipant(
     const ParticipantProxyData &remotePart) {
-  Lock{m_mutex};
+  Lock lock{m_mutex};
   return m_remoteParticipants.add(remotePart);
 }
 
 bool Participant::removeRemoteParticipant(const GuidPrefix_t &prefix) {
-  Lock{m_mutex};
+  Lock lock{m_mutex};
   auto isElementToRemove = [&](const ParticipantProxyData &proxy) {
     return proxy.m_guid.prefix == prefix;
   };
@@ -310,7 +310,7 @@ bool Participant::removeRemoteParticipant(const GuidPrefix_t &prefix) {
 }
 
 void Participant::removeAllProxiesOfParticipant(const GuidPrefix_t &prefix) {
-  Lock{m_mutex};
+  Lock lock{m_mutex};
   for (unsigned int i = 0; i < m_readers.size(); i++) {
     if (m_readers[i] == nullptr) {
       continue;
@@ -327,7 +327,7 @@ void Participant::removeAllProxiesOfParticipant(const GuidPrefix_t &prefix) {
 }
 
 void Participant::removeProxyFromAllEndpoints(const Guid_t &guid) {
-  Lock{m_mutex};
+  Lock lock{m_mutex};
   for (unsigned int i = 0; i < m_writers.size(); i++) {
     if (m_writers[i] == nullptr) {
       continue;
@@ -355,7 +355,7 @@ void Participant::removeProxyFromAllEndpoints(const Guid_t &guid) {
 
 const rtps::ParticipantProxyData *
 Participant::findRemoteParticipant(const GuidPrefix_t &prefix) {
-  Lock{m_mutex};
+  Lock lock{m_mutex};
   auto isElementToFind = [&](const ParticipantProxyData &proxy) {
     return proxy.m_guid.prefix == prefix;
   };
@@ -367,7 +367,7 @@ Participant::findRemoteParticipant(const GuidPrefix_t &prefix) {
 
 void Participant::refreshRemoteParticipantLiveliness(
     const GuidPrefix_t &prefix) {
-  Lock{m_mutex};
+  Lock lock{m_mutex};
   auto isElementToFind = [&](const ParticipantProxyData &proxy) {
     return proxy.m_guid.prefix == prefix;
   };
@@ -382,7 +382,7 @@ void Participant::refreshRemoteParticipantLiveliness(
 }
 
 bool Participant::hasReaderWithMulticastLocator(ip4_addr_t address) {
-  Lock{m_mutex};
+  Lock lock{m_mutex};
   for (uint8_t i = 0; i < m_readers.size(); i++) {
     if (m_readers[i] == nullptr) {
       continue;
@@ -395,15 +395,15 @@ bool Participant::hasReaderWithMulticastLocator(ip4_addr_t address) {
 }
 
 uint32_t Participant::getRemoteParticipantCount() {
-  Lock{m_mutex};
+  Lock lock{m_mutex};
   return m_remoteParticipants.getNumElements();
 }
 
 rtps::MessageReceiver *Participant::getMessageReceiver() { return &m_receiver; }
 
 bool Participant::checkAndResetHeartbeats() {
-  Lock{m_mutex};
-  Lock{m_spdpAgent.m_mutex};
+  Lock lock1{m_mutex};
+  Lock lock2{m_spdpAgent.m_mutex};
   PARTICIPANT_LOG("Have %u remote participants",
                   (unsigned int)m_remoteParticipants.getNumElements());
   PARTICIPANT_LOG(
@@ -521,7 +521,7 @@ void Participant::printInfo() {
 rtps::SPDPAgent &Participant::getSPDPAgent() { return m_spdpAgent; }
 
 void Participant::addBuiltInEndpoints(BuiltInEndpoints &endpoints) {
-  Lock{m_mutex};
+  Lock lock{m_mutex};
   m_hasBuilInEndpoints = true;
   m_spdpAgent.init(*this, endpoints);
   m_sedpAgent.init(*this, endpoints);

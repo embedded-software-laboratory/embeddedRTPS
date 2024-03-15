@@ -159,7 +159,7 @@ const rtps::CacheChange *StatefulWriterT<NetworkDriver>::newChange(
 
 template <class NetworkDriver> void StatefulWriterT<NetworkDriver>::progress() {
   INIT_GUARD()
-  Lock{m_mutex};
+  Lock lock{m_mutex};
   CacheChange *next = m_history.getChangeBySN(m_nextSequenceNumberToSend);
   if (next != nullptr) {
     uint32_t i = 0;
@@ -210,7 +210,7 @@ template <class NetworkDriver> void StatefulWriterT<NetworkDriver>::progress() {
 template <class NetworkDriver>
 void StatefulWriterT<NetworkDriver>::setAllChangesToUnsent() {
   INIT_GUARD()
-  Lock lock(m_mutex);
+  Lock lock{m_mutex};
 
   m_nextSequenceNumberToSend = m_history.getCurrentSeqNumMin();
 
@@ -223,7 +223,7 @@ template <class NetworkDriver>
 void StatefulWriterT<NetworkDriver>::onNewAckNack(
     const SubmessageAckNack &msg, const GuidPrefix_t &sourceGuidPrefix) {
   INIT_GUARD()
-  Lock lock(m_mutex);
+  Lock lock{m_mutex};
   if (!m_is_initialized_) {
     return;
   }
@@ -512,7 +512,7 @@ void StatefulWriterT<NetworkDriver>::sendHeartBeat() {
     MessageFactory::addHeader(info.buffer, m_attributes.endpointGuid.prefix);
 
     {
-      Lock lock(m_mutex);
+      Lock lock{m_mutex};
 
       if (!m_history.isEmpty()) {
         firstSN = m_history.getCurrentSeqNumMin();
