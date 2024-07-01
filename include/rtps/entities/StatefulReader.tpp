@@ -203,6 +203,7 @@ bool StatefulReaderT<NetworkDriver>::onNewGapMessage(
 	  }
 
 
+    return false;
   }
 }
 
