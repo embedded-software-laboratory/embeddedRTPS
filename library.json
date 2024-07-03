@@ -1,0 +1,23 @@
+{
+  "name": "embeddedRTPS",
+  "version": "0.0.1",
+  "keywords": "embedded, rtps, dds, rtos",
+  "description": "A portable and open-source C++ implementation of the Real-Time Publish-Subscribe Protocol (RTPS) for embedded system",
+  "repository":
+  {
+    "type": "git",
+    "url": "https://github.com/SumolX/embeddedRTPS.git"
+  },
+  "frameworks": "arduino",
+  "platforms": "esp32",
+  "build": {
+    "libArchive": false,
+    "flags": [
+        "-I include",
+        "-I thirdparty/Micro-CDR/include",
+        "-I thirdparty/Micro-CDR/build/include"
+    ],
+    "srcDir": ".",
+    "srcFilter": "+<*> -<thirdparty/Micro-CDR/build>"
+   }
+}
