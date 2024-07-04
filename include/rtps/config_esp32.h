@@ -64,10 +64,10 @@ const uint8_t HISTORY_SIZE_STATEFUL = 10;
 const uint8_t MAX_TYPENAME_LENGTH = 32;
 const uint8_t MAX_TOPICNAME_LENGTH = 32;
 
-const int HEARTBEAT_STACKSIZE = 1200;          // byte
+const int HEARTBEAT_STACKSIZE = 4000;          // byte
 const int THREAD_POOL_WRITER_STACKSIZE = 4000; // byte
-const int THREAD_POOL_READER_STACKSIZE = 3000; // byte
-const uint16_t SPDP_WRITER_STACKSIZE = 3000;    // byte
+const int THREAD_POOL_READER_STACKSIZE = 4000; // byte
+const uint16_t SPDP_WRITER_STACKSIZE = 4000;    // byte
 
 const uint16_t SF_WRITER_HB_PERIOD_MS = 4000;
 const uint16_t SPDP_RESEND_PERIOD_MS = 1000;
