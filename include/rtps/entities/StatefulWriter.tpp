@@ -33,13 +33,15 @@ Author: i11 - Embedded Software, RWTH Aachen University
 using rtps::StatefulWriterT;
 
 #if SFW_VERBOSE && RTPS_GLOBAL_VERBOSE
-#include "rtps/utils/printutils.h"
+#include "rtps/utils/strutils.h"
+#ifndef SFW_LOG
 #define SFW_LOG(...)                                                           \
   if (true) {                                                                  \
     printf("[Stateful Writer %s] ", this->m_attributes.topicName);             \
     printf(__VA_ARGS__);                                                       \
     printf("\r\n");                                                            \
   }
+#endif
 #else
 #define SFW_LOG(...) //
 #endif
@@ -239,9 +241,9 @@ void StatefulWriterT<NetworkDriver>::onNewAckNack(
 
   if (reader == nullptr) {
 #if SFW_VERBOSE && RTPS_GLOBAL_VERBOSE
-    SFW_LOG("No proxy found with id: ");
-    printEntityId(msg.readerId);
-    SFW_LOG(" Dropping acknack.\n");
+    char buffer[64];
+    entityId2Str(msg.readerId, buffer, sizeof(buffer));
+    SFW_LOG("No proxy found with id: %s Dropping acknack.", buffer);
 #endif
     return;
   }

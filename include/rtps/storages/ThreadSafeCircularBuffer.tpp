@@ -6,12 +6,14 @@
 #include "rtps/utils/Log.h"
 
 #if TSCB_VERBOSE && RTPS_GLOBAL_VERBOSE
+#ifndef TSCB_LOG
 #define TSCB_LOG(...)                                                          \
   if (true) {                                                                  \
     printf("[TSCircularBuffer] ");                                             \
     printf(__VA_ARGS__);                                                       \
     printf("\n");                                                              \
   }
+#endif
 #else
 #define TSCB_LOG(...) //
 #endif

@@ -30,12 +30,14 @@ Author: i11 - Embedded Software, RWTH Aachen University
 #include "rtps/utils/Log.h"
 
 #if PARTICIPANT_VERBOSE && RTPS_GLOBAL_VERBOSE
+#ifndef PARTICIPANT_LOG
 #define PARTICIPANT_LOG(...)                                                   \
   if (true) {                                                                  \
     printf("[Participant] ");                                                  \
     printf(__VA_ARGS__);                                                       \
     printf("\r\n");                                                            \
   }
+#endif
 #else
 #define PARTICIPANT_LOG(...) //
 #endif

@@ -27,12 +27,14 @@ Author: i11 - Embedded Software, RWTH Aachen University
 #include "rtps/utils/udpUtils.h"
 
 #if DOMAIN_VERBOSE && RTPS_GLOBAL_VERBOSE
+#ifndef DOMAIN_LOG
 #define DOMAIN_LOG(...)                                                        \
   if (true) {                                                                  \
     printf("[Domain] ");                                                       \
     printf(__VA_ARGS__);                                                       \
     printf("\n");                                                              \
   }
+#endif
 #else
 #define DOMAIN_LOG(...) //
 #endif
