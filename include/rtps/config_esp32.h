@@ -39,7 +39,7 @@ namespace Config {
 const VendorId_t VENDOR_ID = {13, 37};
 const std::array<uint8_t, 4> IP_ADDRESS = {
     192, 168, 4, 1}; // Needs to be set in lwipcfg.h too.
-const GuidPrefix_t BASE_GUID_PREFIX{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 13};
+const GuidPrefix_t BASE_GUID_PREFIX = GUID_RANDOM;
 
 const uint8_t DOMAIN_ID = 0; // 230 possible with UDP
 const uint8_t NUM_STATELESS_WRITERS = 4;
