@@ -46,6 +46,7 @@ struct CacheChange {
 	  sentTickCount = other.sentTickCount;
 	  sequenceNumber = other.sequenceNumber;
 	  data = std::move(other.data);
+	  return *this;
   }
 
   CacheChange() = default;
