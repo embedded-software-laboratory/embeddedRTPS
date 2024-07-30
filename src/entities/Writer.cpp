@@ -10,8 +10,9 @@ using namespace rtps;
 bool rtps::Writer::addNewMatchedReader(const ReaderProxy &newProxy) {
   INIT_GUARD();
 #if SFW_VERBOSE && RTPS_GLOBAL_VERBOSE
-  SFW_LOG("New reader added with id: ");
-  printGuid(newProxy.remoteReaderGuid);
+  char buffer[64];
+  guid2Str(newProxy.remoteReaderGuid, buffer, sizeof(buffer));
+  SFW_LOG("New reader added with id: %s", buffer);
 #endif
   Lock lock{m_mutex};
   bool success = m_proxies.add(newProxy);

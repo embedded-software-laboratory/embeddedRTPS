@@ -34,13 +34,15 @@ Author: i11 - Embedded Software, RWTH Aachen University
 #include "ucdr/microcdr.h"
 
 #if SPDP_VERBOSE && RTPS_GLOBAL_VERBOSE
-#include "rtps/utils/printutils.h"
+#ifndef SPDP_LOG
+#include "rtps/utils/strutils.h"
 #define SPDP_LOG(...)                                                          \
   if (true) {                                                                  \
     printf("[SPDP] ");                                                         \
     printf(__VA_ARGS__);                                                       \
     printf("\r\n");                                                              \
   }
+#endif
 #else
 #define SPDP_LOG(...) //
 #endif

@@ -44,4 +44,18 @@ Author: i11 - Embedded Software, RWTH Aachen University
 #define SLR_VERBOSE 0
 #define THREAD_POOL_VERBOSE 0
 
+#undef SFW_LOG
+#undef SPDP_LOG
+#undef PBUF_LOG
+#undef SEDP_LOG
+#undef RECV_LOG
+#undef PARTICIPANT_LOG
+#undef DOMAIN_LOG
+#undef UDP_DRIVER_LOG
+#undef TSCB_LOG
+#undef SLW_LOG
+#undef SFR_LOG
+#undef SLR_LOG
+#undef THREAD_POOL_LOG
+
 #endif // RTPS_LOG_H

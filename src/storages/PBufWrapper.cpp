@@ -31,13 +31,15 @@ Author: i11 - Embedded Software, RWTH Aachen University
 using rtps::PBufWrapper;
 
 #if PBUF_WRAP_VERBOSE && RTPS_GLOBAL_VERBOSE
-#include "rtps/utils/printutils.h"
+#ifndef PBUF_WRAP_LOG
+#include "rtps/utils/strutils.h"
 #define PBUF_WRAP_LOG(...)                                                     \
   if (true) {                                                                  \
     printf("[PBUF Wrapper] ");                                                 \
     printf(__VA_ARGS__);                                                       \
     printf("\n");                                                              \
   }
+#endif
 #else
 #define PBUF_WRAP_LOG(...) //
 #endif

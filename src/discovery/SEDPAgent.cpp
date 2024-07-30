@@ -34,12 +34,14 @@ Author: i11 - Embedded Software, RWTH Aachen University
 using rtps::SEDPAgent;
 
 #if SEDP_VERBOSE && RTPS_GLOBAL_VERBOSE
+#ifndef SEDP_LOG
 #define SEDP_LOG(...)                                                          \
   if (true) {                                                                  \
     printf("[SEDP] ");                                                         \
     printf(__VA_ARGS__);                                                       \
     printf("\r\n");                                                            \
   }
+#endif
 #else
 #define SEDP_LOG(...) //
 #endif

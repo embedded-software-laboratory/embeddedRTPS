@@ -133,9 +133,9 @@ bool Reader::removeProxy(const Guid_t &guid) {
 bool Reader::addNewMatchedWriter(const WriterProxy &newProxy) {
   Lock lock{m_proxies_mutex};
 #if (SFR_VERBOSE || SLR_VERBOSE) && RTPS_GLOBAL_VERBOSE
-  SFR_LOG("New writer added with id: ");
-  printGuid(newProxy.remoteWriterGuid);
-  SFR_LOG("\n");
+  char buffer[64];
+  guid2Str(newProxy.remoteWriterGuid, buffer, sizeof(buffer));
+  SFR_LOG("New writer added with id: %s", buffer);
 #endif
   return m_proxies.add(newProxy);
 }

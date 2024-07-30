@@ -161,8 +161,9 @@ void SPDPAgent::processProxyData() {
     addProxiesForBuiltInEndpoints();
     m_buildInEndpoints.spdpWriter->setAllChangesToUnsent();
 #if SPDP_VERBOSE && RTPS_GLOBAL_VERBOSE
-    SPDP_LOG("Added new participant with guid: ");
-    printGuidPrefix(m_proxyDataBuffer.m_guid.prefix);
+    char buffer[64];
+    guidPrefix2Str(m_proxyDataBuffer.m_guid.prefix, buffer, sizeof(buffer));
+    SPDP_LOG("Added new participant with guid: %s", buffer);
   } else {
     SPDP_LOG("Failed to add new participant");
   }

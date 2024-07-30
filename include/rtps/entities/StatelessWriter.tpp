@@ -39,13 +39,15 @@ using rtps::SequenceNumber_t;
 using rtps::StatelessWriterT;
 
 #if SLW_VERBOSE && RTPS_GLOBAL_VERBOSE
-#include "rtps/utils/printutils.h"
+#ifndef SLW_LOG
+#include "rtps/utils/strutils.h"
 #define SLW_LOG(...)                                                           \
   if (true) {                                                                  \
     printf("[StatelessWriter %s] ", &this->m_attributes.topicName[0]);         \
     printf(__VA_ARGS__);                                                       \
     printf("\n");                                                              \
   }
+#endif
 #else
 #define SLW_LOG(...) //
 #endif

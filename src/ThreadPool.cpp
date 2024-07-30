@@ -34,13 +34,15 @@ Author: i11 - Embedded Software, RWTH Aachen University
 using rtps::ThreadPool;
 
 #if THREAD_POOL_VERBOSE && RTPS_GLOBAL_VERBOSE
-#include "rtps/utils/printutils.h"
+#ifndef THREAD_POOL_LOG
+#include "rtps/utils/strutils.h"
 #define THREAD_POOL_LOG(...)                                                   \
   if (true) {                                                                  \
     printf("[ThreadPool] ");                                                   \
     printf(__VA_ARGS__);                                                       \
     printf("\r\n");                                                            \
   }
+#endif
 #else
 #define THREAD_POOL_LOG(...) //
 #endif

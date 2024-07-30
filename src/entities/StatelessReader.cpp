@@ -29,13 +29,15 @@ Author: i11 - Embedded Software, RWTH Aachen University
 using rtps::StatelessReader;
 
 #if SLR_VERBOSE && RTPS_GLOBAL_VERBOSE
-#include "rtps/utils/printutils.h"
+#include "rtps/utils/strutils.h"
+#ifndef SLR_LOG
 #define SLR_LOG(...)                                                           \
   if (true) {                                                                  \
     printf("[StatelessReader %s] ", &m_attributes.topicName[0]);               \
     printf(__VA_ARGS__);                                                       \
     printf("\n");                                                              \
   }
+#endif
 #else
 #define SLR_LOG(...) //
 #endif
@@ -60,9 +62,9 @@ void StatelessReader::newChange(const ReaderCacheChange &cacheChange) {
 
 bool StatelessReader::addNewMatchedWriter(const WriterProxy &newProxy) {
 #if (SLR_VERBOSE && RTPS_GLOBAL_VERBOSE)
-  SLR_LOG("Adding WriterProxy");
-  printGuid(newProxy.remoteWriterGuid);
-  printf("\n");
+  char buffer[64];
+  guid2Str(newProxy.remoteWriterGuid, buffer, sizeof(buffer));
+  SLR_LOG("Adding WriterProxy: %s", buffer);
 #endif
   return m_proxies.add(newProxy);
 }

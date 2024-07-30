@@ -33,13 +33,15 @@ Author: i11 - Embedded Software, RWTH Aachen University
 using rtps::MessageReceiver;
 
 #if RECV_VERBOSE && RTPS_GLOBAL_VERBOSE
-#include "rtps/utils/printutils.h"
+#ifndef RECV_LOG
+#include "rtps/utils/strutils.h"
 #define RECV_LOG(...)                                                          \
   if (true) {                                                                  \
     printf("[RECV] ");                                                         \
     printf(__VA_ARGS__);                                                       \
     printf("\n");                                                              \
   }
+#endif
 #else
 #define RECV_LOG(...) //
 #endif
@@ -153,9 +155,9 @@ bool MessageReceiver::processDataSubmessage(
   Reader *reader;
   if (dataSubmsg.readerId == ENTITYID_UNKNOWN) {
 #if RECV_VERBOSE && RTPS_GLOBAL_VERBOSE
-    RECV_LOG("Received ENTITYID_UNKNOWN readerID, searching for writer ID = ");
-    printGuid(Guid_t{sourceGuidPrefix, dataSubmsg.writerId});
-    printf("\n");
+    char buffer[64];
+    guid2Str(Guid_t{sourceGuidPrefix, dataSubmsg.writerId}, buffer, sizeof(buffer));
+    RECV_LOG("Received ENTITYID_UNKNOWN readerID, searching for writer ID = %s", buffer);
 #endif
     reader = mp_part->getReaderByWriterId(
         Guid_t{sourceGuidPrefix, dataSubmsg.writerId});
@@ -168,9 +170,9 @@ bool MessageReceiver::processDataSubmessage(
         Guid_t{sourceGuidPrefix, dataSubmsg.writerId});
 
     if (reader_by_writer == nullptr && reader != nullptr) {
-      RECV_LOG("FOUND By READER ID, NOT BY WRITER ID =");
-      printGuid(Guid_t{sourceGuidPrefix, dataSubmsg.writerId});
-      printf("\n");
+      char buffer[64];
+      guid2Str(Guid_t{sourceGuidPrefix, dataSubmsg.writerId}, buffer, sizeof(buffer));
+      RECV_LOG("FOUND By READER ID, NOT BY WRITER ID = %s", buffer);
     }
 #endif
   }
@@ -181,9 +183,9 @@ bool MessageReceiver::processDataSubmessage(
     reader->newChange(change);
   } else {
 #if RECV_VERBOSE && RTPS_GLOBAL_VERBOSE
-    RECV_LOG("Couldn't find a reader with id: ");
-    printEntityId(dataSubmsg.readerId);
-    printf("\n");
+    char buffer[64];
+    entityId2Str(dataSubmsg.readerId, buffer, sizeof(buffer));
+    RECV_LOG("Couldn't find a reader with id: %s", buffer);
 #endif
   }
 

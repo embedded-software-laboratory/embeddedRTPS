@@ -31,13 +31,15 @@ Author: i11 - Embedded Software, RWTH Aachen University
 #include "rtps/utils/Log.h"
 
 #if SFR_VERBOSE && RTPS_GLOBAL_VERBOSE
-#include "rtps/utils/printutils.h"
+#include "rtps/utils/strutils.h"
+#ifndef SFR_LOG
 #define SFR_LOG(...)                                                           \
   if (true) {                                                                  \
     printf("[StatefulReader %s] ", &m_attributes.topicName[0]);                \
     printf(__VA_ARGS__);                                                       \
     printf("\r\n");                                                            \
   }
+#endif
 #else
 #define SFR_LOG(...) //
 #endif
@@ -102,9 +104,9 @@ template <class NetworkDriver>
 bool StatefulReaderT<NetworkDriver>::addNewMatchedWriter(
     const WriterProxy &newProxy) {
 #if SFR_VERBOSE && RTPS_GLOBAL_VERBOSE
-  SFR_LOG("New writer added with id: ");
-  printGuid(newProxy.remoteWriterGuid);
-  SFR_LOG("\n");
+  char buffer[64];
+  guid2Str(newProxy.remoteWriterGuid, buffer, sizeof(buffer));
+  SFR_LOG("New writer added with id: %s", buffer);
 #endif
   return m_proxies.add(newProxy);
 }
@@ -124,12 +126,11 @@ bool StatefulReaderT<NetworkDriver>::onNewGapMessage(
   WriterProxy *writer = getProxy(writerProxyGuid);
 
   if (writer == nullptr) {
-
 #if SFR_VERBOSE && RTPS_GLOBAL_VERBOSE
+    char buffer[64];
+    entityId2Str(msg.writerId, buffer, sizeof(buffer));
     SFR_LOG("Ignore GAP. Couldn't find a matching "
-            "writer with id:");
-    printEntityId(msg.writerId);
-    SFR_LOG("\n");
+            "writer with id: %s", buffer);
 #endif
     return false;
   }
@@ -223,12 +224,11 @@ bool StatefulReaderT<NetworkDriver>::onNewHeartbeat(
   WriterProxy *writer = getProxy(writerProxyGuid);
 
   if (writer == nullptr) {
-
 #if SFR_VERBOSE && RTPS_GLOBAL_VERBOSE
+    char buffer[64];
+    entityId2Str(msg.writerId, buffer, sizeof(buffer));
     SFR_LOG("Ignore heartbeat. Couldn't find a matching "
-            "writer with id:");
-    printEntityId(msg.writerId);
-    SFR_LOG("\n");
+            "writer with id: %s", buffer);
 #endif
     return false;
   }
