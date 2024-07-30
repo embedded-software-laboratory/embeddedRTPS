@@ -505,7 +505,11 @@ rtps::GuidPrefix_t Domain::generateGuidPrefix(ParticipantId_t id) const {
   if (Config::BASE_GUID_PREFIX == GUID_RANDOM) {
     for (unsigned int i = 0; i < rtps::Config::BASE_GUID_PREFIX.id.size();
          i++) {
+#if PLATFORM_ESP32
+      prefix.id[i] = esp_random();
+#else
       prefix.id[i] = rand();
+#endif
     }
   } else {
     for (unsigned int i = 0; i < rtps::Config::BASE_GUID_PREFIX.id.size();
