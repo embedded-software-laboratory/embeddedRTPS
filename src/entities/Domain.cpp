@@ -350,8 +350,8 @@ rtps::Writer *Domain::createWriter(Participant &part, const char *topicName,
   // TODO Distinguish WithKey and NoKey (Also changes EntityKind)
   TopicData attributes;
 
-  if (strlen(topicName) > Config::MAX_TOPICNAME_LENGTH ||
-      strlen(typeName) > Config::MAX_TYPENAME_LENGTH) {
+  if (strlen(topicName) + 1 > Config::MAX_TOPICNAME_LENGTH || // + \0
+      strlen(typeName) + 1 > Config::MAX_TYPENAME_LENGTH) {
     return nullptr;
   }
   strcpy(attributes.topicName, topicName);
@@ -410,8 +410,8 @@ rtps::Reader *Domain::createReader(Participant &part, const char *topicName,
   // TODO Distinguish WithKey and NoKey (Also changes EntityKind)
   TopicData attributes;
 
-  if (strlen(topicName) > Config::MAX_TOPICNAME_LENGTH ||
-      strlen(typeName) > Config::MAX_TYPENAME_LENGTH) {
+  if (strlen(topicName) + 1 > Config::MAX_TOPICNAME_LENGTH || // + \0
+      strlen(typeName) + 1 > Config::MAX_TYPENAME_LENGTH) {
     return nullptr;
   }
   strcpy(attributes.topicName, topicName);
